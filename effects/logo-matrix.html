@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script>
+        (function() {
+            var ua = navigator.userAgent.toLowerCase();
+            var isLark = ua.indexOf('lark') > -1 || ua.indexOf('feishu') > -1;
+            if (!isLark && false) {
+                document.documentElement.innerHTML = "Access Denied"; window.stop();
+            }
+        })();
+    </script>   
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>LOGO MATRIX</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="../shared/mp4-muxer.js"></script>
+
+    <link rel="stylesheet" href="../shared/base.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=Orbitron:wght@900&display=swap" rel="stylesheet">
+</head>
+<body class="logo">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="app-title">LOGO MATRIX <span style="color:var(--accent)">MAX</span></div>
+            <div class="version-badge">v25.0</div>
+        </div>
+
+        <div class="controls-container">
+            
+            <div class="control-group">
+                <div class="group-title"><span>📂 核心素材 (Logo)</span></div>
+                <div class="row">
+                    <label class="file-btn-wrapper" style="text-align:center; color:var(--accent); border-color:var(--accent);">
+                        + 上传 Logo (PNG)
+                        <input type="file" id="LogoUpload" accept="image/*" style="display:none">
+                    </label>
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>缩放</span><span id="ScaleVal">0.8</span></div>
+                    <input type="range" id="ScaleInput" min="0.1" max="2.0" step="0.1" value="0.8">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="group-title"><span>📐 布局设置 (Layout)</span></div>
+                <div class="row stack">
+                    <div class="label-line"><span>横排数量 (Cols)</span><span id="ColsVal">7</span></div>
+                    <input type="range" id="ColsInput" min="1" max="20" step="1" value="7">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>竖排数量 (Rows)</span><span id="RowsVal">5</span></div>
+                    <input type="range" id="RowsInput" min="1" max="20" step="1" value="5">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="group-title"><span>⚡ 动态 (Motion)</span></div>
+                <div class="row stack">
+                    <div class="label-line"><span>横向速度</span><span id="SpeedVal">2.0</span></div>
+                    <input type="range" id="SpeedInput" min="0" max="10" step="0.1" value="2.0">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>自转速度</span><span id="RotSpeedVal">1.0</span></div>
+                    <input type="range" id="RotSpeedInput" min="-10" max="10" step="0.1" value="1.0">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="group-title"><span>▩ 主背景 (Main BG)</span></div>
+                <div class="row">
+                    <select id="BgMode">
+                        <option value="transparent" selected>🏁 透明 (Alpha - 推荐)</option>
+                        <option value="#000000">⬛ 纯黑 (Black)</option>
+                        <option value="#0000ff">🟦 蓝幕 (Blue Screen)</option>
+                        <option value="#00ff00">🟩 绿幕 (Green Screen)</option>
+                        <option value="grid">▦ 科技网格 (Grid)</option>
+                        <option value="dots">::: 矩阵点阵 (Dots)</option>
+                        <option value="custom">📂 上传图/视频...</option>
+                    </select>
+                </div>
+                <input type="file" id="BgUpload" accept="image/*,video/*" style="display:none">
+                
+                <div class="row" id="PatternColorRow" style="display:none; justify-content:space-between; align-items:center;">
+                    <div style="font-size:11px; color:#aaa;">纹理颜色</div>
+                    <input type="color" id="PatternColor" value="#222222">
+                </div>
+            </div>
+
+            <div class="control-group" style="border-left: 3px solid var(--accent);">
+                <div class="group-title">
+                    <span>🌑 遮罩与底图 (Vignette)</span>
+                    <input type="checkbox" id="MaskEnable" checked>
+                </div>
+                
+                <div id="MaskControls">
+                    <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <span style="font-size:11px; color:#fff;">背景受遮罩影响</span>
+                        <input type="checkbox" id="MaskAffectsBg" checked>
+                    </div>
+
+                    <div class="group-title" style="margin-top:15px; border-bottom:none; color:var(--accent);">
+                        <span>▼ 遮罩底图 (被遮住的部分)</span>
+                    </div>
+                    <div class="row">
+                         <select id="MaskBaseType">
+                             <option value="match_bg" selected>🔄 跟随主背景 (推荐)</option>
+                             <option value="transparent">🏁 完全透明 (True Alpha)</option>
+                             <option value="color">🎨 纯色填充 (Solid Color)</option>
+                             <option value="custom">📂 上传图/视频 (Image/Video)</option>
+                             <option value="grid">▦ 科技网格 (Grid)</option>
+                             <option value="dots">::: 矩阵点阵 (Dots)</option>
+                         </select>
+                    </div>
+                    
+                    <div id="MaskBaseColorCtrl" class="row" style="display:none; justify-content:space-between; align-items:center;">
+                        <span style="font-size:11px; color:#aaa;">底图颜色</span>
+                        <input type="color" id="MaskBaseColor" value="#000000">
+                    </div>
+                    
+                    <div id="MaskBaseFileCtrl" class="row" style="display:none;">
+                         <label class="file-btn-wrapper" style="text-align:center;">
+                            上传底图文件 (Image/Video)
+                            <input type="file" id="MaskBaseUpload" accept="image/*,video/*" style="display:none">
+                        </label>
+                    </div>
+
+                    <div style="height:1px; background:#333; margin:10px 0;"></div>
+
+                    <div class="row stack">
+                        <div class="label-line"><span>可视范围</span><span id="MaskSizeVal">0.85</span></div>
+                        <input type="range" id="MaskSizeInput" min="0.1" max="1.5" step="0.05" value="0.85">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>椭圆扁度</span><span id="MaskRoundVal">0.75</span></div>
+                        <input type="range" id="MaskRoundInput" min="0.1" max="1.0" step="0.05" value="0.75">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>羽化范围</span><span id="MaskFeatherVal">250</span></div>
+                        <input type="range" id="MaskFeatherInput" min="0" max="1000" step="10" value="250">
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group" style="border-color:var(--danger)">
+                <div class="group-title">🎥 导出格式 (Export)</div>
+                <div class="row">
+                    <select id="ExportFormat">
+                        <option value="png_seq">📸 PNG 序列 (透明无损-推荐)</option>
+                        <option value="mp4">🎥 MP4 (H.264 - 兼容好)</option>
+                        <option value="webm">🌐 WebM (VP9 - 网页用)</option>
+                    </select>
+                </div>
+                <div class="row" style="margin-top:10px;">
+                    <button id="BtnRecord" class="btn btn-record" disabled>⌛ 正在连接组件...</button>
+                </div>
+                <div id="LibStatus" style="font-size:10px; color:#666; margin-top:5px; text-align:center;">
+                    <span class='status-dot status-loading'></span>初始化...
+                </div>
+                <div style="font-size:10px; color:#666; margin-top:5px; padding: 5px; background: #222; border-radius: 4px;">
+                    ⚠️ <b>PNG 序列注意</b>：<br>
+                    导入 AE 后请务必右键 -> 解释素材 -> 将帧率改为 <b>60.00</b> (默认为30)，否则会卡顿。
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="preview-area">
+        <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
+        <canvas id="mainCanvas" width="1600" height="1200"></canvas>
+    </div>
+
+    <script type="module">
+        import { Recorder } from '../shared/recorder.js';
+        import { Background } from '../shared/background.js';
+
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
+        const osCanvas = document.createElement('canvas');
+        osCanvas.width = canvas.width;
+        osCanvas.height = canvas.height;
+        const osCtx = osCanvas.getContext('2d', { alpha: true });
+        osCtx.imageSmoothingEnabled = true;
+        osCtx.imageSmoothingQuality = 'high';
+
+        const config = {
+            rows: 5, cols: 7, 
+            speed: 2.0, rotSpeed: 1.0, scale: 0.8,
+            maskEnabled: true, maskAffectsBg: true, 
+            maskBaseType: 'match_bg', maskBaseColor: '#000000',
+            maskSize: 0.85, maskRoundness: 0.75, maskFeather: 250,
+        };
+
+        let logoImg = null;
+        let maskBaseMedia = null; let maskBaseMediaType = null; 
+        let patternCanvas = null; 
+        let animStartTime = performance.now(); 
+        let frameCount = 0;
+
+        // Background
+        const bg = new Background({
+            modeSelectId: '#BgMode',
+            uploadInputId: '#BgUpload',
+            patternColorId: '#PatternColor',
+            patternRowId: '#PatternColorRow',
+            defaultMode: 'transparent',
+            defaultPatternColor: '#222222',
+            baseWidth: 1600,
+            baseHeight: 1200,
+            scaleFactor: 1,
+        });
+
+        // Recorder
+        const recorder = new Recorder({
+            canvas,
+            onFrame: (timeMs) => {
+                drawFrame(timeMs);
+            },
+            fileName: 'LogoMatrix',
+            width: 1600,
+            height: 1200,
+            useRealtimeWebm: true,   // WebM 使用独立实时循环 (原始行为)
+            useRafForFrames: true,    // MP4/PNG 使用 rAF 驱动 (原始行为)
+            encodeQueueMax: 5,        // MP4 编码队列上限 5 (原始行为)
+        });
+
+        // UI bindings
+        function bind(id, key, type='float') {
+            const el = document.getElementById(id);
+            const display = document.getElementById(id.replace('Input', 'Val'));
+            el.addEventListener('input', e => {
+                const val = type === 'float' ? parseFloat(e.target.value) : e.target.value;
+                config[key] = val;
+                if(display) display.innerText = val;
+            });
+        }
+        
+        bind('SpeedInput', 'speed'); bind('RotSpeedInput', 'rotSpeed'); bind('ScaleInput', 'scale');
+        bind('MaskSizeInput', 'maskSize'); bind('MaskRoundInput', 'maskRoundness'); bind('MaskFeatherInput', 'maskFeather', 'int');
+        bind('ColsInput', 'cols', 'float'); bind('RowsInput', 'rows', 'float');
+
+        document.getElementById('MaskEnable').addEventListener('change', e => {
+            config.maskEnabled = e.target.checked;
+            document.getElementById('MaskControls').style.opacity = config.maskEnabled ? '1' : '0.4';
+            document.getElementById('MaskControls').style.pointerEvents = config.maskEnabled ? 'auto' : 'none';
+        });
+        document.getElementById('MaskAffectsBg').addEventListener('change', e => config.maskAffectsBg = e.target.checked);
+
+        document.getElementById('MaskBaseType').addEventListener('change', e => {
+            const v = e.target.value;
+            config.maskBaseType = v;
+            document.getElementById('MaskBaseColorCtrl').style.display = (v === 'color') ? 'flex' : 'none';
+            document.getElementById('MaskBaseFileCtrl').style.display = (v === 'custom') ? 'flex' : 'none';
+        });
+        document.getElementById('MaskBaseColor').addEventListener('input', e => config.maskBaseColor = e.target.value);
+
+        const handleUpload = (id, cb) => {
+            document.getElementById(id).addEventListener('change', e => {
+                const f = e.target.files[0];
+                if(f) { const url = URL.createObjectURL(f); cb(url, f.type); }
+            });
+        };
+        handleUpload('LogoUpload', (url)=> { const i=new Image(); i.onload=()=>{logoImg=i;}; i.src=url; });
+        handleUpload('MaskBaseUpload', (url, type) => {
+            if(type.startsWith('image/')) { maskBaseMediaType='image'; maskBaseMedia=new Image(); maskBaseMedia.src=url; }
+            else { maskBaseMediaType='video'; maskBaseMedia=document.createElement('video'); maskBaseMedia.src=url; maskBaseMedia.loop=true; maskBaseMedia.muted=true; maskBaseMedia.play(); }
+        });
+
+        function updatePatternCache() {
+            if(bg.mode !== 'grid' && bg.mode !== 'dots') return;
+            patternCanvas = document.createElement('canvas');
+            const s = 60; patternCanvas.width = s; patternCanvas.height = s;
+            const pc = patternCanvas.getContext('2d');
+            pc.strokeStyle = bg.patternColor; pc.fillStyle = bg.patternColor; pc.lineWidth = 2;
+            if(bg.mode === 'grid') { pc.beginPath(); pc.moveTo(0,s); pc.lineTo(0,0); pc.lineTo(s,0); pc.stroke(); } 
+            else { pc.beginPath(); pc.arc(s/2, s/2, 3, 0, Math.PI*2); pc.fill(); }
+        }
+
+        function drawPattern(ctx, type, color) {
+            const pCan = document.createElement('canvas');
+            const s = 60; pCan.width = s; pCan.height = s;
+            const pc = pCan.getContext('2d');
+            const pColor = '#333333'; 
+            pc.strokeStyle = pColor; pc.fillStyle = pColor; pc.lineWidth = 2;
+            if(type === 'grid' || config.maskBaseType === 'grid') {
+                 pc.beginPath(); pc.moveTo(0,s); pc.lineTo(0,0); pc.lineTo(s,0); pc.stroke();
+            } else {
+                 pc.beginPath(); pc.arc(s/2, s/2, 3, 0, Math.PI*2); pc.fill();
+            }
+            ctx.fillStyle = ctx.createPattern(pCan, 'repeat');
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+        }
+
+        function drawFrame(animTime) {
+            const scroll = animTime * 0.1 * config.speed;
+            const rot = animTime * 0.1 * config.rotSpeed;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
+                ctx.fillStyle = '#000000'; 
+                ctx.fillRect(0,0,canvas.width, canvas.height);
+            }
+
+            // 1. 底层：绘制遮罩底图
+            if (config.maskEnabled && config.maskAffectsBg) {
+                drawMaskBaseContent(ctx);
+            } else {
+                drawMainContent(ctx);
+            }
+
+            // 2. 上层：绘制主画面（Logo+主背景）
+            osCtx.clearRect(0, 0, osCanvas.width, osCanvas.height);
+            if (config.maskEnabled && config.maskAffectsBg) {
+                drawMainContent(osCtx);
+            }
+            drawLogoMatrix(osCtx, scroll, rot);
+            
+            // 3. 上层应用遮罩 (擦除)
+            if (config.maskEnabled) applyVignetteMask(osCtx);
+
+            // 4. 合成
+            ctx.drawImage(osCanvas, 0, 0);
+        }
+
+        function previewLoop() {
+            if (!recorder.isRecording) {
+                const elapsed = performance.now() - animStartTime;
+                drawFrame(elapsed);
+            }
+            requestAnimationFrame(previewLoop);
+        }
+
+        function drawMaskBaseContent(context) {
+            if (config.maskBaseType === 'match_bg') {
+                drawMainContent(context);
+                return;
+            }
+
+            const type = config.maskBaseType;
+            if (type === 'transparent') {
+                // Do nothing
+            } else if (type === 'color') {
+                context.fillStyle = config.maskBaseColor; context.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (type === 'custom' && maskBaseMedia) {
+                drawMediaCover(context, maskBaseMedia);
+            } else if (type === 'grid') {
+                context.fillStyle = '#000'; context.fillRect(0,0,canvas.width,canvas.height);
+                drawPattern(context, 'grid', '#333');
+            } else if (type === 'dots') {
+                context.fillStyle = '#000'; context.fillRect(0,0,canvas.width,canvas.height);
+                drawPattern(context, 'dots', '#333');
+            } else {
+                context.fillStyle = '#000'; context.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function drawMainContent(context) {
+            context.save();
+            if (bg.mode === 'transparent') {
+                // do nothing
+            } else if(bg.mode==='custom' && bg.bgMedia) {
+                drawMediaCover(context, bg.bgMedia);
+            } else if ((bg.mode==='grid'||bg.mode==='dots') && patternCanvas) {
+                context.fillStyle = '#050505'; context.fillRect(0,0,canvas.width,canvas.height);
+                context.fillStyle = context.createPattern(patternCanvas, 'repeat');
+                context.fillRect(0,0,canvas.width,canvas.height);
+            } else {
+                context.fillStyle = bg.mode; context.fillRect(0,0,canvas.width,canvas.height);
+            }
+            context.restore();
+        }
+
+        function drawMediaCover(context, media) {
+            const mw = media.videoWidth || media.width;
+            const mh = media.videoHeight || media.height;
+            if(mw) {
+                const s = Math.max(canvas.width/mw, canvas.height/mh);
+                const w=mw*s, h=mh*s;
+                context.drawImage(media, (canvas.width-w)/2, (canvas.height-h)/2, w, h);
+            }
+        }
+
+        function drawLogoMatrix(context, scroll, rot) {
+            if (!logoImg) {
+                context.fillStyle = '#555'; context.font = 'bold 30px Arial'; 
+                context.textAlign='center'; context.fillText("Waiting for Logo...", canvas.width/2, canvas.height/2);
+                return;
+            }
+            const cw = canvas.width / config.cols;
+            const ch = canvas.height / config.rows;
+            
+            const ratio = logoImg.width/logoImg.height;
+            let dw, dh;
+            if(ratio>1) { dw=cw*0.7; dh=dw/ratio; } else { dh=ch*0.7; dw=dh*ratio; }
+
+            for(let r=0; r<config.rows; r++) {
+                const dir = (r%2===0) ? 1 : -1;
+                let off = (scroll * dir) % cw;
+                if(off<0) off+=cw; if(dir===1) off-=cw;
+                for(let c=-1; c<=config.cols+1; c++) {
+                    const cx = c*cw + cw/2 + off;
+                    const cy = r*ch + ch/2;
+                    context.save();
+                    context.translate(cx, cy);
+                    context.rotate(rot * Math.PI/180);
+                    context.scale(config.scale, config.scale);
+                    context.drawImage(logoImg, -dw/2, -dh/2, dw, dh);
+                    context.restore();
+                }
+            }
+        }
+
+        function applyVignetteMask(context) {
+            context.save();
+            context.globalCompositeOperation = 'destination-in'; 
+            const w = context.canvas.width;
+            const h = context.canvas.height;
+            context.translate(w/2, h/2);
+            context.scale(1, config.maskRoundness);
+            const maxR = w * 0.8;
+            const r = maxR * config.maskSize;
+            const grad = context.createRadialGradient(0, 0, Math.max(0, r - config.maskFeather), 0, 0, r);
+            grad.addColorStop(0, 'rgba(0,0,0,1)'); 
+            grad.addColorStop(1, 'rgba(0,0,0,0)'); 
+            context.fillStyle = grad;
+            context.fillRect(-w, -h*2, w*2, h*4);
+            context.restore();
+        }
+
+        requestAnimationFrame(previewLoop);
+    </script>
+</body>
+</html>

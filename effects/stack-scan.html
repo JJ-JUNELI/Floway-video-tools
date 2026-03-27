@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>STACK SCAN FX</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="../shared/mp4-muxer.js"></script>
+
+    <link rel="stylesheet" href="../shared/base.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700;900&family=Noto+Serif+SC:wght@900&family=Orbitron:wght@900&family=Ma+Shan+Zheng&family=Exo+2:ital,wght@0,100..900;1,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+<body class="stack">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="app-title">STACK SCAN <span style="color:var(--accent)">v19.4</span></div>
+            <div class="version-badge">STABLE FIX</div>
+        </div>
+
+        <div class="controls-container">
+            <div class="control-group">
+                <div class="group-title"><span>📝 核心内容</span></div>
+                <div class="row stack">
+                    <div class="label-line"><span>主文本 (Main)</span></div>
+                    <input type="text" id="MainText" value="小身材，大能耐">
+                </div>
+                <div class="row stack" style="margin-top:10px;">
+                    <div class="label-line"><span>背景水印内容</span></div>
+                    <input type="text" id="BgTextStr" value="Feature">
+                </div>
+                <div class="switch-container" style="background:rgba(255,255,255,0.05); margin-top:15px; border:1px solid #444;">
+                    <span class="switch-label" style="color:var(--accent); font-weight:bold;">👁️ 预览全屏 (Preview)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="PreviewToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="group-title"><span>📚 主样式 (Main Style)</span></div>
+                
+                <div class="row stack">
+                    <div class="label-line"><span>主字体</span></div>
+                    <select id="MainFontInput">
+                        <option value="upload" style="color:var(--accent); font-weight:bold;">📂 + 上传新字体...</option>
+                        <option disabled>──────────</option>
+                        <option value='"Noto Sans SC", sans-serif' selected>思源黑体 (Source Han Sans)</option>
+                        <option value='"Orbitron", monospace'>未来科技 (Tech)</option>
+                        <option value='"Chakra Petch", sans-serif'>机械非衬线 (Chakra Petch)</option>
+                        <option value='"Montserrat", sans-serif'>几何非衬线 (Montserrat)</option>
+                        <option value='"Exo 2", sans-serif'>赛博非衬线 (Exo 2)</option>
+                        <option value='"Playfair Display", serif'>优雅衬线 (Playfair)</option>
+                        <option value='"Noto Serif SC", serif'>思源宋体 (Serif)</option>
+                        <option value='"Ma Shan Zheng", cursive'>毛笔手写 (Brush)</option>
+                    </select>
+                </div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>主字重 (Weight)</span><span id="MainWeightVal">900</span></div>
+                    <input type="range" id="MainWeightInput" min="100" max="900" step="100" value="900">
+                </div>
+                
+                <div class="row stack">
+                    <div class="label-line"><span>主字号 (Size)</span><span id="MainSizeVal">130</span></div>
+                    <input type="range" id="MainSizeInput" min="50" max="300" step="5" value="130">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>颜色 (Color)</span></div>
+                    <input type="color" id="MainColor" value="#ffffff">
+                </div>
+                
+                <div class="row stack">
+                    <div class="label-line"><span>描边粗细 (Stroke)</span><span id="StrokeWidthVal">4</span></div>
+                    <input type="range" id="StrokeWidthInput" min="1" max="15" step="0.5" value="4">
+                </div>
+                
+                <div class="row stack">
+                    <div class="label-line"><span>📏 描边位置</span></div>
+                    <select id="StrokeAlignInput">
+                        <option value="center">↔️ 居中描边 (Center)</option>
+                        <option value="inner" selected>➡️ 内描边 (Inner)</option>
+                        <option value="outer">⬅️ 外描边 (Outer)</option>
+                    </select>
+                </div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>✨ 强力辉光 (Nuclear Glow)</span><span id="GlowIntensityVal">30</span></div>
+                    <input type="range" id="GlowIntensityInput" min="0" max="100" step="1" value="30">
+                </div>
+                
+                <div style="border-top: 1px dashed #444; margin: 10px 0;"></div>
+                
+                <div class="row stack">
+                    <div class="label-line"><span>↔️ 整体水平位置 (Pos X)</span><span id="PosXVal">0</span></div>
+                    <input type="range" id="PosXInput" min="-400" max="400" step="1" value="0">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>↕️ 整体垂直位置 (Pos Y)</span><span id="PosYVal">0</span></div>
+                    <input type="range" id="PosYInput" min="-400" max="400" step="1" value="0">
+                </div>
+            </div>
+
+            <div class="control-group" style="border-left: 3px solid var(--accent);">
+                <div class="group-title">
+                    <span>⚡ 动画序列 (Animation)</span>
+                    <button id="BtnPlay" class="btn btn-play">▶ 播放</button>
+                </div>
+
+                <div class="anim-panel start">
+                    <div class="anim-header"><span style="color:var(--danger)">初始状态 (Start)</span></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>初始字距</span><span id="StartSpacingVal">55</span></div>
+                        <input type="range" id="StartSpacingInput" min="-100" max="200" value="55">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>初始透明度</span><span id="StartOpacityVal">0.0</span></div>
+                        <input type="range" id="StartOpacityInput" min="0" max="1" step="0.1" value="0.0">
+                    </div>
+                </div>
+
+                <div class="anim-panel end">
+                    <div class="anim-header"><span style="color:var(--accent)">目标状态 (End)</span></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>结束字距</span><span id="EndSpacingVal">0</span></div>
+                        <input type="range" id="EndSpacingInput" min="-100" max="200" value="0">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>结束透明度</span><span id="EndOpacityVal">1.0</span></div>
+                        <input type="range" id="EndOpacityInput" min="0" max="1" step="0.1" value="1.0">
+                    </div>
+                </div>
+
+                <div style="border-top: 1px dashed #444; margin: 10px 0;"></div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>📈 字距/透明度运动曲线</span></div>
+                    <select id="EasingInput">
+                        <option value="linear">📏 匀速 (Linear)</option>
+                        <option value="easeIn">🐢 先慢后快 (Ease In)</option>
+                        <option value="easeOut" selected>🚀 先快后慢 (Ease Out)</option>
+                        <option value="smooth">〰️ 丝滑缓动 (Smooth)</option>
+                    </select>
+                </div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>⏳ 字距动画时长</span><span id="SpacingDurationVal">2.0s</span></div>
+                    <input type="range" id="SpacingDurationInput" min="0.5" max="5.0" step="0.1" value="2.0">
+                </div>
+                
+                <div class="row stack">
+                    <div class="label-line"><span>⏳ 透明度变化时长</span><span id="OpacityDurationVal">2.0s</span></div>
+                    <input type="range" id="OpacityDurationInput" min="0.5" max="5.0" step="0.1" value="2.0">
+                </div>
+
+                <div class="row stack" style="border-left: 2px solid var(--text-sub); padding-left: 8px; margin-top: 5px;">
+                    <div class="label-line"><span>⏳ 透明度启动延迟 (Opacity Delay)</span><span id="OpacityDelayVal">0.2s</span></div>
+                    <input type="range" id="OpacityDelayInput" min="0.0" max="5.0" step="0.1" value="0.2">
+                </div>
+
+                <div class="row stack" style="border-left: 2px solid var(--accent); padding-left: 8px; margin-top: 10px;">
+                    <div class="label-line"><span style="color:var(--accent)">⏱️ 扫光启动延迟 (Scan Delay)</span><span id="ScanDelayVal">1.0s</span></div>
+                    <input type="range" id="ScanDelayInput" min="0.0" max="5.0" step="0.1" value="1.0">
+                </div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>🚀 扫光速度</span><span id="SpeedVal">33.5</span></div>
+                    <input type="range" id="SpeedInput" min="0.1" max="100.0" step="0.5" value="33.5">
+                </div>
+                
+                <div class="row stack">
+                    <div class="label-line"><span>堆叠行数 (奇数)</span><span id="StackCountVal">9</span></div>
+                    <input type="range" id="StackCountInput" min="1" max="21" step="2" value="9">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>行间距</span><span id="StackGapVal">5</span></div>
+                    <input type="range" id="StackGapInput" min="-50" max="100" step="1" value="5">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>背景拖尾 (Trail)</span><span id="TrailLenVal">10.0</span></div>
+                    <input type="range" id="TrailLenInput" min="1.0" max="20.0" step="0.1" value="10.0">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="group-title"><span>🌫️ 背景水印 (Watermark)</span></div>
+                
+                <div class="row stack">
+                     <div class="label-line"><span>水印字体</span></div>
+                    <select id="BgFontInput">
+                        <option value="upload" style="color:var(--accent); font-weight:bold;">📂 + 上传新字体...</option>
+                        <option disabled>──────────</option>
+                        <option value='"Noto Sans SC", sans-serif'>思源黑体 (Source Han Sans)</option>
+                        <option value='"Orbitron", monospace'>未来科技 (Tech)</option>
+                        <option value='"Chakra Petch", sans-serif'>机械非衬线 (Chakra Petch)</option>
+                        <option value='"Montserrat", sans-serif' selected>几何非衬线 (Montserrat)</option>
+                        <option value='"Exo 2", sans-serif'>赛博非衬线 (Exo 2)</option>
+                        <option value='"Playfair Display", serif'>优雅衬线 (Playfair)</option>
+                        <option value='"Noto Serif SC", serif'>思源宋体 (Serif)</option>
+                        <option value='"Ma Shan Zheng", cursive'>毛笔手写 (Brush)</option>
+                    </select>
+                </div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>水印字重 (仅预设可用)</span><span id="BgWeightVal">900</span></div>
+                    <input type="range" id="BgWeightInput" min="100" max="900" step="100" value="900">
+                </div>
+
+                <div class="switch-container">
+                    <span class="switch-label"><i>I</i> 斜体 (Italic)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="BgItalicToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                 <div class="row" style="margin-top:5px; justify-content:space-between; align-items:center;">
+                    <span style="font-size:12px; color:#aaa;">水印颜色</span>
+                    <input type="color" id="BgTextColor" value="#121212">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>基础字号</span><span id="BgTextSizeVal">800</span></div>
+                    <input type="range" id="BgTextSizeInput" min="100" max="1500" step="50" value="800">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>字间距</span><span id="BgTextSpaceVal">0</span></div>
+                    <input type="range" id="BgTextSpaceInput" min="-100" max="500" step="10" value="0">
+                </div>
+                
+                <div class="row stack" style="margin-top:5px; border-top:1px dashed #444; padding-top:5px;">
+                    <div class="label-line"><span>↕️ 垂直偏移 (Offset Y)</span><span id="BgOffYVal">-15</span></div>
+                    <input type="range" id="BgOffYInput" min="-200" max="200" step="1" value="-15">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>↔️ 水平偏移 (Offset X)</span><span id="BgOffXVal">0</span></div>
+                    <input type="range" id="BgOffXInput" min="-200" max="200" step="1" value="0">
+                </div>
+
+                <div class="switch-container" style="margin-top:10px;">
+                    <span class="switch-label">🔒 等比例缩放 (Lock Ratio)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="BgLockRatio">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="row stack" style="margin-top:10px;">
+                    <div class="label-line"><span>横向缩放 (Scale X)</span><span id="BgScaleXVal">0.4</span></div>
+                    <input type="range" id="BgScaleXInput" min="0.1" max="3.0" step="0.1" value="0.4">
+                </div>
+                <div class="row stack" id="BgScaleYRow" style="display:flex; opacity:1;">
+                    <div class="label-line"><span>纵向缩放 (Scale Y)</span><span id="BgScaleYVal">0.8</span></div>
+                    <input type="range" id="BgScaleYInput" min="0.1" max="3.0" step="0.1" value="0.8">
+                </div>
+            </div>
+            
+            <!-- 由 shared/controls.js 自动注入 -->
+            <div id="shared-controls-placeholder"></div>
+            
+        </div>
+    </div>
+
+    <input type="file" id="HiddenFontInput" accept=".ttf,.otf,.woff,.woff2" style="display:none">
+
+    <div class="preview-area">
+        <div id="RecIndicator"><div class="rec-dot"></div> RENDERING...</div>
+        <div id="DebugLog"></div>
+        <svg id="mainSvg" viewBox="0 0 1600 1200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <filter id="filter-dilate" x="-50%" y="-50%" width="200%" height="200%">
+                    <feMorphology operator="dilate" radius="2" in="SourceAlpha" result="DILATED"/>
+                    <feComposite operator="out" in="DILATED" in2="SourceAlpha" result="OUTLINE_OUTER"/>
+                    <feFlood flood-color="white" result="COLOR"/>
+                    <feComposite operator="in" in="COLOR" in2="OUTLINE_OUTER" result="FINAL"/>
+                </filter>
+                <filter id="filter-erode" x="-50%" y="-50%" width="200%" height="200%">
+                    <feMorphology operator="erode" radius="2" in="SourceAlpha" result="ERODED"/>
+                    <feComposite operator="out" in="SourceAlpha" in2="ERODED" result="OUTLINE_INNER"/>
+                    <feFlood flood-color="white" result="COLOR"/>
+                    <feComposite operator="in" in="COLOR" in2="OUTLINE_INNER" result="FINAL"/>
+                </filter>
+                <filter id="filter-center" x="-50%" y="-50%" width="200%" height="200%">
+                    <feMorphology operator="dilate" radius="2" in="SourceAlpha" result="FAT"/>
+                    <feMorphology operator="erode" radius="2" in="SourceAlpha" result="THIN"/>
+                    <feComposite operator="out" in="FAT" in2="THIN" result="OUTLINE_CENTER"/>
+                    <feFlood flood-color="white" result="COLOR"/>
+                    <feComposite operator="in" in="COLOR" in2="OUTLINE_CENTER" result="FINAL"/>
+                </filter>
+                <pattern id="bgPattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse"></pattern>
+            </defs>
+
+            <rect id="svgBg" width="100%" height="100%" fill="transparent"/>
+            
+            <g id="watermarkGroup" style="opacity:1"></g>
+
+            <g id="contentGroup">
+                <g id="scanStackGroup"></g>
+                <text id="centerFixedText" x="800" y="600" 
+                      text-anchor="middle" 
+                      dominant-baseline="central" 
+                      alignment-baseline="central" 
+                      fill="white" style="font-weight:900; font-size:130px;">功能3: AI侧边栏</text>
+            </g>
+        </svg>
+        
+        <canvas id="exportCanvas" width="1600" height="1200" style="display:none;"></canvas>
+    </div>
+
+    <script type="module">
+        import { Recorder } from '../shared/recorder.js';
+        import { Background } from '../shared/background.js';
+        import { injectSharedControls } from '../shared/controls.js';
+
+        injectSharedControls({ defaultBgMode: 'transparent', defaultPatternColor: '#222222' });
+
+        const svg = document.getElementById('mainSvg');
+        const contentGroup = document.getElementById('contentGroup');
+        const scanGroup = document.getElementById('scanStackGroup');
+        const centerText = document.getElementById('centerFixedText');
+        const watermarkGroup = document.getElementById('watermarkGroup');
+        const svgBg = document.getElementById('svgBg');
+        const bgPattern = document.getElementById('bgPattern');
+        
+        const exportCanvas = document.getElementById('exportCanvas');
+        const exportCtx = exportCanvas.getContext('2d');
+        
+        const fDilate = document.getElementById('filter-dilate').querySelector('feMorphology');
+        const fErode = document.getElementById('filter-erode').querySelector('feMorphology');
+        const fCenterDilate = document.getElementById('filter-center').querySelector('feMorphology[operator="dilate"]');
+        const fCenterErode = document.getElementById('filter-center').querySelector('feMorphology[operator="erode"]');
+        
+        const floodDilate = document.getElementById('filter-dilate').querySelector('feFlood');
+        const floodErode = document.getElementById('filter-erode').querySelector('feFlood');
+        const floodCenter = document.getElementById('filter-center').querySelector('feFlood');
+
+        // 配置
+        const config = {
+            mainText: "小身材，大能耐",
+            bgTextStr: "Feature",
+            mainFont: '"Noto Sans SC", sans-serif',
+            mainWeight: 900,
+            bgFont: '"Montserrat", sans-serif',
+            bgWeight: 900,
+            mainColor: "#ffffff",
+            mainSize: 130,
+            strokeWidth: 4,
+            strokeAlign: 'inner', 
+            stackCount: 9, 
+            stackGap: 5,
+            bgTextColor: "#121212",
+            bgTextSize: 800,
+            bgTextSpace: 0,
+            bgItalic: true, 
+            bgScaleX: 0.4,
+            bgScaleY: 0.8,
+            bgLockRatio: false,
+            bgOffX: 0, bgOffY: -15, 
+            posX: 0, posY: 0,     
+            glowIntensity: 30, 
+            speed: 33.5, 
+            trailLen: 10.0, 
+            bgMode: document.getElementById('BgMode').value, 
+            patternColor: '#222222',
+            
+            isAnimating: false,
+            animStartTime: 0,
+            startSpacing: 55, 
+            endSpacing: 0,
+            spacingDuration: 2.0,
+            spacingEasing: 'easeOut',
+            scanDelay: 1.0, 
+            
+            startOpacity: 0.0,
+            endOpacity: 1.0,
+            opacityDuration: 2.0,
+            opacityDelay: 0.2, 
+
+            previewMode: false 
+        };
+
+        // 状态
+        let customFontCount = 0;
+        let currentFontTarget = null;
+        let patternCanvas = null;
+
+        // Background (manages uploads + config, but SVG drawing is separate)
+        const bg = new Background({
+            modeSelectId: '#BgMode',
+            uploadInputId: '#BgUpload',
+            patternColorId: '#PatternColor',
+            patternRowId: '#PatternColorRow',
+            defaultMode: 'transparent',
+            defaultPatternColor: '#222222',
+            baseWidth: 1600,
+            baseHeight: 1200,
+            scaleFactor: 1,
+        });
+
+        // Recorder — onFrame is async because rasterizeSVG() is async
+        const recorder = new Recorder({
+            canvas: exportCanvas,
+            onFrame: async (timeMs) => {
+                updateSVG(timeMs);
+                await rasterizeSVG();
+            },
+            fileName: 'StackScan',
+            width: 1600,
+            height: 1200,
+            useManualWebmFrames: true, // WebM 使用 captureStream(0) + requestFrame (原始行为)
+        });
+
+        // Easing
+        const easings = {
+            linear: t => t,
+            easeIn: t => t * t * t,
+            easeOut: t => 1 - Math.pow(1 - t, 3),
+            smooth: t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+        };
+
+        // === SVG 背景处理 (stack-scan 特有，SVG 元素操作) ===
+        function updateSVGPatternCache() {
+            if(config.bgMode !== 'grid' && config.bgMode !== 'dots') return;
+            while(bgPattern.firstChild) bgPattern.removeChild(bgPattern.firstChild);
+            
+            if(config.bgMode === 'grid') {
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", "M0 60 L0 0 L60 0");
+                path.setAttribute("stroke", config.patternColor);
+                path.setAttribute("stroke-width", "2");
+                path.setAttribute("fill", "none");
+                bgPattern.appendChild(path);
+            } else {
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", "30");
+                circle.setAttribute("cy", "30");
+                circle.setAttribute("r", "3");
+                circle.setAttribute("fill", config.patternColor);
+                bgPattern.appendChild(circle);
+            }
+            
+            svgBg.setAttribute('fill', 'url(#bgPattern)');
+            
+            patternCanvas = document.createElement('canvas');
+            const s = 60; patternCanvas.width = s; patternCanvas.height = s;
+            const pc = patternCanvas.getContext('2d');
+            pc.strokeStyle = config.patternColor; pc.fillStyle = config.patternColor; pc.lineWidth = 2;
+            if(config.bgMode === 'grid') { pc.beginPath(); pc.moveTo(0,s); pc.lineTo(0,0); pc.lineTo(s,0); pc.stroke(); } 
+            else { pc.beginPath(); pc.arc(s/2, s/2, 3, 0, Math.PI*2); pc.fill(); }
+        }
+
+        // Sync bg mode from Background module to SVG
+        function syncBgToSVG() {
+            config.bgMode = bg.mode;
+            config.patternColor = bg.patternColor;
+
+            if(config.bgMode === 'transparent') svgBg.setAttribute('fill', 'transparent');
+            else if(config.bgMode === '#000000') svgBg.setAttribute('fill', '#000000');
+            else if(config.bgMode === '#0000ff') svgBg.setAttribute('fill', '#0000ff');
+            else if(config.bgMode === '#00ff00') svgBg.setAttribute('fill', '#00ff00');
+            else if(config.bgMode === 'grid' || config.bgMode === 'dots') updateSVGPatternCache();
+        }
+
+        // === 导出背景绘制 (Canvas, 用于录制) ===
+        function drawExportBackground(ctx, width, height) {
+            ctx.save();
+            const format = recorder.format;
+            const mode = config.bgMode;
+
+            if ((format === 'mp4' || format === 'webm') && mode === 'transparent') {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, width, height);
+            } 
+            else if (format === 'png_seq' && mode === 'transparent') {
+                ctx.clearRect(0, 0, width, height);
+            }
+            else if (mode === 'custom' && bg.bgMedia) {
+                const mw = bg.bgMedia.videoWidth || bg.bgMedia.width;
+                const mh = bg.bgMedia.videoHeight || bg.bgMedia.height;
+                if(mw && mh) {
+                    const s = Math.max(width/mw, height/mh);
+                    const w=mw*s, h=mh*s;
+                    ctx.drawImage(bg.bgMedia, (width-w)/2, (height-h)/2, w, h);
+                }
+            } else if ((mode === 'grid' || mode === 'dots') && patternCanvas) {
+                ctx.fillStyle = '#050505'; ctx.fillRect(0,0,width,height);
+                ctx.fillStyle = ctx.createPattern(patternCanvas, 'repeat');
+                ctx.fillRect(0,0,width,height);
+            } else {
+                ctx.fillStyle = mode; 
+                ctx.fillRect(0, 0, width, height);
+            }
+            ctx.restore();
+        }
+
+        // === 主渲染更新 ===
+        function updateSVG(timeOverride = null) {
+            const now = timeOverride !== null ? timeOverride : performance.now();
+            const elapsed = (now - config.animStartTime) / 1000;
+            
+            let spacingVal = config.endSpacing;
+            let scanOffset = 9999; 
+            let opacityVal = config.endOpacity; 
+
+            if (config.isAnimating) {
+                const spP = Math.min(elapsed / config.spacingDuration, 1);
+                const easeFn = easings[config.spacingEasing] || easings.easeOut;
+                const spEase = easeFn(spP);
+                spacingVal = config.startSpacing + (config.endSpacing - config.startSpacing) * spEase;
+
+                const opacityEffectiveTime = elapsed - config.opacityDelay;
+                let opP = 0;
+                if (opacityEffectiveTime > 0) {
+                    opP = Math.min(opacityEffectiveTime / config.opacityDuration, 1);
+                }
+                const opEase = easeFn(opP);
+                opacityVal = config.startOpacity + (config.endOpacity - config.startOpacity) * opEase;
+
+                const scanEffectiveTime = elapsed - config.scanDelay;
+                let count = Math.max(1, Math.floor(config.stackCount));
+                if(count % 2 === 0) count++;
+                const cycleLen = Math.max(1, count + config.trailLen + 2);
+                
+                const startOffset = -1.0; 
+                const scanDist = startOffset + (scanEffectiveTime * config.speed);
+                scanOffset = scanDist;
+
+                if (spP >= 1 && scanDist > cycleLen + 5 && opP >= 1) {
+                    if (!recorder.isRecording) {
+                        config.isAnimating = false;
+                        spacingVal = config.endSpacing;
+                        opacityVal = config.endOpacity;
+                        scanOffset = 9999;
+                    }
+                }
+            } else {
+                spacingVal = config.endSpacing;
+                opacityVal = config.endOpacity;
+                scanOffset = config.previewMode ? -9999 : 9999; 
+            }
+            
+            const mainFontFull = config.mainFont.includes('CustomFont') ? config.mainFont : config.mainFont; 
+            const mainWeight = config.mainFont.includes('CustomFont') ? 'normal' : config.mainWeight;
+
+            contentGroup.setAttribute('transform', `translate(${config.posX}, ${config.posY})`);
+
+            centerText.textContent = config.mainText;
+            centerText.setAttribute('fill', config.mainColor);
+            centerText.setAttribute('opacity', opacityVal); 
+            centerText.style.fontSize = `${config.mainSize}px`;
+            centerText.style.fontFamily = mainFontFull;
+            centerText.style.fontWeight = mainWeight;
+            centerText.style.letterSpacing = `${spacingVal}px`;
+
+            const r = Math.max(0.5, config.strokeWidth / 2); 
+            fDilate.setAttribute('radius', r);
+            fErode.setAttribute('radius', r);
+            fCenterDilate.setAttribute('radius', r/2);
+            fCenterErode.setAttribute('radius', r/2);
+
+            floodDilate.setAttribute('flood-color', config.mainColor);
+            floodErode.setAttribute('flood-color', config.mainColor);
+            floodCenter.setAttribute('flood-color', config.mainColor);
+
+            let activeFilterId = '';
+            if (config.strokeAlign === 'inner') activeFilterId = 'url(#filter-erode)';
+            else if (config.strokeAlign === 'outer') activeFilterId = 'url(#filter-dilate)';
+            else activeFilterId = 'url(#filter-center)';
+
+            const dropShadow = config.glowIntensity > 0 
+                ? `drop-shadow(0 0 ${config.glowIntensity/5}px ${config.mainColor}) drop-shadow(0 0 ${config.glowIntensity/1.5}px ${config.mainColor}) drop-shadow(0 0 ${config.glowIntensity*2}px ${config.mainColor})` 
+                : 'none';
+
+            updateWatermark();
+
+            let count = Math.max(1, Math.floor(config.stackCount));
+            if(count % 2 === 0) count++;
+            const totalH = count * config.mainSize + (count - 1) * config.stackGap;
+            const startY = (1200 - totalH) / 2 + config.mainSize/2;
+
+            while (scanGroup.firstChild) { scanGroup.removeChild(scanGroup.firstChild); }
+
+            for(let i = 0; i < count; i++) {
+                let alpha = 0;
+                if (scanOffset === -9999) { alpha = 1.0; } 
+                else if (scanOffset === 9999) { alpha = 0; } 
+                else {
+                    const dist = scanOffset - i;
+                    if (dist >= 0 && dist <= config.trailLen) {
+                        const norm = 1 - (dist / config.trailLen); 
+                        alpha = (x => x === 1 ? 1 : 1 - Math.pow(2, -10 * x))(norm);
+                    } else { alpha = 0; }
+                }
+                
+                const finalAlpha = alpha * opacityVal;
+                
+                if (finalAlpha < 0.001) continue;
+
+                const yOffset = startY + i * (config.mainSize + config.stackGap);
+                
+                const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                textEl.textContent = config.mainText;
+                textEl.setAttribute('x', "800");
+                textEl.setAttribute('y', yOffset);
+                textEl.setAttribute('text-anchor', "middle");
+                textEl.setAttribute('dominant-baseline', "central");
+                textEl.setAttribute('alignment-baseline', "central");
+                textEl.setAttribute('fill', config.mainColor); 
+                
+                textEl.style.fontSize = `${config.mainSize}px`;
+                textEl.style.fontFamily = mainFontFull;
+                textEl.style.fontWeight = mainWeight;
+                textEl.style.opacity = finalAlpha; 
+                textEl.style.letterSpacing = `${spacingVal}px`;
+                
+                if (config.glowIntensity > 0) {
+                    textEl.style.filter = `${activeFilterId} ${dropShadow}`; 
+                } else {
+                    textEl.setAttribute('filter', activeFilterId);
+                }
+                scanGroup.appendChild(textEl);
+            }
+        }
+
+        function updateWatermark() {
+            while (watermarkGroup.firstChild) { watermarkGroup.removeChild(watermarkGroup.firstChild); }
+            if(!config.bgTextStr) return;
+
+            const wm = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            wm.textContent = config.bgTextStr;
+            wm.setAttribute('x', "0"); 
+            wm.setAttribute('y', "0"); 
+            wm.setAttribute('text-anchor', "middle");
+            wm.setAttribute('dominant-baseline', "central"); 
+            wm.setAttribute('alignment-baseline', "central");
+            wm.setAttribute('fill', config.bgTextColor);
+            
+            const bgFontFull = config.bgFont.includes('CustomFont') ? config.bgFont : config.bgFont;
+            const bgWeight = config.bgFont.includes('CustomFont') ? 'normal' : config.bgWeight;
+
+            wm.style.fontSize = `${config.bgTextSize}px`;
+            wm.style.fontFamily = bgFontFull;
+            wm.style.fontWeight = bgWeight;
+            wm.style.letterSpacing = `${config.bgTextSpace}px`;
+            if(config.bgItalic) wm.style.fontStyle = 'italic';
+
+            const finalYOffset = config.bgOffY; 
+
+            watermarkGroup.setAttribute('transform', 
+                `translate(${800 + config.bgOffX}, ${600 + finalYOffset}) scale(${config.bgScaleX}, ${config.bgScaleY})`
+            );
+            watermarkGroup.appendChild(wm);
+        }
+
+        function previewLoop() {
+            if (!recorder.isRecording) updateSVG();
+            requestAnimationFrame(previewLoop);
+        }
+        requestAnimationFrame(previewLoop);
+
+        // === Rasterize SVG to Canvas (for export) ===
+        function rasterizeSVG() {
+            return new Promise(resolve => {
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const img = new Image();
+                img.onload = () => {
+                    exportCtx.clearRect(0, 0, 1600, 1200);
+                    drawExportBackground(exportCtx, 1600, 1200); 
+                    exportCtx.drawImage(img, 0, 0);
+                    resolve();
+                };
+                img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+            });
+        }
+
+        // === UI BINDING ===
+        const hiddenFontInput = document.getElementById('HiddenFontInput');
+        
+        function updateWeightControlState(selectId, weightInputId) {
+            const select = document.getElementById(selectId);
+            const input = document.getElementById(weightInputId);
+            const isCustom = select.value.includes('CustomFont');
+            input.disabled = isCustom;
+            input.parentElement.style.opacity = isCustom ? '0.5' : '1';
+        }
+
+        function setupFontSelector(selectId, configKey, weightInputId) {
+            const select = document.getElementById(selectId);
+            select.addEventListener('change', e => {
+                if (e.target.value === 'upload') {
+                    currentFontTarget = { selectId, configKey, weightInputId };
+                    hiddenFontInput.value = '';
+                    hiddenFontInput.click();
+                    select.selectedIndex = 2; 
+                } else {
+                    config[configKey] = e.target.value;
+                    updateWeightControlState(selectId, weightInputId);
+                }
+            });
+            updateWeightControlState(selectId, weightInputId);
+        }
+
+        setupFontSelector('MainFontInput', 'mainFont', 'MainWeightInput');
+        setupFontSelector('BgFontInput', 'bgFont', 'BgWeightInput');
+
+        hiddenFontInput.addEventListener('change', async e => {
+            if (!e.target.files[0] || !currentFontTarget) return;
+            const file = e.target.files[0];
+            try {
+                const buffer = await file.arrayBuffer();
+                const fontName = `CustomFont_${++customFontCount}`;
+                const font = new FontFace(fontName, buffer);
+                await font.load();
+                document.fonts.add(font);
+                const val = `"${fontName}", sans-serif`;
+                const sel = document.getElementById(currentFontTarget.selectId);
+                const opt = document.createElement('option');
+                opt.value = val; opt.text = `📂 ${file.name}`;
+                sel.add(opt, 2); sel.value = val;
+                config[currentFontTarget.configKey] = val;
+                updateWeightControlState(currentFontTarget.selectId, currentFontTarget.weightInputId);
+            } catch (err) { alert("字体加载失败"); }
+        });
+
+        function bind(id, key) {
+            const el = document.getElementById(id);
+            const displayId = id.replace('Input', 'Val');
+            const display = document.getElementById(displayId);
+            if(el) {
+                el.addEventListener('input', e => {
+                    const val = el.type === 'checkbox' ? el.checked : 
+                                (el.type === 'range' ? parseFloat(e.target.value) : e.target.value);
+                    config[key] = val;
+                    if(display) {
+                        if(key.toLowerCase().includes('duration') || key.toLowerCase().includes('delay')) {
+                            display.innerText = val + 's';
+                        } else {
+                            display.innerText = val;
+                        }
+                    }
+                    if(key === 'bgScaleX' && config.bgLockRatio) {
+                        config.bgScaleY = val;
+                        document.getElementById('BgScaleYInput').value = val;
+                    }
+                });
+            }
+        }
+
+        function bindSelect(id, key) {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('change', e => config[key] = e.target.value);
+        }
+
+        ['MainSize', 'MainWeight', 'StrokeWidth', 'StackCount', 'StackGap', 
+         'Speed', 'GlowIntensity', 'TrailLen', 'BgWeight', 'BgTextSize', 
+         'BgTextSpace', 'BgScaleX', 'BgScaleY', 'BgOffX', 'BgOffY', 'PosX', 'PosY',
+         'StartSpacing', 'EndSpacing', 'SpacingDuration', 'ScanDelay',
+         'StartOpacity', 'EndOpacity', 'OpacityDuration', 'OpacityDelay'].forEach(k => bind(k+'Input', k.charAt(0).toLowerCase() + k.slice(1)));
+
+        bindSelect('StrokeAlignInput', 'strokeAlign');
+        bindSelect('EasingInput', 'spacingEasing');
+
+        document.getElementById('MainText').addEventListener('input', e => config.mainText = e.target.value);
+        document.getElementById('BgTextStr').addEventListener('input', e => config.bgTextStr = e.target.value);
+        document.getElementById('MainColor').addEventListener('input', e => config.mainColor = e.target.value);
+        document.getElementById('BgTextColor').addEventListener('input', e => config.bgTextColor = e.target.value);
+        document.getElementById('PreviewToggle').addEventListener('change', e => config.previewMode = e.target.checked);
+        document.getElementById('BgItalicToggle').addEventListener('change', e => config.bgItalic = e.target.checked);
+
+        document.getElementById('BgLockRatio').addEventListener('change', e => {
+            config.bgLockRatio = e.target.checked;
+            document.getElementById('BgScaleYRow').style.display = config.bgLockRatio ? 'none' : 'flex';
+            if(config.bgLockRatio) { config.bgScaleY = config.bgScaleX; document.getElementById('BgScaleYInput').value = config.bgScaleX; }
+        });
+
+        // Background mode changes — sync to SVG
+        document.getElementById('BgMode').addEventListener('change', e => {
+            syncBgToSVG();
+        });
+        document.getElementById('PatternColor').addEventListener('input', e => {
+            config.patternColor = e.target.value;
+            updateSVGPatternCache();
+        });
+
+        // 播放控制
+        function playAnim() {
+            config.isAnimating = true;
+            config.animStartTime = performance.now();
+            config.previewMode = false;
+            document.getElementById('PreviewToggle').checked = false;
+        }
+        document.getElementById('BtnPlay').addEventListener('click', playAnim);
+
+        // Recorder: when starting record, also trigger animation
+        recorder.onStateChange = (recording) => {
+            if (recording) {
+                playAnim();
+                config.animStartTime = 0;
+            }
+        };
+    </script>
+</body>
+</html>

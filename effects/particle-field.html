@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>粒子场</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="../shared/mp4-muxer.js"></script>
+    <link rel="stylesheet" href="../shared/base.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=Orbitron:wght@900&display=swap" rel="stylesheet">
+
+    <style>
+        canvas {
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #333;
+            background: #000; width: 100%; max-width: 1600px; aspect-ratio: 4/3; display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="app-title">✨ 粒子场 <span style="font-size:9px; color:#666">v1.0</span></div>
+            <div class="version-badge">NEW</div>
+        </div>
+
+        <div class="controls-container">
+
+            <div class="control-group">
+                <div class="group-title">🔧 粒子参数</div>
+                <div class="row stack">
+                    <div class="label-line"><span>粒子数量</span><span id="CountVal">200</span></div>
+                    <input type="range" id="CountInput" min="10" max="1000" step="10" value="200">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>粒子大小</span><span id="SizeVal">3</span></div>
+                    <input type="range" id="SizeInput" min="1" max="20" step="0.5" value="3">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>运动速度</span><span id="SpeedVal">1.0</span></div>
+                    <input type="range" id="SpeedInput" min="0.1" max="5" step="0.1" value="1.0">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>连线距离</span><span id="LinkDistVal">120</span></div>
+                    <input type="range" id="LinkDistInput" min="0" max="300" step="10" value="120">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="group-title">🎨 颜色设置</div>
+                <div class="row">
+                    <span style="font-size:12px; color:#aaa;">粒子颜色</span>
+                    <input type="color" id="ColorInput" value="#00ffaa">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>连线透明度</span><span id="LinkOpVal">0.3</span></div>
+                    <input type="range" id="LinkOpInput" min="0" max="1" step="0.05" value="0.3">
+                </div>
+            </div>
+
+            <!-- 背景和导出面板由 shared/controls.js 自动注入 -->
+            <div id="shared-controls-placeholder"></div>
+
+        </div>
+    </div>
+
+    <div class="preview-area">
+        <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
+        <canvas id="mainCanvas" width="1600" height="1200"></canvas>
+    </div>
+
+    <script type="module">
+        import { Recorder } from '../shared/recorder.js';
+        import { Background } from '../shared/background.js';
+        import { lerp, hexToRgba } from '../shared/utils.js';
+        import { injectSharedControls } from '../shared/controls.js';
+
+        // 注入共享面板
+        injectSharedControls({ defaultBgMode: '#000000' });
+
+        // Canvas setup
+        const canvas = document.getElementById('mainCanvas');
+        const SCALE = 2;  // 2x 超采样，预览不变，录制更清晰
+        canvas.width = 1600 * SCALE;
+        canvas.height = 1200 * SCALE;
+        const ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
+        ctx.scale(SCALE, SCALE);
+
+        // Effect config
+        const config = {
+            count: 200,
+            size: 3,
+            speed: 1.0,
+            linkDist: 120,
+            color: '#00ffaa',
+            linkOpacity: 0.3,
+        };
+
+        let animStartTime = performance.now();
+        let particles = [];
+
+        // Initialize shared modules
+        const bg = new Background({
+            modeSelectId: '#BgMode',
+            uploadInputId: '#BgUpload',
+            patternColorId: '#PatternColor',
+            patternRowId: '#PatternColorRow',
+            defaultMode: '#000000',
+            defaultPatternColor: '#333333',
+            baseWidth: 1600,
+            baseHeight: 1200,
+            scaleFactor: SCALE,
+        });
+
+        const recorder = new Recorder({
+            canvas: canvas,
+            onFrame: (timeMs) => {
+                drawFrame(timeMs);
+            },
+            fileName: 'ParticleField',
+            width: 1600 * SCALE,
+            height: 1200 * SCALE,
+        });
+
+        // === PARTICLE SYSTEM ===
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < config.count; i++) {
+                particles.push({
+                    x: Math.random() * 1600,
+                    y: Math.random() * 1200,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                });
+            }
+        }
+        initParticles();
+
+        function updateParticles(dt) {
+            const speed = config.speed;
+            for (const p of particles) {
+                p.x += p.vx * speed * dt * 60;
+                p.y += p.vy * speed * dt * 60;
+                if (p.x < 0) p.x = 1600;
+                if (p.x > 1600) p.x = 0;
+                if (p.y < 0) p.y = 1200;
+                if (p.y > 1200) p.y = 0;
+            }
+        }
+
+        function drawFrame(timeMs) {
+            const dt = 1 / 60;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 背景处理
+            if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            if (bg.mode !== 'transparent') {
+                bg.draw(ctx, timeMs, recorder.isRecording, recorder.format);
+            }
+
+            updateParticles(dt);
+
+            // Draw links
+            if (config.linkDist > 0) {
+                const maxDist = config.linkDist;
+                ctx.strokeStyle = hexToRgba(config.color, config.linkOpacity);
+                ctx.lineWidth = 1;
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < maxDist) {
+                            ctx.globalAlpha = 1 - dist / maxDist;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            // Draw particles
+            ctx.fillStyle = config.color;
+            for (const p of particles) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, config.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Preview loop
+        function previewLoop() {
+            if (!recorder.isRecording) {
+                const elapsed = performance.now() - animStartTime;
+                drawFrame(elapsed);
+            }
+            requestAnimationFrame(previewLoop);
+        }
+        requestAnimationFrame(previewLoop);
+
+        // === UI BINDINGS ===
+        document.getElementById('CountInput').addEventListener('input', e => {
+            config.count = parseInt(e.target.value);
+            document.getElementById('CountVal').innerText = config.count;
+            initParticles();
+        });
+        document.getElementById('SizeInput').addEventListener('input', e => {
+            config.size = parseFloat(e.target.value);
+            document.getElementById('SizeVal').innerText = config.size;
+        });
+        document.getElementById('SpeedInput').addEventListener('input', e => {
+            config.speed = parseFloat(e.target.value);
+            document.getElementById('SpeedVal').innerText = config.speed;
+        });
+        document.getElementById('LinkDistInput').addEventListener('input', e => {
+            config.linkDist = parseInt(e.target.value);
+            document.getElementById('LinkDistVal').innerText = config.linkDist;
+        });
+        document.getElementById('ColorInput').addEventListener('input', e => {
+            config.color = e.target.value;
+        });
+        document.getElementById('LinkOpInput').addEventListener('input', e => {
+            config.linkOpacity = parseFloat(e.target.value);
+            document.getElementById('LinkOpVal').innerText = config.linkOpacity;
+        });
+    </script>
+</body>
+</html>

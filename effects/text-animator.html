@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>效果文字生成器</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="../shared/mp4-muxer.js"></script>
+
+    <link rel="stylesheet" href="../shared/base.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700;900&family=Noto+Serif+SC:wght@200;300;400;500;700;900&family=Orbitron:wght@900&display=swap" rel="stylesheet">
+
+    <style>
+        /* text-animator 专属: canvas 样式 */
+        canvas {
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #333;
+            background: transparent; width: 100%; max-width: 1440px; aspect-ratio: 4/3; display: block;
+        }
+        @media (max-width: 900px) {
+            canvas { max-width: 100%; max-height: 100%; width: auto; height: auto; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="app-title">⚡ 科技动效生成器 <span style="font-size:9px; color:#666">v60.6</span></div>
+            <div style="font-size:10px; color:#444">BG PATTERNS</div>
+        </div>
+
+        <div class="controls-container">
+            
+            <div class="control-group">
+                <div class="group-title">📝 内容编辑</div>
+                <div class="row">
+                    <textarea id="TextInput" rows="2">Manus&#10;核心算力发布</textarea>
+                </div>
+                <div class="row">
+                    <select id="FontSelect" style="flex:2">
+                        <option value="'Noto Sans SC', sans-serif">思源黑体 (Noto Sans)</option>
+                        <option value="'Noto Serif SC', serif">思源宋体 (Noto Serif)</option>
+                        <option value="'Orbitron', sans-serif">Orbitron (科技英文)</option>
+                        <option value="Microsoft YaHei">微软雅黑</option>
+                        <option value="custom">📂 上传字体...</option>
+                    </select>
+                    <input type="file" id="FontUpload" accept=".ttf,.otf" style="display:none">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="group-title">
+                    <span>🎨 填充设置 (Fill)</span>
+                </div>
+                <div class="row">
+                    <select id="FillSelect" style="flex:1">
+                        <option value="solid">纯色填充 (Solid)</option>
+                        <option value="gradient" selected>🌈 线性渐变 (Gradient)</option>
+                    </select>
+                </div>
+                <div id="GradientControls" style="display:block; background:#1a1a1a; padding:8px; border-radius:4px; margin-top:5px; border:1px solid #333;">
+                    <div class="row">
+                        <div class="label-line" style="flex:1; font-size:10px;"><span>颜色 1 (Start)</span></div>
+                        <input type="color" id="GradColor1" value="#ffffff">
+                        <div style="width:10px"></div>
+                        <div class="label-line" style="flex:1; font-size:10px;"><span>颜色 2 (End)</span></div>
+                        <input type="color" id="GradColor2" value="#2b2b2b">
+                    </div>
+                    
+                    <div class="row">
+                        <div style="flex:1" class="stack">
+                             <div class="label-line" style="font-size:10px;"><span>颜色1 透明度</span><span id="GradOp1Val">100%</span></div>
+                             <input type="range" id="GradOp1" min="0" max="100" value="100">
+                        </div>
+                        <div style="width:10px"></div>
+                        <div style="flex:1" class="stack">
+                             <div class="label-line" style="font-size:10px;"><span>颜色2 透明度</span><span id="GradOp2Val">100%</span></div>
+                             <input type="range" id="GradOp2" min="0" max="100" value="100">
+                        </div>
+                    </div>
+
+                    <div class="row stack">
+                        <div class="label-line"><span>渐变角度 (Angle)</span><span id="GradAngleVal">0°</span></div>
+                        <input type="range" id="GradAngle" min="0" max="360" value="0">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>渐变偏移 (Offset)</span><span id="GradOffsetVal">40%</span></div>
+                        <input type="range" id="GradOffset" min="0" max="100" value="40">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>过渡宽度 (Width)</span><span id="GradWidthVal">66%</span></div>
+                        <input type="range" id="GradWidth" min="0" max="100" value="66">
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="group-title">
+                    <span>▩ 纹理叠加 (Texture)</span>
+                </div>
+                <div class="row">
+                    <select id="TextureSelect" style="flex:1">
+                        <option value="none">无纹理</option>
+                        <option value="scanline" selected>光栅 (Scanline)</option>
+                        <option value="pixel">像素 (Pixel)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="group-title">📐 排版与位置</div>
+                <div class="row">
+                    <select id="TextAlign" style="flex:1">
+                        <option value="left">左对齐</option>
+                        <option value="center" selected>居中对齐</option>
+                        <option value="right">右对齐</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <select id="ExpandDirX" style="flex:1">
+                        <option value="center" selected>X轴: 中心展开 (↔)</option>
+                        <option value="left">X轴: 向右展开 (→)</option>
+                        <option value="right">X轴: 向左展开 (←)</option>
+                    </select>
+                    <select id="ExpandDirY" style="flex:1">
+                        <option value="center" selected>Y轴: 中心展开 (↕)</option>
+                        <option value="top">Y轴: 向下展开 (↓)</option>
+                        <option value="bottom">Y轴: 向下展开 (↑)</option>
+                    </select>
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>整体大小 (Size)</span><span id="SizeVal">150</span></div>
+                    <input type="range" id="SizeInput" min="50" max="400" value="150">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>字体粗细 (Weight)</span><span id="WeightVal">900</span></div>
+                    <input type="range" id="WeightInput" min="100" max="900" step="100" value="900">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>水平位置 X</span><span id="PosXVal">0</span></div>
+                    <input type="range" id="PosXInput" min="-700" max="700" value="0">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>垂直位置 Y</span><span id="PosYVal">0</span></div>
+                    <input type="range" id="PosYInput" min="-500" max="500" value="0">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="group-title">✨ 视觉特效</div>
+                
+                <div class="sub-title">
+                    <span>💡 智能辉光 (Luma Glow)</span>
+                    <input type="checkbox" id="GlowToggle" checked>
+                </div>
+                <div class="row">
+                    <input type="color" id="GlowColor" value="#ffffff">
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>辉光范围 (Blur)</span><span id="GlowBlurVal">30</span></div>
+                        <input type="range" id="GlowBlur" min="0" max="100" value="30">
+                    </div>
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>辉光强度 (Opacity)</span><span id="GlowOpacityVal">0.6</span></div>
+                    <input type="range" id="GlowOpacity" min="0" max="1" step="0.1" value="0.6">
+                </div>
+
+                <div style="border-top: 1px dashed #333; margin: 12px 0;"></div>
+
+                <div class="sub-title">
+                    <span>🌑 投影 (Shadow)</span>
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>偏移 X</span><span id="ShadowXVal">-22</span></div>
+                    <input type="range" id="ShadowXInput" min="-50" max="50" value="-22">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>偏移 Y</span><span id="ShadowYVal">0</span></div>
+                    <input type="range" id="ShadowYInput" min="-50" max="50" value="0">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>阴影虚化</span><span id="ShadowBlurVal">30</span></div>
+                    <input type="range" id="ShadowBlurInput" min="0" max="50" value="30">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>阴影浓度</span><span id="ShadowOpVal">0.8</span></div>
+                    <input type="range" id="ShadowOpInput" min="0" max="1" step="0.1" value="0.8">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="group-title">
+                    <span>⚡ 动画控制</span>
+                    <button class="btn btn-primary" style="width:auto; padding:4px 10px;" id="BtnPlay">▶ 播放</button>
+                </div>
+                <div class="row">
+                    <select id="AnimType">
+                        <option value="slideUp">从下浮现 (Slide Up)</option>
+                        <option value="fade" selected>纯淡入 (Fade In)</option>
+                        <option value="zoom">中心缩放 (Zoom In)</option>
+                        <option value="none">无 (仅变化字距)</option>
+                    </select>
+                </div>
+                
+                <div class="anim-panel end">
+                    <div class="anim-header"><span style="color:var(--accent)">目标状态 (结束)</span></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>字间距 (Spacing)</span><span id="EndSpacingVal">-22</span></div>
+                        <input type="range" id="EndSpacingInput" min="-200" max="600" value="-22">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>行间距 (Line)</span><span id="EndLineVal">-5</span></div>
+                        <input type="range" id="EndLineInput" min="-100" max="500" value="-5">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>不透明度</span><span id="EndOpVal">100%</span></div>
+                        <input type="range" id="EndOpInput" min="0" max="100" value="100">
+                    </div>
+                </div>
+
+                <div class="anim-panel start">
+                    <div class="anim-header"><span style="color:var(--danger)">初始状态 (开始)</span></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>字间距</span><span id="StartSpacingVal">-80</span></div>
+                        <input type="range" id="StartSpacingInput" min="-200" max="600" value="-80">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>行间距</span><span id="StartLineVal">-5</span></div>
+                        <input type="range" id="StartLineInput" min="-100" max="500" value="-5">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>不透明度</span><span id="StartOpVal">0%</span></div>
+                        <input type="range" id="StartOpInput" min="0" max="100" value="0">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>动画总时长 (秒)</span><span id="DurVal">2s</span></div>
+                        <input type="range" id="AnimDuration" min="0.5" max="8" step="0.5" value="2">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>透明度耗时 (Op Dur)</span><span id="OpDurVal">2s</span></div>
+                        <input type="range" id="OpacityDuration" min="0.1" max="8" step="0.1" value="2">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>透明度曲线 (Op Curve)</span></div>
+                        <select id="OpCurveSelect">
+                            <option value="linear">📏 线性匀速 (Linear)</option>
+                            <option value="easeIn">🐢 先慢后快 (Ease In)</option>
+                            <option value="easeOut" selected>🚀 先快后慢 (Ease Out)</option>
+                            <option value="easeInOut">〰️ 丝滑缓动 (Ease In-Out)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 背景和导出面板由 shared/controls.js 自动注入 -->
+            <div id="shared-controls-placeholder"></div>
+            
+            <div style="height:20px;"></div>
+        </div>
+    </div>
+
+    <div class="preview-area" id="PreviewArea">
+        <div id="RecIndicator"><div class="rec-dot"></div> 正在录制 (帧同步)</div>
+        <canvas id="mainCanvas"></canvas>
+    </div>
+
+    <script type="module">
+        import { Recorder } from '../shared/recorder.js';
+        import { Background } from '../shared/background.js';
+        import { lerp, hexToRgbaStr, getLightness } from '../shared/utils.js';
+        import { injectSharedControls } from '../shared/controls.js';
+
+        injectSharedControls({ defaultBgMode: '#000000' });
+
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
+
+        const SCALE_FACTOR = 2;
+
+        let config = {
+            text: "Manus\n核心算力发布",
+            fontFamily: "'Noto Sans SC', sans-serif", fontWeight: "900", fontSize: 150,
+            
+            fillMode: 'gradient',
+            gradColor1: '#ffffff', gradOp1: 1.0, 
+            gradColor2: '#2b2b2b', gradOp2: 1.0, 
+            gradAngle: 0, gradWidth: 66, gradOffset: 40,
+
+            textureMode: 'scanline',
+            textAlign: 'center', expandDirX: 'center', expandDirY: 'center', posX: 0, posY: 0,
+            
+            glowEnabled: true, glowBlur: 30, glowColor: '#ffffff', glowOpacity: 0.6,
+            shadowX: -22, shadowY: 0, shadowBlur: 30, shadowOpacity: 0.8, 
+            
+            animType: 'fade', endSpacing: -22, endLine: -5, endOp: 1, startSpacing: -80, startLine: -5, startOp: 0,
+            duration: 2, 
+            opacityDuration: 2,
+            opCurve: 'easeOut',
+
+            isAnimating: false, 
+            startTime: 0, 
+            
+            currentSpacing: -22, currentLine: -5, currentOpacity: 1, currentOffsetY: 0, currentScale: 1
+        };
+
+        let texturePattern = null; 
+        let layoutCache = null; 
+
+        // === Background ===
+        const bg = new Background({
+            modeSelectId: '#BgMode',
+            uploadInputId: '#BgUpload',
+            patternColorId: '#PatternColor',
+            patternRowId: '#PatternColorRow',
+            defaultMode: '#000000',
+            defaultPatternColor: '#333333',
+            baseWidth: 1440,
+            baseHeight: 1080,
+            scaleFactor: SCALE_FACTOR,
+        });
+
+        // === Recorder ===
+        const recorder = new Recorder({
+            canvas,
+            onFrame: (timeMs) => {
+                renderFrame(timeMs);
+            },
+            fileName: 'TextAnim',
+            width: 1440 * SCALE_FACTOR,
+            height: 1080 * SCALE_FACTOR,
+        });
+
+        // === Init ===
+        function init() {
+            canvas.width = 1440 * SCALE_FACTOR;
+            canvas.height = 1080 * SCALE_FACTOR;
+            ctx.scale(SCALE_FACTOR, SCALE_FACTOR);
+            updateTexture();
+            document.getElementById('TextInput').value = config.text;
+            calculateLayout();
+            requestAnimationFrame(previewLoop);
+            updateParams();
+        }
+
+        // === 核心渲染逻辑 ===
+        function renderFrame(timestamp) {
+            ctx.save(); 
+            ctx.setTransform(1, 0, 0, 1, 0, 0); 
+            ctx.clearRect(0, 0, canvas.width, canvas.height); 
+            ctx.restore();
+
+            bg.draw(ctx, timestamp, recorder.isRecording, recorder.format);
+
+            const elapsed = timestamp / 1000;
+
+            if (config.isAnimating || recorder.isRecording) {
+                const safeDuration = config.duration > 0.1 ? config.duration : 0.1;
+                const progress = Math.min(elapsed / safeDuration, 1);
+                const ease = 1 - Math.pow(1 - progress, 4); 
+                
+                const safeOpDur = config.opacityDuration > 0.1 ? config.opacityDuration : 0.1;
+                const opProgress = Math.min(elapsed / safeOpDur, 1);
+                
+                let opEase;
+                switch(config.opCurve) {
+                    case 'linear': opEase = opProgress; break;
+                    case 'easeIn': opEase = Math.pow(opProgress, 3); break; 
+                    case 'easeOut': opEase = 1 - Math.pow(1 - opProgress, 3); break; 
+                    case 'easeInOut': 
+                        opEase = opProgress < 0.5 ? 4 * opProgress * opProgress * opProgress : 1 - Math.pow(-2 * opProgress + 2, 3) / 2; 
+                        break;
+                    default: opEase = 1 - Math.pow(1 - opProgress, 3); 
+                }
+
+                const lockTime = 0.9;
+                let spacingEase = progress >= lockTime ? 1 : (1 - Math.pow(1 - (progress / lockTime), 4));
+                const rawSpacing = lerp(config.startSpacing, config.endSpacing, spacingEase);
+                const rawLine = lerp(config.startLine, config.endLine, spacingEase);
+
+                if (Math.abs(rawSpacing - config.endSpacing) < 0.01) config.currentSpacing = config.endSpacing;
+                else config.currentSpacing = rawSpacing;
+
+                if (Math.abs(rawLine - config.endLine) < 0.01) config.currentLine = config.endLine;
+                else config.currentLine = rawLine;
+
+                config.currentOpacity = lerp(config.startOp, config.endOp, opEase);
+
+                if (config.animType === 'slideUp') { config.currentOffsetY = (1 - ease) * 150; config.currentScale = 1; }
+                else if (config.animType === 'fade') { config.currentOffsetY = 0; config.currentScale = 1; }
+                else if (config.animType === 'zoom') { config.currentOffsetY = 0; config.currentScale = 1.5 - (ease * 0.5); }
+                else { config.currentOffsetY = 0; config.currentScale = 1; }
+                
+                if (!recorder.isRecording && progress >= 1 && opProgress >= 1) config.isAnimating = false;
+            } else {
+                config.currentSpacing = config.endSpacing; config.currentLine = config.endLine;
+                config.currentOpacity = config.endOp; config.currentOffsetY = 0; config.currentScale = 1;
+            }
+
+            if (layoutCache) drawText();
+        }
+
+        let previewStartTime = 0;
+        function previewPlay() {
+            config.isAnimating = true;
+            previewStartTime = performance.now();
+        }
+        function previewLoop() {
+            if (!recorder.isRecording) {
+                let time = 0;
+                if (config.isAnimating) {
+                    time = performance.now() - previewStartTime;
+                } else {
+                    time = 99999; 
+                }
+                renderFrame(time);
+            }
+            requestAnimationFrame(previewLoop);
+        }
+
+        function updateTexture() {
+            const mode = document.getElementById('TextureSelect').value; config.textureMode = mode;
+            const pCanvas = document.createElement('canvas'); const pCtx = pCanvas.getContext('2d'); const scale = SCALE_FACTOR;
+            
+            if (mode === 'scanline') {
+                pCanvas.width = 10 * scale; pCanvas.height = 4 * scale; pCtx.scale(scale, scale);
+                pCtx.clearRect(0,0,10,4); 
+                pCtx.fillStyle = 'rgba(0,0,0,0.5)'; 
+                pCtx.fillRect(0,2,10,2);
+                texturePattern = ctx.createPattern(pCanvas, 'repeat'); 
+                try { texturePattern.setTransform(new DOMMatrix().scale(1/scale)); } catch(_){}
+            } else if (mode === 'pixel') {
+                pCanvas.width = 4 * scale; pCanvas.height = 4 * scale; pCtx.scale(scale, scale);
+                pCtx.clearRect(0,0,4,4);
+                pCtx.fillStyle = 'rgba(0,0,0,0.5)'; 
+                pCtx.fillRect(0,0,2,2); pCtx.fillRect(2,2,2,2);
+                texturePattern = ctx.createPattern(pCanvas, 'repeat');
+                try { texturePattern.setTransform(new DOMMatrix().scale(1/scale)); } catch(_){}
+            } else { texturePattern = null; }
+        }
+
+        function calculateLayout() {
+            ctx.font = `${config.fontWeight} ${config.fontSize}px ${config.fontFamily}`;
+            const lines = config.text.split('\n');
+            layoutCache = lines.map(line => {
+                const chars = line.split(''); const charWidths = chars.map(char => ctx.measureText(char).width);
+                return { chars, charWidths };
+            });
+        }
+
+        function drawText() {
+            ctx.save();
+            ctx.translate(config.posX, config.posY);
+            ctx.globalAlpha = Math.max(0, Math.min(1, config.currentOpacity));
+
+            if (config.currentOpacity <= 0.001) { ctx.restore(); return; }
+
+            if (config.currentScale !== 1) {
+                ctx.translate(1440/2, 1080/2); ctx.scale(config.currentScale, config.currentScale); ctx.translate(-1440/2, -1080/2);
+            }
+            ctx.font = `${config.fontWeight} ${config.fontSize}px ${config.fontFamily}`;
+            ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+
+            const lines = layoutCache;
+            let maxFinalWidth = 0; let maxCurrentWidth = 0;
+            const finalTotalHeight = lines.length * config.fontSize + (lines.length - 1) * config.endLine;
+            const currentTotalHeight = lines.length * config.fontSize + (lines.length - 1) * config.currentLine;
+
+            const lineLayouts = lines.map(line => {
+                const currentW = line.charWidths.reduce((a, b) => a + b, 0) + (line.charWidths.length - 1) * config.currentSpacing;
+                if (currentW > maxCurrentWidth) maxCurrentWidth = currentW;
+                const finalW = line.charWidths.reduce((a, b) => a + b, 0) + (line.charWidths.length - 1) * config.endSpacing;
+                if (finalW > maxFinalWidth) maxFinalWidth = finalW;
+                return { ...line, currentW, finalW };
+            });
+
+            let anchorX = 0;
+            if (config.expandDirX === 'center') anchorX = 1440 / 2;
+            else if (config.expandDirX === 'left') anchorX = (1440 - maxFinalWidth) / 2;
+            else if (config.expandDirX === 'right') anchorX = (1440 + maxFinalWidth) / 2;
+
+            let visualCenterY = (1080 / 2) + config.currentOffsetY;
+            let drawStartY = 0;
+            if (config.expandDirY === 'center') drawStartY = visualCenterY - (currentTotalHeight / 2);
+            else if (config.expandDirY === 'top') drawStartY = visualCenterY - (finalTotalHeight / 2);
+            else if (config.expandDirY === 'bottom') drawStartY = visualCenterY + (finalTotalHeight / 2) - currentTotalHeight;
+
+            lineLayouts.forEach((line, lineIndex) => {
+                const y = drawStartY + lineIndex * (config.fontSize + config.currentLine) + (config.fontSize/2);
+                let currentLineStartX = 0;
+                let blockLeftEdge = 0;
+                if (config.expandDirX === 'center') blockLeftEdge = anchorX - maxCurrentWidth / 2;
+                else if (config.expandDirX === 'left') blockLeftEdge = anchorX;
+                else if (config.expandDirX === 'right') blockLeftEdge = anchorX - maxCurrentWidth;
+
+                if (config.textAlign === 'left') currentLineStartX = blockLeftEdge;
+                else if (config.textAlign === 'center') currentLineStartX = blockLeftEdge + (maxCurrentWidth - line.currentW) / 2;
+                else if (config.textAlign === 'right') currentLineStartX = blockLeftEdge + (maxCurrentWidth - line.currentW);
+
+                let charX = currentLineStartX;
+                line.chars.forEach((char, charIndex) => {
+                    const charRealWidth = line.charWidths[charIndex];
+                    
+                    // 1. Shadow
+                    ctx.save(); 
+                    ctx.shadowColor = `rgba(0, 0, 0, ${config.shadowOpacity})`;
+                    ctx.shadowBlur = config.shadowBlur; 
+                    ctx.shadowOffsetX = config.shadowX; 
+                    ctx.shadowOffsetY = config.shadowY;
+                    ctx.fillStyle = '#000000'; 
+                    ctx.translate(charX, y); ctx.fillText(char, 0, 0); 
+                    ctx.restore();
+
+                    // 2. Glow
+                    if (config.glowEnabled) {
+                        ctx.save(); ctx.globalCompositeOperation = 'screen'; 
+                        let currentGlowStyle;
+                        let currentGlowAlpha = config.currentOpacity * config.glowOpacity;
+
+                        if (config.fillMode === 'gradient') {
+                            const angleRad = (config.gradAngle * Math.PI) / 180;
+                            const vx = Math.cos(angleRad); const vy = Math.sin(angleRad);
+                            const w = charRealWidth; const h = config.fontSize;
+                            const pts = [{x:-w/2,y:-h/2}, {x:w/2,y:-h/2}, {x:w/2,y:h/2}, {x:-w/2,y:h/2}];
+                            let minProj = Infinity, maxProj = -Infinity;
+                            pts.forEach(p => { const proj = p.x*vx + p.y*vy; if(proj<minProj) minProj=proj; if(proj>maxProj) maxProj=proj; });
+                            const span = maxProj - minProj; const transWidth = Math.max(0.1, (config.gradWidth / 100) * span);
+                            const startCenter = maxProj + transWidth/2; const endCenter = minProj - transWidth/2;
+                            const currentCenter = startCenter + (endCenter - startCenter) * (config.gradOffset / 100);
+                            const pStart = currentCenter - transWidth/2; const pEnd = currentCenter + transWidth/2;   
+                            const x1 = pStart * vx; const y1 = pStart * vy; const x2 = pEnd * vx; const y2 = pEnd * vy;
+
+                            const glowGrad = ctx.createLinearGradient(x1, y1, x2, y2);
+                            const l1 = getLightness(config.gradColor1);
+                            const l2 = getLightness(config.gradColor2);
+                            glowGrad.addColorStop(0, hexToRgbaStr(config.glowColor, currentGlowAlpha * l1 * config.gradOp1));
+                            glowGrad.addColorStop(1, hexToRgbaStr(config.glowColor, currentGlowAlpha * l2 * config.gradOp2));
+                            currentGlowStyle = glowGrad;
+                        } else {
+                            currentGlowStyle = hexToRgbaStr(config.glowColor, currentGlowAlpha);
+                        }
+
+                        ctx.translate(charX + charRealWidth/2, y); 
+                        ctx.filter = `blur(${config.glowBlur}px)`;
+                        ctx.fillStyle = currentGlowStyle;
+                        ctx.fillText(char, -charRealWidth/2, 0);
+                        ctx.restore();
+                    }
+
+                    // 3. Fill
+                    ctx.save(); 
+                    ctx.translate(charX, y);
+                    if (config.fillMode === 'gradient') {
+                        const angleRad = (config.gradAngle * Math.PI) / 180;
+                        const vx = Math.cos(angleRad); const vy = Math.sin(angleRad);
+                        const w = charRealWidth; const h = config.fontSize;
+                        const pts = [{x:-w/2,y:-h/2}, {x:w/2,y:-h/2}, {x:w/2,y:h/2}, {x:-w/2,y:h/2}];
+                        let minProj = Infinity, maxProj = -Infinity;
+                        pts.forEach(p => { const proj = p.x*vx + p.y*vy; if(proj<minProj) minProj=proj; if(proj>maxProj) maxProj=proj; });
+                        const span = maxProj - minProj; const transWidth = Math.max(0.1, (config.gradWidth / 100) * span);
+                        const startCenter = maxProj + transWidth/2; const endCenter = minProj - transWidth/2;
+                        const currentCenter = startCenter + (endCenter - startCenter) * (config.gradOffset / 100);
+                        const pStart = currentCenter - transWidth/2; const pEnd = currentCenter + transWidth/2;   
+                        const x1 = pStart * vx; const y1 = pStart * vy; const x2 = pEnd * vx; const y2 = pEnd * vy;
+                        
+                        ctx.translate(charRealWidth/2, 0); 
+                        const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+                        grad.addColorStop(0, hexToRgbaStr(config.gradColor1, config.gradOp1));
+                        grad.addColorStop(1, hexToRgbaStr(config.gradColor2, config.gradOp2));
+                        ctx.fillStyle = grad;
+                        ctx.fillText(char, -charRealWidth/2, 0);
+                    } else {
+                        ctx.fillStyle = '#ffffff'; 
+                        ctx.fillText(char, 0, 0);
+                    }
+                    ctx.restore();
+
+                    // 4. Texture
+                    if (config.textureMode !== 'none' && texturePattern) {
+                        ctx.save();
+                        ctx.fillStyle = texturePattern; 
+                        ctx.translate(charX, y); ctx.fillText(char, 0, 0);
+                        ctx.restore();
+                    }
+
+                    charX += charRealWidth + config.currentSpacing;
+                });
+            });
+            ctx.restore();
+        }
+
+        // === UI Bindings ===
+        function updateParams() {
+            config.fontFamily = document.getElementById('FontSelect').value === 'custom' ? window.customFont : document.getElementById('FontSelect').value;
+            config.fontWeight = document.getElementById('WeightInput').value;
+            config.fontSize = parseInt(document.getElementById('SizeInput').value) || 150;
+            
+            config.textureMode = document.getElementById('TextureSelect').value;
+            config.fillMode = document.getElementById('FillSelect').value; 
+
+            config.textAlign = document.getElementById('TextAlign').value;
+            config.expandDirX = document.getElementById('ExpandDirX').value;
+            config.expandDirY = document.getElementById('ExpandDirY').value;
+            config.posX = parseInt(document.getElementById('PosXInput').value);
+            config.posY = parseInt(document.getElementById('PosYInput').value);
+            config.glowEnabled = document.getElementById('GlowToggle').checked;
+            config.glowBlur = parseInt(document.getElementById('GlowBlur').value);
+            config.glowColor = document.getElementById('GlowColor').value;
+            config.glowOpacity = parseFloat(document.getElementById('GlowOpacity').value);
+            
+            config.shadowX = parseInt(document.getElementById('ShadowXInput').value);
+            config.shadowY = parseInt(document.getElementById('ShadowYInput').value);
+            config.shadowBlur = parseInt(document.getElementById('ShadowBlurInput').value);
+            config.shadowOpacity = parseFloat(document.getElementById('ShadowOpInput').value);
+            
+            config.gradColor1 = document.getElementById('GradColor1').value;
+            config.gradColor2 = document.getElementById('GradColor2').value;
+            config.gradOp1 = parseInt(document.getElementById('GradOp1').value) / 100;
+            config.gradOp2 = parseInt(document.getElementById('GradOp2').value) / 100;
+            config.gradAngle = parseInt(document.getElementById('GradAngle').value);
+            config.gradWidth = parseInt(document.getElementById('GradWidth').value);
+            config.gradOffset = parseInt(document.getElementById('GradOffset').value);
+
+            if(config.fillMode === 'gradient') document.getElementById('GradientControls').style.display = 'block';
+            else document.getElementById('GradientControls').style.display = 'none';
+
+            config.endSpacing = parseInt(document.getElementById('EndSpacingInput').value);
+            config.endLine = parseInt(document.getElementById('EndLineInput').value);
+            config.endOp = parseInt(document.getElementById('EndOpInput').value) / 100;
+            config.startSpacing = parseInt(document.getElementById('StartSpacingInput').value);
+            config.startLine = parseInt(document.getElementById('StartLineInput').value);
+            config.startOp = parseInt(document.getElementById('StartOpInput').value) / 100;
+            config.duration = parseFloat(document.getElementById('AnimDuration').value);
+            config.opacityDuration = parseFloat(document.getElementById('OpacityDuration').value); 
+            config.opCurve = document.getElementById('OpCurveSelect').value;
+            config.animType = document.getElementById('AnimType').value;
+            calculateLayout(); updateTexture();
+        }
+
+        function handleFontChange() {
+            const v = document.getElementById('FontSelect').value;
+            if (v === 'custom') document.getElementById('FontUpload').click();
+            else updateParams();
+        }
+
+        function handleFontUpload(input) {
+            const f = input.files[0]; if(!f) return; const r = new FileReader();
+            r.onload = async (e) => {
+                const n = 'UpFont'; const ff = new FontFace(n, e.target.result); await ff.load();
+                document.fonts.add(ff); window.customFont = n;
+                const s = document.getElementById('FontSelect'); s.options[s.selectedIndex].text="✅ "+f.name; s.value = 'custom'; updateParams();
+            }; r.readAsArrayBuffer(f);
+        }
+
+        // Bind all UI events
+        document.getElementById('TextInput').addEventListener('input', e => { config.text = e.target.value; calculateLayout(); });
+        document.getElementById('FontSelect').addEventListener('change', handleFontChange);
+        document.getElementById('FontUpload').addEventListener('change', e => handleFontUpload(e.target));
+        document.getElementById('FillSelect').addEventListener('change', updateParams);
+        document.getElementById('TextureSelect').addEventListener('change', () => { updateParams(); updateTexture(); });
+        document.getElementById('TextAlign').addEventListener('change', updateParams);
+        document.getElementById('ExpandDirX').addEventListener('change', updateParams);
+        document.getElementById('ExpandDirY').addEventListener('change', updateParams);
+        document.getElementById('GlowToggle').addEventListener('change', updateParams);
+        document.getElementById('AnimType').addEventListener('change', updateParams);
+        document.getElementById('OpCurveSelect').addEventListener('change', updateParams);
+        document.getElementById('BtnPlay').addEventListener('click', previewPlay);
+
+        // Range inputs with display values
+        const rangeBindings = [
+            ['SizeInput', 'SizeVal', v => { config.fontSize = parseInt(v) || 150; }],
+            ['WeightInput', 'WeightVal', v => { config.fontWeight = v; }],
+            ['PosXInput', 'PosXVal', v => { config.posX = parseInt(v); }],
+            ['PosYInput', 'PosYVal', v => { config.posY = parseInt(v); }],
+            ['GlowBlur', 'GlowBlurVal', v => { config.glowBlur = parseInt(v); }],
+            ['GlowOpacity', 'GlowOpacityVal', v => { config.glowOpacity = parseFloat(v); }],
+            ['GlowColor', null, v => { config.glowColor = v; }],
+            ['ShadowXInput', 'ShadowXVal', v => { config.shadowX = parseInt(v); }],
+            ['ShadowYInput', 'ShadowYVal', v => { config.shadowY = parseInt(v); }],
+            ['ShadowBlurInput', 'ShadowBlurVal', v => { config.shadowBlur = parseInt(v); }],
+            ['ShadowOpInput', 'ShadowOpVal', v => { config.shadowOpacity = parseFloat(v); }],
+            ['GradColor1', null, v => { config.gradColor1 = v; }],
+            ['GradColor2', null, v => { config.gradColor2 = v; }],
+            ['GradOp1', 'GradOp1Val', v => { config.gradOp1 = parseInt(v) / 100; }, '%'],
+            ['GradOp2', 'GradOp2Val', v => { config.gradOp2 = parseInt(v) / 100; }, '%'],
+            ['GradAngle', 'GradAngleVal', v => { config.gradAngle = parseInt(v); }, '°'],
+            ['GradOffset', 'GradOffsetVal', v => { config.gradOffset = parseInt(v); }, '%'],
+            ['GradWidth', 'GradWidthVal', v => { config.gradWidth = parseInt(v); }, '%'],
+            ['EndSpacingInput', 'EndSpacingVal', v => { config.endSpacing = parseInt(v); }],
+            ['EndLineInput', 'EndLineVal', v => { config.endLine = parseInt(v); }],
+            ['EndOpInput', 'EndOpVal', v => { config.endOp = parseInt(v) / 100; }, '%'],
+            ['StartSpacingInput', 'StartSpacingVal', v => { config.startSpacing = parseInt(v); }],
+            ['StartLineInput', 'StartLineVal', v => { config.startLine = parseInt(v); }],
+            ['StartOpInput', 'StartOpVal', v => { config.startOp = parseInt(v) / 100; }, '%'],
+            ['AnimDuration', 'DurVal', v => { config.duration = parseFloat(v); }, 's'],
+            ['OpacityDuration', 'OpDurVal', v => { config.opacityDuration = parseFloat(v); }, 's'],
+        ];
+
+        rangeBindings.forEach(([inputId, displayId, setter, suffix]) => {
+            const el = document.getElementById(inputId);
+            if (!el) return;
+            el.addEventListener('input', e => {
+                const v = e.target.type === 'color' ? e.target.value : e.target.value;
+                setter(v);
+                if (displayId) {
+                    const display = document.getElementById(displayId);
+                    if (display) display.innerText = v + (suffix || '');
+                }
+                calculateLayout();
+                updateTexture();
+            });
+        });
+
+        init();
+    </script>
+</body>
+</html>

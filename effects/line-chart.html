@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>折线图表</title>
+
+    <!-- 固定加载顺序，不要改 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="../shared/mp4-muxer.js"></script>
+    <link rel="stylesheet" href="../shared/base.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        canvas {
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #333;
+            background: #000; width: 100%; max-width: 1600px; aspect-ratio: 4/3; display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ====== 侧边栏 ====== -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="app-title">📈 折线图表 <span style="font-size:9px; color:#666">v1.0</span></div>
+            <div class="version-badge">NEW</div>
+        </div>
+
+        <div class="controls-container">
+
+            <!-- 效果参数 -->
+            <div class="control-group">
+                <div class="group-title">🔧 图表参数</div>
+                <div class="row stack">
+                    <div class="label-line"><span>绘制速度</span><span id="SpeedVal">1.0</span></div>
+                    <input type="range" id="SpeedInput" min="0.2" max="3" step="0.1" value="1.0">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>线宽</span><span id="LineWVal">3</span></div>
+                    <input type="range" id="LineWInput" min="1" max="8" step="0.5" value="3">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>发光强度</span><span id="GlowVal">0.5</span></div>
+                    <input type="range" id="GlowInput" min="0" max="1" step="0.05" value="0.5">
+                </div>
+                <div class="row stack">
+                    <div class="label-line"><span>网格透明度</span><span id="GridOpVal">0.15</span></div>
+                    <input type="range" id="GridOpInput" min="0" max="0.5" step="0.05" value="0.15">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="group-title">🎨 颜色设置</div>
+                <div class="row">
+                    <span style="font-size:12px; color:#aaa;">主线颜色</span>
+                    <input type="color" id="Color1Input" value="#00d4ff">
+                </div>
+                <div class="row">
+                    <span style="font-size:12px; color:#aaa;">副线颜色</span>
+                    <input type="color" id="Color2Input" value="#ff6b9d">
+                </div>
+                <div class="row">
+                    <span style="font-size:12px; color:#aaa;">第三线颜色</span>
+                    <input type="color" id="Color3Input" value="#a78bfa">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="group-title">⚙️ 样式选项</div>
+                <div class="row">
+                    <select id="CurveStyle">
+                        <option value="smooth" selected>〰️ 平滑曲线</option>
+                        <option value="linear">📐 折线</option>
+                        <option value="step">🏗️ 阶梯线</option>
+                    </select>
+                </div>
+                <div class="sub-title">
+                    <span>显示数据点</span>
+                    <input type="checkbox" id="ShowDots" checked>
+                </div>
+                <div class="sub-title">
+                    <span>面积填充</span>
+                    <input type="checkbox" id="ShowFill" checked>
+                </div>
+                <div class="sub-title">
+                    <span>显示数值标签</span>
+                    <input type="checkbox" id="ShowLabels" checked>
+                </div>
+                <div class="sub-title">
+                    <span>显示副线</span>
+                    <input type="checkbox" id="ShowLine2" checked>
+                </div>
+                <div class="sub-title">
+                    <span>显示第三线</span>
+                    <input type="checkbox" id="ShowLine3" checked>
+                </div>
+            </div>
+
+            <!-- 背景和导出面板由 shared/controls.js 自动注入 -->
+            <div id="shared-controls-placeholder"></div>
+
+        </div>
+    </div>
+
+    <!-- ====== 画布 ====== -->
+    <div class="preview-area">
+        <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
+        <canvas id="mainCanvas"></canvas>
+    </div>
+
+    <script type="module">
+        import { Recorder } from '../shared/recorder.js';
+        import { Background } from '../shared/background.js';
+        import { lerp, hexToRgba } from '../shared/utils.js';
+        import { injectSharedControls } from '../shared/controls.js';
+
+        // 注入共享面板
+        injectSharedControls({ defaultBgMode: '#000000' });
+
+        // ====== Canvas 初始化（固定写法）======
+        const BASE_W = 1600;
+        const BASE_H = 1200;
+        const SCALE = 2;
+        const canvas = document.getElementById('mainCanvas');
+        canvas.width = BASE_W * SCALE;
+        canvas.height = BASE_H * SCALE;
+        const ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
+        ctx.scale(SCALE, SCALE);
+
+        // ====== 参数默认值 ======
+        const config = {
+            speed: 1.0,
+            lineWidth: 3,
+            glow: 0.5,
+            gridOpacity: 0.15,
+            color1: '#00d4ff',
+            color2: '#ff6b9d',
+            color3: '#a78bfa',
+            curveStyle: 'smooth',
+            showDots: true,
+            showFill: true,
+            showLabels: true,
+            showLine2: true,
+            showLine3: true,
+        };
+
+        // ====== 示例数据 ======
+        const chartData = {
+            labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+            series: [
+                { name: '营收', values: [32, 45, 38, 62, 55, 78, 85, 92, 88, 105, 118, 135] },
+                { name: '用户', values: [20, 28, 35, 42, 48, 55, 65, 72, 80, 88, 95, 110] },
+                { name: '转化', values: [15, 22, 18, 30, 35, 42, 38, 50, 55, 62, 58, 70] },
+            ],
+        };
+
+        // ====== 图表布局常量 ======
+        const PAD_L = 180;
+        const PAD_R = 100;
+        const PAD_T = 160;
+        const PAD_B = 120;
+        const CHART_X = PAD_L;
+        const CHART_Y = PAD_T;
+        const CHART_W = BASE_W - PAD_L - PAD_R;
+        const CHART_H = BASE_H - PAD_T - PAD_B;
+
+        // 计算 Y 轴范围（所有系列的最大最小值）
+        function getYRange() {
+            let min = Infinity, max = -Infinity;
+            for (const s of chartData.series) {
+                for (const v of s.values) {
+                    if (v < min) min = v;
+                    if (v > max) max = v;
+                }
+            }
+            const pad = (max - min) * 0.15;
+            return { min: Math.floor((min - pad) / 10) * 10, max: Math.ceil((max + pad) / 10) * 10 };
+        }
+
+        // 数据 → 画布坐标
+        function dataToCanvas(index, value, yRange) {
+            const n = chartData.labels.length;
+            const x = CHART_X + (index / (n - 1)) * CHART_W;
+            const y = CHART_Y + CHART_H - ((value - yRange.min) / (yRange.max - yRange.min)) * CHART_H;
+            return { x, y };
+        }
+
+        // ====== 共享模块初始化（固定写法）======
+        let animStartTime = performance.now();
+
+        const bg = new Background({
+            modeSelectId: '#BgMode',
+            uploadInputId: '#BgUpload',
+            patternColorId: '#PatternColor',
+            patternRowId: '#PatternColorRow',
+            defaultMode: '#000000',
+            defaultPatternColor: '#333333',
+            baseWidth: BASE_W,
+            baseHeight: BASE_H,
+            scaleFactor: SCALE,
+        });
+
+        const recorder = new Recorder({
+            canvas: canvas,
+            onFrame: (timeMs) => drawFrame(timeMs),
+            fileName: 'LineChart',
+            width: BASE_W * SCALE,
+            height: BASE_H * SCALE,
+        });
+
+        // ====== 缓动函数 ======
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+
+        function easeOutQuart(t) {
+            return 1 - Math.pow(1 - t, 4);
+        }
+
+        // ====== 绘制网格和坐标轴 ======
+        function drawGrid(ctx, timeMs, yRange, fadeIn) {
+            if (fadeIn <= 0) return;
+
+            ctx.save();
+            ctx.globalAlpha = fadeIn * config.gridOpacity;
+
+            // Y 轴网格线 + 标签
+            const ySteps = 5;
+            ctx.font = '500 22px "DM Sans", sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 6]);
+
+            for (let i = 0; i <= ySteps; i++) {
+                const val = yRange.min + (yRange.max - yRange.min) * (i / ySteps);
+                const { y } = dataToCanvas(0, val, yRange);
+                ctx.beginPath();
+                ctx.moveTo(CHART_X, y);
+                ctx.lineTo(CHART_X + CHART_W, y);
+                ctx.stroke();
+
+                ctx.globalAlpha = fadeIn * 0.6;
+                ctx.fillStyle = '#888888';
+                ctx.fillText(Math.round(val).toString(), CHART_X - 16, y);
+                ctx.globalAlpha = fadeIn * config.gridOpacity;
+            }
+
+            // X 轴标签
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.setLineDash([]);
+            ctx.globalAlpha = fadeIn * 0.6;
+
+            const n = chartData.labels.length;
+            for (let i = 0; i < n; i++) {
+                const { x } = dataToCanvas(i, 0, yRange);
+                ctx.fillStyle = '#888888';
+                ctx.fillText(chartData.labels[i], x, CHART_Y + CHART_H + 14);
+
+                // 小刻度线
+                ctx.globalAlpha = fadeIn * config.gridOpacity * 0.5;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x, CHART_Y + CHART_H);
+                ctx.lineTo(x, CHART_Y + CHART_H + 6);
+                ctx.stroke();
+                ctx.globalAlpha = fadeIn * 0.6;
+            }
+
+            ctx.restore();
+        }
+
+        // ====== 构建路径 ======
+        function buildPath(points, style) {
+            if (points.length < 2) return;
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+
+            if (style === 'smooth') {
+                // Catmull-Rom → Cubic Bezier 平滑曲线
+                for (let i = 0; i < points.length - 1; i++) {
+                    const p0 = points[Math.max(0, i - 1)];
+                    const p1 = points[i];
+                    const p2 = points[i + 1];
+                    const p3 = points[Math.min(points.length - 1, i + 2)];
+                    const tension = 0.35;
+                    const cp1x = p1.x + (p2.x - p0.x) * tension;
+                    const cp1y = p1.y + (p2.y - p0.y) * tension;
+                    const cp2x = p2.x - (p3.x - p1.x) * tension;
+                    const cp2y = p2.y - (p3.y - p1.y) * tension;
+                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+                }
+            } else if (style === 'step') {
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i - 1].y);
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+            } else {
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+            }
+        }
+
+        // ====== 绘制单条数据线（带动画裁剪）======
+        function drawSeries(ctx, series, color, timeMs, yRange, progress) {
+            const n = series.values.length;
+            const allPoints = [];
+            for (let i = 0; i < n; i++) {
+                allPoints.push(dataToCanvas(i, series.values[i], yRange));
+            }
+
+            // 根据 progress 裁剪可见点数（带子像素过渡）
+            const visibleFloat = progress * (n - 1);
+            const visibleCount = Math.floor(visibleFloat) + 1;
+            const frac = visibleFloat - Math.floor(visibleFloat);
+
+            const visiblePoints = allPoints.slice(0, visibleCount);
+            if (visibleCount < n && frac > 0 && visibleCount < allPoints.length) {
+                const from = allPoints[visibleCount - 1];
+                const to = allPoints[visibleCount];
+                visiblePoints.push({
+                    x: lerp(from.x, to.x, frac),
+                    y: lerp(from.y, to.y, frac),
+                });
+            }
+
+            if (visiblePoints.length < 2) return;
+
+            // 发光层
+            if (config.glow > 0) {
+                ctx.save();
+                ctx.globalAlpha = config.glow * 0.6;
+                ctx.strokeStyle = color;
+                ctx.lineWidth = config.lineWidth + 8;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 20;
+                buildPath(visiblePoints, config.curveStyle);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 面积填充
+            if (config.showFill) {
+                ctx.save();
+                const gradient = ctx.createLinearGradient(0, CHART_Y, 0, CHART_Y + CHART_H);
+                gradient.addColorStop(0, hexToRgba(color, 0.25));
+                gradient.addColorStop(0.6, hexToRgba(color, 0.08));
+                gradient.addColorStop(1, hexToRgba(color, 0.0));
+                ctx.fillStyle = gradient;
+
+                buildPath(visiblePoints, config.curveStyle);
+                ctx.lineTo(visiblePoints[visiblePoints.length - 1].x, CHART_Y + CHART_H);
+                ctx.lineTo(visiblePoints[0].x, CHART_Y + CHART_H);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // 主线条
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = config.lineWidth;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            buildPath(visiblePoints, config.curveStyle);
+            ctx.stroke();
+            ctx.restore();
+
+            // 数据点
+            if (config.showDots && progress >= 0.99) {
+                const dotAlpha = Math.min(1, (progress - 0.99) / 0.01);
+                ctx.save();
+                ctx.globalAlpha = dotAlpha;
+                for (let i = 0; i < allPoints.length; i++) {
+                    const p = allPoints[i];
+                    // 外圈光晕
+                    ctx.fillStyle = hexToRgba(color, 0.2);
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                    // 内圈实心
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    // 白色中心
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            // 数值标签
+            if (config.showLabels && progress >= 0.99) {
+                const labelAlpha = Math.min(1, (progress - 0.99) / 0.01);
+                ctx.save();
+                ctx.globalAlpha = labelAlpha;
+                ctx.font = '700 20px "DM Sans", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillStyle = '#ffffff';
+
+                for (let i = 0; i < allPoints.length; i++) {
+                    const p = allPoints[i];
+                    // 背景
+                    const val = series.values[i].toString();
+                    const tw = ctx.measureText(val).width;
+                    const px = 8, py = 4;
+                    ctx.fillStyle = hexToRgba(color, 0.85);
+                    const rx = p.x - tw / 2 - px;
+                    const ry = p.y - 32 - py;
+                    const rw = tw + px * 2;
+                    const rh = 24 + py * 2;
+                    ctx.beginPath();
+                    ctx.roundRect(rx, ry, rw, rh, 6);
+                    ctx.fill();
+                    // 文字
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(val, p.x, p.y - 32);
+                }
+                ctx.restore();
+            }
+        }
+
+        // ====== 绘制标题 ======
+        function drawTitle(ctx, fadeIn) {
+            if (fadeIn <= 0) return;
+            ctx.save();
+            ctx.globalAlpha = fadeIn;
+            ctx.font = '900 52px "Noto Sans SC", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('年度数据趋势', PAD_L, 40);
+
+            ctx.font = '400 24px "Noto Sans SC", sans-serif';
+            ctx.fillStyle = '#666666';
+            ctx.fillText('2024 年 1 月 — 12 月  ·  单位：万元', PAD_L, 105);
+            ctx.restore();
+        }
+
+        // ====== 绘制图例 ======
+        function drawLegend(ctx, fadeIn) {
+            if (fadeIn <= 0) return;
+            ctx.save();
+            ctx.globalAlpha = fadeIn;
+            ctx.font = '500 22px "DM Sans", "Noto Sans SC", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+
+            const items = [
+                { name: chartData.series[0].name, color: config.color1 },
+            ];
+            if (config.showLine2) items.push({ name: chartData.series[1].name, color: config.color2 });
+            if (config.showLine3) items.push({ name: chartData.series[2].name, color: config.color3 });
+
+            let lx = BASE_W - PAD_R - items.length * 130;
+            const ly = 56;
+
+            for (const item of items) {
+                // 色条
+                ctx.fillStyle = item.color;
+                ctx.beginPath();
+                ctx.roundRect(lx, ly - 4, 28, 8, 4);
+                ctx.fill();
+                // 名称
+                ctx.fillStyle = '#aaaaaa';
+                ctx.fillText(item.name, lx + 36, ly);
+                lx += 130;
+            }
+            ctx.restore();
+        }
+
+        // ====== 渲染函数（核心）======
+        function drawFrame(timeMs) {
+            const elapsed = timeMs;
+            const speed = config.speed;
+
+            // 动画时间线（毫秒）
+            const TITLE_DUR = 600;
+            const GRID_DUR = 500;
+            const LINE_DUR = 2500;
+
+            const titleFade = easeOutCubic(Math.min(1, elapsed / (TITLE_DUR / speed)));
+            const gridFade = easeOutCubic(Math.min(1, Math.max(0, (elapsed - 200 / speed)) / (GRID_DUR / speed)));
+            const lineProgress = easeOutQuart(Math.min(1, Math.max(0, (elapsed - 400 / speed)) / (LINE_DUR / speed)));
+
+            const yRange = getYRange();
+
+            // 清屏（固定写法 - 规则 #3）
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+
+            // 背景（固定写法 - 规则 #5）
+            if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, BASE_W, BASE_H);
+            }
+            if (bg.mode !== 'transparent') {
+                bg.draw(ctx, timeMs, recorder.isRecording, recorder.format);
+            }
+
+            // 绘制层级
+            drawTitle(ctx, titleFade);
+            drawLegend(ctx, titleFade);
+            drawGrid(ctx, timeMs, yRange, gridFade);
+
+            // 副线（先画，在底层）
+            if (config.showLine3) {
+                drawSeries(ctx, chartData.series[2], config.color3, timeMs, yRange, lineProgress);
+            }
+            if (config.showLine2) {
+                drawSeries(ctx, chartData.series[1], config.color2, timeMs, yRange, lineProgress);
+            }
+
+            // 主线（最上层）
+            drawSeries(ctx, chartData.series[0], config.color1, timeMs, yRange, lineProgress);
+
+            // 底部装饰线
+            ctx.save();
+            ctx.globalAlpha = gridFade * 0.4;
+            ctx.strokeStyle = '#444444';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(CHART_X, CHART_Y + CHART_H);
+            ctx.lineTo(CHART_X + CHART_W, CHART_Y + CHART_H);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(CHART_X, CHART_Y);
+            ctx.lineTo(CHART_X, CHART_Y + CHART_H);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // ====== 预览循环（固定写法 - 规则 #2）======
+        function previewLoop() {
+            if (!recorder.isRecording) {
+                drawFrame(performance.now() - animStartTime);
+            }
+            requestAnimationFrame(previewLoop);
+        }
+        requestAnimationFrame(previewLoop);
+
+        // ====== UI 绑定 ======
+        document.getElementById('SpeedInput').addEventListener('input', e => {
+            config.speed = parseFloat(e.target.value);
+            document.getElementById('SpeedVal').innerText = config.speed.toFixed(1);
+        });
+        document.getElementById('LineWInput').addEventListener('input', e => {
+            config.lineWidth = parseFloat(e.target.value);
+            document.getElementById('LineWVal').innerText = config.lineWidth.toFixed(1);
+        });
+        document.getElementById('GlowInput').addEventListener('input', e => {
+            config.glow = parseFloat(e.target.value);
+            document.getElementById('GlowVal').innerText = config.glow.toFixed(2);
+        });
+        document.getElementById('GridOpInput').addEventListener('input', e => {
+            config.gridOpacity = parseFloat(e.target.value);
+            document.getElementById('GridOpVal').innerText = config.gridOpacity.toFixed(2);
+        });
+        document.getElementById('Color1Input').addEventListener('input', e => {
+            config.color1 = e.target.value;
+        });
+        document.getElementById('Color2Input').addEventListener('input', e => {
+            config.color2 = e.target.value;
+        });
+        document.getElementById('Color3Input').addEventListener('input', e => {
+            config.color3 = e.target.value;
+        });
+        document.getElementById('CurveStyle').addEventListener('change', e => {
+            config.curveStyle = e.target.value;
+        });
+        document.getElementById('ShowDots').addEventListener('change', e => {
+            config.showDots = e.target.checked;
+        });
+        document.getElementById('ShowFill').addEventListener('change', e => {
+            config.showFill = e.target.checked;
+        });
+        document.getElementById('ShowLabels').addEventListener('change', e => {
+            config.showLabels = e.target.checked;
+        });
+        document.getElementById('ShowLine2').addEventListener('change', e => {
+            config.showLine2 = e.target.checked;
+        });
+        document.getElementById('ShowLine3').addEventListener('change', e => {
+            config.showLine3 = e.target.checked;
+        });
+    </script>
+</body>
+</html>

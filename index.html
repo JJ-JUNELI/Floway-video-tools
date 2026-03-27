@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FLOWAY MEDIA TOOLS MATRIX | 循流视频效果工具</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #0f0f12;
+            --card-bg: #18181b;
+            --accent: #00f2ff;
+            --accent-glow: rgba(0, 242, 255, 0.2);
+            --text-main: #e0e0e0;
+            --text-sub: #888;
+            --border: #333;
+        }
+        body {
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Noto Sans SC', sans-serif;
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            -webkit-tap-highlight-color: transparent;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        header { text-align: center; padding: 50px 20px 30px; width: 100%; box-sizing: border-box; }
+        h1 { font-family: 'Orbitron', sans-serif; font-size: 28px; margin: 0; color: #fff; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 0 15px var(--accent-glow); }
+        h1 span { color: var(--accent); }
+        .subtitle { color: var(--text-sub); margin-top: 8px; font-size: 12px; letter-spacing: 1px; opacity: 0.8; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; max-width: 1000px; padding: 20px; box-sizing: border-box; }
+        .tool-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 25px; text-decoration: none; display: flex; flex-direction: column; position: relative; overflow: hidden; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; }
+        @media (hover: hover) { .tool-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 30px rgba(0, 242, 255, 0.1); } .tool-card:hover .arrow { transform: translateX(5px); } }
+        .tool-card:active { transform: scale(0.98); background: #222; border-color: var(--accent); }
+        .tool-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .tool-icon { font-size: 32px; background: rgba(255,255,255,0.05); width: 50px; height: 50px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #333; }
+        .tool-info h2 { font-size: 16px; margin: 0 0 4px 0; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .version-tag { font-size: 9px; background: #333; color: #aaa; padding: 2px 5px; border-radius: 4px; font-weight: normal; font-family: monospace; }
+        .tool-desc { font-size: 12px; color: var(--text-sub); line-height: 1.5; margin-bottom: 20px; flex: 1; }
+        .tool-status { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #333; padding-top: 15px; }
+        .arrow { transition: 0.2s; font-size: 14px; }
+        .card-corner { position: absolute; top: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 30px 30px 0; border-color: transparent #2a2a2a transparent transparent; transition: 0.3s; }
+        footer { margin-top: auto; padding: 30px; font-size: 10px; color: #444; text-align: center; }
+        @media (min-width: 768px) { h1 { font-size: 42px; } .subtitle { font-size: 14px; } .grid-container { padding: 40px; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>MEDIA <span>TOOLS</span></h1>
+        <div class="subtitle">内部效果工具平台 · Internal Only</div>
+    </header>
+
+    <div class="grid-container">
+
+        <a href="effects/text-animator.html" class="tool-card">
+            <div class="card-corner"></div>
+            <div class="tool-header">
+                <div class="tool-icon">⚡</div>
+                <div class="tool-info">
+                    <h2>文字动效 <span class="version-tag">v60.6</span></h2>
+                    <div style="font-size:10px; color:#666">TEXT ANIMATOR</div>
+                </div>
+            </div>
+            <div class="tool-desc">生成科技感标题文字。支持 VP9 25Mbps 录制、2x 超采样、工业风阴影、透明度过度调节、字体渐变颜色、透明底png序列、MP4格式导出。</div>
+            <div class="tool-status"><span>启动程序</span> <span class="arrow">→</span></div>
+        </a>
+
+        <a href="effects/stack-scan.html" class="tool-card">
+            <div class="card-corner"></div>
+            <div class="tool-header">
+                <div class="tool-icon">📠</div>
+                <div class="tool-info">
+                    <h2>堆叠扫描 <span class="version-tag" style="color:var(--accent)">v19.4</span></h2>
+                    <div style="font-size:10px; color:#666">STACK SCAN FX</div>
+                </div>
+            </div>
+            <div class="tool-desc">生成赛博朋克风格堆叠扫描文字。支持 25Mbps MP4/PNG 序列导出、多字体斜体、透明度延迟及防掉帧渲染。</div>
+            <div class="tool-status"><span>启动程序</span> <span class="arrow">→</span></div>
+        </a>
+
+        <a href="effects/logo-matrix.html" class="tool-card">
+            <div class="card-corner"></div>
+            <div class="tool-header">
+                <div class="tool-icon">💠</div>
+                <div class="tool-info">
+                    <h2>Logo 矩阵 <span class="version-tag">v25.0</span></h2>
+                    <div style="font-size:10px; color:#666">MATRIX GENERATOR</div>
+                </div>
+            </div>
+            <div class="tool-desc">生成循环 Logo 阵列背景。支持 25Mbps 帧同步录制、羽化遮罩、自定义底图及多种科技纹理（网格/点阵），可导出 PNG 序列以及 H.264。</div>
+            <div class="tool-status"><span>启动程序</span> <span class="arrow">→</span></div>
+        </a>
+
+        <a href="effects/particle-field.html" class="tool-card">
+            <div class="card-corner"></div>
+            <div class="tool-header">
+                <div class="tool-icon">✨</div>
+                <div class="tool-info">
+                    <h2>粒子场 <span class="version-tag" style="color:var(--accent)">v1.0</span></h2>
+                    <div style="font-size:10px; color:#666">PARTICLE FIELD</div>
+                </div>
+            </div>
+            <div class="tool-desc">生成动态粒子连线场效果。可调节粒子数量、大小、速度及连线距离。</div>
+            <div class="tool-status"><span>启动程序</span> <span class="arrow">→</span></div>
+        </a>
+        <div class="tool-card" style="opacity: 0.5; filter: grayscale(1);">
+            <div class="tool-header">
+                <div class="tool-icon">🧊</div>
+                <div class="tool-info">
+                    <h2>3D 卡片 <span class="version-tag">v1.0</span></h2>
+                    <div style="font-size:10px; color:#666">CARD GENERATOR</div>
+                </div>
+            </div>
+            <div class="tool-desc">生成伪 3D 悬浮展示卡片。支持图片/视频素材导入，自定义圆角、透视角度及动态高光。</div>
+            <div class="tool-status" style="color:#666; border-top-color:#333;"><span>开发中...</span> <span>🔒</span></div>
+        </div>
+
+        <a href="effects/line-chart.html" class="tool-card">
+            <div class="card-corner"></div>
+            <div class="tool-header">
+                <div class="tool-icon">📈</div>
+                <div class="tool-info">
+                    <h2>折线图表 <span class="version-tag" style="color:var(--accent)">v1.0</span></h2>
+                    <div style="font-size:10px; color:#666">LINE CHART</div>
+                </div>
+            </div>
+            <div class="tool-desc">生成动态折线图趋势动画。支持三线数据系列、平滑/折线/阶梯三种曲线、面积填充、发光效果及数值标签。</div>
+            <div class="tool-status"><span>启动程序</span> <span class="arrow">→</span></div>
+        </a>
+
+        <div class="tool-card" style="opacity: 0.5; filter: grayscale(1);">
+            <div class="tool-header">
+                <div class="tool-icon">📊</div>
+                <div class="tool-info">
+                    <h2>全息图表 <span class="version-tag">DEV</span></h2>
+                    <div style="font-size:10px; color:#666">HOLO CHART</div>
+                </div>
+            </div>
+            <div class="tool-desc">赛博风格数据可视化生成器。支持动态柱状图、雷达图生长动画。</div>
+            <div class="tool-status" style="color:#666; border-top-color:#333;"><span>开发中...</span> <span>🔒</span></div>
+        </div>
+
+    </div>
+
+    <footer>
+        &copy; 2026 FlowayMedia Internal Tools.<br>Authorized Personnel Only.
+    </footer>
+
+</body>
+</html>
