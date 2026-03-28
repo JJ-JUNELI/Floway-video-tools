@@ -1,20 +1,22 @@
 /**
- * Floway Tools — 共享控件注入
- * 在效果 HTML 中用 <!-- SHARED-CONTROLS --> 标记，调用此函数自动替换为标准面板
+ * Floway Tools — 效果初始化
+ * 一行代码完成：Canvas 初始化、Background、Recorder、面板注入、预览循环
  */
 
-export function injectSharedControls(opts = {}) {
+import { Recorder } from './recorder.js';
+import { Background } from './background.js';
+import { lerp, hexToRgba, hexToRgbaStr, getLightness } from './utils.js';
+
+// ========== 面板 HTML 注入 ==========
+
+export function injectPanels(opts = {}) {
     const placeholder = document.querySelector('#shared-controls-placeholder');
-    if (!placeholder) {
-        console.warn('[shared/controls] #shared-controls-placeholder not found');
-        return;
-    }
+    if (!placeholder) return;
 
     const defaultBgMode = opts.defaultBgMode || '#000000';
     const defaultPatternColor = opts.defaultPatternColor || '#333333';
 
     placeholder.innerHTML = `
-        <!-- Background controls -->
         <div class="control-group">
             <div class="group-title"><span>▩ 场景背景</span></div>
             <div class="row">
@@ -35,7 +37,6 @@ export function injectSharedControls(opts = {}) {
             </div>
         </div>
 
-        <!-- Export controls -->
         <div class="control-group" style="border-color:var(--danger)">
             <div class="group-title">🎥 导出</div>
             <div class="row">
@@ -53,4 +54,117 @@ export function injectSharedControls(opts = {}) {
             </div>
         </div>
     `;
+}
+
+// ========== 主初始化函数 ==========
+
+/**
+ * @param {Object} opts
+ * @param {string} [opts.canvasId='mainCanvas']
+ * @param {string} opts.fileName          - 导出文件名
+ * @param {number} [opts.baseWidth=1600]
+ * @param {number} [opts.baseHeight=1200]
+ * @param {number} [opts.scale=2]         - 超采样倍率
+ * @param {string} [opts.defaultBgMode='#000000']
+ * @param {string} [opts.defaultPatternColor='#333333']
+ * @param {Function} opts.onFrame        - (timeMs) => void，录制时每帧调用
+ * @param {boolean} [opts.useRealtimeWebm=false]
+ * @param {boolean} [opts.useRafForFrames=false]
+ * @param {boolean} [opts.useManualWebmFrames=false]
+ * @param {number}  [opts.encodeQueueMax=2]
+ * @param {boolean} [opts.autoPreview=true] - 是否自动启动预览循环
+ * @returns {{ ctx, canvas, bg, recorder, baseWidth, baseHeight, scale, clearFrame, drawBg, startPreviewLoop, resetAnimStart }}
+ */
+export function initEffect(opts) {
+    // 1. 注入面板 HTML
+    injectPanels(opts);
+
+    // 2. Canvas 初始化
+    const baseWidth = opts.baseWidth || 1600;
+    const baseHeight = opts.baseHeight || 1200;
+    const scale = opts.scale || 2;
+    const canvas = document.getElementById(opts.canvasId || 'mainCanvas');
+    canvas.width = baseWidth * scale;
+    canvas.height = baseHeight * scale;
+    const ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
+    ctx.scale(scale, scale);
+
+    // 3. Background
+    const bg = new Background({
+        modeSelectId: '#BgMode',
+        uploadInputId: '#BgUpload',
+        patternColorId: '#PatternColor',
+        patternRowId: '#PatternColorRow',
+        defaultMode: opts.defaultBgMode || '#000000',
+        defaultPatternColor: opts.defaultPatternColor || '#333333',
+        baseWidth,
+        baseHeight,
+        scaleFactor: scale,
+    });
+
+    // 4. Recorder
+    const recorder = new Recorder({
+        canvas,
+        onFrame: opts.onFrame,
+        fileName: opts.fileName || 'Effect',
+        width: baseWidth * scale,
+        height: baseHeight * scale,
+        useRealtimeWebm: opts.useRealtimeWebm || false,
+        useRafForFrames: opts.useRafForFrames || false,
+        useManualWebmFrames: opts.useManualWebmFrames || false,
+        encodeQueueMax: opts.encodeQueueMax || 2,
+    });
+
+    // 5. 动画时间
+    let animStartTime = performance.now();
+    function resetAnimStart() {
+        animStartTime = performance.now();
+    }
+
+    // 6. 画布工具函数
+    function clearFrame() {
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+    }
+
+    function drawBg(timeMs) {
+        if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, baseWidth, baseHeight);
+        }
+        if (bg.mode !== 'transparent') {
+            bg.draw(ctx, timeMs, recorder.isRecording, recorder.format);
+        }
+    }
+
+    // 7. 预览循环
+    let _previewLoopRunning = false;
+
+    function startPreviewLoop(drawFn) {
+        if (_previewLoopRunning) return;
+        _previewLoopRunning = true;
+        function loop() {
+            if (!recorder.isRecording) {
+                drawFn(performance.now() - animStartTime);
+            }
+            requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+    }
+
+    // 8. 自动启动预览（默认开启）
+    if (opts.autoPreview !== false) {
+        // 预览循环由效果自己启动（因为需要传 drawFrame）
+        // 这里不自动启动，返回 startPreviewLoop 让效果控制
+    }
+
+    return {
+        ctx, canvas, bg, recorder,
+        baseWidth, baseHeight, scale,
+        clearFrame, drawBg,
+        startPreviewLoop, resetAnimStart,
+        lerp, hexToRgba, hexToRgbaStr, getLightness,
+    };
 }
