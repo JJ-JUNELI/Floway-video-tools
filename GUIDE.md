@@ -30,9 +30,10 @@ floway-tools-v2/
 ├── shared/              ← 共享模块，不需要修改
 │   ├── base.css         ← UI 样式框架
 │   ├── recorder.js      ← 录制引擎（MP4/WebM/PNG）
-│   ├── background.js    ← 背景系统
-│   ├── controls.js      ← 背景和导出面板（自动注入，不需要写 HTML）
-│   ├── utils.js         ← 工具函数
+│   ├── background.js    ← 背景系统（支持 Canvas 和 SVG 两种输出目标）
+│   ├── controls.js      ← 一行初始化：Canvas/Background/Recorder/面板/预览循环
+│   ├── svg-renderer.js  ← SVG 渲染管线：SVG→Canvas 序列化（SVG 效果用）
+│   ├── utils.js         ← 工具函数（lerp, hexToRgba 等）
 │   └── mp4-muxer.js     ← MP4 编码库
 ├── effects/             ← 效果文件目录
 │   ├── text-animator.html
@@ -94,99 +95,41 @@ floway-tools-v2/
 
     <div class="preview-area">
         <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
-        <canvas id="mainCanvas"></canvas>
+        <canvas id="mainCanvas" class="effect-canvas"></canvas>
     </div>
 
     <script type="module">
-        import { Recorder } from '../shared/recorder.js';
-        import { Background } from '../shared/background.js';
         import { lerp, hexToRgba } from '../shared/utils.js';
-        import { injectSharedControls } from '../shared/controls.js';
+        import { initEffect } from '../shared/controls.js';
 
-        // 注入共享面板（固定写法，不要改）
-        injectSharedControls({ defaultBgMode: '#000000' });
-
-        // ====== Canvas 初始化（固定写法）======
-        const BASE_W = 1600;
-        const BASE_H = 1200;
-        const SCALE = 2;
-        const canvas = document.getElementById('mainCanvas');
-        canvas.width = BASE_W * SCALE;
-        canvas.height = BASE_H * SCALE;
-        const ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
-        ctx.scale(SCALE, SCALE);
+        // ====== 初始化（固定写法，不要改）======
+        const { ctx, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop } = initEffect({
+            canvasId: 'mainCanvas',
+            fileName: 'EffectName',
+        });
 
         // ====== 参数默认值 ======
         const config = {
             // 在这里定义你的参数
         };
 
-        // ====== 共享模块初始化（固定写法）======
-        let animStartTime = performance.now();
-
-        const bg = new Background({
-            modeSelectId: '#BgMode',
-            uploadInputId: '#BgUpload',
-            patternColorId: '#PatternColor',
-            patternRowId: '#PatternColorRow',
-            defaultMode: '#000000',
-            defaultPatternColor: '#333333',
-            baseWidth: BASE_W,
-            baseHeight: BASE_H,
-            scaleFactor: SCALE,
-        });
-
-        const recorder = new Recorder({
-            canvas: canvas,
-            onFrame: (timeMs) => drawFrame(timeMs),
-            fileName: 'EffectName',
-            width: BASE_W * SCALE,
-            height: BASE_H * SCALE,
-        });
-
         // ====== 渲染函数（核心）======
         function drawFrame(timeMs) {
-            // 清屏（固定写法）
-            ctx.save();
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.restore();
-
-            // 背景（固定写法）
-            if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(0, 0, BASE_W, BASE_H);
-            }
-            if (bg.mode !== 'transparent') {
-                bg.draw(ctx, timeMs, recorder.isRecording, recorder.format);
-            }
-
+            clearFrame();
+            drawBg(timeMs);
             // ★ 在这里写你的渲染逻辑 ★
-            // 坐标空间是 BASE_W × BASE_H (1600 × 1200)
-            // SCALE 已经通过 ctx.scale() 应用，不需要手动乘
-            // timeMs 是毫秒
         }
 
-        // ====== 预览循环（固定写法，不要改）======
-        function previewLoop() {
-            if (!recorder.isRecording) {
-                drawFrame(performance.now() - animStartTime);
-            }
-            requestAnimationFrame(previewLoop);
-        }
-        requestAnimationFrame(previewLoop);
+        // ====== 启动预览 ======
+        startPreviewLoop(drawFrame);
 
         // ====== UI 绑定 ======
-        // 每个滑块/选择器需要绑定到 config
         // 示例：
         // document.getElementById('SpeedInput').addEventListener('input', e => {
         //     config.speed = parseFloat(e.target.value);
         //     document.getElementById('SpeedVal').innerText = e.target.value;
         // });
     </script>
-</body>
-</html>
-```
 
 ---
 
@@ -235,19 +178,17 @@ floway-tools-v2/
 | # | 规则 | 原因 |
 |---|---|---|
 | 1 | `jszip.min.js` 和 `mp4-muxer.js` 用 `<script>` 标签加载，**不要用 ES module import** | mp4-muxer.js 不是 ESM 格式，import 会导致整个脚本崩溃 |
-| 2 | previewLoop 用 `if (!recorder.isRecording) { }` 包裹，**不要用 `return`** | `return` 会永久终止循环，录制结束后画面冻结 |
-| 3 | clearRect 前必须 `ctx.save()` + `ctx.setTransform(1,0,0,1,0,0)`，之后 `ctx.restore()` | 不重置 transform 的话 clearRect 范围会受 scale 影响 |
-| 4 | 绘制坐标用 `BASE_W` / `BASE_H` (1600/1200)，**不要用** `canvas.width` / `canvas.height` | canvas 实际尺寸是 3200×2400，用了会画到画布外 |
-| 5 | `recorder.format` 在首次录制前是 `undefined`，不是字符串 | 检查 format 时要注意这一点 |
-| 6 | 不要在函数声明前后插入 console.log 或其他语句 | ES module 中 function 声明不是 hoisted 到顶部的，会被语句打断 |
-| 7 | **不要写背景面板和导出面板的 HTML**，用 `<div id="shared-controls-placeholder"></div>` 代替 | 面板由 `shared/controls.js` 自动注入，手动写会引入不一致 |
-
+| 2 | **不要写背景面板和导出面板的 HTML**，用 `<div id="shared-controls-placeholder"></div>` 代替 | 面板由 `initEffect()` 自动注入，手动写会引入不一致 |
+| 3 | 不要在函数声明前后插入 console.log 或其他语句 | ES module 中 function 声明不是 hoisted 到顶部的，会被语句打断 |
+| 4 | 绘制坐标用 `baseWidth` / `baseHeight`（默认 1600/1200），**不要用** `canvas.width` / `canvas.height` | canvas 实际尺寸是 3200×2400，用了会画到画布外 |
 ---
 
 ## 可用工具函数
 
 ```javascript
-import { lerp, hexToRgba } from '../shared/utils.js';
+// 工具函数已通过 initEffect() 返回，无需单独 import
+// 在 initEffect 解构时按需取用即可：
+// const { ..., lerp, hexToRgba, hexToRgbaStr, getLightness } = initEffect({...});
 
 lerp(0, 100, 0.5)        // → 50  线性插值
 hexToRgba('#ff0000', 0.5) // → 'rgba(255, 0, 0, 0.5)'  颜色转带透明度
@@ -264,6 +205,72 @@ hexToRgba('#ff0000', 0.5) // → 'rgba(255, 0, 0, 0.5)'  颜色转带透明度
 - 每帧必须先清屏再画，不要依赖上帧残留
 
 ---
+
+---
+
+## SVG 效果（高级）
+
+大多数效果用 Canvas 渲染即可。如果你的效果需要 SVG 特性（如 SVG 滤镜描边、SVG 文字渲染），使用以下模式：
+
+**关键区别：** SVG 效果在预览时直接操作 SVG DOM 元素，导出时通过 `SvgRenderer` 将 SVG 序列化为 Image 再绘制到隐藏 Canvas。
+
+```html
+<!-- SVG 根元素，包含 SVG 背景和内容 -->
+<svg id="mainSvg" width="1600" height="1200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <pattern id="bgPattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse"></pattern>
+    </defs>
+    <rect id="svgBg" width="100%" height="100%" fill="transparent"/>
+    <g id="contentGroup">
+        <!-- ★ 在这里画你的 SVG 内容 ★ -->
+    </g>
+</svg>
+```
+
+```javascript
+import { Recorder } from '../shared/recorder.js';
+import { Background } from '../shared/background.js';
+import { SvgRenderer } from '../shared/svg-renderer.js';
+import { injectPanels } from '../shared/controls.js';
+
+injectPanels({ defaultBgMode: 'transparent' });
+
+const svg = document.getElementById('mainSvg');
+
+const bg = new Background({
+    modeSelectId: '#BgMode',
+    uploadInputId: '#BgUpload',
+    patternColorId: '#PatternColor',
+    patternRowId: '#PatternColorRow',
+    defaultMode: 'transparent',
+    baseWidth: 1600, baseHeight: 1200, scaleFactor: 1,
+    svgTargets: {
+        bgRect: document.getElementById('svgBg'),
+        patternEl: document.getElementById('bgPattern'),
+    },
+});
+
+const svgRenderer = new SvgRenderer(svg, 1600, 1200);
+
+const recorder = new Recorder({
+    canvas: svgRenderer.exportCanvas,
+    onFrame: async (timeMs) => {
+        updateSVG(timeMs);                             // 你的 SVG 更新逻辑
+        svgRenderer.drawBackground(bg, recorder.format); // 背景画到底层
+        await svgRenderer.rasterize();                  // SVG→Canvas 序列化
+    },
+    fileName: 'SvgEffect', width: 1600, height: 1200,
+});
+
+function updateSVG(timeOverride = null) {
+    // ★ 在这里操作 SVG DOM 元素 ★
+}
+```
+
+**注意事项：**
+- SVG 效果的 `onFrame` 必须是 `async`，因为 `svgRenderer.rasterize()` 返回 Promise
+- 背景由 `svgTargets` 自动同步到 SVG 元素，**不需要手动操作** `svgBg` 或 `bgPattern`
+- 导出 Canvas 由 `SvgRenderer` 管理，**不需要手动创建** `<canvas id="exportCanvas">`
 
 ## 导出格式
 
