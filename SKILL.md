@@ -99,10 +99,13 @@ Copy this template as-is. The sections marked with `█ YOUR` are where you writ
 
     <script type="module">
         import { initEffect } from '../shared/controls.js';
-        import { initEffect } from '../shared/controls.js';
 
         // ====== █ DO NOT modify: Init ======
-        const { ctx, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop, lerp, hexToRgba } = initEffect({
+        const { ctx, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop,
+                lerp, clamp, hexToRgba, getLightness,
+                easeOutCubic, getEasing, loadFont,
+                createLinearGradient, createRadialGradient,
+                drawTextCentered, drawTextWrapped } = initEffect({
             canvasId: 'mainCanvas',
             fileName: 'YourEffect',
         });
@@ -155,7 +158,22 @@ Add a card link in `index.html` inside the `.grid-container` div.
 
 ```javascript
 const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
-        clearFrame, drawBg, startPreviewLoop, resetAnimStart } = initEffect({
+        clearFrame, drawBg, startPreviewLoop, resetAnimStart,
+        // 数学
+        lerp, clamp,
+        // 颜色
+        hexToRgba, hexToRgbaStr, getLightness,
+        // 缓动
+        easeLinear, easeInCubic, easeOutCubic, easeInOutCubic,
+        easeOutQuart, easeOutExpo, easeInOutCubicSmooth, getEasing,
+        // 字体
+        loadFont,
+        // Canvas 辅助
+        drawMediaContain,
+        // 渐变
+        createLinearGradient, createRadialGradient,
+        // 文字排版
+        drawTextCentered, drawTextWrapped } = initEffect({
     canvasId: 'mainCanvas',    // Canvas 元素 ID
     fileName: 'EffectName',    // 导出文件名
     // 可选：
@@ -165,6 +183,8 @@ const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
     // useManualWebmFrames: false,  encodeQueueMax: 2,
 });
 ```
+
+### Core (必用)
 
 | 返回值 | 说明 |
 |---|---|
@@ -179,6 +199,60 @@ const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
 | `drawBg(timeMs)` | 绘制背景（自动处理透明+非 PNG 的黑色填充） |
 | `startPreviewLoop(drawFn)` | 启动预览循环，drawFn = (timeMs) => void |
 | `resetAnimStart()` | 重置动画起始时间 |
+
+### Math (数学)
+
+| 返回值 | 签名 | 说明 |
+|---|---|---|
+| `lerp` | `(s, e, t) => number` | 线性插值 |
+| `clamp` | `(v, min, max) => number` | 值域限制 |
+
+### Color (颜色)
+
+| 返回值 | 签名 | 说明 |
+|---|---|---|
+| `hexToRgba` | `(hex, alpha) => string` | HEX → `rgba(r,g,b,a)` 字符串 |
+| `hexToRgbaStr` | `(hex, alpha) => string` | 同上（别名） |
+| `getLightness` | `(hex) => number` | 获取明度 0~1 |
+
+### Easing (缓动)
+
+| 返回值 | 签名 | 说明 |
+|---|---|---|
+| `easeLinear` | `(t) => number` | 匀速 |
+| `easeInCubic` | `(t) => number` | 缓入 |
+| `easeOutCubic` | `(t) => number` | 缓出 |
+| `easeInOutCubic` | `(t) => number` | 缓入缓出 |
+| `easeOutQuart` | `(t) => number` | 强缓出 |
+| `easeOutExpo` | `(t) => number` | 指数缓出 |
+| `easeInOutCubicSmooth` | `(t) => number` | 平滑缓入缓出 |
+| `getEasing` | `(name) => Function` | 按名称查找缓动函数。name: `'linear'`/`'easeIn'`/`'easeOut'`/`'easeInOut'`/`'easeOutQuart'`/`'easeOutExpo'`/`'smooth'` |
+
+### Font (字体)
+
+| 返回值 | 签名 | 说明 |
+|---|---|---|
+| `loadFont` | `(file, familyName?) => Promise<string>` | 加载字体文件，返回 CSS font-family 字符串 |
+
+### Canvas Helpers (画布辅助)
+
+| 返回值 | 签名 | 说明 |
+|---|---|---|
+| `drawMediaContain` | `(ctx, media, w, h, scaleFactor?) => void` | 图片/视频 contain 模式居中铺满 |
+
+### Gradient (渐变)
+
+| 返回值 | 签名 | 说明 |
+|---|---|---|
+| `createLinearGradient` | `(ctx, x0, y0, x1, y1, stops) => CanvasGradient` | stops: `[{pos, color}]` |
+| `createRadialGradient` | `(ctx, x, y, r0, r1, stops) => CanvasGradient` | stops: `[{pos, color}]` |
+
+### Text Layout (文字排版)
+
+| 返回值 | 签名 | 说明 |
+|---|---|---|
+| `drawTextCentered` | `(ctx, text, x, y, font?, color?, align?, maxWidth?) => void` | 居中绘制，超宽截断 |
+| `drawTextWrapped` | `(ctx, text, x, y, maxWidth, lineHeight?) => number` | 自动换行，返回总高度 |
 
 ### 可选录制参数
 

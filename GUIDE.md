@@ -185,13 +185,114 @@ floway-tools-v2/
 
 ## 可用工具函数
 
-```javascript
-// 工具函数已通过 initEffect() 返回，无需单独 import
-// 在 initEffect 解构时按需取用即可：
-// const { ..., lerp, hexToRgba, hexToRgbaStr, getLightness } = initEffect({...});
+所有工具函数通过 `initEffect()` 返回，**无需单独 import**。在解构时按需取用：
 
-lerp(0, 100, 0.5)        // → 50  线性插值
-hexToRgba('#ff0000', 0.5) // → 'rgba(255, 0, 0, 0.5)'  颜色转带透明度
+```javascript
+const { ctx, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop,
+        lerp, clamp, hexToRgba, getLightness,
+        easeOutCubic, getEasing,
+        loadFont, drawMediaContain,
+        createLinearGradient, createRadialGradient,
+        drawTextCentered, drawTextWrapped } = initEffect({
+    canvasId: 'mainCanvas',
+    fileName: 'EffectName',
+});
+```
+
+### 数学
+
+| 函数 | 说明 | 示例 |
+|---|---|---|
+| `lerp(s, e, t)` | 线性插值 | `lerp(0, 100, 0.5)` → `50` |
+| `clamp(v, min, max)` | 值域限制 | `clamp(150, 0, 100)` → `100` |
+
+### 颜色
+
+| 函数 | 说明 | 示例 |
+|---|---|---|
+| `hexToRgba(hex, alpha)` | HEX 转 rgba 字符串 | `hexToRgba('#ff0000', 0.5)` → `'rgba(255, 0, 0, 0.5)'` |
+| `hexToRgbaStr(hex, alpha)` | 同上（别名） | 同 `hexToRgba` |
+| `getLightness(hex)` | 获取颜色明度 0~1 | `getLightness('#ffffff')` → `1` |
+
+### 渐变
+
+| 函数 | 说明 |
+|---|---|
+| `createLinearGradient(ctx, x0, y0, x1, y1, stops)` | 创建线性渐变，stops = `[{pos: 0, color: '#000'}, {pos: 1, color: '#fff'}]` |
+| `createRadialGradient(ctx, x, y, r0, r1, stops)` | 创建径向渐变，stops 同上 |
+
+```javascript
+// 用法示例：渐变背景
+const grad = createLinearGradient(ctx, 0, 0, baseWidth, baseHeight, [
+    { pos: 0, color: '#1a1a2e' },
+    { pos: 1, color: '#16213e' },
+]);
+ctx.fillStyle = grad;
+ctx.fillRect(0, 0, baseWidth, baseHeight);
+```
+
+### 缓动函数
+
+| 函数 | 说明 |
+|---|---|
+| `easeLinear(t)` | 匀速 |
+| `easeInCubic(t)` | 缓入（慢→快） |
+| `easeOutCubic(t)` | 缓出（快→慢） |
+| `easeInOutCubic(t)` | 缓入缓出 |
+| `easeOutQuart(t)` | 强缓出 |
+| `easeOutExpo(t)` | 指数缓出 |
+| `easeInOutCubicSmooth(t)` | 平滑缓入缓出（同 easeInOutCubic） |
+| `getEasing(name)` | 按名称查找，`name` = `'linear'` / `'easeIn'` / `'easeOut'` / `'easeInOut'` / `'easeOutQuart'` / `'easeOutExpo'` / `'smooth'` |
+
+```javascript
+// 用法示例 1：直接使用
+const progress = easeOutCubic(t);
+
+// 用法示例 2：配合下拉菜单动态选择
+const easing = getEasing(config.easingType);
+const progress = easing(normalizedTime);
+```
+
+### 字体
+
+| 函数 | 说明 |
+|---|---|
+| `loadFont(file, familyName?)` | 加载字体文件 (.ttf/.otf/.woff/.woff2)，返回 CSS font-family 字符串 |
+
+```javascript
+// 用法示例：配合文件上传
+document.getElementById('FontUpload').addEventListener('change', async e => {
+    const fontStr = await loadFont(e.target.files[0], 'MyFont');
+    config.fontFamily = fontStr; // '"MyFont", sans-serif'
+});
+```
+
+### Canvas 辅助
+
+| 函数 | 说明 |
+|---|---|
+| `drawMediaContain(ctx, media, w, h, scaleFactor?)` | 图片/视频 contain 模式铺满画布（保持比例，居中裁切） |
+
+```javascript
+// 用法示例：绘制背景视频
+drawMediaContain(ctx, videoElement, baseWidth, baseHeight, scale);
+```
+
+### 文字排版
+
+| 函数 | 说明 |
+|---|---|
+| `drawTextCentered(ctx, text, x, y, font?, color?, align?, maxWidth?)` | 居中绘制文字，超宽自动截断加省略号 |
+| `drawTextWrapped(ctx, text, x, y, maxWidth, lineHeight?)` | 自动换行绘制文字，返回总行高 |
+
+```javascript
+// 用法示例：标题居中
+drawTextCentered(ctx, 'Hello World', baseWidth / 2, 100,
+    '700 48px "Noto Sans SC", sans-serif', '#ffffff');
+
+// 用法示例：多行文字自动换行
+const totalHeight = drawTextWrapped(ctx, longText, 100, 200,
+    baseWidth - 200, 1.5);
 ```
 
 ---

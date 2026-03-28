@@ -1,7 +1,7 @@
 # Floway Tools v2 — 当前状态 & 待办清单
 
 > 最后更新: 2026-03-28
-> Git HEAD: 09943ce
+> Git HEAD: 2956b7a
 > 服务器: python3 -m http.server 8000 (需手动启动)
 
 ---
@@ -11,12 +11,12 @@
 ```
 floway-tools-v2/
 ├── shared/
-│   ├── controls.js      170行  initEffect() + injectPanels()
+│   ├── controls.js      175行  initEffect() + injectPanels() (导入并导出全部 utils 函数)
 │   ├── recorder.js      307行  录制引擎 (MP4/WebM/PNG)
 │   ├── background.js    317行  背景系统 (Canvas + SVG 双模式)
 │   ├── svg-renderer.js   56行  SVG→Canvas 序列化管线
 │   ├── base.css         402行  UI 框架
-│   ├── utils.js          43行  lerp, hexToRgba, hexToRgbaStr, getLightness, saveFile
+│   ├── utils.js         247行  数学/颜色/缓动/字体/Canvas/渐变/文字排版/文件保存
 │   └── mp4-muxer.js   1845行  MP4 编码库 (本地化, <script> 标签加载)
 ├── effects/
 │   ├── text-animator.html  687行  ⚡ 科技动效 (1440×1080, 自定义动画控制, initEffect)
@@ -24,8 +24,8 @@ floway-tools-v2/
 │   ├── logo-matrix.html    425行  💠 Logo矩阵 (initEffect, scale:1, 离屏合成, 内联面板)
 │   ├── particle-field.html 177行  ✨ 粒子场 (AI生成验证 #1, initEffect)
 │   └── line-chart.html     550行  📈 折线图表 (AI生成验证 #2, initEffect)
-├── GUIDE.md              ~270行  AI 自包含生成指引 (给 AI 读的)
-├── SKILL.md              ~240行  开发者参考 (给人读的)
+├── GUIDE.md              ~320行  AI 自包含生成指引 (给 AI 读的, 含完整工具函数文档)
+├── SKILL.md              ~310行  开发者参考 (给人读的, 含完整 initEffect 返回值表)
 ├── PROMPT_TEMPLATE.md     49行   已被 GUIDE.md 取代
 └── index.html            155行  导航页
 ```
@@ -51,7 +51,12 @@ floway-tools-v2/
 ✅ GUIDE.md / SKILL.md 文档
 ✅ SVG 渲染管线 (SvgRenderer + Background svgTargets)
 ✅ utils 函数打包进 initEffect() 返回值 (AI 只需一行 import)
-✅ Git 提交 (7 commits, 可回滚)
+✅ Git 提交 (8 commits, 可回滚)
+✅ utils.js 扩展 — 新增 5 大类工具函数: 缓动(8个)/字体上传/Canvas辅助/渐变/文字排版
+✅ GUIDE.md 工具函数文档 — 7 个分类, 含代码示例
+✅ SKILL.md initEffect 返回值表 — 完整列出全部 22 个工具函数
+✅ SKILL.md bug 修复 — 删除重复的 import 行
+✅ 全文件验证 — 15 个文件 HTTP 200, 5 个效果 import 一致性检查通过
 
 ---
 
@@ -93,16 +98,16 @@ if (recorder.isRecording && recorder.format !== 'png_seq' && bg.mode === 'transp
 - **影响**: AI 生成新效果不知道该用哪个 body class, 选错 UI 控件表现不一致
 - **决策**: 需要确定新效果默认用哪个 class, 然后写进文档
 
-#### Doc 3: initEffect 返回值文档需同步到 GUIDE.md
-- **问题**: GUIDE.md 的模板里 initEffect 解构只列了部分返回值, 缺少 lerp/hexToRgba 等工具函数
-- **修复**: 确保模板和 initEffect() 实际返回值一致
+#### Doc 3: initEffect 返回值文档已同步到 GUIDE.md ✅ 已完成
+- GUIDE.md 新增 7 个分类的完整工具函数文档, 含代码示例
+- SKILL.md 新增完整 initEffect 返回值表 (Core + Math + Color + Easing + Font + Canvas + Gradient + Text)
+- SKILL.md 修复重复 import 行 bug
 
 ### 🟢 共享模块提取
 
-#### Module 1: Easing 缓动函数
+#### Module 1: Easing 缓动函数 ✅ 已完成
 - **放哪里**: shared/utils.js
-- **内容**: easeOutCubic, easeOutQuart, easeInCubic, easeInOutCubic, easeOutExpo 等
-- **现有重复**: line-chart (easeOutCubic/Quart), text-animator (switch 内部), stack-scan (easings 对象)
+- **内容**: easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, easeInOutCubicSmooth, getEasing
 - **理由**: 几乎所有动画效果都需要, AI 自己写容易参数不一致
 
 #### Module 2: UI 绑定工具
@@ -113,29 +118,25 @@ if (recorder.isRecording && recorder.format !== 'png_seq' && bg.mode === 'transp
 - **设计注意**: 不同效果绑定方式差异大 (后缀如 's', 'px', '固定小数位', 触发回调如 initParticles)
 - **需要支持**: range → parseFloat, select → string, color → string, checkbox → boolean, 触发回调
 
-#### Module 3: 字体上传
-- **放哪里**: shared/utils.js 或新建 shared/font-loader.js
-- **内容**: 文件选择 → FileReader/arrayBuffer → FontFace 注册 → select 下拉联动
-- **现有重复**: text-animator (handleFontUpload ~8行), stack-scan (setupFontSelector + hiddenFontInput ~30行)
+#### Module 3: 字体上传 ✅ 已完成
+- **放哪里**: shared/utils.js
+- **内容**: `loadFont(file, familyName?)` — File → FontFace 注册 → 返回 CSS font-family 字符串
 - **理由**: 所有文字类效果都需要, 代码复杂, AI 自己写容易出错
 
-#### Module 4: Canvas 绘图辅助
+#### Module 4: Canvas 绘图辅助 ✅ 已完成
 - **放哪里**: shared/utils.js
-- **内容**: drawMediaCover(ctx, media, w, h), drawPattern(ctx, type, color, w, h)
-- **现有重复**: logo-matrix 有 drawMediaCover 和 drawPattern, background.js 有 _drawMediaContain 和 _updatePatternCache (内部方法)
-- **理由**: 需要图片/视频/纹理作为背景或叠加层的效果都用得到
+- **内容**: `drawMediaContain(ctx, media, w, h, scaleFactor?)` — 图片/视频 contain 模式居中铺满
+- **理由**: 需要图片/视频作为背景或叠加层的效果都用得到
 
-#### Module 5: 颜色/渐变工具
+#### Module 5: 颜色/渐变工具 ✅ 已完成
 - **放哪里**: shared/utils.js
-- **内容**: createLinearGradient(ctx, stops), createRadialGradient(ctx, stops), 传入坐标和颜色数组直接返回 gradient
-- **现有使用**: line-chart 大量使用 hexToRgba + ctx.createLinearGradient + addColorStop
+- **内容**: `createLinearGradient(ctx, x0, y0, x1, y1, stops)`, `createRadialGradient(ctx, x, y, r0, r1, stops)`
 - **理由**: addColorStop 写起来啰嗦且容易格式写错
 
-#### Module 6: 文字排版工具
+#### Module 6: 文字排版工具 ✅ 已完成
 - **放哪里**: shared/utils.js
-- **内容**: measureTextCenter, wrapText (自动换行), 居中定位辅助
-- **现有重复**: text-animator 有 calculateLayout, line-chart 有 measureText + textAlign/baseline 组合
-- **理由**: measureText + textAlign + dominantBaseline 配合容易出错
+- **内容**: `drawTextCentered(ctx, text, x, y, font?, color?, align?, maxWidth?)`, `drawTextWrapped(ctx, text, x, y, maxWidth, lineHeight?)`
+- **理由**: measureText + textAlign + baseline 配合容易出错
 
 #### Module 7: Canvas 尺寸自适应 class
 - **放哪里**: shared/base.css
