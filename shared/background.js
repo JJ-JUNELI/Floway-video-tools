@@ -3,8 +3,9 @@
  * 从 tool-text-v4 / tool-stack-scan / tool-logo-v4 提取
  * 
  * 支持: 纯色 / 绿幕 / 蓝幕 / 网格 / 点阵 / 透明 / 自定义图片或视频
+ * 可选 SVG 模式: 自动同步背景到 SVG 元素（用于 SVG 渲染管线的效果）
  * 
- * 使用方式:
+ * 使用方式 (Canvas 效果):
  *   const bg = new Background({
  *       modeSelectId:   '#BgMode',
  *       uploadInputId:  '#BgUpload',
@@ -12,13 +13,21 @@
  *       patternRowId:   '#PatternColorRow',
  *       defaultMode:    '#000000',
  *       defaultPatternColor: '#333333',
- *       baseWidth:      1440,   // 逻辑宽度 (不含超采样)
- *       baseHeight:     1080,   // 逻辑高度
- *       scaleFactor:    1,      // 超采样倍率 (text 用 2, 其他用 1)
+ *       baseWidth:      1440,
+ *       baseHeight:     1080,
+ *       scaleFactor:    1,
  *   });
- * 
- *   // 每帧调用:
- *   bg.draw(ctx, timestamp);
+ *   bg.draw(ctx, timestamp, isRecording, exportFormat);
+ *
+ * 使用方式 (SVG 效果):
+ *   const bg = new Background({
+ *       ...其他选项,
+ *       svgTargets: {
+ *           bgRect:    document.getElementById('svgBg'),    // SVG <rect> 背景
+ *           patternEl: document.getElementById('bgPattern'), // SVG <pattern> 纹理
+ *       },
+ *   });
+ *   bg.drawToCanvas(ctx, width, height, exportFormat); // 导出时画到 Canvas
  */
 
 export class Background {
@@ -39,8 +48,13 @@ export class Background {
         this.bgMediaType = null;
         this.patternCanvas = null;
 
+        // SVG 目标元素（可选，SVG 效果用）
+        this.svgBgRect = (opts.svgTargets && opts.svgTargets.bgRect) || null;
+        this.svgPatternEl = (opts.svgTargets && opts.svgTargets.patternEl) || null;
+
         this._bindUI();
         this._updatePatternCache();
+        if (this.svgBgRect) this._syncSvg();
     }
 
     _bindUI() {
@@ -66,6 +80,8 @@ export class Background {
                 } else {
                     this._updatePatternCache();
                 }
+
+                this._syncSvg();
             });
         }
 
@@ -96,12 +112,17 @@ export class Background {
             patternColor.addEventListener('input', (e) => {
                 this.patternColor = e.target.value;
                 this._updatePatternCache();
+                this._syncSvg();
             });
         }
     }
 
     _updatePatternCache() {
-        if (this.mode !== 'grid' && this.mode !== 'dots') return;
+        if (this.mode !== 'grid' && this.mode !== 'dots') {
+            this.patternCanvas = null;
+            this._updateSvgPattern();
+            return;
+        }
 
         this.patternCanvas = document.createElement('canvas');
         const s = 60;
@@ -123,7 +144,62 @@ export class Background {
             pc.arc(s / 2, s / 2, 3, 0, Math.PI * 2);
             pc.fill();
         }
+
+        this._updateSvgPattern();
     }
+
+    // ========== SVG 同步（SVG 效果用） ==========
+
+    /**
+     * 同步当前背景模式到 SVG 元素
+     */
+    _syncSvg() {
+        if (!this.svgBgRect) return;
+
+        const mode = this.mode;
+        if (mode === 'transparent') {
+            this.svgBgRect.setAttribute('fill', 'transparent');
+        } else if (mode === '#000000' || mode === '#0000ff' || mode === '#00ff00') {
+            this.svgBgRect.setAttribute('fill', mode);
+        } else if (mode === 'grid' || mode === 'dots') {
+            this._updateSvgPattern();
+        }
+    }
+
+    /**
+     * 更新 SVG <pattern> 元素（网格/点阵）
+     */
+    _updateSvgPattern() {
+        if (!this.svgPatternEl || !this.svgBgRect) return;
+        const mode = this.mode;
+
+        // 清空旧 pattern 子元素
+        while (this.svgPatternEl.firstChild) {
+            this.svgPatternEl.removeChild(this.svgPatternEl.firstChild);
+        }
+
+        if (mode === 'grid' || mode === 'dots') {
+            const ns = 'http://www.w3.org/2000/svg';
+            if (mode === 'grid') {
+                const path = document.createElementNS(ns, 'path');
+                path.setAttribute('d', 'M0 60 L0 0 L60 0');
+                path.setAttribute('stroke', this.patternColor);
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('fill', 'none');
+                this.svgPatternEl.appendChild(path);
+            } else {
+                const circle = document.createElementNS(ns, 'circle');
+                circle.setAttribute('cx', '30');
+                circle.setAttribute('cy', '30');
+                circle.setAttribute('r', '3');
+                circle.setAttribute('fill', this.patternColor);
+                this.svgPatternEl.appendChild(circle);
+            }
+            this.svgBgRect.setAttribute('fill', 'url(#bgPattern)');
+        }
+    }
+
+    // ========== Canvas 绘制（Canvas 效果每帧调用） ==========
 
     /**
      * 在 Canvas 上绘制背景
@@ -173,6 +249,48 @@ export class Background {
 
         ctx.restore();
     }
+
+    // ========== 导出用 Canvas 背景绘制（SVG 效果导出时用） ==========
+
+    /**
+     * 在指定 Canvas 上绘制背景（用于 SVG 效果的导出 canvas）
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {number} width
+     * @param {number} height
+     * @param {string} exportFormat - 'png_seq' | 'mp4' | 'webm'
+     */
+    drawToCanvas(ctx, width, height, exportFormat = '') {
+        const mode = this.mode;
+        ctx.save();
+
+        // 透明 + 非PNG → 黑底
+        if ((exportFormat === 'mp4' || exportFormat === 'webm') && mode === 'transparent') {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, width, height);
+        } else if (exportFormat === 'png_seq' && mode === 'transparent') {
+            ctx.clearRect(0, 0, width, height);
+        } else if (mode === 'custom' && this.bgMedia) {
+            const mw = this.bgMedia.videoWidth || this.bgMedia.width;
+            const mh = this.bgMedia.videoHeight || this.bgMedia.height;
+            if (mw && mh) {
+                const s = Math.max(width / mw, height / mh);
+                const w = mw * s, h = mh * s;
+                ctx.drawImage(this.bgMedia, (width - w) / 2, (height - h) / 2, w, h);
+            }
+        } else if ((mode === 'grid' || mode === 'dots') && this.patternCanvas) {
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = ctx.createPattern(this.patternCanvas, 'repeat');
+            ctx.fillRect(0, 0, width, height);
+        } else {
+            ctx.fillStyle = mode;
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        ctx.restore();
+    }
+
+    // ========== 内部工具 ==========
 
     /**
      * Draw cover — 图片/视频铺满画布 (contain模式)
