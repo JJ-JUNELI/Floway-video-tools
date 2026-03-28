@@ -307,27 +307,20 @@
                       fill="white" style="font-weight:900; font-size:130px;">功能3: AI侧边栏</text>
             </g>
         </svg>
-        
-        <canvas id="exportCanvas" width="1600" height="1200" style="display:none;"></canvas>
-    </div>
 
     <script type="module">
         import { Recorder } from '../shared/recorder.js';
         import { Background } from '../shared/background.js';
-        import { injectSharedControls } from '../shared/controls.js';
+        import { injectPanels } from '../shared/controls.js';
+        import { SvgRenderer } from '../shared/svg-renderer.js';
 
-        injectSharedControls({ defaultBgMode: 'transparent', defaultPatternColor: '#222222' });
+        injectPanels({ defaultBgMode: 'transparent', defaultPatternColor: '#222222' });
 
         const svg = document.getElementById('mainSvg');
         const contentGroup = document.getElementById('contentGroup');
         const scanGroup = document.getElementById('scanStackGroup');
         const centerText = document.getElementById('centerFixedText');
         const watermarkGroup = document.getElementById('watermarkGroup');
-        const svgBg = document.getElementById('svgBg');
-        const bgPattern = document.getElementById('bgPattern');
-        
-        const exportCanvas = document.getElementById('exportCanvas');
-        const exportCtx = exportCanvas.getContext('2d');
         
         const fDilate = document.getElementById('filter-dilate').querySelector('feMorphology');
         const fErode = document.getElementById('filter-erode').querySelector('feMorphology');
@@ -386,9 +379,7 @@
         // 状态
         let customFontCount = 0;
         let currentFontTarget = null;
-        let patternCanvas = null;
-
-        // Background (manages uploads + config, but SVG drawing is separate)
+        // Background (SVG 模式：自动同步背景到 SVG 元素)
         const bg = new Background({
             modeSelectId: '#BgMode',
             uploadInputId: '#BgUpload',
@@ -399,103 +390,34 @@
             baseWidth: 1600,
             baseHeight: 1200,
             scaleFactor: 1,
+            svgTargets: {
+                bgRect: document.getElementById('svgBg'),
+                patternEl: document.getElementById('bgPattern'),
+            },
         });
 
-        // Recorder — onFrame is async because rasterizeSVG() is async
+        // SVG 渲染管线（序列化 SVG → 隐藏 Canvas → Recorder 抓帧）
+        const svgRenderer = new SvgRenderer(svg, 1600, 1200);
+
         const recorder = new Recorder({
-            canvas: exportCanvas,
+            canvas: svgRenderer.exportCanvas,
             onFrame: async (timeMs) => {
                 updateSVG(timeMs);
-                await rasterizeSVG();
+                svgRenderer.drawBackground(bg, recorder.format);
+                await svgRenderer.rasterize();
             },
             fileName: 'StackScan',
             width: 1600,
             height: 1200,
-            useManualWebmFrames: true, // WebM 使用 captureStream(0) + requestFrame (原始行为)
+            useManualWebmFrames: true,
         });
 
-        // Easing
         const easings = {
             linear: t => t,
             easeIn: t => t * t * t,
             easeOut: t => 1 - Math.pow(1 - t, 3),
             smooth: t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
         };
-
-        // === SVG 背景处理 (stack-scan 特有，SVG 元素操作) ===
-        function updateSVGPatternCache() {
-            if(config.bgMode !== 'grid' && config.bgMode !== 'dots') return;
-            while(bgPattern.firstChild) bgPattern.removeChild(bgPattern.firstChild);
-            
-            if(config.bgMode === 'grid') {
-                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                path.setAttribute("d", "M0 60 L0 0 L60 0");
-                path.setAttribute("stroke", config.patternColor);
-                path.setAttribute("stroke-width", "2");
-                path.setAttribute("fill", "none");
-                bgPattern.appendChild(path);
-            } else {
-                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                circle.setAttribute("cx", "30");
-                circle.setAttribute("cy", "30");
-                circle.setAttribute("r", "3");
-                circle.setAttribute("fill", config.patternColor);
-                bgPattern.appendChild(circle);
-            }
-            
-            svgBg.setAttribute('fill', 'url(#bgPattern)');
-            
-            patternCanvas = document.createElement('canvas');
-            const s = 60; patternCanvas.width = s; patternCanvas.height = s;
-            const pc = patternCanvas.getContext('2d');
-            pc.strokeStyle = config.patternColor; pc.fillStyle = config.patternColor; pc.lineWidth = 2;
-            if(config.bgMode === 'grid') { pc.beginPath(); pc.moveTo(0,s); pc.lineTo(0,0); pc.lineTo(s,0); pc.stroke(); } 
-            else { pc.beginPath(); pc.arc(s/2, s/2, 3, 0, Math.PI*2); pc.fill(); }
-        }
-
-        // Sync bg mode from Background module to SVG
-        function syncBgToSVG() {
-            config.bgMode = bg.mode;
-            config.patternColor = bg.patternColor;
-
-            if(config.bgMode === 'transparent') svgBg.setAttribute('fill', 'transparent');
-            else if(config.bgMode === '#000000') svgBg.setAttribute('fill', '#000000');
-            else if(config.bgMode === '#0000ff') svgBg.setAttribute('fill', '#0000ff');
-            else if(config.bgMode === '#00ff00') svgBg.setAttribute('fill', '#00ff00');
-            else if(config.bgMode === 'grid' || config.bgMode === 'dots') updateSVGPatternCache();
-        }
-
-        // === 导出背景绘制 (Canvas, 用于录制) ===
-        function drawExportBackground(ctx, width, height) {
-            ctx.save();
-            const format = recorder.format;
-            const mode = config.bgMode;
-
-            if ((format === 'mp4' || format === 'webm') && mode === 'transparent') {
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(0, 0, width, height);
-            } 
-            else if (format === 'png_seq' && mode === 'transparent') {
-                ctx.clearRect(0, 0, width, height);
-            }
-            else if (mode === 'custom' && bg.bgMedia) {
-                const mw = bg.bgMedia.videoWidth || bg.bgMedia.width;
-                const mh = bg.bgMedia.videoHeight || bg.bgMedia.height;
-                if(mw && mh) {
-                    const s = Math.max(width/mw, height/mh);
-                    const w=mw*s, h=mh*s;
-                    ctx.drawImage(bg.bgMedia, (width-w)/2, (height-h)/2, w, h);
-                }
-            } else if ((mode === 'grid' || mode === 'dots') && patternCanvas) {
-                ctx.fillStyle = '#050505'; ctx.fillRect(0,0,width,height);
-                ctx.fillStyle = ctx.createPattern(patternCanvas, 'repeat');
-                ctx.fillRect(0,0,width,height);
-            } else {
-                ctx.fillStyle = mode; 
-                ctx.fillRect(0, 0, width, height);
-            }
-            ctx.restore();
-        }
 
         // === 主渲染更新 ===
         function updateSVG(timeOverride = null) {
@@ -662,20 +584,6 @@
         }
         requestAnimationFrame(previewLoop);
 
-        // === Rasterize SVG to Canvas (for export) ===
-        function rasterizeSVG() {
-            return new Promise(resolve => {
-                const svgData = new XMLSerializer().serializeToString(svg);
-                const img = new Image();
-                img.onload = () => {
-                    exportCtx.clearRect(0, 0, 1600, 1200);
-                    drawExportBackground(exportCtx, 1600, 1200); 
-                    exportCtx.drawImage(img, 0, 0);
-                    resolve();
-                };
-                img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
-            });
-        }
 
         // === UI BINDING ===
         const hiddenFontInput = document.getElementById('HiddenFontInput');
@@ -777,14 +685,6 @@
             if(config.bgLockRatio) { config.bgScaleY = config.bgScaleX; document.getElementById('BgScaleYInput').value = config.bgScaleX; }
         });
 
-        // Background mode changes — sync to SVG
-        document.getElementById('BgMode').addEventListener('change', e => {
-            syncBgToSVG();
-        });
-        document.getElementById('PatternColor').addEventListener('input', e => {
-            config.patternColor = e.target.value;
-            updateSVGPatternCache();
-        });
 
         // 播放控制
         function playAnim() {

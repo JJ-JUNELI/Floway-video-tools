@@ -173,15 +173,24 @@
 
     <div class="preview-area">
         <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
-        <canvas id="mainCanvas" width="1600" height="1200"></canvas>
+        <canvas id="mainCanvas" class="effect-canvas"></canvas>
     </div>
 
     <script type="module">
-        import { Recorder } from '../shared/recorder.js';
-        import { Background } from '../shared/background.js';
+        import { initEffect } from '../shared/controls.js';
 
-        const canvas = document.getElementById('mainCanvas');
-        const ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
+        const { ctx, canvas, bg, recorder, baseWidth, baseHeight } = initEffect({
+            canvasId: 'mainCanvas',
+            fileName: 'LogoMatrix',
+            scale: 1,
+            defaultBgMode: 'transparent',
+            defaultPatternColor: '#222222',
+            useRealtimeWebm: true,
+            useRafForFrames: true,
+            encodeQueueMax: 5,
+            onFrame: drawFrame,
+        });
+
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
@@ -194,7 +203,7 @@
 
         const config = {
             rows: 5, cols: 7, 
-            speed: 2.0, rotSpeed: 1.0, scale: 0.8,
+            speed: 2.0, rotSpeed: 1.0, logoScale: 0.8,
             maskEnabled: true, maskAffectsBg: true, 
             maskBaseType: 'match_bg', maskBaseColor: '#000000',
             maskSize: 0.85, maskRoundness: 0.75, maskFeather: 250,
@@ -205,33 +214,6 @@
         let patternCanvas = null; 
         let animStartTime = performance.now(); 
         let frameCount = 0;
-
-        // Background
-        const bg = new Background({
-            modeSelectId: '#BgMode',
-            uploadInputId: '#BgUpload',
-            patternColorId: '#PatternColor',
-            patternRowId: '#PatternColorRow',
-            defaultMode: 'transparent',
-            defaultPatternColor: '#222222',
-            baseWidth: 1600,
-            baseHeight: 1200,
-            scaleFactor: 1,
-        });
-
-        // Recorder
-        const recorder = new Recorder({
-            canvas,
-            onFrame: (timeMs) => {
-                drawFrame(timeMs);
-            },
-            fileName: 'LogoMatrix',
-            width: 1600,
-            height: 1200,
-            useRealtimeWebm: true,   // WebM 使用独立实时循环 (原始行为)
-            useRafForFrames: true,    // MP4/PNG 使用 rAF 驱动 (原始行为)
-            encodeQueueMax: 5,        // MP4 编码队列上限 5 (原始行为)
-        });
 
         // UI bindings
         function bind(id, key, type='float') {
@@ -244,7 +226,7 @@
             });
         }
         
-        bind('SpeedInput', 'speed'); bind('RotSpeedInput', 'rotSpeed'); bind('ScaleInput', 'scale');
+        bind('SpeedInput', 'speed'); bind('RotSpeedInput', 'rotSpeed'); bind('ScaleInput', 'logoScale');
         bind('MaskSizeInput', 'maskSize'); bind('MaskRoundInput', 'maskRoundness'); bind('MaskFeatherInput', 'maskFeather', 'int');
         bind('ColsInput', 'cols', 'float'); bind('RowsInput', 'rows', 'float');
 
@@ -413,7 +395,7 @@
                     context.save();
                     context.translate(cx, cy);
                     context.rotate(rot * Math.PI/180);
-                    context.scale(config.scale, config.scale);
+                context.scale(config.logoScale, config.logoScale);
                     context.drawImage(logoImg, -dw/2, -dh/2, dw, dh);
                     context.restore();
                 }
