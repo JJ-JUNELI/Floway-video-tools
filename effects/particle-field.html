@@ -12,12 +12,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=Orbitron:wght@900&display=swap" rel="stylesheet">
 
-    <style>
-        canvas {
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #333;
-            background: #000; width: 100%; max-width: 1600px; aspect-ratio: 4/3; display: block;
-        }
-    </style>
 </head>
 <body>
 
@@ -69,27 +63,18 @@
 
     <div class="preview-area">
         <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
-        <canvas id="mainCanvas" width="1600" height="1200"></canvas>
+        <canvas id="mainCanvas" class="effect-canvas"></canvas>
     </div>
 
     <script type="module">
-        import { Recorder } from '../shared/recorder.js';
-        import { Background } from '../shared/background.js';
-        import { lerp, hexToRgba } from '../shared/utils.js';
-        import { injectSharedControls } from '../shared/controls.js';
+        import { initEffect } from '../shared/controls.js';
 
-        // 注入共享面板
-        injectSharedControls({ defaultBgMode: '#000000' });
+        const { ctx, canvas, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop, lerp, hexToRgba } = initEffect({
+            canvasId: 'mainCanvas',
+            fileName: 'ParticleField',
+            onFrame: drawFrame,
+        });
 
-        // Canvas setup
-        const canvas = document.getElementById('mainCanvas');
-        const SCALE = 2;  // 2x 超采样，预览不变，录制更清晰
-        canvas.width = 1600 * SCALE;
-        canvas.height = 1200 * SCALE;
-        const ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
-        ctx.scale(SCALE, SCALE);
-
-        // Effect config
         const config = {
             count: 200,
             size: 3,
@@ -99,39 +84,14 @@
             linkOpacity: 0.3,
         };
 
-        let animStartTime = performance.now();
         let particles = [];
 
-        // Initialize shared modules
-        const bg = new Background({
-            modeSelectId: '#BgMode',
-            uploadInputId: '#BgUpload',
-            patternColorId: '#PatternColor',
-            patternRowId: '#PatternColorRow',
-            defaultMode: '#000000',
-            defaultPatternColor: '#333333',
-            baseWidth: 1600,
-            baseHeight: 1200,
-            scaleFactor: SCALE,
-        });
-
-        const recorder = new Recorder({
-            canvas: canvas,
-            onFrame: (timeMs) => {
-                drawFrame(timeMs);
-            },
-            fileName: 'ParticleField',
-            width: 1600 * SCALE,
-            height: 1200 * SCALE,
-        });
-
-        // === PARTICLE SYSTEM ===
         function initParticles() {
             particles = [];
             for (let i = 0; i < config.count; i++) {
                 particles.push({
-                    x: Math.random() * 1600,
-                    y: Math.random() * 1200,
+                    x: Math.random() * baseWidth,
+                    y: Math.random() * baseHeight,
                     vx: (Math.random() - 0.5) * 2,
                     vy: (Math.random() - 0.5) * 2,
                 });
@@ -144,29 +104,18 @@
             for (const p of particles) {
                 p.x += p.vx * speed * dt * 60;
                 p.y += p.vy * speed * dt * 60;
-                if (p.x < 0) p.x = 1600;
-                if (p.x > 1600) p.x = 0;
-                if (p.y < 0) p.y = 1200;
-                if (p.y > 1200) p.y = 0;
+                if (p.x < 0) p.x = baseWidth;
+                if (p.x > baseWidth) p.x = 0;
+                if (p.y < 0) p.y = baseHeight;
+                if (p.y > baseHeight) p.y = 0;
             }
         }
 
         function drawFrame(timeMs) {
-            const dt = 1 / 60;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            clearFrame();
+            drawBg(timeMs);
+            updateParticles(1 / 60);
 
-            // 背景处理
-            if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-            if (bg.mode !== 'transparent') {
-                bg.draw(ctx, timeMs, recorder.isRecording, recorder.format);
-            }
-
-            updateParticles(dt);
-
-            // Draw links
             if (config.linkDist > 0) {
                 const maxDist = config.linkDist;
                 ctx.strokeStyle = hexToRgba(config.color, config.linkOpacity);
@@ -188,7 +137,6 @@
                 ctx.globalAlpha = 1;
             }
 
-            // Draw particles
             ctx.fillStyle = config.color;
             for (const p of particles) {
                 ctx.beginPath();
@@ -197,15 +145,7 @@
             }
         }
 
-        // Preview loop
-        function previewLoop() {
-            if (!recorder.isRecording) {
-                const elapsed = performance.now() - animStartTime;
-                drawFrame(elapsed);
-            }
-            requestAnimationFrame(previewLoop);
-        }
-        requestAnimationFrame(previewLoop);
+        startPreviewLoop(drawFrame);
 
         // === UI BINDINGS ===
         document.getElementById('CountInput').addEventListener('input', e => {

@@ -13,12 +13,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <style>
-        canvas {
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #333;
-            background: #000; width: 100%; max-width: 1600px; aspect-ratio: 4/3; display: block;
-        }
-    </style>
 </head>
 <body>
 
@@ -108,27 +102,18 @@
     <!-- ====== 画布 ====== -->
     <div class="preview-area">
         <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
-        <canvas id="mainCanvas"></canvas>
+        <canvas id="mainCanvas" class="effect-canvas"></canvas>
     </div>
 
     <script type="module">
-        import { Recorder } from '../shared/recorder.js';
-        import { Background } from '../shared/background.js';
-        import { lerp, hexToRgba } from '../shared/utils.js';
-        import { injectSharedControls } from '../shared/controls.js';
+        import { initEffect } from '../shared/controls.js';
 
-        // 注入共享面板
-        injectSharedControls({ defaultBgMode: '#000000' });
+        const { ctx, canvas, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop, lerp, hexToRgba } = initEffect({
+            canvasId: 'mainCanvas',
+            fileName: 'LineChart',
+            onFrame: drawFrame,
+        });
 
-        // ====== Canvas 初始化（固定写法）======
-        const BASE_W = 1600;
-        const BASE_H = 1200;
-        const SCALE = 2;
-        const canvas = document.getElementById('mainCanvas');
-        canvas.width = BASE_W * SCALE;
-        canvas.height = BASE_H * SCALE;
-        const ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
-        ctx.scale(SCALE, SCALE);
 
         // ====== 参数默认值 ======
         const config = {
@@ -164,8 +149,8 @@
         const PAD_B = 120;
         const CHART_X = PAD_L;
         const CHART_Y = PAD_T;
-        const CHART_W = BASE_W - PAD_L - PAD_R;
-        const CHART_H = BASE_H - PAD_T - PAD_B;
+        const CHART_W = baseWidth - PAD_L - PAD_R;
+        const CHART_H = baseHeight - PAD_T - PAD_B;
 
         // 计算 Y 轴范围（所有系列的最大最小值）
         function getYRange() {
@@ -189,28 +174,6 @@
         }
 
         // ====== 共享模块初始化（固定写法）======
-        let animStartTime = performance.now();
-
-        const bg = new Background({
-            modeSelectId: '#BgMode',
-            uploadInputId: '#BgUpload',
-            patternColorId: '#PatternColor',
-            patternRowId: '#PatternColorRow',
-            defaultMode: '#000000',
-            defaultPatternColor: '#333333',
-            baseWidth: BASE_W,
-            baseHeight: BASE_H,
-            scaleFactor: SCALE,
-        });
-
-        const recorder = new Recorder({
-            canvas: canvas,
-            onFrame: (timeMs) => drawFrame(timeMs),
-            fileName: 'LineChart',
-            width: BASE_W * SCALE,
-            height: BASE_H * SCALE,
-        });
-
         // ====== 缓动函数 ======
         function easeOutCubic(t) {
             return 1 - Math.pow(1 - t, 3);
@@ -465,7 +428,7 @@
             if (config.showLine2) items.push({ name: chartData.series[1].name, color: config.color2 });
             if (config.showLine3) items.push({ name: chartData.series[2].name, color: config.color3 });
 
-            let lx = BASE_W - PAD_R - items.length * 130;
+            let lx = baseWidth - PAD_R - items.length * 130;
             const ly = 56;
 
             for (const item of items) {
@@ -498,20 +461,11 @@
 
             const yRange = getYRange();
 
-            // 清屏（固定写法 - 规则 #3）
-            ctx.save();
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.restore();
+            clearFrame();
 
-            // 背景（固定写法 - 规则 #5）
-            if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(0, 0, BASE_W, BASE_H);
-            }
-            if (bg.mode !== 'transparent') {
-                bg.draw(ctx, timeMs, recorder.isRecording, recorder.format);
-            }
+            // 背景
+
+            drawBg(elapsed);
 
             // 绘制层级
             drawTitle(ctx, titleFade);
@@ -545,14 +499,7 @@
             ctx.restore();
         }
 
-        // ====== 预览循环（固定写法 - 规则 #2）======
-        function previewLoop() {
-            if (!recorder.isRecording) {
-                drawFrame(performance.now() - animStartTime);
-            }
-            requestAnimationFrame(previewLoop);
-        }
-        requestAnimationFrame(previewLoop);
+        startPreviewLoop(drawFrame);
 
         // ====== UI 绑定 ======
         document.getElementById('SpeedInput').addEventListener('input', e => {
