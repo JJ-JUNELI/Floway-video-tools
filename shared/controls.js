@@ -5,7 +5,7 @@
 
 import { Recorder } from './recorder.js';
 import { Background } from './background.js';
-import { lerp, hexToRgba, hexToRgbaStr, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, easeInOutCubicSmooth, getEasing, loadFont, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped, bindUI } from './utils.js';
+import { lerp, hexToRgba, hexToRgbaStr, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, easeInOutCubicSmooth, getEasing, loadFont, setupFontSelector, FONT_LIST, fontSelectHTML, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped, bindUI } from './utils.js';
 
 // ========== 面板 HTML 注入 ==========
 
@@ -173,6 +173,8 @@ export function initEffect(opts) {
         lerp, hexToRgba, hexToRgbaStr, getLightness, clamp,
         easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, easeInOutCubicSmooth, getEasing,
         loadFont,
+        setupFontSelector,
+        FONT_LIST, fontSelectHTML,
         drawMediaContain,
         createLinearGradient, createRadialGradient,
         drawTextCentered, drawTextWrapped,

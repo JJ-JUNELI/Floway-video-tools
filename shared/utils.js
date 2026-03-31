@@ -90,8 +90,7 @@ export const easeInOutCubic = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t
 export const easeOutQuart = t => 1 - Math.pow(1 - t, 4);
 /** @param {number} t 0~1 */
 export const easeOutExpo = t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-/** @param {number} t 0~1 */
-export const easeInOutCubicSmooth = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+export const easeInOutCubicSmooth = easeInOutCubic;
 
 /**
  * 按名称查找缓动函数，用于动态配置 (如 select 下拉选择)
@@ -130,7 +129,94 @@ export async function loadFont(file, familyName) {
     return `"${familyName}", sans-serif`;
 }
 
-// ========== 5. Canvas 绘图辅助 ==========
+// ========== 5. 字体选择器 ==========
+
+export const FONT_LIST = [
+    { value: "'Noto Sans SC', sans-serif", label: '思源黑体 (Source Han Sans)' },
+    { value: "'Orbitron', monospace", label: '未来科技 (Orbitron)' },
+    { value: "'Chakra Petch', sans-serif", label: '机械非衬线 (Chakra Petch)' },
+    { value: "'Montserrat', sans-serif", label: '几何非衬线 (Montserrat)' },
+    { value: "'Exo 2', sans-serif", label: '赛博非衬线 (Exo 2)' },
+    { value: "'Playfair Display', serif", label: '优雅衬线 (Playfair)' },
+    { value: "'Noto Serif SC', serif", label: '思源宋体 (Noto Serif)' },
+    { value: "'Ma Shan Zheng', cursive", label: '毛笔手写 (Brush)' },
+];
+
+export function fontSelectHTML(selectId, selectedValue) {
+    const opts = FONT_LIST.map(f =>
+        `<option value="${f.value}"${f.value === selectedValue ? ' selected' : ''}>${f.label}</option>`
+    ).join('\n                        ');
+    return `<select id="${selectId}" style="width:100%">
+                        <option value="upload" style="color:var(--accent); font-weight:bold;">📂 上传字体...</option>
+                        <option disabled>──────────</option>
+                        ${opts}
+                    </select>
+                    <input type="file" id="${selectId}Upload" accept=".ttf,.otf,.woff,.woff2" style="display:none">`;
+}
+
+/**
+ * 初始化带上传功能的字体选择器
+ *
+ * 要求 HTML 中有:
+ *   <select id="{selectId}">
+ *     <option value="upload">📂 上传字体...</option>
+ *     <option disabled>──────────</option>
+ *     <option value="...">预设1</option>
+ *     ...
+ *   </select>
+ *   <input type="file" id="{fileInputId}" accept=".ttf,.otf,.woff,.woff2" style="display:none">
+ *
+ * @param {Object} opts
+ * @param {string} opts.selectId    - select 元素 ID
+ * @param {string} opts.configKey   - config 对象中对应的属性名
+ * @param {string} opts.fileInputId - 隐藏的 file input 元素 ID
+ * @param {string} [opts.weightInputId] - 字重滑块 ID（可选），自定义字体时自动禁用
+ * @param {Object} opts.config     - 配置对象
+ */
+export function setupFontSelector({ selectId, configKey, fileInputId, weightInputId, config }) {
+    const select = document.getElementById(selectId);
+    const fileInput = document.getElementById(fileInputId);
+
+    function updateWeightState() {
+        if (!weightInputId) return;
+        const input = document.getElementById(weightInputId);
+        if (!input) return;
+        const isCustom = select.value.includes('CustomFont');
+        input.disabled = isCustom;
+        input.parentElement.style.opacity = isCustom ? '0.5' : '1';
+    }
+
+    select.addEventListener('change', e => {
+        if (e.target.value === 'upload') {
+            fileInput.value = '';
+            fileInput.click();
+            e.target.selectedIndex = 2;
+        } else {
+            config[configKey] = e.target.value;
+            updateWeightState();
+        }
+    });
+    updateWeightState();
+
+    fileInput.addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+            const val = await loadFont(file);
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.text = `📂 ${file.name}`;
+            select.add(opt, 2);
+            select.value = val;
+            config[configKey] = val;
+            updateWeightState();
+        } catch (err) {
+            alert('字体加载失败');
+        }
+    });
+}
+
+// ========== 6. Canvas 绘图辅助 ==========
 
 /**
  * 图片/视频铺满画布 (contain 模式, 保持比例)

@@ -50,14 +50,14 @@
                     <select id="MainFontInput">
                         <option value="upload" style="color:var(--accent); font-weight:bold;">📂 + 上传新字体...</option>
                         <option disabled>──────────</option>
-                        <option value='"Noto Sans SC", sans-serif' selected>思源黑体 (Source Han Sans)</option>
-                        <option value='"Orbitron", monospace'>未来科技 (Tech)</option>
-                        <option value='"Chakra Petch", sans-serif'>机械非衬线 (Chakra Petch)</option>
-                        <option value='"Montserrat", sans-serif'>几何非衬线 (Montserrat)</option>
-                        <option value='"Exo 2", sans-serif'>赛博非衬线 (Exo 2)</option>
-                        <option value='"Playfair Display", serif'>优雅衬线 (Playfair)</option>
-                        <option value='"Noto Serif SC", serif'>思源宋体 (Serif)</option>
-                        <option value='"Ma Shan Zheng", cursive'>毛笔手写 (Brush)</option>
+                        <option value="'Noto Sans SC', sans-serif" selected>思源黑体 (Source Han Sans)</option>
+                        <option value="'Orbitron', monospace">未来科技 (Orbitron)</option>
+                        <option value="'Chakra Petch', sans-serif">机械非衬线 (Chakra Petch)</option>
+                        <option value="'Montserrat', sans-serif">几何非衬线 (Montserrat)</option>
+                        <option value="'Exo 2', sans-serif">赛博非衬线 (Exo 2)</option>
+                        <option value="'Playfair Display', serif">优雅衬线 (Playfair)</option>
+                        <option value="'Noto Serif SC', serif">思源宋体 (Noto Serif)</option>
+                        <option value="'Ma Shan Zheng', cursive">毛笔手写 (Brush)</option>
                     </select>
                 </div>
 
@@ -195,14 +195,14 @@
                     <select id="BgFontInput">
                         <option value="upload" style="color:var(--accent); font-weight:bold;">📂 + 上传新字体...</option>
                         <option disabled>──────────</option>
-                        <option value='"Noto Sans SC", sans-serif'>思源黑体 (Source Han Sans)</option>
-                        <option value='"Orbitron", monospace'>未来科技 (Tech)</option>
-                        <option value='"Chakra Petch", sans-serif'>机械非衬线 (Chakra Petch)</option>
-                        <option value='"Montserrat", sans-serif' selected>几何非衬线 (Montserrat)</option>
-                        <option value='"Exo 2", sans-serif'>赛博非衬线 (Exo 2)</option>
-                        <option value='"Playfair Display", serif'>优雅衬线 (Playfair)</option>
-                        <option value='"Noto Serif SC", serif'>思源宋体 (Serif)</option>
-                        <option value='"Ma Shan Zheng", cursive'>毛笔手写 (Brush)</option>
+                        <option value="'Noto Sans SC', sans-serif">思源黑体 (Source Han Sans)</option>
+                        <option value="'Orbitron', monospace">未来科技 (Orbitron)</option>
+                        <option value="'Chakra Petch', sans-serif">机械非衬线 (Chakra Petch)</option>
+                        <option value="'Montserrat', sans-serif" selected>几何非衬线 (Montserrat)</option>
+                        <option value="'Exo 2', sans-serif">赛博非衬线 (Exo 2)</option>
+                        <option value="'Playfair Display', serif">优雅衬线 (Playfair)</option>
+                        <option value="'Noto Serif SC', serif">思源宋体 (Noto Serif)</option>
+                        <option value="'Ma Shan Zheng', cursive">毛笔手写 (Brush)</option>
                     </select>
                 </div>
 
@@ -313,6 +313,7 @@
         import { Background } from '../shared/background.js';
         import { injectPanels } from '../shared/controls.js';
         import { SvgRenderer } from '../shared/svg-renderer.js';
+        import { getEasing, bindUI, setupFontSelector } from '../shared/utils.js';
 
         injectPanels({ defaultBgMode: 'transparent', defaultPatternColor: '#222222' });
 
@@ -332,6 +333,8 @@
         const floodCenter = document.getElementById('filter-center').querySelector('feFlood');
 
         // 配置
+        const baseWidth = 1440, baseHeight = 1080, scaleFactor = 2;
+
         const config = {
             mainText: "小身材，大能耐",
             bgTextStr: "Feature",
@@ -353,33 +356,30 @@
             bgScaleY: 0.8,
             bgLockRatio: false,
             bgOffX: 0, bgOffY: -15, 
-            posX: 0, posY: 0,     
-            glowIntensity: 30, 
-            speed: 33.5, 
-            trailLen: 10.0, 
-            bgMode: document.getElementById('BgMode').value, 
-            patternColor: '#222222',
-            
-            isAnimating: false,
-            animStartTime: 0,
-            startSpacing: 55, 
+            posX: 0, posY: 0,
+            glowIntensity: 30,
+            speed: 33.5,
+            trailLen: 10.0,
+
+            startSpacing: 55,
             endSpacing: 0,
             spacingDuration: 2.0,
             spacingEasing: 'easeOut',
-            scanDelay: 1.0, 
-            
+            scanDelay: 1.0,
+
             startOpacity: 0.0,
             endOpacity: 1.0,
             opacityDuration: 2.0,
-            opacityDelay: 0.2, 
+            opacityDelay: 0.2,
+        };
 
-            previewMode: false 
+        const state = {
+            isAnimating: false,
+            animStartTime: 0,
+            previewMode: false,
         };
 
         // 状态
-        let customFontCount = 0;
-        let currentFontTarget = null;
-        // Background (SVG 模式：自动同步背景到 SVG 元素)
         const bg = new Background({
             modeSelectId: '#BgMode',
             uploadInputId: '#BgUpload',
@@ -387,8 +387,8 @@
             patternRowId: '#PatternColorRow',
             defaultMode: 'transparent',
             defaultPatternColor: '#222222',
-            baseWidth: 1440,
-            baseHeight: 1080,
+            baseWidth,
+            baseHeight,
             scaleFactor: 2,
             svgTargets: {
                 bgRect: document.getElementById('svgBg'),
@@ -397,7 +397,7 @@
         });
 
         // SVG 渲染管线（序列化 SVG → 隐藏 Canvas → Recorder 抓帧）
-        const svgRenderer = new SvgRenderer(svg, 2880, 2160);
+        const svgRenderer = new SvgRenderer(svg, baseWidth * scaleFactor, baseHeight * scaleFactor);
 
         const recorder = new Recorder({
             canvas: svgRenderer.exportCanvas,
@@ -410,25 +410,18 @@
             useManualWebmFrames: true,
         });
 
-        const easings = {
-            linear: t => t,
-            easeIn: t => t * t * t,
-            easeOut: t => 1 - Math.pow(1 - t, 3),
-            smooth: t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-        };
-
         // === 主渲染更新 ===
         function updateSVG(timeOverride = null) {
             const now = timeOverride !== null ? timeOverride : performance.now();
-            const elapsed = (now - config.animStartTime) / 1000;
+            const elapsed = (now - state.animStartTime) / 1000;
             
             let spacingVal = config.endSpacing;
             let scanOffset = 9999; 
             let opacityVal = config.endOpacity; 
 
-            if (config.isAnimating) {
+            if (state.isAnimating) {
                 const spP = Math.min(elapsed / config.spacingDuration, 1);
-                const easeFn = easings[config.spacingEasing] || easings.easeOut;
+                const easeFn = getEasing(config.spacingEasing);
                 const spEase = easeFn(spP);
                 spacingVal = config.startSpacing + (config.endSpacing - config.startSpacing) * spEase;
 
@@ -451,7 +444,7 @@
 
                 if (spP >= 1 && scanDist > cycleLen + 5 && opP >= 1) {
                     if (!recorder.isRecording) {
-                        config.isAnimating = false;
+                        state.isAnimating = false;
                         spacingVal = config.endSpacing;
                         opacityVal = config.endOpacity;
                         scanOffset = 9999;
@@ -460,10 +453,10 @@
             } else {
                 spacingVal = config.endSpacing;
                 opacityVal = config.endOpacity;
-                scanOffset = config.previewMode ? -9999 : 9999; 
+                scanOffset = state.previewMode ? -9999 : 9999; 
             }
             
-            const mainFontFull = config.mainFont.includes('CustomFont') ? config.mainFont : config.mainFont; 
+            const mainFontFull = config.mainFont;
             const mainWeight = config.mainFont.includes('CustomFont') ? 'normal' : config.mainWeight;
 
             contentGroup.setAttribute('transform', `translate(${config.posX}, ${config.posY})`);
@@ -500,7 +493,7 @@
             let count = Math.max(1, Math.floor(config.stackCount));
             if(count % 2 === 0) count++;
             const totalH = count * config.mainSize + (count - 1) * config.stackGap;
-            const startY = (1080 - totalH) / 2 + config.mainSize/2;
+            const startY = (baseHeight - totalH) / 2 + config.mainSize/2;
 
             while (scanGroup.firstChild) { scanGroup.removeChild(scanGroup.firstChild); }
 
@@ -559,7 +552,7 @@
             wm.setAttribute('alignment-baseline', "central");
             wm.setAttribute('fill', config.bgTextColor);
             
-            const bgFontFull = config.bgFont.includes('CustomFont') ? config.bgFont : config.bgFont;
+            const bgFontFull = config.bgFont;
             const bgWeight = config.bgFont.includes('CustomFont') ? 'normal' : config.bgWeight;
 
             wm.style.fontSize = `${config.bgTextSize}px`;
@@ -583,112 +576,74 @@
         requestAnimationFrame(previewLoop);
 
 
+        // === 字体选择器 ===
+        setupFontSelector({ selectId: 'MainFontInput', configKey: 'mainFont', fileInputId: 'HiddenFontInput', weightInputId: 'MainWeightInput', config });
+        setupFontSelector({ selectId: 'BgFontInput', configKey: 'bgFont', fileInputId: 'HiddenFontInput', weightInputId: 'BgWeightInput', config });
+
         // === UI BINDING ===
-        const hiddenFontInput = document.getElementById('HiddenFontInput');
-        
-        function updateWeightControlState(selectId, weightInputId) {
-            const select = document.getElementById(selectId);
-            const input = document.getElementById(weightInputId);
-            const isCustom = select.value.includes('CustomFont');
-            input.disabled = isCustom;
-            input.parentElement.style.opacity = isCustom ? '0.5' : '1';
-        }
-
-        function setupFontSelector(selectId, configKey, weightInputId) {
-            const select = document.getElementById(selectId);
-            select.addEventListener('change', e => {
-                if (e.target.value === 'upload') {
-                    currentFontTarget = { selectId, configKey, weightInputId };
-                    hiddenFontInput.value = '';
-                    hiddenFontInput.click();
-                    select.selectedIndex = 2; 
-                } else {
-                    config[configKey] = e.target.value;
-                    updateWeightControlState(selectId, weightInputId);
+        bindUI(config, [
+            ['MainSizeInput', 'mainSize', 'int', 'MainSizeVal'],
+            ['MainWeightInput', 'mainWeight', 'int', 'MainWeightVal'],
+            ['StrokeWidthInput', 'strokeWidth', 'float', 'StrokeWidthVal'],
+            ['StackCountInput', 'stackCount', 'int', 'StackCountVal'],
+            ['StackGapInput', 'stackGap', 'int', 'StackGapVal'],
+            ['SpeedInput', 'speed', 'float', 'SpeedVal'],
+            ['GlowIntensityInput', 'glowIntensity', 'int', 'GlowIntensityVal'],
+            ['TrailLenInput', 'trailLen', 'float', 'TrailLenVal'],
+            ['BgWeightInput', 'bgWeight', 'int', 'BgWeightVal'],
+            ['BgTextSizeInput', 'bgTextSize', 'int', 'BgTextSizeVal'],
+            ['BgTextSpaceInput', 'bgTextSpace', 'int', 'BgTextSpaceVal'],
+            ['BgScaleXInput', 'bgScaleX', 'float', 'BgScaleXVal'],
+            ['BgScaleYInput', 'bgScaleY', 'float', 'BgScaleYVal'],
+            ['BgOffXInput', 'bgOffX', 'int', 'BgOffXVal'],
+            ['BgOffYInput', 'bgOffY', 'int', 'BgOffYVal'],
+            ['PosXInput', 'posX', 'int', 'PosXVal'],
+            ['PosYInput', 'posY', 'int', 'PosYVal'],
+            ['StartSpacingInput', 'startSpacing', 'int', 'StartSpacingVal'],
+            ['EndSpacingInput', 'endSpacing', 'int', 'EndSpacingVal'],
+            ['SpacingDurationInput', 'spacingDuration', 'float', 'SpacingDurationVal', 's'],
+            ['ScanDelayInput', 'scanDelay', 'float', 'ScanDelayVal', 's'],
+            ['StartOpacityInput', 'startOpacity', 'float', 'StartOpacityVal'],
+            ['EndOpacityInput', 'endOpacity', 'float', 'EndOpacityVal'],
+            ['OpacityDurationInput', 'opacityDuration', 'float', 'OpacityDurationVal', 's'],
+            ['OpacityDelayInput', 'opacityDelay', 'float', 'OpacityDelayVal', 's'],
+            ['StrokeAlignInput', 'strokeAlign'],
+            ['EasingInput', 'spacingEasing'],
+            ['BgItalicToggle', 'bgItalic', 'checked'],
+        ], {
+            onChange: (val, key) => {
+                if (key === 'bgScaleX' && config.bgLockRatio) {
+                    config.bgScaleY = config.bgScaleX;
+                    document.getElementById('BgScaleYInput').value = config.bgScaleX;
+                    const disp = document.getElementById('BgScaleYVal');
+                    if (disp) disp.innerText = config.bgScaleX;
                 }
-            });
-            updateWeightControlState(selectId, weightInputId);
-        }
-
-        setupFontSelector('MainFontInput', 'mainFont', 'MainWeightInput');
-        setupFontSelector('BgFontInput', 'bgFont', 'BgWeightInput');
-
-        hiddenFontInput.addEventListener('change', async e => {
-            if (!e.target.files[0] || !currentFontTarget) return;
-            const file = e.target.files[0];
-            try {
-                const buffer = await file.arrayBuffer();
-                const fontName = `CustomFont_${++customFontCount}`;
-                const font = new FontFace(fontName, buffer);
-                await font.load();
-                document.fonts.add(font);
-                const val = `"${fontName}", sans-serif`;
-                const sel = document.getElementById(currentFontTarget.selectId);
-                const opt = document.createElement('option');
-                opt.value = val; opt.text = `📂 ${file.name}`;
-                sel.add(opt, 2); sel.value = val;
-                config[currentFontTarget.configKey] = val;
-                updateWeightControlState(currentFontTarget.selectId, currentFontTarget.weightInputId);
-            } catch (err) { alert("字体加载失败"); }
-        });
-
-        function bind(id, key) {
-            const el = document.getElementById(id);
-            const displayId = id.replace('Input', 'Val');
-            const display = document.getElementById(displayId);
-            if(el) {
-                el.addEventListener('input', e => {
-                    const val = el.type === 'checkbox' ? el.checked : 
-                                (el.type === 'range' ? parseFloat(e.target.value) : e.target.value);
-                    config[key] = val;
-                    if(display) {
-                        if(key.toLowerCase().includes('duration') || key.toLowerCase().includes('delay')) {
-                            display.innerText = val + 's';
-                        } else {
-                            display.innerText = val;
-                        }
-                    }
-                    if(key === 'bgScaleX' && config.bgLockRatio) {
-                        config.bgScaleY = val;
-                        document.getElementById('BgScaleYInput').value = val;
-                    }
-                });
             }
-        }
-
-        function bindSelect(id, key) {
-            const el = document.getElementById(id);
-            if(el) el.addEventListener('change', e => config[key] = e.target.value);
-        }
-
-        ['MainSize', 'MainWeight', 'StrokeWidth', 'StackCount', 'StackGap', 
-         'Speed', 'GlowIntensity', 'TrailLen', 'BgWeight', 'BgTextSize', 
-         'BgTextSpace', 'BgScaleX', 'BgScaleY', 'BgOffX', 'BgOffY', 'PosX', 'PosY',
-         'StartSpacing', 'EndSpacing', 'SpacingDuration', 'ScanDelay',
-         'StartOpacity', 'EndOpacity', 'OpacityDuration', 'OpacityDelay'].forEach(k => bind(k+'Input', k.charAt(0).toLowerCase() + k.slice(1)));
-
-        bindSelect('StrokeAlignInput', 'strokeAlign');
-        bindSelect('EasingInput', 'spacingEasing');
+        });
 
         document.getElementById('MainText').addEventListener('input', e => config.mainText = e.target.value);
         document.getElementById('BgTextStr').addEventListener('input', e => config.bgTextStr = e.target.value);
         document.getElementById('MainColor').addEventListener('input', e => config.mainColor = e.target.value);
         document.getElementById('BgTextColor').addEventListener('input', e => config.bgTextColor = e.target.value);
-        document.getElementById('PreviewToggle').addEventListener('change', e => config.previewMode = e.target.checked);
-        document.getElementById('BgItalicToggle').addEventListener('change', e => config.bgItalic = e.target.checked);
+        document.getElementById('PreviewToggle').addEventListener('change', e => { state.previewMode = e.target.checked; });
 
         document.getElementById('BgLockRatio').addEventListener('change', e => {
             config.bgLockRatio = e.target.checked;
             document.getElementById('BgScaleYRow').style.display = config.bgLockRatio ? 'none' : 'flex';
-            if(config.bgLockRatio) { config.bgScaleY = config.bgScaleX; document.getElementById('BgScaleYInput').value = config.bgScaleX; }
+            if (config.bgLockRatio) {
+                config.bgScaleY = config.bgScaleX;
+                document.getElementById('BgScaleYInput').value = config.bgScaleX;
+                const disp = document.getElementById('BgScaleYVal');
+                if (disp) disp.innerText = config.bgScaleX;
+            }
         });
 
 
         // 播放控制
         function playAnim() {
-            config.isAnimating = true;
-            config.animStartTime = performance.now();
-            config.previewMode = false;
+            state.isAnimating = true;
+            state.animStartTime = performance.now();
+            state.previewMode = false;
             document.getElementById('PreviewToggle').checked = false;
         }
         document.getElementById('BtnPlay').addEventListener('click', playAnim);
@@ -697,7 +652,7 @@
         recorder.onStateChange = (recording) => {
             if (recording) {
                 playAnim();
-                config.animStartTime = 0;
+                state.animStartTime = 0;
             }
         };
     </script>

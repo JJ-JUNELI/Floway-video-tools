@@ -31,14 +31,7 @@
                     <textarea id="TextInput" rows="2">Manus&#10;核心算力发布</textarea>
                 </div>
                 <div class="row">
-                    <select id="FontSelect" style="flex:2">
-                        <option value="'Noto Sans SC', sans-serif">思源黑体 (Noto Sans)</option>
-                        <option value="'Noto Serif SC', serif">思源宋体 (Noto Serif)</option>
-                        <option value="'Orbitron', sans-serif">Orbitron (科技英文)</option>
-                        <option value="Microsoft YaHei">微软雅黑</option>
-                        <option value="custom">📂 上传字体...</option>
-                    </select>
-                    <input type="file" id="FontUpload" accept=".ttf,.otf" style="display:none">
+                    <div id="FontSelectorMount" style="width:100%"></div>
                 </div>
             </div>
 
@@ -263,7 +256,7 @@
 
         const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
                 clearFrame, drawBg, lerp, hexToRgbaStr, getLightness,
-                getEasing, easeOutQuart, loadFont, bindUI } = initEffect({
+                getEasing, easeOutQuart, loadFont, bindUI, setupFontSelector, fontSelectHTML } = initEffect({
             canvasId: 'mainCanvas',
             fileName: 'TextAnim',
             onFrame: renderFrame,
@@ -283,9 +276,11 @@
             animType: 'fade', endSpacing: -22, endLine: -5, endOp: 1,
             startSpacing: -80, startLine: -5, startOp: 0,
             duration: 2, opacityDuration: 2, opCurve: 'easeOut',
+        };
+
+        const state = {
             isAnimating: false,
-            currentSpacing: -22, currentLine: -5, currentOpacity: 1,
-            currentOffsetY: 0, currentScale: 1
+            spacing: -22, line: -5, opacity: 1, offsetY: 0, textScale: 1,
         };
 
         let texturePattern = null;
@@ -299,6 +294,22 @@
                 const charWidths = chars.map(char => ctx.measureText(char).width);
                 return { chars, charWidths };
             });
+        }
+
+        function calcGradCoords(charW, charH) {
+            const angleRad = (config.gradAngle * Math.PI) / 180;
+            const vx = Math.cos(angleRad); const vy = Math.sin(angleRad);
+            const pts = [{ x: -charW / 2, y: -charH / 2 }, { x: charW / 2, y: -charH / 2 }, { x: charW / 2, y: charH / 2 }, { x: -charW / 2, y: charH / 2 }];
+            let minProj = Infinity, maxProj = -Infinity;
+            pts.forEach(p => { const proj = p.x * vx + p.y * vy; if (proj < minProj) minProj = proj; if (proj > maxProj) maxProj = proj; });
+            const span = maxProj - minProj;
+            const transWidth = Math.max(0.1, (config.gradWidth / 100) * span);
+            const startCenter = maxProj + transWidth / 2;
+            const endCenter = minProj - transWidth / 2;
+            const currentCenter = startCenter + (endCenter - startCenter) * (config.gradOffset / 100);
+            const pStart = currentCenter - transWidth / 2;
+            const pEnd = currentCenter + transWidth / 2;
+            return { x1: pStart * vx, y1: pStart * vy, x2: pEnd * vx, y2: pEnd * vy };
         }
 
         function updateTexture() {
@@ -330,7 +341,7 @@
 
             const elapsed = timestamp / 1000;
 
-            if (config.isAnimating || recorder.isRecording) {
+            if (state.isAnimating || recorder.isRecording) {
                 const safeDuration = config.duration > 0.1 ? config.duration : 0.1;
                 const progress = Math.min(elapsed / safeDuration, 1);
                 const ease = easeOutQuart(progress);
@@ -344,22 +355,22 @@
                 const rawSpacing = lerp(config.startSpacing, config.endSpacing, spacingEase);
                 const rawLine = lerp(config.startLine, config.endLine, spacingEase);
 
-                if (Math.abs(rawSpacing - config.endSpacing) < 0.01) config.currentSpacing = config.endSpacing;
-                else config.currentSpacing = rawSpacing;
-                if (Math.abs(rawLine - config.endLine) < 0.01) config.currentLine = config.endLine;
-                else config.currentLine = rawLine;
+                if (Math.abs(rawSpacing - config.endSpacing) < 0.01) state.spacing = config.endSpacing;
+                else state.spacing = rawSpacing;
+                if (Math.abs(rawLine - config.endLine) < 0.01) state.line = config.endLine;
+                else state.line = rawLine;
 
-                config.currentOpacity = lerp(config.startOp, config.endOp, opEase);
+                state.opacity = lerp(config.startOp, config.endOp, opEase);
 
-                if (config.animType === 'slideUp') { config.currentOffsetY = (1 - ease) * 150; config.currentScale = 1; }
-                else if (config.animType === 'fade') { config.currentOffsetY = 0; config.currentScale = 1; }
-                else if (config.animType === 'zoom') { config.currentOffsetY = 0; config.currentScale = 1.5 - (ease * 0.5); }
-                else { config.currentOffsetY = 0; config.currentScale = 1; }
+                if (config.animType === 'slideUp') { state.offsetY = (1 - ease) * 150; state.textScale = 1; }
+                else if (config.animType === 'fade') { state.offsetY = 0; state.textScale = 1; }
+                else if (config.animType === 'zoom') { state.offsetY = 0; state.textScale = 1.5 - (ease * 0.5); }
+                else { state.offsetY = 0; state.textScale = 1; }
 
-                if (!recorder.isRecording && progress >= 1 && opProgress >= 1) config.isAnimating = false;
+                if (!recorder.isRecording && progress >= 1 && opProgress >= 1) state.isAnimating = false;
             } else {
-                config.currentSpacing = config.endSpacing; config.currentLine = config.endLine;
-                config.currentOpacity = config.endOp; config.currentOffsetY = 0; config.currentScale = 1;
+                state.spacing = config.endSpacing; state.line = config.endLine;
+                state.opacity = config.endOp; state.offsetY = 0; state.textScale = 1;
             }
 
             if (layoutCache) drawText();
@@ -367,13 +378,13 @@
 
         let previewStartTime = 0;
         function previewPlay() {
-            config.isAnimating = true;
+            state.isAnimating = true;
             previewStartTime = performance.now();
         }
         function previewLoop() {
             if (!recorder.isRecording) {
                 let time = 0;
-                if (config.isAnimating) {
+                if (state.isAnimating) {
                     time = performance.now() - previewStartTime;
                 } else {
                     time = 99999;
@@ -386,13 +397,13 @@
         function drawText() {
             ctx.save();
             ctx.translate(config.posX, config.posY);
-            ctx.globalAlpha = Math.max(0, Math.min(1, config.currentOpacity));
+            ctx.globalAlpha = Math.max(0, Math.min(1, state.opacity));
 
-            if (config.currentOpacity <= 0.001) { ctx.restore(); return; }
+            if (state.opacity <= 0.001) { ctx.restore(); return; }
 
-            if (config.currentScale !== 1) {
+            if (state.textScale !== 1) {
                 ctx.translate(baseWidth / 2, baseHeight / 2);
-                ctx.scale(config.currentScale, config.currentScale);
+                ctx.scale(state.textScale, state.textScale);
                 ctx.translate(-baseWidth / 2, -baseHeight / 2);
             }
             ctx.font = `${config.fontWeight} ${config.fontSize}px ${config.fontFamily}`;
@@ -401,10 +412,10 @@
             const lines = layoutCache;
             let maxFinalWidth = 0; let maxCurrentWidth = 0;
             const finalTotalHeight = lines.length * config.fontSize + (lines.length - 1) * config.endLine;
-            const currentTotalHeight = lines.length * config.fontSize + (lines.length - 1) * config.currentLine;
+            const currentTotalHeight = lines.length * config.fontSize + (lines.length - 1) * state.line;
 
             const lineLayouts = lines.map(line => {
-                const currentW = line.charWidths.reduce((a, b) => a + b, 0) + (line.charWidths.length - 1) * config.currentSpacing;
+                const currentW = line.charWidths.reduce((a, b) => a + b, 0) + (line.charWidths.length - 1) * state.spacing;
                 if (currentW > maxCurrentWidth) maxCurrentWidth = currentW;
                 const finalW = line.charWidths.reduce((a, b) => a + b, 0) + (line.charWidths.length - 1) * config.endSpacing;
                 if (finalW > maxFinalWidth) maxFinalWidth = finalW;
@@ -416,14 +427,14 @@
             else if (config.expandDirX === 'left') anchorX = (baseWidth - maxFinalWidth) / 2;
             else if (config.expandDirX === 'right') anchorX = (baseWidth + maxFinalWidth) / 2;
 
-            let visualCenterY = (baseHeight / 2) + config.currentOffsetY;
+            let visualCenterY = (baseHeight / 2) + state.offsetY;
             let drawStartY = 0;
             if (config.expandDirY === 'center') drawStartY = visualCenterY - (currentTotalHeight / 2);
             else if (config.expandDirY === 'top') drawStartY = visualCenterY - (finalTotalHeight / 2);
             else if (config.expandDirY === 'bottom') drawStartY = visualCenterY + (finalTotalHeight / 2) - currentTotalHeight;
 
             lineLayouts.forEach((line, lineIndex) => {
-                const y = drawStartY + lineIndex * (config.fontSize + config.currentLine) + (config.fontSize / 2);
+                const y = drawStartY + lineIndex * (config.fontSize + state.line) + (config.fontSize / 2);
                 let currentLineStartX = 0;
                 let blockLeftEdge = 0;
                 if (config.expandDirX === 'center') blockLeftEdge = anchorX - maxCurrentWidth / 2;
@@ -450,20 +461,10 @@
                     if (config.glowEnabled) {
                         ctx.save(); ctx.globalCompositeOperation = 'screen';
                         let currentGlowStyle;
-                        let currentGlowAlpha = config.currentOpacity * config.glowOpacity;
+                        let currentGlowAlpha = state.opacity * config.glowOpacity;
 
                         if (config.fillMode === 'gradient') {
-                            const angleRad = (config.gradAngle * Math.PI) / 180;
-                            const vx = Math.cos(angleRad); const vy = Math.sin(angleRad);
-                            const w = charRealWidth; const h = config.fontSize;
-                            const pts = [{ x: -w / 2, y: -h / 2 }, { x: w / 2, y: -h / 2 }, { x: w / 2, y: h / 2 }, { x: -w / 2, y: h / 2 }];
-                            let minProj = Infinity, maxProj = -Infinity;
-                            pts.forEach(p => { const proj = p.x * vx + p.y * vy; if (proj < minProj) minProj = proj; if (proj > maxProj) maxProj = proj; });
-                            const span = maxProj - minProj; const transWidth = Math.max(0.1, (config.gradWidth / 100) * span);
-                            const startCenter = maxProj + transWidth / 2; const endCenter = minProj - transWidth / 2;
-                            const currentCenter = startCenter + (endCenter - startCenter) * (config.gradOffset / 100);
-                            const pStart = currentCenter - transWidth / 2; const pEnd = currentCenter + transWidth / 2;
-                            const x1 = pStart * vx; const y1 = pStart * vy; const x2 = pEnd * vx; const y2 = pEnd * vy;
+                            const { x1, y1, x2, y2 } = calcGradCoords(charRealWidth, config.fontSize);
 
                             const glowGrad = ctx.createLinearGradient(x1, y1, x2, y2);
                             const l1 = getLightness(config.gradColor1);
@@ -485,17 +486,7 @@
                     ctx.save();
                     ctx.translate(charX, y);
                     if (config.fillMode === 'gradient') {
-                        const angleRad = (config.gradAngle * Math.PI) / 180;
-                        const vx = Math.cos(angleRad); const vy = Math.sin(angleRad);
-                        const w = charRealWidth; const h = config.fontSize;
-                        const pts = [{ x: -w / 2, y: -h / 2 }, { x: w / 2, y: -h / 2 }, { x: w / 2, y: h / 2 }, { x: -w / 2, y: h / 2 }];
-                        let minProj = Infinity, maxProj = -Infinity;
-                        pts.forEach(p => { const proj = p.x * vx + p.y * vy; if (proj < minProj) minProj = proj; if (proj > maxProj) maxProj = proj; });
-                        const span = maxProj - minProj; const transWidth = Math.max(0.1, (config.gradWidth / 100) * span);
-                        const startCenter = maxProj + transWidth / 2; const endCenter = minProj - transWidth / 2;
-                        const currentCenter = startCenter + (endCenter - startCenter) * (config.gradOffset / 100);
-                        const pStart = currentCenter - transWidth / 2; const pEnd = currentCenter + transWidth / 2;
-                        const x1 = pStart * vx; const y1 = pStart * vy; const x2 = pEnd * vx; const y2 = pEnd * vy;
+                        const { x1, y1, x2, y2 } = calcGradCoords(charRealWidth, config.fontSize);
 
                         ctx.translate(charRealWidth / 2, 0);
                         const grad = ctx.createLinearGradient(x1, y1, x2, y2);
@@ -516,7 +507,7 @@
                         ctx.restore();
                     }
 
-                    charX += charRealWidth + config.currentSpacing;
+                    charX += charRealWidth + state.spacing;
                 });
             });
             ctx.restore();
@@ -560,7 +551,6 @@
             ['OpacityDuration', 'opacityDuration', 'float', 'OpDurVal', 's'],
         ], {
             onChange: () => {
-                config.fontFamily = document.getElementById('FontSelect').value === 'custom' ? window.customFont : document.getElementById('FontSelect').value;
                 document.getElementById('GradientControls').style.display = config.fillMode === 'gradient' ? 'block' : 'none';
                 calculateLayout();
                 updateTexture();
@@ -569,21 +559,12 @@
 
         // Special controls not covered by bindUI
         document.getElementById('TextInput').addEventListener('input', e => { config.text = e.target.value; calculateLayout(); });
-        document.getElementById('FontSelect').addEventListener('change', v => {
-            if (v.target.value === 'custom') document.getElementById('FontUpload').click();
-            else { config.fontFamily = v.target.value; calculateLayout(); }
-        });
-        document.getElementById('FontUpload').addEventListener('change', async e => {
-            const f = e.target.files[0]; if (!f) return;
-            const fontFamily = await loadFont(f);
-            window.customFont = fontFamily;
-            const s = document.getElementById('FontSelect');
-            s.options[s.selectedIndex].text = "✅ " + f.name;
-            s.value = 'custom';
-            config.fontFamily = fontFamily;
-            calculateLayout();
-        });
         document.getElementById('BtnPlay').addEventListener('click', previewPlay);
+
+        // Font selector: inject HTML and init
+        const fontSelectId = 'FontSelect';
+        document.getElementById('FontSelectorMount').innerHTML = fontSelectHTML(fontSelectId, config.fontFamily);
+        setupFontSelector({ selectId: fontSelectId, configKey: 'fontFamily', fileInputId: fontSelectId + 'Upload', weightInputId: 'WeightInput', config });
 
         // Init
         calculateLayout();
