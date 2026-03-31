@@ -5,7 +5,7 @@
 
 import { Recorder } from './recorder.js';
 import { Background } from './background.js';
-import { lerp, hexToRgba, hexToRgbaStr, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, easeInOutCubicSmooth, getEasing, loadFont, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped } from './utils.js';
+import { lerp, hexToRgba, hexToRgbaStr, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, easeInOutCubicSmooth, getEasing, loadFont, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped, bindUI } from './utils.js';
 
 // ========== 面板 HTML 注入 ==========
 
@@ -15,8 +15,9 @@ export function injectPanels(opts = {}) {
 
     const defaultBgMode = opts.defaultBgMode || '#000000';
     const defaultPatternColor = opts.defaultPatternColor || '#333333';
+    const skipBg = opts.skipBgPanel === true;
 
-    placeholder.innerHTML = `
+    const bgPanelHTML = skipBg ? '' : `
         <div class="control-group">
             <div class="group-title"><span>▩ 场景背景</span></div>
             <div class="row">
@@ -36,6 +37,10 @@ export function injectPanels(opts = {}) {
                 <input type="color" id="PatternColor" value="${defaultPatternColor}">
             </div>
         </div>
+    `;
+
+    placeholder.innerHTML = `
+        ${bgPanelHTML}
 
         <div class="control-group" style="border-color:var(--danger)">
             <div class="group-title">🎥 导出</div>
@@ -62,8 +67,8 @@ export function injectPanels(opts = {}) {
  * @param {Object} opts
  * @param {string} [opts.canvasId='mainCanvas']
  * @param {string} opts.fileName          - 导出文件名
- * @param {number} [opts.baseWidth=1600]
- * @param {number} [opts.baseHeight=1200]
+ * @param {number} [opts.baseWidth=1440]
+ * @param {number} [opts.baseHeight=1080]
  * @param {number} [opts.scale=2]         - 超采样倍率
  * @param {string} [opts.defaultBgMode='#000000']
  * @param {string} [opts.defaultPatternColor='#333333']
@@ -80,8 +85,8 @@ export function initEffect(opts) {
     injectPanels(opts);
 
     // 2. Canvas 初始化
-    const baseWidth = opts.baseWidth || 1600;
-    const baseHeight = opts.baseHeight || 1200;
+    const baseWidth = opts.baseWidth || 1440;
+    const baseHeight = opts.baseHeight || 1080;
     const scale = opts.scale || 2;
     const canvas = document.getElementById(opts.canvasId || 'mainCanvas');
     canvas.width = baseWidth * scale;
@@ -171,5 +176,6 @@ export function initEffect(opts) {
         drawMediaContain,
         createLinearGradient, createRadialGradient,
         drawTextCentered, drawTextWrapped,
+        bindUI,
     };
 }

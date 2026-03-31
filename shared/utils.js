@@ -245,3 +245,82 @@ export function saveFile(blob, name) {
         URL.revokeObjectURL(u);
     }, 100);
 }
+
+// ========== 8. UI 绑定 ==========
+
+/**
+ * 批量绑定UI控件到config对象，自动监听变化
+ *
+ * @param {Object} config - 配置对象
+ * @param {Array<Array>} rules - 绑定规则数组
+ *   每条规则: [elemId, configKey, transform?, displayId?, suffix?]
+ *   transform:
+ *     'int'     → parseInt(v)
+ *     'float'   → parseFloat(v)
+ *     '%'       → parseInt(v) / 100
+ *     'checked' → 用 el.checked 代替 el.value
+ *     Function  → 自定义转换函数
+ *     undefined → 原样字符串
+ *   displayId: 变化时同步更新显示值的元素ID
+ *   suffix: 显示值后缀（如 '%'、's'、'°'）
+ *
+ * @param {Object} opts
+ *   opts.onChange(rawVal, configKey, elemId) - 每次值变化后调用
+ *
+ * @returns {{ readAll: Function }}
+ *   readAll() 一次性从DOM读取所有值到config，然后调用onChange
+ *
+ * @example
+ *   const { readAll } = bindUI(config, [
+ *       ['SizeInput', 'fontSize', 'int', 'SizeVal'],
+ *       ['GlowToggle', 'glowEnabled', 'checked'],
+ *       ['FillSelect', 'fillMode'],
+ *       ['GradOp1', 'gradOp1', '%', 'GradOp1Val', '%'],
+ *       ['AnimDuration', 'duration', 'float', 'DurVal', 's'],
+ *   ], { onChange: () => { recalculate(); } });
+ */
+export function bindUI(config, rules, opts = {}) {
+    const onChange = opts.onChange || (() => {});
+
+    function transformValue(raw, transform) {
+        if (typeof transform === 'function') return transform(raw);
+        if (transform === 'int') return parseInt(raw);
+        if (transform === 'float') return parseFloat(raw);
+        if (transform === '%') return parseInt(raw) / 100;
+        return raw;
+    }
+
+    function readOne(rule) {
+        const [elemId, configKey, transform] = rule;
+        const el = document.getElementById(elemId);
+        if (!el) return;
+        const raw = transform === 'checked' ? el.checked : el.value;
+        if (configKey) config[configKey] = transformValue(raw, transform);
+    }
+
+    function readAll() {
+        for (const rule of rules) readOne(rule);
+        onChange();
+    }
+
+    for (const rule of rules) {
+        const [elemId, configKey, transform, displayId, suffix] = rule;
+        const el = document.getElementById(elemId);
+        if (!el) continue;
+
+        const isSelect = el.tagName === 'SELECT';
+        const isCheckbox = el.type === 'checkbox' || transform === 'checked';
+        const eventType = (isSelect || isCheckbox) ? 'change' : 'input';
+
+        el.addEventListener(eventType, () => {
+            readOne(rule);
+            if (displayId) {
+                const display = document.getElementById(displayId);
+                if (display) display.innerText = el.value + (suffix || '');
+            }
+            onChange(el.value, configKey, elemId);
+        });
+    }
+
+    return { readAll };
+}
