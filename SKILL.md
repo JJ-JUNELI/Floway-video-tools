@@ -56,7 +56,7 @@ Copy this template as-is. The sections marked with `█ YOUR` are where you writ
     <style>
         canvas {
             box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #333;
-            background: #000; width: 100%; max-width: 1600px; aspect-ratio: 4/3; display: block;
+            background: #000; width: 100%; max-width: 1440px; aspect-ratio: 4/3; display: block;
         }
     </style>
 </head>
@@ -120,7 +120,7 @@ Copy this template as-is. The sections marked with `█ YOUR` are where you writ
             clearFrame();
             drawBg(timeMs);
             // █ YOUR: Draw your effect here using ctx
-            // All coordinates are in baseWidth × baseHeight space (1600 × 1200)
+            // All coordinates are in baseWidth × baseHeight space (1440 × 1080)
             // The SCALE transform is already applied, no need to multiply
         }
 
@@ -142,8 +142,8 @@ Copy this template as-is. The sections marked with `█ YOUR` are where you writ
 The `drawFrame(timeMs)` function is called for each frame.
 
 - `timeMs` is in milliseconds
-- All drawing coordinates are in `baseWidth × baseHeight` space (default 1600 × 1200). The 2x SCALE transform is already applied.
-- **Never use `canvas.width` or `canvas.height` for drawing** — those are the physical pixel dimensions (3200 × 2400). Use `baseWidth` and `baseHeight` instead.
+- All drawing coordinates are in `baseWidth × baseHeight` space (default 1440 × 1080). The 2x SCALE transform is already applied.
+- **Never use `canvas.width` or `canvas.height` for drawing** — those are the physical pixel dimensions (2880 × 2160). Use `baseWidth` and `baseHeight` instead.
 - `clearFrame()` and `drawBg(timeMs)` handle clearing and background automatically — no need to manually clearRect or save/restore.
 
 ### Step 4: Bind UI controls
@@ -177,7 +177,7 @@ const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
     canvasId: 'mainCanvas',    // Canvas 元素 ID
     fileName: 'EffectName',    // 导出文件名
     // 可选：
-    // baseWidth: 1600,  baseHeight: 1200,  scale: 2,
+    // baseWidth: 1440,  baseHeight: 1080,  scale: 2,
     // defaultBgMode: '#000000',  defaultPatternColor: '#333333',
     // useRealtimeWebm: false,  useRafForFrames: false,
     // useManualWebmFrames: false,  encodeQueueMax: 2,
@@ -192,8 +192,8 @@ const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
 | `canvas` | Canvas 元素 |
 | `bg` | Background 实例（一般不需要直接用） |
 | `recorder` | Recorder 实例（一般不需要直接用） |
-| `baseWidth` | 逻辑宽度（默认 1600） |
-| `baseHeight` | 逻辑高度（默认 1200） |
+| `baseWidth` | 逻辑宽度（默认 1440） |
+| `baseHeight` | 逻辑高度（默认 1080） |
 | `scale` | 超采样倍率（默认 2） |
 | `clearFrame()` | 清屏（正确处理 scale 变换） |
 | `drawBg(timeMs)` | 绘制背景（自动处理透明+非 PNG 的黑色填充） |
@@ -286,14 +286,14 @@ injectPanels({ defaultBgMode: 'transparent' });
 const bg = new Background({
     modeSelectId: '#BgMode', uploadInputId: '#BgUpload',
     patternColorId: '#PatternColor', patternRowId: '#PatternColorRow',
-    defaultMode: 'transparent', baseWidth: 1600, baseHeight: 1200, scaleFactor: 1,
+    defaultMode: 'transparent', baseWidth: 1440, baseHeight: 1080, scaleFactor: 2,
     svgTargets: {
         bgRect: document.getElementById('svgBg'),
         patternEl: document.getElementById('bgPattern'),
     },
 });
 
-const svgRenderer = new SvgRenderer(svg, 1600, 1200);
+const svgRenderer = new SvgRenderer(svg, 1440, 1080);
 
 const recorder = new Recorder({
     canvas: svgRenderer.exportCanvas,
@@ -302,7 +302,7 @@ const recorder = new Recorder({
         svgRenderer.drawBackground(bg, recorder.format);
         await svgRenderer.rasterize();
     },
-    fileName: 'SvgEffect', width: 1600, height: 1200,
+    fileName: 'SvgEffect', width: 1440, height: 1080,
 });
 ```
 
@@ -330,4 +330,4 @@ SVG HTML structure must include: `<rect id="svgBg">` for background and `<patter
 
 3. **Don't insert statements before function declarations**: In ES modules, `function` declarations are NOT hoisted to top. Inserting `console.log()` or other statements between them will break the code.
 
-4. **Use `baseWidth` / `baseHeight`, not `canvas.width` / `canvas.height`**: The physical canvas is 3200×2400 (2x supersampled). All drawing coordinates should use the logical dimensions (1600×1200).
+4. **Use `baseWidth` / `baseHeight`, not `canvas.width` / `canvas.height`**: The physical canvas is 2880×2160 (2x supersampled). All drawing coordinates should use the logical dimensions (1440×1080).

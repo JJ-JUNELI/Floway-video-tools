@@ -67,7 +67,7 @@ floway-tools-v2/
     <style>
         canvas {
             box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #333;
-            background: #000; width: 100%; max-width: 1600px; aspect-ratio: 4/3; display: block;
+            background: #000; width: 100%; max-width: 1440px; aspect-ratio: 4/3; display: block;
         }
     </style>
 </head>
@@ -180,7 +180,7 @@ floway-tools-v2/
 | 1 | `jszip.min.js` 和 `mp4-muxer.js` 用 `<script>` 标签加载，**不要用 ES module import** | mp4-muxer.js 不是 ESM 格式，import 会导致整个脚本崩溃 |
 | 2 | **不要写背景面板和导出面板的 HTML**，用 `<div id="shared-controls-placeholder"></div>` 代替 | 面板由 `initEffect()` 自动注入，手动写会引入不一致 |
 | 3 | 不要在函数声明前后插入 console.log 或其他语句 | ES module 中 function 声明不是 hoisted 到顶部的，会被语句打断 |
-| 4 | 绘制坐标用 `baseWidth` / `baseHeight`（默认 1600/1200），**不要用** `canvas.width` / `canvas.height` | canvas 实际尺寸是 3200×2400，用了会画到画布外 |
+| 4 | 绘制坐标用 `baseWidth` / `baseHeight`（默认 1440/1080），**不要用** `canvas.width` / `canvas.height` | canvas 实际尺寸是 2880×2160，用了会画到画布外 |
 ---
 
 ## 可用工具函数
@@ -299,8 +299,8 @@ const totalHeight = drawTextWrapped(ctx, longText, 100, 200,
 
 ## Canvas 绘制要点
 
-- 画布逻辑尺寸：**1600 × 1200**（4:3 比例）
-- 实际像素：3200 × 2400（2x 超采样，导出更清晰）
+- 画布逻辑尺寸：**1440 × 1080**（4:3 比例）
+- 实际像素：2880 × 2160（2x 超采样，导出更清晰）
 - 预览显示大小由 CSS 控制，跟逻辑尺寸一致
 - `ctx.scale(SCALE, SCALE)` 已设置，所有绘制用逻辑坐标
 - 每帧必须先清屏再画，不要依赖上帧残留
@@ -317,7 +317,7 @@ const totalHeight = drawTextWrapped(ctx, longText, 100, 200,
 
 ```html
 <!-- SVG 根元素，包含 SVG 背景和内容 -->
-<svg id="mainSvg" width="1600" height="1200" xmlns="http://www.w3.org/2000/svg">
+<svg id="mainSvg" width="1440" height="1080" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <pattern id="bgPattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse"></pattern>
     </defs>
@@ -344,14 +344,14 @@ const bg = new Background({
     patternColorId: '#PatternColor',
     patternRowId: '#PatternColorRow',
     defaultMode: 'transparent',
-    baseWidth: 1600, baseHeight: 1200, scaleFactor: 1,
+    baseWidth: 1440, baseHeight: 1080, scaleFactor: 2,
     svgTargets: {
         bgRect: document.getElementById('svgBg'),
         patternEl: document.getElementById('bgPattern'),
     },
 });
 
-const svgRenderer = new SvgRenderer(svg, 1600, 1200);
+const svgRenderer = new SvgRenderer(svg, 1440, 1080);
 
 const recorder = new Recorder({
     canvas: svgRenderer.exportCanvas,
@@ -360,7 +360,7 @@ const recorder = new Recorder({
         svgRenderer.drawBackground(bg, recorder.format); // 背景画到底层
         await svgRenderer.rasterize();                  // SVG→Canvas 序列化
     },
-    fileName: 'SvgEffect', width: 1600, height: 1200,
+    fileName: 'SvgEffect', width: 1440, height: 1080,
 });
 
 function updateSVG(timeOverride = null) {
