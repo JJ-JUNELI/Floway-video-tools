@@ -47,18 +47,7 @@
                 
                 <div class="row stack">
                     <div class="label-line"><span>主字体</span></div>
-                    <select id="MainFontInput">
-                        <option value="upload" style="color:var(--accent); font-weight:bold;">📂 + 上传新字体...</option>
-                        <option disabled>──────────</option>
-                        <option value="'Noto Sans SC', sans-serif" selected>思源黑体 (Source Han Sans)</option>
-                        <option value="'Orbitron', monospace">未来科技 (Orbitron)</option>
-                        <option value="'Chakra Petch', sans-serif">机械非衬线 (Chakra Petch)</option>
-                        <option value="'Montserrat', sans-serif">几何非衬线 (Montserrat)</option>
-                        <option value="'Exo 2', sans-serif">赛博非衬线 (Exo 2)</option>
-                        <option value="'Playfair Display', serif">优雅衬线 (Playfair)</option>
-                        <option value="'Noto Serif SC', serif">思源宋体 (Noto Serif)</option>
-                        <option value="'Ma Shan Zheng', cursive">毛笔手写 (Brush)</option>
-                    </select>
+                    <div id="MainFontMount" style="width:100%"></div>
                 </div>
 
                 <div class="row stack">
@@ -192,18 +181,7 @@
                 
                 <div class="row stack">
                      <div class="label-line"><span>水印字体</span></div>
-                    <select id="BgFontInput">
-                        <option value="upload" style="color:var(--accent); font-weight:bold;">📂 + 上传新字体...</option>
-                        <option disabled>──────────</option>
-                        <option value="'Noto Sans SC', sans-serif">思源黑体 (Source Han Sans)</option>
-                        <option value="'Orbitron', monospace">未来科技 (Orbitron)</option>
-                        <option value="'Chakra Petch', sans-serif">机械非衬线 (Chakra Petch)</option>
-                        <option value="'Montserrat', sans-serif" selected>几何非衬线 (Montserrat)</option>
-                        <option value="'Exo 2', sans-serif">赛博非衬线 (Exo 2)</option>
-                        <option value="'Playfair Display', serif">优雅衬线 (Playfair)</option>
-                        <option value="'Noto Serif SC', serif">思源宋体 (Noto Serif)</option>
-                        <option value="'Ma Shan Zheng', cursive">毛笔手写 (Brush)</option>
-                    </select>
+                    <div id="BgFontMount" style="width:100%"></div>
                 </div>
 
                 <div class="row stack">
@@ -265,7 +243,8 @@
         </div>
     </div>
 
-    <input type="file" id="HiddenFontInput" accept=".ttf,.otf,.woff,.woff2" style="display:none">
+    <input type="file" id="MainFontUpload" accept=".ttf,.otf,.woff,.woff2" style="display:none">
+    <input type="file" id="BgFontUpload" accept=".ttf,.otf,.woff,.woff2" style="display:none">
 
     <div class="preview-area">
         <div id="RecIndicator"><div class="rec-dot"></div> RENDERING...</div>
@@ -304,7 +283,7 @@
                       text-anchor="middle" 
                       dominant-baseline="central" 
                       alignment-baseline="central" 
-                      fill="white" style="font-weight:900; font-size:130px;">功能3: AI侧边栏</text>
+                      fill="white" style="font-weight:900; font-size:130px;">小身材，大能耐</text>
             </g>
         </svg>
 
@@ -313,7 +292,7 @@
         import { Background } from '../shared/background.js';
         import { injectPanels } from '../shared/controls.js';
         import { SvgRenderer } from '../shared/svg-renderer.js';
-        import { getEasing, bindUI, setupFontSelector } from '../shared/utils.js';
+        import { getEasing, bindUI, setupFontSelector, fontSelectHTML } from '../shared/utils.js';
 
         injectPanels({ defaultBgMode: 'transparent', defaultPatternColor: '#222222' });
 
@@ -334,13 +313,14 @@
 
         // 配置
         const baseWidth = 1440, baseHeight = 1080, scaleFactor = 2;
+        const centerX = baseWidth / 2, centerY = baseHeight / 2;
 
         const config = {
             mainText: "小身材，大能耐",
             bgTextStr: "Feature",
-            mainFont: '"Noto Sans SC", sans-serif',
+            mainFont: "'Noto Sans SC', sans-serif",
             mainWeight: 900,
-            bgFont: '"Montserrat", sans-serif',
+            bgFont: "'Montserrat', sans-serif",
             bgWeight: 900,
             mainColor: "#ffffff",
             mainSize: 130,
@@ -495,7 +475,7 @@
             const totalH = count * config.mainSize + (count - 1) * config.stackGap;
             const startY = (baseHeight - totalH) / 2 + config.mainSize/2;
 
-            while (scanGroup.firstChild) { scanGroup.removeChild(scanGroup.firstChild); }
+            scanGroup.replaceChildren();
 
             for(let i = 0; i < count; i++) {
                 let alpha = 0;
@@ -517,7 +497,7 @@
                 
                 const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 textEl.textContent = config.mainText;
-                textEl.setAttribute('x', "720");
+                textEl.setAttribute('x', String(centerX));
                 textEl.setAttribute('y', yOffset);
                 textEl.setAttribute('text-anchor', "middle");
                 textEl.setAttribute('dominant-baseline', "central");
@@ -540,7 +520,7 @@
         }
 
         function updateWatermark() {
-            while (watermarkGroup.firstChild) { watermarkGroup.removeChild(watermarkGroup.firstChild); }
+            watermarkGroup.replaceChildren();
             if(!config.bgTextStr) return;
 
             const wm = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -564,7 +544,7 @@
             const finalYOffset = config.bgOffY; 
 
             watermarkGroup.setAttribute('transform', 
-                `translate(${720 + config.bgOffX}, ${540 + finalYOffset}) scale(${config.bgScaleX}, ${config.bgScaleY})`
+                `translate(${centerX + config.bgOffX}, ${centerY + finalYOffset}) scale(${config.bgScaleX}, ${config.bgScaleY})`
             );
             watermarkGroup.appendChild(wm);
         }
@@ -577,8 +557,10 @@
 
 
         // === 字体选择器 ===
-        setupFontSelector({ selectId: 'MainFontInput', configKey: 'mainFont', fileInputId: 'HiddenFontInput', weightInputId: 'MainWeightInput', config });
-        setupFontSelector({ selectId: 'BgFontInput', configKey: 'bgFont', fileInputId: 'HiddenFontInput', weightInputId: 'BgWeightInput', config });
+        document.getElementById('MainFontMount').innerHTML = fontSelectHTML('MainFontInput', config.mainFont);
+        document.getElementById('BgFontMount').innerHTML = fontSelectHTML('BgFontInput', config.bgFont);
+        setupFontSelector({ selectId: 'MainFontInput', configKey: 'mainFont', fileInputId: 'MainFontUpload', weightInputId: 'MainWeightInput', config });
+        setupFontSelector({ selectId: 'BgFontInput', configKey: 'bgFont', fileInputId: 'BgFontUpload', weightInputId: 'BgWeightInput', config });
 
         // === UI BINDING ===
         bindUI(config, [
