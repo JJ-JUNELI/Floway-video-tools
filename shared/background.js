@@ -30,6 +30,8 @@
  *   bg.drawToCanvas(ctx, width, height, exportFormat); // 导出时画到 Canvas
  */
 
+import { drawMediaContain } from './utils.js';
+
 export class Background {
     constructor(opts) {
         this.modeSelectId = opts.modeSelectId !== undefined ? opts.modeSelectId : '#BgMode';
@@ -305,22 +307,6 @@ export class Background {
      * Draw cover — 图片/视频铺满画布 (contain模式)
      */
     _drawMediaContain(ctx, media) {
-        const mw = media.videoWidth || media.width;
-        const mh = media.videoHeight || media.height;
-        if (!mw || !mh) return;
-
-        const scale = Math.max(this.baseWidth / mw, this.baseHeight / mh);
-        const w = mw * scale;
-        const h = mh * scale;
-
-        // 应用超采样缩放
-        const sx = this.scaleFactor;
-        ctx.drawImage(
-            media,
-            (this.baseWidth - w) / 2 * sx,
-            (this.baseHeight - h) / 2 * sx,
-            w * sx,
-            h * sx
-        );
+        drawMediaContain(ctx, media, this.baseWidth, this.baseHeight, this.scaleFactor);
     }
 }

@@ -266,7 +266,7 @@
             if (bg.mode === 'transparent') {
                 // do nothing
             } else {
-                bg.draw(context, 0, false, recorder.format);
+                bg.draw(context, 0, recorder.isRecording, recorder.format);
             }
         }
         function drawLogoMatrix(context, scroll, rot) {

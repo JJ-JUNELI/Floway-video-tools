@@ -26,13 +26,6 @@ export function hexToRgba(hex, alpha) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export function hexToRgbaStr(hex, alpha) {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
 export function getLightness(hex) {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -90,8 +83,6 @@ export const easeInOutCubic = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t
 export const easeOutQuart = t => 1 - Math.pow(1 - t, 4);
 /** @param {number} t 0~1 */
 export const easeOutExpo = t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-export const easeInOutCubicSmooth = easeInOutCubic;
-
 /**
  * 按名称查找缓动函数，用于动态配置 (如 select 下拉选择)
  * @param {string} name - 'linear' | 'easeInCubic' | 'easeOutCubic' | ...
@@ -105,7 +96,7 @@ export function getEasing(name) {
         easeInOut: easeInOutCubic,
         easeOutQuart,
         easeOutExpo,
-        smooth: easeInOutCubicSmooth,
+        smooth: easeInOutCubic,
     };
     return map[name] || easeOutCubic;
 }

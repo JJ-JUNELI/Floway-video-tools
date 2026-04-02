@@ -162,10 +162,10 @@ const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
         // 数学
         lerp, clamp,
         // 颜色
-        hexToRgba, hexToRgbaStr, getLightness,
+        hexToRgba, getLightness,
         // 缓动
         easeLinear, easeInCubic, easeOutCubic, easeInOutCubic,
-        easeOutQuart, easeOutExpo, easeInOutCubicSmooth, getEasing,
+        easeOutQuart, easeOutExpo, getEasing,
         // 字体
         loadFont,
         // Canvas 辅助
@@ -212,7 +212,6 @@ const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
 | 返回值 | 签名 | 说明 |
 |---|---|---|
 | `hexToRgba` | `(hex, alpha) => string` | HEX → `rgba(r,g,b,a)` 字符串 |
-| `hexToRgbaStr` | `(hex, alpha) => string` | 同上（别名） |
 | `getLightness` | `(hex) => number` | 获取明度 0~1 |
 
 ### Easing (缓动)
@@ -225,7 +224,6 @@ const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
 | `easeInOutCubic` | `(t) => number` | 缓入缓出 |
 | `easeOutQuart` | `(t) => number` | 强缓出 |
 | `easeOutExpo` | `(t) => number` | 指数缓出 |
-| `easeInOutCubicSmooth` | `(t) => number` | 平滑缓入缓出 |
 | `getEasing` | `(name) => Function` | 按名称查找缓动函数。name: `'linear'`/`'easeIn'`/`'easeOut'`/`'easeInOut'`/`'easeOutQuart'`/`'easeOutExpo'`/`'smooth'` |
 
 ### Font (字体)

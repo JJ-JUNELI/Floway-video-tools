@@ -33,7 +33,7 @@ floway-tools-v2/
 │   ├── background.js    ← 背景系统（支持 Canvas 和 SVG 两种输出目标）
 │   ├── controls.js      ← 一行初始化：Canvas/Background/Recorder/面板/预览循环
 │   ├── svg-renderer.js  ← SVG 渲染管线：SVG→Canvas 序列化（SVG 效果用）
-│   ├── utils.js         ← 工具函数（lerp, hexToRgba 等）
+│   ├── utils.js         ← 工具函数（lerp, hexToRgba, bindUI 等）
 │   └── mp4-muxer.js     ← MP4 编码库
 ├── effects/             ← 效果文件目录
 │   ├── text-animator.html
@@ -49,6 +49,8 @@ floway-tools-v2/
 ## 效果文件模板
 
 每个效果是一个**完整的单文件 HTML**。背景面板和导出面板由 `shared/controls.js` 自动注入，**你不需要写也不应该修改它们**。
+
+### 模板 A：Canvas 效果（90% 的效果用这个）
 
 ```html
 <!DOCTYPE html>
@@ -84,7 +86,30 @@ floway-tools-v2/
             <!-- ★ 在这里写你的参数面板 ★ -->
             <div class="control-group">
                 <div class="group-title">🔧 效果参数</div>
-                <!-- 加滑块、颜色选择器、下拉菜单 -->
+
+                <!-- 示例：滑块 -->
+                <div class="row stack">
+                    <div class="label-line"><span>大小</span><span id="SizeVal">50</span></div>
+                    <input type="range" id="SizeInput" min="0" max="100" step="1" value="50">
+                </div>
+
+                <!-- 示例：颜色 -->
+                <div class="row">
+                    <span style="font-size:12px; color:#aaa;">主颜色</span>
+                    <input type="color" id="ColorInput" value="#00ffaa">
+                </div>
+
+                <!-- 示例：开关 -->
+                <div class="sub-title">
+                    <span>启用辉光</span>
+                    <input type="checkbox" id="GlowToggle" checked>
+                </div>
+
+                <!-- 字体选择器（三步注入） -->
+                <div class="row">
+                    <span style="font-size:12px; color:#aaa;">字体</span>
+                </div>
+                <div id="FontMount" style="width:100%"></div>
             </div>
 
             <!-- 背景和导出面板自动注入，不要写也不要改 -->
@@ -99,37 +124,135 @@ floway-tools-v2/
     </div>
 
     <script type="module">
-        import { lerp, hexToRgba } from '../shared/utils.js';
         import { initEffect } from '../shared/controls.js';
 
-        // ====== 初始化（固定写法，不要改）======
-        const { ctx, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop } = initEffect({
+        // ====== 初始化（固定写法）======
+        const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
+                clearFrame, drawBg, startPreviewLoop, resetAnimStart,
+                lerp, clamp, hexToRgba, getLightness,
+                easeOutCubic, getEasing,
+                loadFont, setupFontSelector, FONT_LIST, fontSelectHTML,
+                drawMediaContain, bindUI,
+                createLinearGradient, createRadialGradient,
+                drawTextCentered, drawTextWrapped } = initEffect({
             canvasId: 'mainCanvas',
             fileName: 'EffectName',
+            defaultBgMode: '#000000',
+            defaultPatternColor: '#333333',
+            onFrame: null,  // 由 startPreviewLoop 驱动时传 null
         });
 
         // ====== 参数默认值 ======
         const config = {
-            // 在这里定义你的参数
+            size: 50,
+            color: '#00ffaa',
+            glowEnabled: true,
+            fontFamily: 'Orbitron',
         };
+
+        // ====== 注入字体选择器 ======
+        document.getElementById('FontMount').innerHTML = fontSelectHTML('FontSelect', config.fontFamily);
+        setupFontSelector({
+            selectId: 'FontSelect',
+            configKey: 'fontFamily',
+            fileInputId: 'FontSelectUpload',
+            config,
+        });
+
+        // ====== UI 绑定（批量）======
+        bindUI(config, [
+            ['SizeInput',     'size',        'int',   'SizeVal'],
+            ['ColorInput',    'color'],
+            ['GlowToggle',    'glowEnabled',  'checked'],
+        ], {
+            onChange: () => {
+                // 参数变化后需要重绘时调用 resetAnimStart()
+                resetAnimStart();
+            }
+        });
 
         // ====== 渲染函数（核心）======
         function drawFrame(timeMs) {
             clearFrame();
             drawBg(timeMs);
             // ★ 在这里写你的渲染逻辑 ★
+            // 所有坐标使用 baseWidth / baseHeight（1440 / 1080）
         }
 
         // ====== 启动预览 ======
         startPreviewLoop(drawFrame);
-
-        // ====== UI 绑定 ======
-        // 示例：
-        // document.getElementById('SpeedInput').addEventListener('input', e => {
-        //     config.speed = parseFloat(e.target.value);
-        //     document.getElementById('SpeedVal').innerText = e.target.value;
-        // });
     </script>
+```
+
+### 模板 B：SVG 效果（需要 SVG 滤镜/特殊文字渲染时用）
+
+大多数效果用 **模板 A（Canvas）** 即可。如果你的效果需要 SVG 特性（如 SVG 滤镜描边、SVG 文字渲染），使用以下模式：
+
+```html
+<!-- SVG 根元素，包含 SVG 背景和内容 -->
+<svg id="mainSvg" width="1440" height="1080" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <pattern id="bgPattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse"></pattern>
+    </defs>
+    <rect id="svgBg" width="100%" height="100%" fill="transparent"/>
+    <g id="contentGroup">
+        <!-- ★ 在这里画你的 SVG 内容 ★ -->
+    </g>
+</svg>
+```
+
+```javascript
+import { Recorder } from '../shared/recorder.js';
+import { Background } from '../shared/background.js';
+import { SvgRenderer } from '../shared/svg-renderer.js';
+import { injectPanels, bindUI } from '../shared/controls.js';
+import { getEasing, setupFontSelector, fontSelectHTML } from '../shared/utils.js';
+
+// 注入共享面板（背景 + 导出）
+injectPanels({ defaultBgMode: 'transparent' });
+
+const baseWidth = 1440, baseHeight = 1080, scale = 2;
+
+// 创建背景系统（绑定到 SVG 元素）
+const bg = new Background({
+    modeSelectId: '#BgMode',
+    uploadInputId: '#BgUpload',
+    patternColorId: '#PatternColor',
+    patternRowId: '#PatternColorRow',
+    defaultMode: 'transparent',
+    defaultPatternColor: '#222222',
+    baseWidth, baseHeight, scaleFactor: scale,
+    svgTargets: {
+        bgRect: document.getElementById('svgBg'),
+        patternEl: document.getElementById('bgPattern'),
+    },
+});
+
+// 创建 SVG 渲染器
+const svgRenderer = new SvgRenderer(document.getElementById('mainSvg'), baseWidth, baseHeight);
+
+// 创建录制器
+const recorder = new Recorder({
+    canvas: svgRenderer.exportCanvas,
+    onFrame: async (timeMs) => {
+        updateSVG(timeMs);                             // 你的 SVG 更新逻辑
+        svgRenderer.drawBackground(bg, recorder.format); // 背景画到底层
+        await svgRenderer.rasterize();                  // SVG→Canvas 序列化
+    },
+    fileName: 'SvgEffect', width: baseWidth * scale, height: baseHeight * scale,
+    useManualWebmFrames: true,
+});
+
+function updateSVG(timeOverride = null) {
+    // ★ 在这里操作 SVG DOM 元素 ★
+}
+```
+
+**SVG 效果注意事项：**
+- `onFrame` 必须是 `async`，因为 `svgRenderer.rasterize()` 返回 Promise
+- 背景由 `svgTargets` 自动同步到 SVG 元素，**不需要手动操作** `svgBg` 或 `bgPattern`
+- 导出 Canvas 由 `SvgRenderer` 管理，**不需要手动创建** `<canvas id="exportCanvas">`
+- UI 绑定同样使用 `bindUI()`，从 utils.js 单独导入
 
 ---
 
@@ -173,14 +296,187 @@ floway-tools-v2/
 
 ---
 
+## `bindUI()` — 批量 UI 绑定
+
+**不要手写 addEventListener！** 用 `bindUI()` 一行绑定所有控件。
+
+### 函数签名
+
+```javascript
+const { readAll } = bindUI(config, rules, options);
+```
+
+### 参数说明
+
+| 参数 | 类型 | 说明 |
+|---|---|---|
+| `config` | Object | 你的参数对象，bindUI 会自动读写其中的属性 |
+| `rules` | Array | 绑定规则数组，每条规则格式见下表 |
+| `options` | Object | 可选，`{ onChange: function }` 回调 |
+
+### 规则格式
+
+每条规则是一个数组：`[elemId, configKey, transform?, displayId?, suffix?]`
+
+| 位置 | 名称 | 说明 | 示例 |
+|---|---|---|---|
+| 0 | `elemId` | 控件 DOM 元素 ID | `'SpeedInput'` |
+| 1 | `configKey` | config 对应的属性名 | `'speed'` |
+| 2 | `transform` | 值转换类型（可选） | 见下方列表 |
+| 3 | `displayId` | 数值显示元素的 ID（可选） | `'SpeedVal'` |
+| 4 | `suffix` | 显示值的后缀（可选） | `'s'`, `'%'` |
+
+### transform 类型
+
+| 值 | 作用 | 示例 |
+|---|---|---|
+| `'int'` | 转为整数 | `"3.7"` → `3` |
+| `'float'` | 转为浮点数 | `"3.7"` → `3.7` |
+| `'%'` | 转为 0~1 小数 | `"50"` → `0.5` |
+| `'checked'` | 读取 checkbox 状态 | `true` / `false` |
+| 函数 | 自定义转换 | `(v) => v.toUpperCase()` |
+| 省略 | 保持原字符串 | `"hello"` → `"hello"` |
+
+### 完整示例
+
+```javascript
+bindUI(config, [
+    // 滑块 → int + 实时显示数值
+    ['FontSizeInput', 'fontSize', 'int', 'FontSizeVal'],
+    // 颜色选择器 → 直接存字符串
+    ['GradColor1', 'gradColor1'],
+    // 百分比滑块 → 转为小数 + 显示带 % 后缀
+    ['OpacityInput', 'opacity', '%', 'OpacityVal', '%'],
+    // 开关 → 读取 checked 状态
+    ['GlowToggle', 'glowEnabled', 'checked'],
+    // 浮点数 + 带 s 后缀显示
+    ['DurationInput', 'duration', 'float', 'DurVal', 's'],
+    // 下拉菜单 → 直接存字符串
+    ['EasingSelect', 'easingType'],
+], {
+    onChange: (val, key, elemId) => {
+        // 任一控件变化时触发
+        // val: 当前值, key: config 属性名, elemId: 控件 ID
+        resetAnimStart();  // 重置动画时间让预览即时更新
+    }
+});
+
+// 手动读取所有控件值（用于初始化或强制刷新）
+// readAll();
+```
+
+### 返回值
+
+返回 `{ readAll }` — 调用 `readAll()` 可强制从所有 DOM 控件重新读取值到 config。
+
+---
+
+## 字体选择器
+
+字体选择器分三步设置。它提供预设字体列表 + 上传自定义字体功能。
+
+### 第一步：在 HTML 中放置容器
+
+```html
+<div class="row">
+    <span style="font-size:12px; color:#aaa;">字体</span>
+</div>
+<div id="FontMount" style="width:100%"></div>
+```
+
+### 第二步：注入 HTML
+
+```javascript
+document.getElementById('FontMount').innerHTML = fontSelectHTML('FontSelect', config.fontFamily);
+```
+
+`fontSelectHTML(selectId, selectedValue)` 返回一个包含 `<select>` + 隐藏 `<input type="file">` 的 HTML 字符串。
+
+### 第三步：初始化交互
+
+```javascript
+setupFontSelector({
+    selectId: 'FontSelect',          // select 元素 ID
+    configKey: 'fontFamily',         // config 中存储字体值的属性名
+    fileInputId: 'FontSelectUpload', // 隐藏的 file input ID（自动生成）
+    weightInputId: 'WeightInput',    // 可选：字重 input ID，上传自定义字体时自动禁用
+    config,                          // 你的参数对象
+});
+```
+
+用户操作流程：
+1. 从下拉列表选预设字体 → 自动写入 `config.fontFamily`
+2. 选"上传字体..." → 弹出文件选择器 → 加载 .ttf/.otf/.woff/.woff2 → 自动添加到下拉列表并选中
+
+### FONT_LIST
+
+预设字体列表（已内置在 `fontSelectHTML` 中），包含：
+- Orbitron、Rajdhani、Chakra Petch、Exo 2 等科技风字体
+- Noto Sans SC、ZCOOL QingKeHuangYou 等中文字体
+- CustomFont 系列占位符
+
+---
+
+## Background 系统
+
+### 有 DOM 绑定（主背景，initEffect 自动创建）
+
+`initEffect()` 内部自动创建 Background 实例，通过返回的 `bg` 使用：
+
+```javascript
+bg.mode    // 当前背景模式字符串
+bg.draw(ctx, timestamp, isRecording, exportFormat)  // 绘制到 Canvas
+```
+
+在 `drawFrame` 中调用 `drawBg(timeMs)` 即可（内部封装了 `bg.draw()`）。
+
+### 无 DOM 绑定（headless，用于内部图案/遮罩底图）
+
+当你的效果需要一个独立的背景图案（不绑定到 UI 面板），使用 headless 模式：
+
+```javascript
+import { Background } from '../shared/background.js';
+
+const maskBg = new Background({
+    modeSelectId: null,              // 关键：null 表示不绑定任何 DOM
+    defaultMode: 'grid',             // 默认图案类型
+    defaultPatternColor: '#333333',  // 图案颜色
+});
+
+// 动态切换模式
+maskBg.setMode('dots');              // 切换到点阵
+
+// 获取图案 Canvas（可直接绘制或作为遮罩使用）
+const patternCanvas = maskBg.patternCanvas;
+```
+
+**典型用途**：logo-matrix 中的遮罩底图——底层用 headless Background 绘制网格/点阵纹理，上层绘制主内容。
+
+---
+
+## `resetAnimStart()` — 重置动画时间
+
+当用户修改参数后需要动画从头播放时调用：
+
+```javascript
+bindUI(config, [...], {
+    onChange: () => {
+        resetAnimStart();  // 下一帧从 timeMs=0 开始
+    }
+});
+```
+
+---
+
 ## 严格规则（违反会导致效果无法运行）
 
 | # | 规则 | 原因 |
 |---|---|---|
 | 1 | `jszip.min.js` 和 `mp4-muxer.js` 用 `<script>` 标签加载，**不要用 ES module import** | mp4-muxer.js 不是 ESM 格式，import 会导致整个脚本崩溃 |
-| 2 | **不要写背景面板和导出面板的 HTML**，用 `<div id="shared-controls-placeholder"></div>` 代替 | 面板由 `initEffect()` 自动注入，手动写会引入不一致 |
-| 3 | 不要在函数声明前后插入 console.log 或其他语句 | ES module 中 function 声明不是 hoisted 到顶部的，会被语句打断 |
-| 4 | 绘制坐标用 `baseWidth` / `baseHeight`（默认 1440/1080），**不要用** `canvas.width` / `canvas.height` | canvas 实际尺寸是 2880×2160，用了会画到画布外 |
+| 2 | **不要写背景面板和导出面板的 HTML**，用 `<div id="shared-controls-placeholder"></div>` 代替 | 面板由 `initEffect()` / `injectPanels()` 自动注入，手动写会引入不一致 |
+| 3 | 将所有 `function` 声明放在模块顶层，不要夹杂在业务逻辑中间 | 虽然 ES module 中 function 会被 hoisted，但声明被其他语句包裹可能导致时序问题或可读性差。保持顶层声明是最佳实践 |
+| 4 | 绘制坐标用 `baseWidth` / `baseHeight`（默认 1440/1080），**不要用** `canvas.width` / `canvas.height` | canvas 实际尺寸是 2880×2160（2x 超采样），用了会画到画布外 |
+
 ---
 
 ## 可用工具函数
@@ -191,7 +487,8 @@ floway-tools-v2/
 const { ctx, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop,
         lerp, clamp, hexToRgba, getLightness,
         easeOutCubic, getEasing,
-        loadFont, drawMediaContain,
+        loadFont, setupFontSelector, FONT_LIST, fontSelectHTML,
+        drawMediaContain, bindUI,
         createLinearGradient, createRadialGradient,
         drawTextCentered, drawTextWrapped } = initEffect({
     canvasId: 'mainCanvas',
@@ -211,7 +508,6 @@ const { ctx, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop,
 | 函数 | 说明 | 示例 |
 |---|---|---|
 | `hexToRgba(hex, alpha)` | HEX 转 rgba 字符串 | `hexToRgba('#ff0000', 0.5)` → `'rgba(255, 0, 0, 0.5)'` |
-| `hexToRgbaStr(hex, alpha)` | 同上（别名） | 同 `hexToRgba` |
 | `getLightness(hex)` | 获取颜色明度 0~1 | `getLightness('#ffffff')` → `1` |
 
 ### 渐变
@@ -241,8 +537,7 @@ ctx.fillRect(0, 0, baseWidth, baseHeight);
 | `easeInOutCubic(t)` | 缓入缓出 |
 | `easeOutQuart(t)` | 强缓出 |
 | `easeOutExpo(t)` | 指数缓出 |
-| `easeInOutCubicSmooth(t)` | 平滑缓入缓出（同 easeInOutCubic） |
-| `getEasing(name)` | 按名称查找，`name` = `'linear'` / `'easeIn'` / `'easeOut'` / `'easeInOut'` / `'easeOutQuart'` / `'easeOutExpo'` / `'smooth'` |
+| `getEasing(name)` | 按名称查找，`name` = `'linear'` / `'easeIn'` / `'easeOut'` / `'easeInOut'` / `'easeOutQuart'` / `'easeOutExpo'` |
 
 ```javascript
 // 用法示例 1：直接使用
@@ -253,19 +548,13 @@ const easing = getEasing(config.easingType);
 const progress = easing(normalizedTime);
 ```
 
-### 字体
+### 字体加载
 
 | 函数 | 说明 |
 |---|---|
 | `loadFont(file, familyName?)` | 加载字体文件 (.ttf/.otf/.woff/.woff2)，返回 CSS font-family 字符串 |
 
-```javascript
-// 用法示例：配合文件上传
-document.getElementById('FontUpload').addEventListener('change', async e => {
-    const fontStr = await loadFont(e.target.files[0], 'MyFont');
-    config.fontFamily = fontStr; // '"MyFont", sans-serif'
-});
-```
+> 注意：通常不需要直接调用 `loadFont()`，字体选择器（`setupFontSelector`）内部已经封装了字体上传和加载流程。
 
 ### Canvas 辅助
 
@@ -304,74 +593,9 @@ const totalHeight = drawTextWrapped(ctx, longText, 100, 200,
 - 预览显示大小由 CSS 控制，跟逻辑尺寸一致
 - `ctx.scale(SCALE, SCALE)` 已设置，所有绘制用逻辑坐标
 - 每帧必须先清屏再画，不要依赖上帧残留
+- 录制时 `recorder.isRecording` 为 `true`，可在渲染中据此跳过不必要的计算
 
 ---
-
----
-
-## SVG 效果（高级）
-
-大多数效果用 Canvas 渲染即可。如果你的效果需要 SVG 特性（如 SVG 滤镜描边、SVG 文字渲染），使用以下模式：
-
-**关键区别：** SVG 效果在预览时直接操作 SVG DOM 元素，导出时通过 `SvgRenderer` 将 SVG 序列化为 Image 再绘制到隐藏 Canvas。
-
-```html
-<!-- SVG 根元素，包含 SVG 背景和内容 -->
-<svg id="mainSvg" width="1440" height="1080" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-        <pattern id="bgPattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse"></pattern>
-    </defs>
-    <rect id="svgBg" width="100%" height="100%" fill="transparent"/>
-    <g id="contentGroup">
-        <!-- ★ 在这里画你的 SVG 内容 ★ -->
-    </g>
-</svg>
-```
-
-```javascript
-import { Recorder } from '../shared/recorder.js';
-import { Background } from '../shared/background.js';
-import { SvgRenderer } from '../shared/svg-renderer.js';
-import { injectPanels } from '../shared/controls.js';
-
-injectPanels({ defaultBgMode: 'transparent' });
-
-const svg = document.getElementById('mainSvg');
-
-const bg = new Background({
-    modeSelectId: '#BgMode',
-    uploadInputId: '#BgUpload',
-    patternColorId: '#PatternColor',
-    patternRowId: '#PatternColorRow',
-    defaultMode: 'transparent',
-    baseWidth: 1440, baseHeight: 1080, scaleFactor: 2,
-    svgTargets: {
-        bgRect: document.getElementById('svgBg'),
-        patternEl: document.getElementById('bgPattern'),
-    },
-});
-
-const svgRenderer = new SvgRenderer(svg, 1440, 1080);
-
-const recorder = new Recorder({
-    canvas: svgRenderer.exportCanvas,
-    onFrame: async (timeMs) => {
-        updateSVG(timeMs);                             // 你的 SVG 更新逻辑
-        svgRenderer.drawBackground(bg, recorder.format); // 背景画到底层
-        await svgRenderer.rasterize();                  // SVG→Canvas 序列化
-    },
-    fileName: 'SvgEffect', width: 1440, height: 1080,
-});
-
-function updateSVG(timeOverride = null) {
-    // ★ 在这里操作 SVG DOM 元素 ★
-}
-```
-
-**注意事项：**
-- SVG 效果的 `onFrame` 必须是 `async`，因为 `svgRenderer.rasterize()` 返回 Promise
-- 背景由 `svgTargets` 自动同步到 SVG 元素，**不需要手动操作** `svgBg` 或 `bgPattern`
-- 导出 Canvas 由 `SvgRenderer` 管理，**不需要手动创建** `<canvas id="exportCanvas">`
 
 ## 导出格式
 

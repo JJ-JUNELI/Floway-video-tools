@@ -5,7 +5,7 @@
 
 import { Recorder } from './recorder.js';
 import { Background } from './background.js';
-import { lerp, hexToRgba, hexToRgbaStr, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, easeInOutCubicSmooth, getEasing, loadFont, setupFontSelector, FONT_LIST, fontSelectHTML, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped, bindUI } from './utils.js';
+import { lerp, hexToRgba, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, getEasing, loadFont, setupFontSelector, FONT_LIST, fontSelectHTML, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped, bindUI } from './utils.js';
 
 // ========== 面板 HTML 注入 ==========
 
@@ -77,7 +77,6 @@ export function injectPanels(opts = {}) {
  * @param {boolean} [opts.useRafForFrames=false]
  * @param {boolean} [opts.useManualWebmFrames=false]
  * @param {number}  [opts.encodeQueueMax=2]
- * @param {boolean} [opts.autoPreview=true] - 是否自动启动预览循环
  * @returns {{ ctx, canvas, bg, recorder, baseWidth, baseHeight, scale, clearFrame, drawBg, startPreviewLoop, resetAnimStart }}
  */
 export function initEffect(opts) {
@@ -159,19 +158,13 @@ export function initEffect(opts) {
         requestAnimationFrame(loop);
     }
 
-    // 8. 自动启动预览（默认开启）
-    if (opts.autoPreview !== false) {
-        // 预览循环由效果自己启动（因为需要传 drawFrame）
-        // 这里不自动启动，返回 startPreviewLoop 让效果控制
-    }
-
     return {
         ctx, canvas, bg, recorder,
         baseWidth, baseHeight, scale,
         clearFrame, drawBg,
         startPreviewLoop, resetAnimStart,
-        lerp, hexToRgba, hexToRgbaStr, getLightness, clamp,
-        easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, easeInOutCubicSmooth, getEasing,
+        lerp, hexToRgba, getLightness, clamp,
+        easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, getEasing,
         loadFont,
         setupFontSelector,
         FONT_LIST, fontSelectHTML,

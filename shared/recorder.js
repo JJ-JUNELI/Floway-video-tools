@@ -296,6 +296,7 @@ export class Recorder {
     _saveVideoWebM() {
         const blob = new Blob(this.chunks, { type: 'video/webm' });
         saveFile(blob, `${this.fileName}_${Date.now()}.webm`);
+        this.chunks = [];
         this._resetBtn();
     }
 

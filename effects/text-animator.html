@@ -255,7 +255,7 @@
         import { initEffect } from '../shared/controls.js';
 
         const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
-                clearFrame, drawBg, lerp, hexToRgbaStr, getLightness,
+                clearFrame, drawBg, lerp, hexToRgba, getLightness,
                 getEasing, easeOutQuart, loadFont, bindUI, setupFontSelector, fontSelectHTML } = initEffect({
             canvasId: 'mainCanvas',
             fileName: 'TextAnim',
@@ -469,11 +469,11 @@
                             const glowGrad = ctx.createLinearGradient(x1, y1, x2, y2);
                             const l1 = getLightness(config.gradColor1);
                             const l2 = getLightness(config.gradColor2);
-                            glowGrad.addColorStop(0, hexToRgbaStr(config.glowColor, currentGlowAlpha * l1 * config.gradOp1));
-                            glowGrad.addColorStop(1, hexToRgbaStr(config.glowColor, currentGlowAlpha * l2 * config.gradOp2));
+                            glowGrad.addColorStop(0, hexToRgba(config.glowColor, currentGlowAlpha * l1 * config.gradOp1));
+                            glowGrad.addColorStop(1, hexToRgba(config.glowColor, currentGlowAlpha * l2 * config.gradOp2));
                             currentGlowStyle = glowGrad;
                         } else {
-                            currentGlowStyle = hexToRgbaStr(config.glowColor, currentGlowAlpha);
+                            currentGlowStyle = hexToRgba(config.glowColor, currentGlowAlpha);
                         }
 
                         ctx.translate(charX + charRealWidth / 2, y);
@@ -490,8 +490,8 @@
 
                         ctx.translate(charRealWidth / 2, 0);
                         const grad = ctx.createLinearGradient(x1, y1, x2, y2);
-                        grad.addColorStop(0, hexToRgbaStr(config.gradColor1, config.gradOp1));
-                        grad.addColorStop(1, hexToRgbaStr(config.gradColor2, config.gradOp2));
+                        grad.addColorStop(0, hexToRgba(config.gradColor1, config.gradOp1));
+                        grad.addColorStop(1, hexToRgba(config.gradColor2, config.gradOp2));
                         ctx.fillStyle = grad;
                         ctx.fillText(char, -charRealWidth / 2, 0);
                     } else {
