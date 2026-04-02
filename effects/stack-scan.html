@@ -592,6 +592,12 @@
             ['StrokeAlignInput', 'strokeAlign'],
             ['EasingInput', 'spacingEasing'],
             ['BgItalicToggle', 'bgItalic', 'checked'],
+            ['MainText', 'mainText'],
+            ['BgTextStr', 'bgTextStr'],
+            ['MainColor', 'mainColor'],
+            ['BgTextColor', 'bgTextColor'],
+            ['PreviewToggle', 'previewMode', 'checked'],
+            ['BgLockRatio', 'bgLockRatio', 'checked'],
         ], {
             onChange: (val, key) => {
                 if (key === 'bgScaleX' && config.bgLockRatio) {
@@ -600,23 +606,12 @@
                     const disp = document.getElementById('BgScaleYVal');
                     if (disp) disp.innerText = config.bgScaleX;
                 }
-            }
-        });
-
-        document.getElementById('MainText').addEventListener('input', e => config.mainText = e.target.value);
-        document.getElementById('BgTextStr').addEventListener('input', e => config.bgTextStr = e.target.value);
-        document.getElementById('MainColor').addEventListener('input', e => config.mainColor = e.target.value);
-        document.getElementById('BgTextColor').addEventListener('input', e => config.bgTextColor = e.target.value);
-        document.getElementById('PreviewToggle').addEventListener('change', e => { state.previewMode = e.target.checked; });
-
-        document.getElementById('BgLockRatio').addEventListener('change', e => {
-            config.bgLockRatio = e.target.checked;
-            document.getElementById('BgScaleYRow').style.display = config.bgLockRatio ? 'none' : 'flex';
-            if (config.bgLockRatio) {
-                config.bgScaleY = config.bgScaleX;
-                document.getElementById('BgScaleYInput').value = config.bgScaleX;
-                const disp = document.getElementById('BgScaleYVal');
-                if (disp) disp.innerText = config.bgScaleX;
+                if (key === 'bgLockRatio') {
+                    document.getElementById('BgScaleYRow').style.display = val ? 'none' : 'flex';
+                }
+                if (key === 'previewMode') {
+                    state.previewMode = val;
+                }
             }
         });
 
