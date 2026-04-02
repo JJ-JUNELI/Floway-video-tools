@@ -32,10 +32,10 @@
 
 export class Background {
     constructor(opts) {
-        this.modeSelectId = opts.modeSelectId || '#BgMode';
-        this.uploadInputId = opts.uploadInputId || '#BgUpload';
-        this.patternColorId = opts.patternColorId || '#PatternColor';
-        this.patternRowId = opts.patternRowId || '#PatternColorRow';
+        this.modeSelectId = opts.modeSelectId !== undefined ? opts.modeSelectId : '#BgMode';
+        this.uploadInputId = opts.uploadInputId !== undefined ? opts.uploadInputId : '#BgUpload';
+        this.patternColorId = opts.patternColorId !== undefined ? opts.patternColorId : '#PatternColor';
+        this.patternRowId = opts.patternRowId !== undefined ? opts.patternRowId : '#PatternColorRow';
         this.defaultMode = opts.defaultMode || '#000000';
         this.defaultPatternColor = opts.defaultPatternColor || '#333333';
         this.baseWidth = opts.baseWidth || 1440;
@@ -52,7 +52,10 @@ export class Background {
         this.svgBgRect = (opts.svgTargets && opts.svgTargets.bgRect) || null;
         this.svgPatternEl = (opts.svgTargets && opts.svgTargets.patternEl) || null;
 
-        this._bindUI();
+        if (this.modeSelectId) {
+            this._bindUI();
+        }
+
         this._updatePatternCache();
         if (this.svgBgRect) this._syncSvg();
     }
@@ -146,6 +149,12 @@ export class Background {
         }
 
         this._updateSvgPattern();
+    }
+
+    setMode(mode) {
+        this.mode = mode;
+        this._updatePatternCache();
+        this._syncSvg();
     }
 
     // ========== SVG 同步（SVG 效果用） ==========

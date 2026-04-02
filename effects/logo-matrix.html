@@ -1,16 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script>
-        (function() {
-            var ua = navigator.userAgent.toLowerCase();
-            var isLark = ua.indexOf('lark') > -1 || ua.indexOf('feishu') > -1;
-            if (!isLark && false) {
-                document.documentElement.innerHTML = "Access Denied"; window.stop();
-            }
-        })();
-    </script>   
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>LOGO MATRIX</title>
@@ -68,26 +58,6 @@
                 <div class="row stack">
                     <div class="label-line"><span>自转速度</span><span id="RotSpeedVal">1.0</span></div>
                     <input type="range" id="RotSpeedInput" min="-10" max="10" step="0.1" value="1.0">
-                </div>
-            </div>
-
-            <div class="control-group">
-                <div class="group-title"><span>▩ 主背景 (Main BG)</span></div>
-                <div class="row">
-                    <select id="BgMode">
-                        <option value="transparent" selected>🏁 透明 (Alpha - 推荐)</option>
-                        <option value="#000000">⬛ 纯黑 (Black)</option>
-                        <option value="#0000ff">🟦 裸幕 (Blue Screen)</option>
-                        <option value="#00ff00">🟩 绿幕 (Green Screen)</option>
-                        <option value="grid">▦ 科技网格 (Grid)</option>
-                        <option value="dots">::: 矩阵点阵 (Dots)</option>
-                        <option value="custom">📂 上传图/视频...</option>
-                    </select>
-                </div>
-                <input type="file" id="BgUpload" accept="image/*,video/*" style="display:none">
-                <div class="row" id="PatternColorRow" style="display:none; justify-content:space-between; align-items:center;">
-                    <div style="font-size:11px; color:#aaa;">纹理颜色</div>
-                    <input type="color" id="PatternColor" value="#222222">
                 </div>
             </div>
 
@@ -157,13 +127,14 @@
 
     <script type="module">
         import { initEffect } from '../shared/controls.js';
+        import { Background } from '../shared/background.js';
 
-        const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale } = initEffect({
+        const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
+                clearFrame, startPreviewLoop, drawMediaContain, bindUI } = initEffect({
             canvasId: 'mainCanvas',
             fileName: 'LogoMatrix',
             defaultBgMode: 'transparent',
             defaultPatternColor: '#222222',
-            skipBgPanel: true,
             useRealtimeWebm: true,
             useRafForFrames: true,
             encodeQueueMax: 5,
@@ -186,36 +157,38 @@
             maskBaseType: 'match_bg', maskBaseColor: '#000000',
             maskSize: 0.85, maskRoundness: 0.75, maskFeather: 250,
         };
+        const maskBg = new Background({ modeSelectId: null, defaultMode: config.maskBaseType, defaultPatternColor: '#333333' });
+
         let logoImg = null;
         let maskBaseMedia = null; let maskBaseMediaType = null;
-        let animStartTime = performance.now(); 
         let frameCount = 0;
-        // UI bindings
-        function bind(id, key, type='float') {
-            const el = document.getElementById(id);
-            const display = document.getElementById(id.replace('Input', 'Val'));
-            el.addEventListener('input', e => {
-                const val = type === 'float' ? parseFloat(e.target.value) : e.target.value;
-                config[key] = val;
-                if(display) display.innerText = val;
-            });
-        }
-        bind('SpeedInput', 'speed'); bind('RotSpeedInput', 'rotSpeed'); bind('ScaleInput', 'logoScale');
-        bind('MaskSizeInput', 'maskSize'); bind('MaskRoundInput', 'maskRoundness'); bind('MaskFeatherInput', 'maskFeather', 'int');
-        bind('ColsInput', 'cols', 'float'); bind('RowsInput', 'rows', 'float');
-        document.getElementById('MaskEnable').addEventListener('change', e => {
-            config.maskEnabled = e.target.checked;
-            document.getElementById('MaskControls').style.opacity = config.maskEnabled ? '1' : '0.4';
-            document.getElementById('MaskControls').style.pointerEvents = config.maskEnabled ? 'auto' : 'none';
+
+        bindUI(config, [
+            ['SpeedInput', 'speed', 'float', 'SpeedVal'],
+            ['RotSpeedInput', 'rotSpeed', 'float', 'RotSpeedVal'],
+            ['ScaleInput', 'logoScale', 'float', 'ScaleVal'],
+            ['MaskSizeInput', 'maskSize', 'float', 'MaskSizeVal'],
+            ['MaskRoundInput', 'maskRoundness', 'float', 'MaskRoundVal'],
+            ['MaskFeatherInput', 'maskFeather', 'int', 'MaskFeatherVal'],
+            ['ColsInput', 'cols', 'int', 'ColsVal'],
+            ['RowsInput', 'rows', 'int', 'RowsVal'],
+            ['MaskAffectsBg', 'maskAffectsBg', 'checked'],
+            ['MaskBaseType', 'maskBaseType'],
+            ['MaskBaseColor', 'maskBaseColor'],
+            ['MaskEnable', 'maskEnabled', 'checked'],
+        ], {
+            onChange: (val, key) => {
+                if (key === 'maskEnabled') {
+                    document.getElementById('MaskControls').style.opacity = config.maskEnabled ? '1' : '0.4';
+                    document.getElementById('MaskControls').style.pointerEvents = config.maskEnabled ? 'auto' : 'none';
+                }
+                if (key === 'maskBaseType') {
+                    document.getElementById('MaskBaseColorCtrl').style.display = (val === 'color') ? 'flex' : 'none';
+                    document.getElementById('MaskBaseFileCtrl').style.display = (val === 'custom') ? 'flex' : 'none';
+                    maskBg.setMode(val);
+                }
+            }
         });
-        document.getElementById('MaskAffectsBg').addEventListener('change', e => config.maskAffectsBg = e.target.checked);
-        document.getElementById('MaskBaseType').addEventListener('change', e => {
-            const v = e.target.value;
-            config.maskBaseType = v;
-            document.getElementById('MaskBaseColorCtrl').style.display = (v === 'color') ? 'flex' : 'none';
-            document.getElementById('MaskBaseFileCtrl').style.display = (v === 'custom') ? 'flex' : 'none';
-        });
-        document.getElementById('MaskBaseColor').addEventListener('input', e => config.maskBaseColor = e.target.value);
 
         const handleUpload = (id, cb) => {
             document.getElementById(id).addEventListener('change', e => {
@@ -232,7 +205,7 @@
         function drawFrame(animTime) {
             const scroll = animTime * 0.1 * config.speed;
             const rot = animTime * 0.1 * config.rotSpeed;
-            ctx.clearRect(0, 0, baseWidth, baseHeight);
+            clearFrame();
             if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
                 ctx.fillStyle = '#000000'; 
                 ctx.fillRect(0,0,baseWidth, baseHeight);
@@ -260,13 +233,7 @@
             ctx.restore();
         }
 
-        function previewLoop() {
-            if (!recorder.isRecording) {
-                const elapsed = performance.now() - animStartTime;
-                drawFrame(elapsed);
-            }
-            requestAnimationFrame(previewLoop);
-        }
+        startPreviewLoop(drawFrame);
 
         function drawMaskBaseContent(context) {
             if (config.maskBaseType === 'match_bg') {
@@ -280,14 +247,17 @@
                 context.fillStyle = config.maskBaseColor;
                 context.fillRect(0, 0, baseWidth, baseHeight);
             } else if (type === 'custom' && maskBaseMedia) {
-                drawMediaCover(context, maskBaseMedia);
+                drawMediaContain(context, maskBaseMedia, baseWidth, baseHeight);
             } else if (type === 'grid' || type === 'dots') {
+                context.save();
+                context.setTransform(1, 0, 0, 1, 0, 0);
                 context.fillStyle = '#050505';
-                context.fillRect(0, 0, baseWidth, baseHeight);
-                if (bg.patternCanvas) {
-                    context.fillStyle = context.createPattern(bg.patternCanvas, 'repeat');
-                    context.fillRect(0, 0, baseWidth, baseHeight);
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                if (maskBg.patternCanvas) {
+                    context.fillStyle = context.createPattern(maskBg.patternCanvas, 'repeat');
+                    context.fillRect(0, 0, canvas.width, canvas.height);
                 }
+                context.restore();
             } else {
                 context.fillStyle = '#000';
                 context.fillRect(0, 0, baseWidth, baseHeight);
@@ -300,16 +270,6 @@
                 bg.draw(context, 0, false, recorder.format);
             }
         }
-        function drawMediaCover(context, media) {
-            const mw = media.videoWidth || media.width;
-            const mh = media.videoHeight || media.height;
-            if (mw) {
-                const s = Math.max(baseWidth / mw, baseHeight / mh);
-                const w = mw * s, h = mh * s;
-                context.drawImage(media, (baseWidth - w) / 2, (baseHeight - h) / 2, w, h);
-            }
-        }
-
         function drawLogoMatrix(context, scroll, rot) {
             if (!logoImg) {
                 context.fillStyle = '#555';
@@ -355,7 +315,7 @@
             context.fillRect(-w, -h * 2, w * 2, h * 4);
             context.restore();
         }
-        requestAnimationFrame(previewLoop);
+        startPreviewLoop(drawFrame);
     </script>
 </body>
 </html>

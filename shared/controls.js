@@ -22,7 +22,7 @@ export function injectPanels(opts = {}) {
             <div class="group-title"><span>▩ 场景背景</span></div>
             <div class="row">
                 <select id="BgMode">
-                    <option value="transparent">🏁 透明</option>
+                    <option value="transparent" ${defaultBgMode === 'transparent' ? 'selected' : ''}>🏁 透明</option>
                     <option value="#000000" ${defaultBgMode === '#000000' ? 'selected' : ''}>⬛ 纯黑</option>
                     <option value="#00ff00">🟩 绿幕</option>
                     <option value="#0000ff">🟦 蓝幕</option>
