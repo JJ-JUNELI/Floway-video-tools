@@ -161,7 +161,6 @@
 
         let logoImg = null;
         let maskBaseMedia = null; let maskBaseMediaType = null;
-        let frameCount = 0;
 
         bindUI(config, [
             ['SpeedInput', 'speed', 'float', 'SpeedVal'],
@@ -315,7 +314,6 @@
             context.fillRect(-w, -h * 2, w * 2, h * 4);
             context.restore();
         }
-        startPreviewLoop(drawFrame);
     </script>
 </body>
 </html>
