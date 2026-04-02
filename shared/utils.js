@@ -425,7 +425,9 @@ export function bindUI(config, rules, opts = {}) {
                 const display = document.getElementById(displayId);
                 if (display) display.innerText = el.value + (suffix || '');
             }
-            onChange(el.value, configKey, elemId);
+            // 传 transform 后的值（checkbox 时为布尔值，而非 value 属性）
+            const raw = transform === 'checked' ? el.checked : el.value;
+            onChange(transformValue(raw, transform), configKey, elemId);
         });
     }
 
