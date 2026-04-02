@@ -50,7 +50,55 @@ floway-tools-v2/
 
 每个效果是一个**完整的单文件 HTML**。背景面板和导出面板由 `shared/controls.js` 自动注入，**你不需要写也不应该修改它们**。
 
-### 模板 A：Canvas 效果（90% 的效果用这个）
+### 模板 A（推荐）：Canvas 最简模式 — onRender
+
+**大多数新效果用这个写法**，只需关注业务逻辑，框架自动处理 clearFrame/drawBg/预览循环。
+
+```html
+<!-- HTML 部分与下方「完整模式」相同，这里只展示 JS 核心差异 -->
+<script type="module">
+    import { initEffect } from '../shared/controls.js';
+
+    const { ctx, baseWidth, baseHeight, bindUI, initFontSelector,
+            lerp, hexToRgba } = initEffect({
+        canvasId: 'mainCanvas',
+        fileName: 'MyEffect',
+        defaultBgMode: '#000000',
+        // ★ 核心：只写渲染逻辑，clearFrame + drawBg 自动处理 ★
+        onRender(t) {
+            const progress = Math.min(t / 2000, 1);   // 2 秒动画
+            const alpha = lerp(0, 1, progress);
+            ctx.fillStyle = hexToRgba('#00ffaa', alpha);
+            ctx.beginPath();
+            ctx.arc(baseWidth / 2, baseHeight / 2, 100, 0, Math.PI * 2);
+            ctx.fill();
+        },
+    });
+
+    const config = { size: 50, color: '#00ffaa' };
+
+    // UI 绑定
+    bindUI(config, [
+        ['SizeInput', 'size', 'int', 'SizeVal'],
+        ['ColorInput', 'color'],
+    ], { onChange: () => { /* reRender() 由框架管理 */ } });
+
+    // 字体选择器（一行搞定）
+    initFontSelector({ mountId: 'FontMount', configKey: 'fontFamily', config });
+</script>
+```
+
+**onRender 模式要点：**
+- `onRender(t)` 只接收时间参数，`clearFrame()` 和 `drawBg(t)` 已自动调用
+- `startPreviewLoop()` 自动启动，不需要手动调用
+- 返回的 `reRender()` 等同于 `resetAnimStart()`，用于重播动画
+- 如果需要 hold 终态（播完停在最后一帧），加 `loopOpts: { duration: 2, hold: true }`
+
+---
+
+### 模板 A（完整模式）：Canvas 效果 — 手动控制预览循环
+
+如果效果需要更复杂的动画状态管理（如 text-animator 的播放/暂停），使用此模式。
 
 ```html
 <!DOCTYPE html>
@@ -415,6 +463,16 @@ setupFontSelector({
 - Noto Sans SC、ZCOOL QingKeHuangYou 等中文字体
 - CustomFont 系列占位符
 
+### 快捷方式：`initFontSelector()` 一行搞定
+
+如果不需要自定义 select ID，可以用合并函数一步完成上述三步：
+
+```javascript
+initFontSelector({ mountId: 'FontMount', configKey: 'fontFamily', config });
+```
+
+内部自动生成 select ID、注入 HTML、绑定事件。返回 `{ selectId }` 如需额外操作可用。
+
 ---
 
 ## Background 系统
@@ -466,6 +524,33 @@ bindUI(config, [...], {
 });
 ```
 
+### `startPreviewLoop` hold 终态模式
+
+默认情况下预览循环会持续播放（每帧传入递增的时间）。如果效果需要**播完后停在终态**（如文字动画、图表生长），使用 hold 模式：
+
+```javascript
+// 动画 2 秒，之后停在终态（time 传入 Infinity）
+startPreviewLoop(drawFrame, { duration: 2, hold: true });
+
+// drawFrame 中判断：
+function drawFrame(t) {
+    if (t === Infinity) {
+        // 画终态（progress = 1）
+    } else {
+        // 正常动画（progress = t / 2000）
+    }
+}
+```
+
+配合 `onRender` 模式使用时，通过 `loopOpts` 传递：
+```javascript
+initEffect({
+    ...
+    onRender(t) { /* ... */ },
+    loopOpts: { duration: 2, hold: true },
+});
+```
+
 ---
 
 ## 严格规则（违反会导致效果无法运行）
@@ -487,10 +572,11 @@ bindUI(config, [...], {
 const { ctx, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop,
         lerp, clamp, hexToRgba, getLightness,
         easeOutCubic, getEasing,
-        loadFont, setupFontSelector, FONT_LIST, fontSelectHTML,
+        loadFont, initFontSelector, setupFontSelector, fontSelectHTML,
         drawMediaContain, bindUI,
         createLinearGradient, createRadialGradient,
-        drawTextCentered, drawTextWrapped } = initEffect({
+        drawTextCentered, drawTextWrapped,
+        applyVignetteMask, calcGradCoords } = initEffect({
     canvasId: 'mainCanvas',
     fileName: 'EffectName',
 });
@@ -582,6 +668,22 @@ drawTextCentered(ctx, 'Hello World', baseWidth / 2, 100,
 // 用法示例：多行文字自动换行
 const totalHeight = drawTextWrapped(ctx, longText, 100, 200,
     baseWidth - 200, 1.5);
+```
+
+### 渲染辅助
+
+| 函数 | 说明 |
+|---|---|
+| `applyVignetteMask(ctx, w, h, intensity?)` | 径向羽化遮罩（destination-in），边缘渐变透明。intensity 0~1，默认 0.85 |
+| `calcGradCoords(w, h, angleDeg)` | 根据角度计算渐变起止坐标，用于文字/形状渐变填充 |
+
+```javascript
+// 羽化遮罩：让画布四角自然淡出
+applyVignetteMask(ctx, baseWidth, baseHeight, 0.8);
+
+// 渐变坐标：45 度角渐变
+const { x1, y1, x2, y2 } = calcGradCoords(charWidth, fontSize, 45);
+const grad = ctx.createLinearGradient(x1, y1, x2, y2);
 ```
 
 ---

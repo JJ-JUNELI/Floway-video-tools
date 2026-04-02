@@ -207,6 +207,36 @@ export function setupFontSelector({ selectId, configKey, fileInputId, weightInpu
     });
 }
 
+// ========== 5.5 一行字体选择器 ==========
+
+/**
+ * 一行初始化字体选择器（合并 fontSelectHTML + setupFontSelector）
+ *
+ * HTML 中只需放容器：
+ *   <div id="FontMount" style="width:100%"></div>
+ *
+ * @param {Object} opts
+ * @param {string} opts.mountId       - 容器元素 ID
+ * @param {string} opts.configKey     - config 对象中的属性名
+ * @param {Object} opts.config        - 配置对象
+ * @param {string} [opts.weightInputId] - 字重滑块 ID（可选），上传自定义字体时自动禁用
+ * @returns {{ selectId: string }}    - 生成的 select 元素 ID（如需额外绑定可用）
+ */
+export function initFontSelector({ mountId, configKey, weightInputId, config }) {
+    const selectId = 'FontSelect_' + Date.now().toString(36);
+    const container = document.getElementById(mountId);
+    if (!container) return { selectId };
+    container.innerHTML = fontSelectHTML(selectId, config[configKey]);
+    setupFontSelector({
+        selectId,
+        configKey,
+        fileInputId: selectId + 'Upload',
+        weightInputId,
+        config,
+    });
+    return { selectId };
+}
+
 // ========== 6. Canvas 绘图辅助 ==========
 
 /**
@@ -400,4 +430,49 @@ export function bindUI(config, rules, opts = {}) {
     }
 
     return { readAll };
+}
+
+// ========== 9. 渲染辅助函数 ==========
+
+/**
+ * 应用径向羽化遮罩（destination-in 合成模式）
+ * 调用后画布边缘会按 intensity 渐变透明
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} w 画布逻辑宽度 (baseWidth)
+ * @param {number} h 画布逻辑高度 (baseHeight)
+ * @param {number} [intensity=0.85] 遮罩强度 0~1，1=全显 0=全透明边缘
+ */
+export function applyVignetteMask(ctx, w, h, intensity = 0.85) {
+    const cx = w / 2, cy = h / 2;
+    const r = Math.sqrt(cx * cx + cy * cy);
+    const grad = ctx.createRadialGradient(cx, cy, r * (1 - intensity), cx, cy, r);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+}
+
+/**
+ * 根据角度计算线性渐变的起止坐标（用于文字/形状渐变填充）
+ *
+ * @param {number} w 目标宽度
+ * @param {number} h 目标高度
+ * @param {number} angleDeg 角度（度），0=从左到右，90=从上到下
+ * @returns {{ x1: number, y1: number, x2: number, y2: number }}
+ */
+export function calcGradCoords(w, h, angleDeg) {
+    const rad = (angleDeg % 360) * Math.PI / 180;
+    const vx = Math.cos(rad);
+    const vy = Math.sin(rad);
+    const diag = Math.sqrt(w * w + h * h) / 2;
+    return {
+        x1: w / 2 - vx * diag,
+        y1: h / 2 - vy * diag,
+        x2: w / 2 + vx * diag,
+        y2: h / 2 + vy * diag,
+    };
 }

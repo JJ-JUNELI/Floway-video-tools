@@ -5,7 +5,7 @@
 
 import { Recorder } from './recorder.js';
 import { Background } from './background.js';
-import { lerp, hexToRgba, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, getEasing, loadFont, setupFontSelector, FONT_LIST, fontSelectHTML, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped, bindUI } from './utils.js';
+import { lerp, hexToRgba, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, getEasing, loadFont, setupFontSelector, initFontSelector, FONT_LIST, fontSelectHTML, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped, bindUI, applyVignetteMask, calcGradCoords } from './utils.js';
 
 // ========== 面板 HTML 注入 ==========
 
@@ -146,16 +146,57 @@ export function initEffect(opts) {
     // 7. 预览循环
     let _previewLoopRunning = false;
 
-    function startPreviewLoop(drawFn) {
+    function startPreviewLoop(drawFn, loopOpts = {}) {
         if (_previewLoopRunning) return;
         _previewLoopRunning = true;
+        const duration = (loopOpts.duration || 0) * 1000;
+        const hold = loopOpts.hold === true;
+
         function loop() {
             if (!recorder.isRecording) {
-                drawFn(performance.now() - animStartTime);
+                let time = performance.now() - animStartTime;
+                // hold 模式：超过时长后传入 Infinity 让效果画终态
+                if (hold && duration > 0 && time > duration) {
+                    time = Infinity;
+                }
+                drawFn(time);
             }
             requestAnimationFrame(loop);
         }
         requestAnimationFrame(loop);
+    }
+
+    // 8. onRender 自动模式（可选）
+    // 如果提供 onRender 回调，自动完成 clearFrame → drawBg → 业务逻辑 → startPreviewLoop
+    if (opts.onRender && typeof opts.onRender === 'function') {
+        const userRender = opts.onRender;
+        const loopOpts = opts.loopOpts || {};
+
+        function _autoDrawFrame(timeMs) {
+            clearFrame();
+            drawBg(timeMs);
+            userRender(timeMs);
+        }
+
+        startPreviewLoop(_autoDrawFrame, loopOpts);
+
+        return {
+            ctx, canvas, bg, recorder,
+            baseWidth, baseHeight, scale,
+            clearFrame, drawBg,
+            startPreviewLoop, resetAnimStart,
+            reRender: resetAnimStart,  // 快捷重播（onRender 模式下的别名）
+            lerp, hexToRgba, getLightness, clamp,
+            easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, getEasing,
+            loadFont,
+            setupFontSelector, initFontSelector,
+            FONT_LIST, fontSelectHTML,
+            drawMediaContain,
+            createLinearGradient, createRadialGradient,
+            drawTextCentered, drawTextWrapped,
+            bindUI,
+            applyVignetteMask, calcGradCoords,
+        };
     }
 
     return {
@@ -166,11 +207,12 @@ export function initEffect(opts) {
         lerp, hexToRgba, getLightness, clamp,
         easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, getEasing,
         loadFont,
-        setupFontSelector,
+        setupFontSelector, initFontSelector,
         FONT_LIST, fontSelectHTML,
         drawMediaContain,
         createLinearGradient, createRadialGradient,
         drawTextCentered, drawTextWrapped,
         bindUI,
+        applyVignetteMask, calcGradCoords,
     };
 }
