@@ -187,7 +187,7 @@ floway-tools-v2/
             fileName: 'EffectName',
             defaultBgMode: '#000000',
             defaultPatternColor: '#333333',
-            onFrame: null,  // 由 startPreviewLoop 驱动时传 null
+            onFrame: drawFrame,  // 录制时的帧回调，必须指向你的渲染函数
         });
 
         // ====== 参数默认值 ======

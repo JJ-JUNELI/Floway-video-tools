@@ -243,9 +243,6 @@
         </div>
     </div>
 
-    <input type="file" id="MainFontUpload" accept=".ttf,.otf,.woff,.woff2" style="display:none">
-    <input type="file" id="BgFontUpload" accept=".ttf,.otf,.woff,.woff2" style="display:none">
-
     <div class="preview-area">
         <div id="RecIndicator"><div class="rec-dot"></div> RENDERING...</div>
         <div id="DebugLog"></div>
@@ -559,8 +556,8 @@
         // === 字体选择器 ===
         document.getElementById('MainFontMount').innerHTML = fontSelectHTML('MainFontInput', config.mainFont);
         document.getElementById('BgFontMount').innerHTML = fontSelectHTML('BgFontInput', config.bgFont);
-        setupFontSelector({ selectId: 'MainFontInput', configKey: 'mainFont', fileInputId: 'MainFontUpload', weightInputId: 'MainWeightInput', config });
-        setupFontSelector({ selectId: 'BgFontInput', configKey: 'bgFont', fileInputId: 'BgFontUpload', weightInputId: 'BgWeightInput', config });
+        setupFontSelector({ selectId: 'MainFontInput', configKey: 'mainFont', fileInputId: 'MainFontInputUpload', weightInputId: 'MainWeightInput', config });
+        setupFontSelector({ selectId: 'BgFontInput', configKey: 'bgFont', fileInputId: 'BgFontInputUpload', weightInputId: 'BgWeightInput', config });
 
         // === UI BINDING ===
         bindUI(config, [

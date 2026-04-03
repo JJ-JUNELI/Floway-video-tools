@@ -112,7 +112,7 @@
                     <select id="ExpandDirY" style="flex:1">
                         <option value="center" selected>Y轴: 中心展开 (↕)</option>
                         <option value="top">Y轴: 向下展开 (↓)</option>
-                        <option value="bottom">Y轴: 向下展开 (↑)</option>
+                        <option value="bottom">Y轴: 向下展开 (↓)</option>
                     </select>
                 </div>
                 <div class="row stack">
@@ -256,7 +256,8 @@
 
         const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
                 clearFrame, drawBg, lerp, hexToRgba, getLightness,
-                getEasing, easeOutQuart, loadFont, bindUI, setupFontSelector, fontSelectHTML } = initEffect({
+                getEasing, easeOutQuart, bindUI, setupFontSelector, fontSelectHTML,
+                startPreviewLoop, resetAnimStart } = initEffect({
             canvasId: 'mainCanvas',
             fileName: 'TextAnim',
             onFrame: renderFrame,
@@ -341,7 +342,7 @@
 
             const elapsed = timestamp / 1000;
 
-            if (state.isAnimating || recorder.isRecording) {
+            if ((state.isAnimating || recorder.isRecording) && isFinite(timestamp)) {
                 const safeDuration = config.duration > 0.1 ? config.duration : 0.1;
                 const progress = Math.min(elapsed / safeDuration, 1);
                 const ease = easeOutQuart(progress);
@@ -376,23 +377,12 @@
             if (layoutCache) drawText();
         }
 
-        let previewStartTime = 0;
-        function previewPlay() {
-            state.isAnimating = true;
-            previewStartTime = performance.now();
-        }
-        function previewLoop() {
-            if (!recorder.isRecording) {
-                let time = 0;
-                if (state.isAnimating) {
-                    time = performance.now() - previewStartTime;
-                } else {
-                    time = 99999;
-                }
-                renderFrame(time);
-            }
-            requestAnimationFrame(previewLoop);
-        }
+        // 预览循环：播完后停在终态（hold 模式）
+        // duration 从 config 动态读取，hold=true 使超时后传入 Infinity
+        startPreviewLoop(renderFrame, () => ({
+            duration: config.duration,
+            hold: true,
+        }));
 
         function drawText() {
             ctx.save();
@@ -559,7 +549,10 @@
 
         // Special controls not covered by bindUI
         document.getElementById('TextInput').addEventListener('input', e => { config.text = e.target.value; calculateLayout(); });
-        document.getElementById('BtnPlay').addEventListener('click', previewPlay);
+        document.getElementById('BtnPlay').addEventListener('click', () => {
+            state.isAnimating = true;
+            resetAnimStart();
+        });
 
         // Font selector: inject HTML and init
         const fontSelectId = 'FontSelect';
@@ -569,7 +562,6 @@
         // Init
         calculateLayout();
         updateTexture();
-        requestAnimationFrame(previewLoop);
     </script>
 </body>
 </html>

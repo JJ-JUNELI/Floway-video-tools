@@ -266,7 +266,7 @@ export function drawMediaContain(ctx, media, w, h, scaleFactor = 1) {
     );
 }
 
-// ========== 6. 文字排版 ==========
+// ========== 7. 文字排版 ==========
 
 /**
  * 在指定位置绘制居中文字
@@ -337,7 +337,7 @@ export function drawTextWrapped(ctx, text, x, y, maxWidth, lineHeight = 1.2) {
     return curY - y;
 }
 
-// ========== 7. 文件保存 ==========
+// ========== 8. 文件保存 ==========
 
 export function saveFile(blob, name) {
     const u = URL.createObjectURL(blob);
@@ -353,7 +353,7 @@ export function saveFile(blob, name) {
     }, 100);
 }
 
-// ========== 8. UI 绑定 ==========
+// ========== 9. UI 绑定 ==========
 
 /**
  * 批量绑定UI控件到config对象，自动监听变化
@@ -434,7 +434,7 @@ export function bindUI(config, rules, opts = {}) {
     return { readAll };
 }
 
-// ========== 9. 渲染辅助函数 ==========
+// ========== 10. 渲染辅助函数 ==========
 
 /**
  * 应用径向羽化遮罩（destination-in 合成模式）

@@ -146,15 +146,20 @@ export function initEffect(opts) {
     // 7. 预览循环
     let _previewLoopRunning = false;
 
-    function startPreviewLoop(drawFn, loopOpts = {}) {
+    function startPreviewLoop(drawFn, loopOptsOrGetter = {}) {
         if (_previewLoopRunning) return;
         _previewLoopRunning = true;
-        const duration = (loopOpts.duration || 0) * 1000;
-        const hold = loopOpts.hold === true;
+
+        function getOpts() {
+            return typeof loopOptsOrGetter === 'function' ? loopOptsOrGetter() : loopOptsOrGetter;
+        }
 
         function loop() {
             if (!recorder.isRecording) {
                 let time = performance.now() - animStartTime;
+                const opts = getOpts();
+                const duration = (opts.duration || 0) * 1000;
+                const hold = opts.hold === true;
                 // hold 模式：超过时长后传入 Infinity 让效果画终态
                 if (hold && duration > 0 && time > duration) {
                     time = Infinity;
@@ -180,12 +185,12 @@ export function initEffect(opts) {
 
         startPreviewLoop(_autoDrawFrame, loopOpts);
 
-        return {
+        // 普通模式的返回值（onRender 模式追加 reRender）
+        const result = {
             ctx, canvas, bg, recorder,
             baseWidth, baseHeight, scale,
             clearFrame, drawBg,
             startPreviewLoop, resetAnimStart,
-            reRender: resetAnimStart,  // 快捷重播（onRender 模式下的别名）
             lerp, hexToRgba, getLightness, clamp,
             easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, getEasing,
             loadFont,
@@ -197,6 +202,8 @@ export function initEffect(opts) {
             bindUI,
             applyVignetteMask, calcGradCoords,
         };
+        result.reRender = resetAnimStart;  // 快捷重播（onRender 模式下的别名）
+        return result;
     }
 
     return {

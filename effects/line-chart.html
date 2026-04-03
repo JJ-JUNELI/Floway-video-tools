@@ -108,7 +108,7 @@
     <script type="module">
         import { initEffect } from '../shared/controls.js';
 
-        const { ctx, canvas, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop, lerp, hexToRgba } = initEffect({
+        const { ctx, canvas, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop, lerp, hexToRgba, easeOutCubic, easeOutQuart } = initEffect({
             canvasId: 'mainCanvas',
             fileName: 'LineChart',
             onFrame: drawFrame,
@@ -174,14 +174,6 @@
         }
 
         // ====== 共享模块初始化（固定写法）======
-        // ====== 缓动函数 ======
-        function easeOutCubic(t) {
-            return 1 - Math.pow(1 - t, 3);
-        }
-
-        function easeOutQuart(t) {
-            return 1 - Math.pow(1 - t, 4);
-        }
 
         // ====== 绘制网格和坐标轴 ======
         function drawGrid(ctx, timeMs, yRange, fadeIn) {
