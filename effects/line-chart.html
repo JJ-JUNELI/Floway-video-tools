@@ -15,24 +15,30 @@
 
     <style>
         /* 数据表格 — base.css 无此组件 */
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        .data-table th { text-align: left; font-size: 10px; color: #666; padding: 4px; border-bottom: 1px solid #333; }
-        .data-table td { padding: 4px 2px; }
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 5px; table-layout: fixed; }
+        .data-table th { text-align: left; font-size: 10px; color: var(--text-sub, #888); padding: 6px 6px; border-bottom: 1px solid var(--border, #eee); white-space: nowrap; }
+        .data-table td { padding: 5px 4px; vertical-align: middle; }
+        .data-table tr + tr td { border-top: 1px solid rgba(128,128,128,0.12); }
         .data-table input {
-            background: #111; border: 1px solid #333; color: white;
-            padding: 6px; border-radius: 4px; font-size: 12px; width: 100%; outline: none;
+            background: var(--card-bg, #fafafa); border: 1px solid var(--border, #ddd); color: var(--text-main, #333);
+            padding: 7px 8px; border-radius: 4px; font-size: 12px; width: 100%; outline: none;
+            box-sizing: border-box; height: 32px;
             transition: border-color 0.2s;
         }
-        .data-table input:focus { border-color: var(--accent); background: #1a1a1a; }
+        .data-table input:focus { border-color: var(--accent, #555); background: #fff; }
 
         /* 行操作按钮 */
         .btn-icon {
-            width: 24px; height: 24px; border: 1px solid #444; background: #222;
-            color: #888; border-radius: 4px; cursor: pointer; display: inline-flex;
-            align-items: center; justify-content: center; font-size: 14px; transition: 0.2s;
+            width: 28px; height: 32px; border: 1px solid var(--border, #ddd); background: var(--card-bg, #f5f5f5);
+            color: var(--text-sub, #888); border-radius: 4px; cursor: pointer; display: inline-flex;
+            align-items: center; justify-content: center; font-size: 13px; transition: 0.2s;
+            box-sizing: border-box; flex-shrink: 0; vertical-align: middle;
         }
-        .btn-icon:hover { color: white; border-color: #666; background: #333; }
-        .btn-icon.del:hover { color: var(--danger); border-color: var(--danger); }
+        .btn-icon:hover { color: var(--text-main, #333); border-color: var(--accent, #555); background: #eee; }
+        .btn-icon.del:hover { color: var(--danger, #cc3333); border-color: var(--danger, #cc3333); }
+
+        /* 操作列 */
+        .op-cell { white-space: nowrap; text-align: center; }
 
         .btn-play {
             background: var(--accent); color: #000; font-weight: bold;
@@ -54,8 +60,11 @@
     <!-- ====== 侧边栏 ====== -->
     <div class="sidebar">
         <div class="sidebar-header">
-            <div class="app-title">📈 折线图表 <span style="font-size:9px; color:#666">v2.0</span></div>
-            <div class="version-badge">NEW</div>
+            <div class="app-title">📈 折线图表 <span style="font-size:9px; color:var(--text-sub, #888)">v2.0</span></div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button id="themeToggle" class="btn-icon" title="切换主题 (暗色/亮色)">☀</button>
+                <div class="version-badge">NEW</div>
+            </div>
         </div>
 
         <div class="controls-container">
@@ -64,14 +73,14 @@
             <div class="control-group">
                 <div class="group-title">
                     <span>📊 数据管理</span>
-                    <button class="btn-icon" onclick="resetData()" title="重置">↺</button>
+                    <button class="btn-icon" onclick="resetData()" title="重置" style="width:28px;height:32px;font-size:13px;">↺</button>
                 </div>
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="width: 40%">名称</th>
-                            <th style="width: 35%">数值</th>
-                            <th style="width: 25%">操作</th>
+                            <th style="width: 32%">名称</th>
+                            <th style="width: 36%">数值</th>
+                            <th style="width: 32%">操作</th>
                         </tr>
                     </thead>
                     <tbody id="DataBody"></tbody>
@@ -110,11 +119,11 @@
                 </div>
 
                 <div class="row" style="justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; color:#aaa;">主标题颜色</span>
+                    <span style="font-size:12px; color:var(--text-sub, #888);">主标题颜色</span>
                     <input type="color" id="TitleColor" value="#ffffff">
                 </div>
                 <div class="row" style="justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; color:#aaa;">副标题颜色</span>
+                    <span style="font-size:12px; color:var(--text-sub, #888);">副标题颜色</span>
                     <input type="color" id="SubTitleColor" value="#ffffff">
                 </div>
                 <div class="sub-title">
@@ -140,7 +149,7 @@
                     </select>
                 </div>
 
-                <div id="YAxisCustomPanel" style="display:none; margin-top:10px; border-top:1px dashed #333; padding-top:10px;">
+                <div id="YAxisCustomPanel" class="divider-dash" style="display:none; margin-top:10px; padding-top:10px;">
                     <div class="row">
                         <div class="stack" style="flex:1">
                             <div class="label-line"><span>最小值</span></div>
@@ -180,7 +189,7 @@
                 </div>
 
                 <div class="row" style="justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; color:#aaa;">卡片底色</span>
+                    <span style="font-size:12px; color:var(--text-sub, #888);">卡片底色</span>
                     <input type="color" id="CardBg" value="#1a1a2e">
                 </div>
 
@@ -195,7 +204,7 @@
                 </div>
 
                 <div class="row" style="justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; color:#aaa;">边框颜色</span>
+                    <span style="font-size:12px; color:var(--text-sub, #888);">边框颜色</span>
                     <input type="color" id="CardBorderColor" value="#333355">
                 </div>
 
@@ -293,7 +302,7 @@
                 </div>
 
                 <div class="row" style="justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; color:#aaa;">数值颜色</span>
+                    <span style="font-size:12px; color:var(--text-sub, #888);">数值颜色</span>
                     <input type="color" id="ValueColor" value="#ffffff">
                 </div>
             </div>
@@ -308,7 +317,7 @@
                 </div>
 
                 <div class="row" style="justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; color:#aaa;">网格线颜色</span>
+                    <span style="font-size:12px; color:var(--text-sub, #888);">网格线颜色</span>
                     <input type="color" id="GridColor" value="#333333">
                 </div>
 
@@ -360,6 +369,7 @@
 
     <script type="module">
         import { initEffect } from '../shared/controls.js';
+        import { getTheme, setTheme, toggleTheme } from '../shared/themes.js';
 
         // ====== 初始化 ======
         const { ctx, baseWidth, baseHeight, clearFrame, drawBg,
@@ -368,7 +378,7 @@
                 createLinearGradient, fontSelectHTML, setupFontSelector } = initEffect({
             canvasId: 'mainCanvas',
             fileName: 'LineChart',
-            defaultBgMode: '#000000',
+            defaultBgMode: 'transparent',
             onFrame: drawFrame,
         });
 
@@ -528,10 +538,10 @@
                 tr.innerHTML = `
                     <td><input type="text" value="${item.label}" oninput="updateData(${index}, 'label', this.value)"></td>
                     <td><input type="number" value="${item.value}" oninput="updateData(${index}, 'value', this.value)"></td>
-                    <td style="display:flex; gap:4px;">
-                        <div class="btn-icon" onclick="moveRow(${index}, -1)" title="上移">↑</div>
-                        <div class="btn-icon" onclick="moveRow(${index}, 1)" title="下移">↓</div>
-                        <div class="btn-icon del" onclick="removeRow(${index})" title="删除">×</div>
+                    <td class="op-cell">
+                        <button class="btn-icon" onclick="moveRow(${index}, -1)" title="上移">↑</button>
+                        <button class="btn-icon" onclick="moveRow(${index}, 1)" title="下移">↓</button>
+                        <button class="btn-icon del" onclick="removeRow(${index})" title="删除">×</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -575,6 +585,17 @@
 
         // 播放按钮
         document.getElementById('BtnPlay').addEventListener('click', () => resetAnimStart());
+
+        // 主题切换按钮
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            toggleTheme();
+            // 更新按钮图标
+            const btn = document.getElementById('themeToggle');
+            btn.textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+            resetAnimStart();
+        });
+        // 初始化按钮图标
+        document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
 
         // ====== Y 轴范围计算 ======
         function getYRange() {
@@ -734,14 +755,15 @@
                 const baseB = parseInt(config.cardBg.slice(5, 7), 16);
 
                 // ── 投影 ──
-                ctx.shadowColor = 'rgba(0,0,0,0.35)';
+                const t = getTheme();
+                ctx.shadowColor = t.canvasShadow;
                 ctx.shadowBlur = 30;
                 ctx.shadowOffsetY = 12;
 
                 ctx.beginPath();
                 roundRect(ctx, cx, cy, cw, ch, r);
                 ctx.closePath();
-                ctx.fillStyle = '#000';
+                ctx.fillStyle = t.canvasCardFill;
                 ctx.fill();
                 ctx.shadowColor = 'transparent';
                 ctx.shadowBlur = 0;
@@ -871,7 +893,8 @@
 
             // ====== 坐标轴线（极淡） ======
             ctx.save();
-            ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+            const t = getTheme();
+            ctx.strokeStyle = t.canvasAxisLine;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(chartLeft, chartTop); ctx.lineTo(chartRight, chartTop);
@@ -896,7 +919,7 @@
 
             // 无数据提示
             if (dataPoints.length === 0) {
-                ctx.fillStyle = '#666';
+                ctx.fillStyle = t.textSub;
                 ctx.font = `24px ${config.titleFont}`;
                 ctx.textAlign = 'center';
                 ctx.fillText('请添加数据点', w / 2, h / 2);
@@ -922,7 +945,7 @@
                 }
 
                 ctx.font = `11px ${config.titleFont}`;
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.fillStyle = t.canvasText;
                 ctx.textAlign = 'right';
 
                 for (let i = 0; i <= config.gridY; i++) {
@@ -944,7 +967,7 @@
             // ====== X 轴标签 ======
             ctx.save();
             ctx.font = `11px ${config.titleFont}`;
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.fillStyle = t.canvasText;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
 
@@ -1000,7 +1023,7 @@
                 ctx.stroke();
 
                 ctx.lineWidth = Math.max(1, config.lineWidth - 2);
-                ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+                ctx.strokeStyle = t.canvasLineHighlight;
                 ctx.shadowBlur = 0;
                 ctx.stroke();
 
@@ -1033,7 +1056,7 @@
                     // 白心
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, config.pointSize * 0.6, 0, Math.PI * 2);
-                    ctx.fillStyle = '#ffffff';
+                    ctx.fillStyle = t.canvasPointWhite;
                     ctx.fill();
 
                     // 数值标签（胶囊 badge，终态显示）

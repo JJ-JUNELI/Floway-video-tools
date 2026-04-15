@@ -279,7 +279,12 @@ export function drawMediaContain(ctx, media, w, h, scaleFactor = 1) {
  * @param {string} [align='center'] - 'left' | 'center' | 'right'
  * @param {number} [maxWidth] - 可选, 超过宽度自动截断加省略号
  */
-export function drawTextCentered(ctx, text, x, y, font, color = '#ffffff', align = 'center', maxWidth) {
+export function drawTextCentered(ctx, text, x, y, font, color = 'auto', align = 'center', maxWidth) {
+    // 'auto' → 从当前主题取文字颜色
+    if (color === 'auto') {
+        color = (typeof window !== 'undefined' && window.__flowayTheme)
+            ? window.__flowayTheme.textMain : '#ffffff';
+    }
     ctx.save();
     ctx.font = font || '700 24px "Noto Sans SC", sans-serif';
     ctx.textAlign = align;
@@ -449,6 +454,7 @@ export function applyVignetteMask(ctx, w, h, intensity = 0.85) {
     const cx = w / 2, cy = h / 2;
     const r = Math.sqrt(cx * cx + cy * cy);
     const grad = ctx.createRadialGradient(cx, cy, r * (1 - intensity), cx, cy, r);
+    // 使用主题色（暗色下白色，亮色下也用白色因为这是 destination-in 合成）
     grad.addColorStop(0, 'rgba(255,255,255,1)');
     grad.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.save();

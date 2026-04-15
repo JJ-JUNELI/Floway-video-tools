@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>纸张折线图</title>
+
+    <!-- 固定加载顺序，不要改 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="../shared/mp4-muxer.js"></script>
+    <link rel="stylesheet" href="../shared/base.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700;900&family=Noto+Serif+SC:wght@200;300;400;500;700;900&family=Orbitron:wght@400;700;900&family=Chakra+Petch:wght@300;400;500;600;700&family=Exo+2:wght@100;300;400;500;600;700;800;900&family=Montserrat:wght@100;300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+
+    <style>
+        /* 数据表格 — base.css 无此组件 */
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 5px; table-layout: fixed; }
+        .data-table th { text-align: left; font-size: 10px; color: var(--text-sub, #888); padding: 6px 6px; border-bottom: 1px solid var(--border, #eee); white-space: nowrap; }
+        .data-table td { padding: 5px 4px; vertical-align: middle; }
+        .data-table tr + tr td { border-top: 1px solid rgba(128,128,128,0.12); }
+        .data-table input {
+            background: var(--card-bg, #fafafa); border: 1px solid var(--border, #ddd); color: var(--text-main, #333);
+            padding: 7px 8px; border-radius: 4px; font-size: 12px; width: 100%; outline: none;
+            box-sizing: border-box; height: 32px;
+            transition: border-color 0.2s;
+        }
+        .data-table input:focus { border-color: var(--accent, #555); background: #fff; }
+
+        /* 行操作按钮 */
+        .btn-icon {
+            width: 28px; height: 32px; border: 1px solid var(--border, #ddd); background: var(--card-bg, #f5f5f5);
+            color: var(--text-sub, #888); border-radius: 4px; cursor: pointer; display: inline-flex;
+            align-items: center; justify-content: center; font-size: 13px; transition: 0.2s;
+            box-sizing: border-box; flex-shrink: 0; vertical-align: middle;
+        }
+        .btn-icon:hover { color: var(--text-main, #333); border-color: var(--accent, #555); background: #eee; }
+        .btn-icon.del:hover { color: var(--danger, #cc3333); border-color: var(--danger, #cc3333); }
+
+        /* 操作列 */
+        .op-cell { white-space: nowrap; text-align: center; }
+
+        .btn-play {
+            background: var(--accent); color: #000; font-weight: bold;
+            border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer;
+            font-size: 11px; transition: 0.2s;
+        }
+        .btn-play:hover { filter: brightness(1.1); }
+
+        .btn-add {
+            background: var(--accent); color: #000; font-weight: bold;
+            border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;
+            font-size: 11px; width: 100%; margin-top: 10px; transition: 0.2s;
+        }
+        .btn-add:hover { filter: brightness(1.1); }
+
+        /* CSS Grid 叠放：bgCanvas（全尺寸固定）和 .paper-card（卡片尺寸浮动） */
+        .canvas-grid {
+            display: grid;
+            width: 100%;
+            max-width: 1440px;
+        }
+        .canvas-grid > * {
+            grid-area: 1 / 1;
+        }
+
+        /* 背景画布 — 全尺寸（100%），固定不动 */
+        #bgCanvas {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 卡片层 — 卡片大小（默认80%），居中，CSS 3D 漂浮 */
+        .paper-card {
+            width: 80%;
+            aspect-ratio: 4 / 3;
+            justify-self: center;
+            align-self: center;
+            z-index: 1;
+            background: transparent;
+            padding: 0;
+            overflow: visible;
+            transform-origin: center center;
+        }
+        .paper-card .effect-canvas {
+            border: none !important;
+            background: transparent !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            aspect-ratio: auto !important;
+        }
+
+        /* 录制中：paper-card 恢复全尺寸，禁用 CSS 3D，隐藏 bgCanvas */
+        body.is-recording .paper-card {
+            width: 100% !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        body.is-recording #bgCanvas { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- ====== 侧边栏 ====== -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="app-title">📄 纸张折线图 <span style="font-size:9px; color:var(--text-sub, #888)">v2.0</span></div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button id="themeToggle" class="btn-icon" title="切换主题 (暗色/亮色)">☀</button>
+                <div class="version-badge">NEW</div>
+            </div>
+        </div>
+
+        <div class="controls-container">
+
+            <!-- 数据管理 -->
+            <div class="control-group">
+                <div class="group-title">
+                    <span>📊 数据管理</span>
+                    <button class="btn-icon" onclick="resetData()" title="重置" style="width:28px;height:32px;font-size:13px;">↺</button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 32%">名称</th>
+                            <th style="width: 36%">数值</th>
+                            <th style="width: 32%">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="DataBody"></tbody>
+                </table>
+                <button class="btn-add" onclick="addRow()">+ 添加数据行</button>
+            </div>
+
+            <!-- 标题设置 -->
+            <div class="control-group">
+                <div class="group-title"><span>📝 标题设置</span></div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>主标题</span></div>
+                    <input type="text" id="MainTitle" value="汽车零售销量新能源月度渗透率走势">
+                </div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>副标题 (右侧文字)</span></div>
+                    <input type="text" id="SubTitle" value="新能源乘用车渗透率超 50%">
+                </div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>标题字体</span></div>
+                    <div id="TitleFontMount" style="width:100%"></div>
+                </div>
+
+                <div class="row">
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>主标题字号</span><span id="TitleSizeVal">26</span></div>
+                        <input type="range" id="TitleSize" min="14" max="48" step="1" value="26">
+                    </div>
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>副标题字号</span><span id="SubTitleSizeVal">36</span></div>
+                        <input type="range" id="SubTitleSize" min="18" max="72" step="1" value="36">
+                    </div>
+                </div>
+
+                <div class="row" style="justify-content:space-between; align-items:center;">
+                    <span style="font-size:12px; color:var(--text-sub, #888);">主标题颜色</span>
+                    <input type="color" id="TitleColor" value="#333333">
+                </div>
+                <div class="row" style="justify-content:space-between; align-items:center;">
+                    <span style="font-size:12px; color:var(--text-sub, #888);">副标题颜色</span>
+                    <input type="color" id="SubTitleColor" value="#999999">
+                </div>
+            </div>
+
+            <!-- 纸张与纹理 -->
+            <div class="control-group">
+                <div class="group-title"><span>📄 纸张与纹理</span></div>
+
+                <div class="row">
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>色温</span><span id="PaperWarmthVal">45</span></div>
+                        <input type="range" id="PaperWarmth" min="0" max="100" step="1" value="45">
+                    </div>
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
+                        <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>纤维感</span><span id="FiberVal">20</span></div>
+                        <input type="range" id="FiberIntensity" min="0" max="100" step="1" value="20">
+                    </div>
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
+                        <input type="range" id="Vignette" min="0" max="100" step="1" value="15">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 折线样式 -->
+            <div class="control-group">
+                <div class="group-title"><span>📈 折线样式</span></div>
+
+                <div class="row">
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>线条粗细</span><span id="LineWidthVal">1.2</span></div>
+                        <input type="range" id="LineWidth" min="0.5" max="4" step="0.1" value="1.2">
+                    </div>
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>抖动幅度</span><span id="LineJitterVal">25</span></div>
+                        <input type="range" id="LineJitter" min="0" max="100" step="1" value="25">
+                    </div>
+                </div>
+
+                <div class="row" style="justify-content:space-between; align-items:center;">
+                    <span style="font-size:12px; color:var(--text-sub, #888);">线条颜色</span>
+                    <input type="color" id="LineColor" value="#555555">
+                </div>
+
+                <div class="row">
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>填充透明度</span><span id="AreaOpacityVal">12%</span></div>
+                        <input type="range" id="AreaOpacity" min="0" max="60" step="1" value="12">
+                    </div>
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>填充颜色</span></div>
+                        <input type="color" id="AreaColor" value="#b4a58c">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>数据点大小</span><span id="PointSizeVal">4</span></div>
+                        <input type="range" id="PointSize" min="1" max="12" step="0.5" value="4">
+                    </div>
+                </div>
+
+                <div class="sub-title">
+                    <span>显示数据点</span>
+                    <input type="checkbox" id="ShowPoints" checked>
+                </div>
+                <div class="sub-title">
+                    <span>显示数值标签</span>
+                    <input type="checkbox" id="ShowValues">
+                </div>
+            </div>
+
+            <!-- 网格与坐标 -->
+            <div class="control-group">
+                <div class="group-title"><span>▦ 网格与坐标</span></div>
+
+                <div class="row">
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>网格强度</span><span id="GridIntensityVal">35</span></div>
+                        <input type="range" id="GridIntensity" min="0" max="100" step="1" value="35">
+                    </div>
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>Y轴刻度数</span><span id="GridYVal">4</span></div>
+                        <input type="range" id="GridY" min="2" max="10" step="1" value="4">
+                    </div>
+                </div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>Y轴起始点</span></div>
+                    <select id="YAxisMode">
+                        <option value="zero" selected>从零开始</option>
+                        <option value="auto">自动取整（从最小值附近）</option>
+                    </select>
+                </div>
+
+                <div class="sub-title">
+                    <span>虚线网格</span>
+                    <input type="checkbox" id="DashedGrid">
+                </div>
+            </div>
+
+            <!-- 卡片漂浮 -->
+            <div class="control-group">
+                <div class="group-title">
+                    <span>🃏 卡片漂浮状态</span>
+                </div>
+
+                <div class="row">
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
+                        <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5">
+                    </div>
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
+                        <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1">
+                    </div>
+                </div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
+                    <input type="range" id="CardScale" min="40" max="100" step="1" value="80">
+                </div>
+
+                <div class="row">
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>悬浮高度</span><span id="ElevationVal">50</span></div>
+                        <input type="range" id="Elevation" min="0" max="100" step="1" value="50">
+                    </div>
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
+                        <input type="range" id="CardRadius" min="0" max="28" step="1" value="16">
+                    </div>
+                </div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>内边距</span><span id="CardPadVal">32</span></div>
+                    <input type="range" id="CardPad" min="10" max="80" step="2" value="32">
+                </div>
+
+                <div class="sub-title">
+                    <span>漂浮微动画</span>
+                    <input type="checkbox" id="FloatEnabled" checked>
+                </div>
+
+                <div class="row">
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>X轴摆幅 (°)</span><span id="FloatRotateXVal">2.0°</span></div>
+                        <input type="range" id="FloatRotateX" min="0" max="8" step="0.5" value="2.0">
+                    </div>
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>Y轴摆幅 (°)</span><span id="FloatRotateYVal">1.5°</span></div>
+                        <input type="range" id="FloatRotateY" min="0" max="8" step="0.5" value="1.5">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>周期 (秒)</span><span id="FloatDurationVal">4s</span></div>
+                        <input type="range" id="FloatDuration" min="1" max="10" step="0.5" value="4">
+                    </div>
+                    <div style="flex:1" class="stack">
+                        <div class="label-line"><span>相位差</span><span id="FloatPhaseVal">25%</span></div>
+                        <input type="range" id="FloatPhase" min="0" max="100" step="5" value="25">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 动画设置 -->
+            <div class="control-group" style="border-left: 3px solid var(--accent);">
+                <div class="group-title">
+                    <span>⚡ 动画设置</span>
+                    <button id="BtnPlay" class="btn-play">▶ 播放</button>
+                </div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>动画时长 (秒)</span><span id="AnimDurationVal">3.5s</span></div>
+                    <input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="2.0">
+                </div>
+
+                <div class="row stack">
+                    <div class="label-line"><span>动画曲线</span></div>
+                    <select id="AnimEasing">
+                        <option value="linear">线性 (Linear)</option>
+                        <option value="easeIn">先慢后快 (Ease In)</option>
+                        <option value="easeOut">先快后慢 (Ease Out)</option>
+                        <option value="easeInOut" selected>丝滑缓动 (Smooth)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 背景和导出面板由 shared/controls.js 自动注入 -->
+            <div id="shared-controls-placeholder"></div>
+
+        </div>
+    </div>
+
+    <!-- ====== 画布 ====== -->
+    <div class="preview-area" id="previewArea">
+        <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
+        <div class="canvas-grid">
+            <canvas id="bgCanvas"></canvas>
+            <div class="paper-card" id="paperCard">
+                <canvas id="mainCanvas" class="effect-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initEffect } from '../shared/controls.js';
+        import { getTheme, setTheme, toggleTheme } from '../shared/themes.js';
+
+        // ====== 初始化 ======
+        const { ctx, canvas, bg, baseWidth, baseHeight, scale, clearFrame, drawBg,
+                startPreviewLoop, resetAnimStart, recorder,
+                clamp, hexToRgba, getEasing, bindUI,
+                createLinearGradient, fontSelectHTML, setupFontSelector } = initEffect({
+            canvasId: 'mainCanvas',
+            fileName: 'PaperChart',
+            defaultBgMode: 'transparent',
+            onFrame: drawFrame,
+        });
+
+        // ====== 背景画布（固定不动，不受 .paper-card CSS 3D 影响） ======
+        const bgCanvasEl = document.getElementById('bgCanvas');
+        bgCanvasEl.width = baseWidth * scale;
+        bgCanvasEl.height = baseHeight * scale;
+        const bgCtx = bgCanvasEl.getContext('2d', { alpha: true });
+        bgCtx.scale(scale, scale);
+
+        // 根据背景模式切换：transparent 用 .preview-area CSS，其他用 bgCanvas
+        function updateBgMode() {
+            const area = document.getElementById('previewArea');
+            if (bg.mode === 'transparent') {
+                // transparent：恢复 .preview-area CSS 背景，隐藏 bgCanvas
+                area.style.backgroundColor = '';
+                area.style.boxShadow = '';
+                bgCanvasEl.style.display = 'none';
+            } else {
+                // 其他模式：bgCanvas 显示，.preview-area 透明
+                area.style.backgroundColor = 'transparent';
+                area.style.boxShadow = 'none';
+                bgCanvasEl.style.display = '';
+            }
+        }
+
+        // 监听背景模式变化
+        const bgModeSelect = document.querySelector('#BgMode');
+        if (bgModeSelect) bgModeSelect.addEventListener('change', updateBgMode);
+        updateBgMode();
+
+        // ====== 数据点 ======
+        let dataPoints = [
+            { label: '1月', value: 41 },
+            { label: '2月', value: 49 },
+            { label: '3月', value: 51.5 },
+            { label: '4月', value: 52.5 },
+            { label: '5月', value: 53.5 },
+            { label: '6月', value: 52 },
+            { label: '7月', value: 52 },
+            { label: '8月', value: 55.5 },
+            { label: '9月', value: 58.5 },
+            { label: '10月', value: 57.5 },
+            { label: '11月', value: 59 },
+            { label: '12月', value: 58 }
+        ];
+
+        // ====== 参数（与 demo 对齐） ======
+        const config = {
+            mainTitle: '汽车零售销量新能源月度渗透率走势',
+            subTitle: '新能源乘用车渗透率超 50%',
+            titleFont: "'Noto Sans SC', sans-serif",
+            mainTitleSize: 26,
+            subTitleSize: 36,
+            mainTitleColor: '#333333',
+            subTitleColor: '#999999',
+            paperWarmth: 45,
+            noiseGrain: 35,
+            fiberIntensity: 20,
+            vignette: 15,
+            lineWidth: 1.2,
+            lineJitter: 25,
+            lineColor: '#555555',
+            areaOpacity: 12,
+            areaColor: '#b4a58c',
+            showPoints: true,
+            showValues: false,
+            gridIntensity: 35,
+            gridY: 4,
+            yAxisMode: 'zero',
+            dashedGrid: false,
+            pointSize: 4,
+            rotateX: 1.5,
+            rotateY: -1,
+            elevation: 50,
+            cardRadius: 16,
+            cardScale: 0.8,
+            floatEnabled: true,
+            floatRotateX: 2.0,
+            floatRotateY: 1.5,
+            floatPhase: 25,
+            floatDuration: 4,
+            cardPad: 32,
+            animDuration: 3.5,
+            animEasing: 'easeInOut',
+        };
+
+        // 字体选择器
+        const titleFontSelectId = 'TitleFontSelect';
+        document.getElementById('TitleFontMount').innerHTML = fontSelectHTML(titleFontSelectId, config.titleFont);
+        setupFontSelector({ selectId: titleFontSelectId, configKey: 'titleFont', fileInputId: titleFontSelectId + 'Upload', config });
+        document.getElementById(titleFontSelectId).addEventListener('change', () => resetAnimStart());
+
+        // ====== UI 绑定 ======
+        bindUI(config, [
+            ['MainTitle',       'mainTitle'],
+            ['SubTitle',        'subTitle'],
+            ['TitleSize',       'mainTitleSize',   'int',   'TitleSizeVal'],
+            ['SubTitleSize',    'subTitleSize',    'int',   'SubTitleSizeVal'],
+            ['TitleColor',      'mainTitleColor'],
+            ['SubTitleColor',   'subTitleColor'],
+            ['PaperWarmth',     'paperWarmth',     'int',   'PaperWarmthVal'],
+            ['NoiseGrain',      'noiseGrain',      'int',   'NoiseGrainVal'],
+            ['FiberIntensity',  'fiberIntensity',  'int',   'FiberVal'],
+            ['Vignette',        'vignette',        'int',   'VignetteVal'],
+            ['LineWidth',       'lineWidth',       'float', 'LineWidthVal'],
+            ['LineJitter',      'lineJitter',      'int',   'LineJitterVal'],
+            ['LineColor',       'lineColor'],
+            ['AreaOpacity',     'areaOpacity',     '%',     'AreaOpacityVal', '%'],
+            ['AreaColor',       'areaColor'],
+            ['ShowPoints',      'showPoints',      'checked'],
+            ['ShowValues',      'showValues',      'checked'],
+            ['GridIntensity',   'gridIntensity',   'int',   'GridIntensityVal'],
+            ['GridY',           'gridY',           'int',   'GridYVal'],
+            ['YAxisMode',       'yAxisMode'],
+            ['DashedGrid',      'dashedGrid',      'checked'],
+            ['RotateX',         'rotateX',         'float', 'RotateXVal',   '°'],
+            ['RotateY',         'rotateY',         'float', 'RotateYVal',   '°'],
+            ['Elevation',       'elevation',       'int',   'ElevationVal'],
+            ['CardRadius',      'cardRadius',      'int',   'CardRadiusVal'],
+            ['CardScale',       'cardScale',       '%',     'CardScaleVal', '%'],
+            ['CardPad',         'cardPad',         'int',   'CardPadVal'],
+            ['FloatEnabled',    'floatEnabled',    'checked'],
+            ['FloatRotateX',    'floatRotateX',    'float', 'FloatRotateXVal',  '°'],
+            ['FloatRotateY',    'floatRotateY',    'float', 'FloatRotateYVal',  '°'],
+            ['FloatPhase',      'floatPhase',      'int',   'FloatPhaseVal',    '%'],
+            ['FloatDuration',   'floatDuration',   'float', 'FloatDurationVal', 's'],
+            ['PointSize',       'pointSize',       'int',   'PointSizeVal'],
+            ['AnimDuration',    'animDuration',    'float', 'AnimDurationVal', 's'],
+            ['AnimEasing',      'animEasing'],
+        ], {
+            onChange: () => {
+                _paperTexCache = null;
+                _staticBgCache = null;
+                _pathPtsCache = null;
+                // 同步 .paper-card CSS 宽度 = cardScale
+                document.getElementById('paperCard').style.width = (config.cardScale * 100) + '%';
+                startFloatAnim();
+                resetAnimStart();
+            }
+        });
+
+        // ====== CSS 3D 漂浮（预览用，录制时自动禁用） ======
+        const paperCard = document.getElementById('paperCard');
+        paperCard.style.width = (config.cardScale * 100) + '%';
+        let _floatAnimId = null;
+        let _floatStartTime = performance.now();
+
+        function applyCardFloat(rx, ry) {
+            const elev = config.elevation / 100;
+            const radius = config.cardRadius;
+            const sy = 4 + elev * 36, sb = 12 + elev * 44;
+            paperCard.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+            paperCard.style.boxShadow = `0 ${sy}px ${sb}px ${elev*6}px rgba(0,0,0,${0.05+elev*0.10}), 0 ${sy*0.5}px ${sb*0.4}px rgba(0,0,0,${0.03+elev*0.04})`;
+            paperCard.style.borderRadius = radius + 'px';
+        }
+
+        function floatAnimLoop(now) {
+            if (!config.floatEnabled) {
+                applyCardFloat(config.rotateX, config.rotateY);
+                _floatAnimId = null;
+                return;
+            }
+            const elapsed = (now - _floatStartTime) / 1000;
+            const dur = config.floatDuration;
+            const phaseRad = (config.floatPhase / 100) * Math.PI * 2;
+            const rx = Math.sin(elapsed / dur * Math.PI * 2) * config.floatRotateX;
+            const ry = Math.sin(elapsed / dur * Math.PI * 2 + phaseRad) * config.floatRotateY;
+            applyCardFloat(rx, ry);
+            _floatAnimId = requestAnimationFrame(floatAnimLoop);
+        }
+
+        function startFloatAnim() {
+            if (_floatAnimId) { cancelAnimationFrame(_floatAnimId); _floatAnimId = null; }
+            _floatStartTime = performance.now();
+            _floatAnimId = requestAnimationFrame(floatAnimLoop);
+        }
+        startFloatAnim();
+
+        // ====== 数据表格管理 ======
+        function renderTable() {
+            const tbody = document.getElementById('DataBody');
+            tbody.innerHTML = '';
+            dataPoints.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" value="${item.label}" oninput="updateData(${index}, 'label', this.value)"></td>
+                    <td><input type="number" value="${item.value}" oninput="updateData(${index}, 'value', this.value)"></td>
+                    <td class="op-cell">
+                        <button class="btn-icon" onclick="moveRow(${index}, -1)" title="上移">↑</button>
+                        <button class="btn-icon" onclick="moveRow(${index}, 1)" title="下移">↓</button>
+                        <button class="btn-icon del" onclick="removeRow(${index})" title="删除">×</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.updateData = (index, key, val) => {
+            if (key === 'value') val = parseFloat(val) || 0;
+            dataPoints[index][key] = val;
+        };
+        window.addRow = () => { dataPoints.push({ label: '新项', value: 0 }); renderTable(); };
+        window.removeRow = (index) => {
+            if (dataPoints.length <= 2) { alert('至少保留两个数据点'); return; }
+            dataPoints.splice(index, 1); renderTable();
+        };
+        window.moveRow = (index, dir) => {
+            if (index + dir < 0 || index + dir >= dataPoints.length) return;
+            const temp = dataPoints[index]; dataPoints[index] = dataPoints[index + dir]; dataPoints[index + dir] = temp; renderTable();
+        };
+        window.resetData = () => {
+            dataPoints = [{ label: 'A', value: 20 }, { label: 'B', value: 50 }, { label: 'C', value: 30 }, { label: 'D', value: 80 }, { label: 'E', value: 60 }];
+            renderTable();
+        };
+        document.getElementById('BtnPlay').addEventListener('click', () => resetAnimStart());
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            toggleTheme(); document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙'; resetAnimStart();
+        });
+        document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+
+        // ====== Y 轴范围计算 ======
+        function getYRange() {
+            const values = dataPoints.map(d => d.value);
+            if (values.length === 0) return { yMin: 0, yMax: 100 };
+
+            const dataMin = Math.min(...values);
+            const dataMax = Math.max(...values);
+            const span = dataMax - dataMin || 10;
+
+            if (config.yAxisMode === 'auto') {
+                // 自动取整：yMin 从最小值附近向下取整，yMax 向上取整
+                const step = getYStep(span);
+                let yMin = Math.floor(dataMin / step) * step;
+                let yMax = Math.ceil(dataMax / step) * step;
+                if (yMax <= yMin) yMax = yMin + step;
+                // 留一点余量：确保数据不会贴到顶
+                if (dataMax >= yMax) yMax += step;
+                return { yMin, yMax };
+            } else {
+                // 从零开始
+                let yMin = 0;
+                let yMax = Math.max(dataMax, 0);
+                if (yMax === 0) yMax = 10;
+                const step = getYStep(yMax);
+                yMax = Math.ceil(yMax / step) * step;
+                if (yMax <= yMin) yMax = yMin + step;
+                return { yMin: 0, yMax };
+            }
+        }
+
+        // 根据数据跨度自动选择合适的刻度步长
+        function getYStep(span) {
+            const rawStep = span / 4; // 大约 4-5 个刻度
+            const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+            const normalized = rawStep / mag;
+            let niceStep;
+            if (normalized <= 1.5) niceStep = 1;
+            else if (normalized <= 3.5) niceStep = 2;
+            else if (normalized <= 7.5) niceStep = 5;
+            else niceStep = 10;
+            return niceStep * mag;
+        }
+
+        // ====== 种子随机数（demo 方式） ======
+        let _lineSeed = 54321;
+        function seededRandom() {
+            _lineSeed = (_lineSeed * 1664525 + 1013904223) & 0xffffffff;
+            return ((_lineSeed >>> 0) % 10000) / 10000;
+        }
+
+        let _texSeed = 42;
+        function texRnd() {
+            _texSeed = (_texSeed * 1664525 + 1013904223) & 0xffffffff;
+            return ((_texSeed >>> 0) % 10000) / 10000;
+        }
+
+        function hash2(x, y) {
+            let h = x * 374761393 + y * 668265263;
+            h = (h ^ (h >> 13)) * 1274126177;
+            h = h ^ (h >> 16);
+            return ((h % 10000) + 10000) % 10000 / 10000;
+        }
+
+        // ====== 4层纸张纹理（半分辨率生成，性能关键！） ======
+        let _paperTexCache = null;
+
+        function generatePaperTexture(texW, texH) {
+            const warmth = config.paperWarmth / 100;
+            const grain = config.noiseGrain / 100;
+            const fiber = config.fiberIntensity / 100;
+            const vig = config.vignette / 100;
+            const key = `${warmth.toFixed(2)}|${grain.toFixed(2)}|${fiber.toFixed(2)}|${vig.toFixed(2)}|${texW}|${texH}`;
+            if (_paperTexCache && _paperTexCache.key === key) return _paperTexCache.canvas;
+
+            // 半分辨率
+            const tw = Math.round(texW / 2);
+            const th = Math.round(texH / 2);
+            const tc = document.createElement('canvas');
+            tc.width = tw; tc.height = th;
+            const tctx = tc.getContext('2d');
+            const img = tctx.createImageData(tw, th);
+            const d = img.data;
+
+            const bgR = Math.round(250 - warmth * 12), bgG = Math.round(248 - warmth * 10), bgB = Math.round(243 - warmth * 5);
+            _texSeed = 42;
+
+            for (let y = 0; y < th; y++) {
+                for (let x = 0; x < tw; x++) {
+                    const idx = (y * tw + x) * 4;
+                    let r = bgR, g = bgG, b = bgB;
+
+                    if (grain > 0) {
+                        const n = (texRnd() - 0.5) * grain * 22;
+                        r += n; g += n * 0.97; b += n * 0.92;
+                    }
+                    if (grain > 0.1) {
+                        const scale = 80;
+                        const nx = x / scale, ny = y / scale;
+                        const lx = Math.floor(nx), ly = Math.floor(ny);
+                        const fx = nx - lx, fy = ny - ly;
+                        const s1 = hash2(lx, ly), s2 = hash2(lx+1, ly), s3 = hash2(lx, ly+1), s4 = hash2(lx+1, ly+1);
+                        const lowFreq = (s1*(1-fx)*(1-fy) + s2*fx*(1-fy) + s3*(1-fx)*fy + s4*fx*fy) - 0.5;
+                        const bump = lowFreq * grain * 8;
+                        r += bump; g += bump * 0.98; b += bump * 0.95;
+                    }
+                    if (fiber > 0) {
+                        const fiberAngle = 12 * Math.PI / 180;
+                        const proj = x * Math.cos(fiberAngle) + y * Math.sin(fiberAngle);
+                        const fiberNoise = Math.sin(proj * 0.35 + hash2(Math.floor(x/3), Math.floor(y/3)) * 10);
+                        const fiberVal = fiberNoise * fiber * 3;
+                        r -= fiberVal * 0.3; g -= fiberVal * 0.28; b -= fiberVal * 0.25;
+                    }
+                    if (vig > 0) {
+                        const cx = tw / 2, cy = th / 2;
+                        const maxDist = Math.sqrt(cx * cx + cy * cy);
+                        const dx = (x - cx) / maxDist, dy = (y - cy) / maxDist;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        const vigFactor = Math.pow(dist, 2.2) * vig * 18;
+                        r -= vigFactor; g -= vigFactor; b -= vigFactor;
+                    }
+                    d[idx]   = clamp(Math.round(r), 0, 255);
+                    d[idx+1] = clamp(Math.round(g), 0, 255);
+                    d[idx+2] = clamp(Math.round(b), 0, 255);
+                    d[idx+3] = 255;
+                }
+            }
+            tctx.putImageData(img, 0, 0);
+            _paperTexCache = { key, canvas: tc };
+            return tc;
+        }
+
+        // ====== 圆角矩形 ======
+        function roundRect(c, x, y, w, h, r) {
+            r = Math.min(r, w / 2, h / 2);
+            c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.arcTo(x + w, y, x + w, y + r, r);
+            c.lineTo(x + w, y + h - r); c.arcTo(x + w, y + h, x + w - r, y + h, r);
+            c.lineTo(x + r, y + h); c.arcTo(x, y + h, x, y + h - r, r); c.lineTo(x, y + r); c.arcTo(x, y, x + r, y, r);
+        }
+
+        // ====== 静态背景缓存 ======
+        let _staticBgCache = null;
+        let _pathPtsCache = null;
+
+        function drawStaticBg(w, h) {
+            const key = `${config.paperWarmth}|${config.noiseGrain}|${config.fiberIntensity}|${config.vignette}|${config.gridIntensity}|${config.gridY}|${config.yAxisMode}|${config.dashedGrid}|${config.cardPad}|${w}|${dataPoints.map(d=>d.value).join(',')}`;
+            if (_staticBgCache && _staticBgCache.key === key) {
+                ctx.drawImage(_staticBgCache.canvas, 0, 0, w, h);
+                return;
+            }
+            const off = document.createElement('canvas');
+            off.width = w; off.height = h;
+            const oc = off.getContext('2d');
+
+            const warmth = config.paperWarmth / 100;
+            oc.fillStyle = `rgb(${Math.round(250-warmth*12)},${Math.round(248-warmth*10)},${Math.round(243-warmth*5)})`;
+            oc.fillRect(0, 0, w, h);
+            const tex = generatePaperTexture(w, h);
+            if (tex) oc.drawImage(tex, 0, 0, w, h);
+
+            const _pad = config.cardPad;
+            const padL = _pad + 98, padR = _pad + 98, padT = _pad + 50, padB = _pad + 55;
+            const cw = w - padL - padR, ch = h - padT - padB;
+            const { yMin, yMax } = getYRange();
+
+            oc.save();
+            oc.font = '11px ' + String(config.titleFont).replace(/'/g, '');
+            oc.fillStyle = '#999'; oc.textAlign = 'right'; oc.textBaseline = 'middle';
+            const yStep = (yMax - yMin) / config.gridY;
+            const yDecimal = yStep >= 1 ? 0 : (yStep >= 0.1 ? 1 : 2);
+            for (let i = 0; i <= config.gridY; i++) {
+                const ratio = i / config.gridY;
+                oc.fillText((yMin + ratio * (yMax - yMin)).toFixed(yDecimal), padL - 14, padT + ch - ratio * ch);
+            }
+            oc.restore();
+
+            oc.save();
+            oc.font = '10px ' + String(config.titleFont).replace(/'/g, '');
+            oc.fillStyle = '#aaa'; oc.textAlign = 'center'; oc.textBaseline = 'top';
+            dataPoints.forEach((d, i) => {
+                oc.fillText(d.label, padL + (i / Math.max(dataPoints.length - 1, 1)) * cw, h - padB + 22);
+            });
+            oc.restore();
+
+            const gv = config.gridIntensity / 100;
+            if (gv > 0) {
+                oc.save();
+                oc.strokeStyle = `rgba(195,188,175,${gv * 0.45})`; oc.lineWidth = 0.5;
+                if (config.dashedGrid) oc.setLineDash([3, 6]);
+                for (let i = 0; i < dataPoints.length; i++) {
+                    const x = padL + (i / Math.max(dataPoints.length - 1, 1)) * cw;
+                    oc.beginPath(); oc.moveTo(x, padT); oc.lineTo(x, padT + ch); oc.stroke();
+                }
+                for (let i = 0; i <= config.gridY; i++) {
+                    const y = padT + ch - (i / config.gridY) * ch;
+                    oc.beginPath(); oc.moveTo(padL, y); oc.lineTo(padL + cw, y); oc.stroke();
+                }
+                oc.restore();
+            }
+
+            _staticBgCache = { key, canvas: off };
+            ctx.drawImage(off, 0, 0, w, h);
+        }
+
+        // ====== 绘制背景到指定 context ======
+        function drawBgTo(targetCtx, timeMs, isRec, fmt) {
+            targetCtx.save();
+            targetCtx.setTransform(1, 0, 0, 1, 0, 0);
+            targetCtx.clearRect(0, 0, targetCtx.canvas.width, targetCtx.canvas.height);
+            targetCtx.restore();
+            if (bg.mode === 'transparent') {
+                if (isRec) {
+                    // 录制时需要填充底色到 mainCanvas
+                    if (fmt !== 'png_seq') {
+                        targetCtx.fillStyle = '#000000';
+                    } else {
+                        targetCtx.fillStyle = getTheme().canvasBg;
+                    }
+                    targetCtx.fillRect(0, 0, baseWidth, baseHeight);
+                }
+                // 预览时不画（.preview-area CSS 负责背景）
+            } else {
+                bg.draw(targetCtx, timeMs, isRec, fmt);
+            }
+        }
+
+        // ====== 主渲染函数 ======
+        function drawFrame(timeMs) {
+            clearFrame();
+
+            if (recorder.isRecording) {
+                // 录制：背景画到 mainCanvas（CSS 3D 已禁用，canvas 全尺寸）
+                drawBgTo(ctx, timeMs, true, recorder.format);
+            } else {
+                // 预览：背景画到 bgCanvas（固定不动）
+                drawBgTo(bgCtx, timeMs, false, 'webm');
+            }
+
+            const canvasW = baseWidth, canvasH = baseHeight;
+            // 预览时画满 canvas（CSS 已缩放 paper-card 为卡片大小）
+            // 录制时用 cardScale 画卡片（canvas 全尺寸）
+            const effectiveScale = recorder.isRecording ? config.cardScale : 1.0;
+            const w = Math.round(canvasW * effectiveScale);
+            const h = Math.round(canvasH * effectiveScale);
+            const radius = config.cardRadius;
+            const elev = config.elevation / 100;
+            const cardX = (canvasW - w) / 2;
+            const cardY = (canvasH - h) / 2;
+
+            // 动画进度
+            const isHold = !isFinite(timeMs);
+            const duration = config.animDuration * 1000;
+            const rawProgress = isHold ? 1 : Math.min(timeMs / duration, 1);
+            const progress = getEasing(config.animEasing)(rawProgress);
+
+            // 卡片阴影
+            ctx.save();
+            const sy = 4 + elev * 36, sb = 12 + elev * 44, ss = elev * 6;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = sy * 0.6;
+            ctx.shadowBlur = sb * 0.5;
+            ctx.shadowColor = `rgba(0,0,0,${0.05 + elev * 0.10})`;
+            ctx.fillStyle = 'rgba(0,0,0,0.01)';
+            ctx.beginPath();
+            roundRect(ctx, cardX, cardY, w, h, radius);
+            ctx.fill();
+            ctx.restore();
+
+            // 卡片内容（translate + clip）
+            ctx.save();
+            ctx.translate(cardX, cardY);
+            ctx.beginPath();
+            roundRect(ctx, 0, 0, w, h, radius);
+            ctx.clip();
+
+            drawStaticBg(w, h);
+
+            if (dataPoints.length === 0) {
+                ctx.fillStyle = '#999'; ctx.font = `24px ${config.titleFont}`;
+                ctx.textAlign = 'center'; ctx.fillText('请添加数据点', w / 2, h / 2);
+                ctx.restore();
+                return;
+            }
+
+            // 标题
+            const titleAlpha = clamp(rawProgress * 2.5, 0, 1);
+            const subTitleAlpha = clamp((rawProgress - 0.3) * 2, 0, 1);
+            ctx.save();
+            ctx.globalAlpha = titleAlpha;
+            ctx.font = `700 ${config.mainTitleSize}px ${config.titleFont}`;
+            ctx.fillStyle = config.mainTitleColor;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(config.mainTitle, w / 2, 50);
+            ctx.globalAlpha = subTitleAlpha;
+            ctx.font = `400 ${config.subTitleSize}px ${config.titleFont}`;
+            ctx.fillStyle = config.subTitleColor;
+            ctx.textAlign = 'right';
+            ctx.fillText(config.subTitle, w - 90, h / 2);
+            ctx.restore();
+
+            // 路径点
+            const _pad = config.cardPad;
+            const padL = _pad + 98, padR = _pad + 98, padT = _pad + 50, padB = _pad + 55;
+            const cw = w - padL - padR, ch = h - padT - padB;
+            const { yMin, yMax } = getYRange();
+            const jitter = config.lineJitter / 100;
+
+            const ptsCacheKey = `${dataPoints.length}|${jitter}|${config.cardPad}|${w}|${yMin}-${yMax}`;
+            if (!_pathPtsCache || _pathPtsCache.key !== ptsCacheKey) {
+                const pts = dataPoints.map((d, i) => ({
+                    x: padL + (i / Math.max(dataPoints.length - 1, 1)) * cw,
+                    y: padT + ch - ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch
+                }));
+                _lineSeed = 54321;
+                const pp = [{ x: pts[0].x, y: pts[0].y }];
+                for (let i = 1; i < pts.length; i++) {
+                    const prev = pts[i - 1], curr = pts[i];
+                    for (let j = 1; j <= 12; j++) {
+                        const t = j / 12;
+                        pp.push({
+                            x: prev.x + (curr.x - prev.x) * t + (seededRandom() - 0.5) * jitter * 1.3,
+                            y: prev.y + (curr.y - prev.y) * t + (seededRandom() - 0.5) * jitter * 1.3
+                        });
+                    }
+                }
+                _pathPtsCache = { key: ptsCacheKey, pathPoints: pp, points: pts };
+            }
+
+            const pathPoints = _pathPtsCache.pathPoints;
+            const points = _pathPtsCache.points;
+            const totalPts = pathPoints.length;
+            const drawF = progress * (totalPts - 1);
+            const lineDrawn = Math.floor(drawF) + 1;
+            const frac = drawF - Math.floor(drawF);
+            const isComplete = lineDrawn >= totalPts;
+            let tipX, tipY;
+            if (isComplete) { tipX = pathPoints[totalPts - 1].x; tipY = pathPoints[totalPts - 1].y; }
+            else { const ti = lineDrawn - 1; tipX = pathPoints[ti].x + (pathPoints[ti+1].x - pathPoints[ti].x) * frac; tipY = pathPoints[ti].y + (pathPoints[ti+1].y - pathPoints[ti].y) * frac; }
+
+            // 填充
+            if (lineDrawn >= 2) {
+                const bottomY = padT + ch;
+                const alpha = config.areaOpacity / 100;
+                const fillGrad = createLinearGradient(ctx, 0, padT, 0, bottomY, [
+                    { pos: 0, color: hexToRgba(config.areaColor, alpha) },
+                    { pos: 0.6, color: hexToRgba(config.areaColor, alpha * 0.5) },
+                    { pos: 1, color: hexToRgba(config.areaColor, 0) },
+                ]);
+                ctx.save(); ctx.fillStyle = fillGrad; ctx.beginPath();
+                ctx.moveTo(pathPoints[0].x, bottomY);
+                const fillEnd = isComplete ? totalPts : lineDrawn;
+                for (let i = 0; i < fillEnd; i++) ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+                if (!isComplete) ctx.lineTo(tipX, tipY);
+                ctx.lineTo(isComplete ? pathPoints[totalPts-1].x : tipX, bottomY);
+                ctx.closePath(); ctx.fill(); ctx.restore();
+            }
+
+            // 折线
+            if (lineDrawn >= 2) {
+                ctx.save();
+                ctx.lineWidth = config.lineWidth; ctx.strokeStyle = config.lineColor;
+                ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                ctx.beginPath(); ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+                const lineEnd = isComplete ? totalPts : lineDrawn;
+                for (let i = 1; i < lineEnd; i++) ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+                if (!isComplete) ctx.lineTo(tipX, tipY);
+                ctx.stroke(); ctx.restore();
+            }
+
+            // 数据点
+            if (config.showPoints) {
+                const dotDelay = rawProgress > 0.75 ? clamp((rawProgress - 0.75) / 0.20, 0, 1) : 0;
+                const ps = config.pointSize * dotDelay;
+                if (ps >= 0.5) {
+                    ctx.save();
+                    points.forEach((p) => {
+                        ctx.beginPath(); ctx.arc(p.x, p.y, ps * 1.8, 0, Math.PI * 2);
+                        ctx.fillStyle = hexToRgba(config.lineColor, 0.1 * dotDelay); ctx.fill();
+                        ctx.beginPath(); ctx.arc(p.x, p.y, ps, 0, Math.PI * 2);
+                        ctx.fillStyle = hexToRgba(config.lineColor, 0.65 * dotDelay); ctx.fill();
+                        ctx.beginPath(); ctx.arc(p.x, p.y, ps * 0.5, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255,255,255,${dotDelay})`; ctx.fill();
+                    });
+                    ctx.restore();
+                }
+            }
+
+            // 数值标签
+            if (config.showValues && rawProgress > 0.94) {
+                const labelAlpha = clamp((rawProgress - 0.94) / 0.06, 0, 1);
+                ctx.save();
+                ctx.font = `bold 11px ${config.titleFont}`;
+                points.forEach((p, i) => {
+                    const txt = String(dataPoints[i].value);
+                    const tw = ctx.measureText(txt).width, th = 14;
+                    const bx = p.x - tw / 2 - 5, by = p.y - config.pointSize * 6 - th - 4;
+                    ctx.globalAlpha = labelAlpha * 0.7;
+                    ctx.beginPath();
+                    roundRect(ctx, bx, by, tw + 10, th, th / 2);
+                    ctx.fillStyle = hexToRgba(config.lineColor, 0.15); ctx.fill();
+                    ctx.strokeStyle = hexToRgba(config.lineColor, 0.3); ctx.lineWidth = 0.5; ctx.stroke();
+                    ctx.globalAlpha = labelAlpha; ctx.fillStyle = '#555';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(txt, p.x, by + th / 2);
+                });
+                ctx.restore();
+            }
+
+            ctx.restore(); // clip + translate
+        }
+
+        // ====== 启动预览 ======
+        renderTable();
+        startPreviewLoop(drawFrame, () => ({ duration: config.animDuration, hold: true }));
+    </script>
+</body>
+</html>

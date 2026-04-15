@@ -19,8 +19,11 @@
 
     <div class="sidebar">
         <div class="sidebar-header">
-            <div class="app-title">⚡ 科技动效生成器 <span style="font-size:9px; color:#666">v60.6</span></div>
-            <div style="font-size:10px; color:#444">BG PATTERNS</div>
+            <div class="app-title">⚡ 科技动效生成器 <span style="font-size:9px; color:var(--text-sub, #888)">v60.6</span></div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button id="themeToggle" class="btn-icon" title="切换主题 (暗色/亮色)">☀</button>
+                <div style="font-size:10px; color:var(--text-sub, #888); font-weight:600;">BG PATTERNS</div>
+            </div>
         </div>
 
         <div class="controls-container">
@@ -45,7 +48,7 @@
                         <option value="gradient" selected>🌈 线性渐变 (Gradient)</option>
                     </select>
                 </div>
-                <div id="GradientControls" style="display:block; background:#1a1a1a; padding:8px; border-radius:4px; margin-top:5px; border:1px solid #333;">
+                <div id="GradientControls" class="gradient-panel" style="display:block; padding:8px; border-radius:4px; margin-top:5px;">
                     <div class="row">
                         <div class="label-line" style="flex:1; font-size:10px;"><span>颜色 1 (Start)</span></div>
                         <input type="color" id="GradColor1" value="#ffffff">
@@ -152,7 +155,7 @@
                     <input type="range" id="GlowOpacity" min="0" max="1" step="0.1" value="0.6">
                 </div>
 
-                <div style="border-top: 1px dashed #333; margin: 12px 0;"></div>
+                <div class="divider-dash" style="margin: 12px 0;"></div>
 
                 <div class="sub-title">
                     <span>🌑 投影 (Shadow)</span>
@@ -253,6 +256,7 @@
 
     <script type="module">
         import { initEffect } from '../shared/controls.js';
+        import { getTheme, toggleTheme } from '../shared/themes.js';
 
         const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
                 clearFrame, drawBg, lerp, hexToRgba, getLightness,
@@ -260,6 +264,7 @@
                 startPreviewLoop, resetAnimStart } = initEffect({
             canvasId: 'mainCanvas',
             fileName: 'TextAnim',
+            defaultBgMode: 'transparent',
             onFrame: renderFrame,
         });
 
@@ -440,11 +445,13 @@
                     const charRealWidth = line.charWidths[charIndex];
 
                     ctx.save();
-                    ctx.shadowColor = `rgba(0, 0, 0, ${config.shadowOpacity})`;
+                    ctx.shadowColor = getTheme().id === 'light'
+                        ? `rgba(0, 0, 0, ${config.shadowOpacity})`
+                        : `rgba(0, 0, 0, ${Math.min(config.shadowOpacity * 1.5, 0.8)})`;
                     ctx.shadowBlur = config.shadowBlur;
                     ctx.shadowOffsetX = config.shadowX;
                     ctx.shadowOffsetY = config.shadowY;
-                    ctx.fillStyle = '#000000';
+                    ctx.fillStyle = getTheme().textShadowColor;
                     ctx.translate(charX, y); ctx.fillText(char, 0, 0);
                     ctx.restore();
 
@@ -485,7 +492,7 @@
                         ctx.fillStyle = grad;
                         ctx.fillText(char, -charRealWidth / 2, 0);
                     } else {
-                        ctx.fillStyle = '#ffffff';
+                        ctx.fillStyle = getTheme().textMain;
                         ctx.fillText(char, 0, 0);
                     }
                     ctx.restore();
@@ -553,6 +560,14 @@
             state.isAnimating = true;
             resetAnimStart();
         });
+
+        // 主题切换
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            toggleTheme();
+            document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+            resetAnimStart();
+        });
+        document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
 
         // Font selector: inject HTML and init
         const fontSelectId = 'FontSelect';

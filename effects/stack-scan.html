@@ -19,7 +19,10 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="app-title">STACK SCAN <span style="color:var(--accent)">v19.4</span></div>
-            <div class="version-badge">STABLE FIX</div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button id="themeToggle" class="btn-icon" title="切换主题 (暗色/亮色)">☀</button>
+                <div class="version-badge">STABLE FIX</div>
+            </div>
         </div>
 
         <div class="controls-container">
@@ -33,7 +36,7 @@
                     <div class="label-line"><span>背景水印内容</span></div>
                     <input type="text" id="BgTextStr" value="Feature">
                 </div>
-                <div class="switch-container" style="background:rgba(255,255,255,0.05); margin-top:15px; border:1px solid #444;">
+                <div class="switch-container" style="margin-top:15px;">
                     <span class="switch-label" style="color:var(--accent); font-weight:bold;">👁️ 预览全屏 (Preview)</span>
                     <label class="switch">
                         <input type="checkbox" id="PreviewToggle">
@@ -83,7 +86,7 @@
                     <input type="range" id="GlowIntensityInput" min="0" max="100" step="1" value="30">
                 </div>
                 
-                <div style="border-top: 1px dashed #444; margin: 10px 0;"></div>
+                <div class="divider-dash" style="margin: 10px 0;"></div>
                 
                 <div class="row stack">
                     <div class="label-line"><span>↔️ 整体水平位置 (Pos X)</span><span id="PosXVal">0</span></div>
@@ -125,7 +128,7 @@
                     </div>
                 </div>
 
-                <div style="border-top: 1px dashed #444; margin: 10px 0;"></div>
+                <div class="divider-dash" style="margin: 10px 0;"></div>
 
                 <div class="row stack">
                     <div class="label-line"><span>📈 字距/透明度运动曲线</span></div>
@@ -198,7 +201,7 @@
                 </div>
 
                  <div class="row" style="margin-top:5px; justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; color:#aaa;">水印颜色</span>
+                    <span style="font-size:12px; color:var(--text-sub, #888);">水印颜色</span>
                     <input type="color" id="BgTextColor" value="#121212">
                 </div>
                 <div class="row stack">
@@ -290,6 +293,7 @@
         import { injectPanels } from '../shared/controls.js';
         import { SvgRenderer } from '../shared/svg-renderer.js';
         import { getEasing, bindUI, setupFontSelector, fontSelectHTML } from '../shared/utils.js';
+        import { getTheme, toggleTheme } from '../shared/themes.js';
 
         injectPanels({ defaultBgMode: 'transparent', defaultPatternColor: '#222222' });
 
@@ -629,6 +633,29 @@
                 state.animStartTime = 0;
             }
         };
+
+        // === 主题切换 ===
+        function applyTheme() {
+            const t = getTheme();
+            const isLight = t.id === 'light';
+            document.getElementById('themeToggle').textContent = isLight ? '🌙' : '☀';
+
+            // SVG 文本填充：亮色用深色文字，暗色用白色
+            centerText.setAttribute('fill', t.textMain);
+
+            // SVG 滤镜 flood-color：描边颜色跟随主题（仅当用户未自定义时）
+            floodDilate.setAttribute('flood-color', config.mainColor);
+            floodErode.setAttribute('flood-color', config.mainColor);
+            floodCenter.setAttribute('flood-color', config.mainColor);
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            toggleTheme();
+            applyTheme();
+        });
+
+        // 初始化主题
+        applyTheme();
     </script>
 </body>
 </html>

@@ -17,8 +17,11 @@
 
     <div class="sidebar">
         <div class="sidebar-header">
-            <div class="app-title">✨ 粒子场 <span style="font-size:9px; color:#666">v1.0</span></div>
-            <div class="version-badge">NEW</div>
+            <div class="app-title">✨ 粒子场 <span style="font-size:9px; color:var(--text-sub)">v1.0</span></div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button id="themeToggle" class="btn-icon" title="切换主题 (暗色/亮色)" style="font-size:13px;">☀</button>
+                <div class="version-badge">NEW</div>
+            </div>
         </div>
 
         <div class="controls-container">
@@ -46,7 +49,7 @@
             <div class="control-group">
                 <div class="group-title">🎨 颜色设置</div>
                 <div class="row">
-                    <span style="font-size:12px; color:#aaa;">粒子颜色</span>
+                    <span style="font-size:12px; color:var(--text-sub, #888);">粒子颜色</span>
                     <input type="color" id="ColorInput" value="#00ffaa">
                 </div>
                 <div class="row stack">
@@ -68,9 +71,11 @@
 
     <script type="module">
         import { initEffect } from '../shared/controls.js';
+        import { getTheme, toggleTheme } from '../shared/themes.js';
 
-        const { ctx, canvas, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop, lerp, hexToRgba } = initEffect({
+        const { ctx, canvas, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop, lerp, hexToRgba, bindUI } = initEffect({
             canvasId: 'mainCanvas',
+            defaultBgMode: 'transparent',
             fileName: 'ParticleField',
             onFrame: drawFrame,
         });
@@ -146,6 +151,13 @@
         }
 
         startPreviewLoop(drawFrame);
+
+        // 主题切换
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            toggleTheme();
+            document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+        });
+        document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
 
         // === UI BINDINGS ===
         document.getElementById('CountInput').addEventListener('input', e => {

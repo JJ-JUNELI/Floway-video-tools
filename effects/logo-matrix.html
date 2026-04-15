@@ -18,7 +18,10 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="app-title">LOGO MATRIX <span style="color:var(--accent)">MAX</span></div>
-            <div class="version-badge">v25.0</div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button id="themeToggle" class="btn-icon" title="切换主题 (暗色/亮色)">☀</button>
+                <div class="version-badge">v25.0</div>
+            </div>
         </div>
 
         <div class="controls-container">
@@ -69,7 +72,7 @@
                 
                 <div id="MaskControls">
                     <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <span style="font-size:11px; color:#fff;">背景受遮罩影响</span>
+                        <span style="font-size:11px; color:var(--text-main);">背景受遮罩影响</span>
                         <input type="checkbox" id="MaskAffectsBg" checked>
                     </div>
 
@@ -88,7 +91,7 @@
                     </div>
                     
                     <div id="MaskBaseColorCtrl" class="row" style="display:none; justify-content:space-between; align-items:center;">
-                        <span style="font-size:11px; color:#aaa;">底图颜色</span>
+                        <span style="font-size:11px; color:var(--text-sub, #888);">底图颜色</span>
                         <input type="color" id="MaskBaseColor" value="#000000">
                     </div>
                     
@@ -99,7 +102,7 @@
                         </label>
                     </div>
 
-                    <div style="height:1px; background:#333; margin:10px 0;"></div>
+                    <div class="divider-line" style="margin:10px 0;"></div>
 
                     <div class="row stack">
                         <div class="label-line"><span>可视范围</span><span id="MaskSizeVal">0.85</span></div>
@@ -128,6 +131,7 @@
     <script type="module">
         import { initEffect } from '../shared/controls.js';
         import { Background } from '../shared/background.js';
+        import { getTheme, toggleTheme } from '../shared/themes.js';
 
         const { ctx, canvas, bg, recorder, baseWidth, baseHeight, scale,
                 clearFrame, startPreviewLoop, drawMediaContain, bindUI } = initEffect({
@@ -206,7 +210,7 @@
             const rot = animTime * 0.1 * config.rotSpeed;
             clearFrame();
             if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
-                ctx.fillStyle = '#000000'; 
+                ctx.fillStyle = getTheme().canvasBg;
                 ctx.fillRect(0,0,baseWidth, baseHeight);
             }
             // 1. 底层：绘制遮罩底图
@@ -232,6 +236,13 @@
             ctx.restore();
         }
 
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            toggleTheme();
+            document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+            resetAnimStart();
+        });
+        document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+
         startPreviewLoop(drawFrame);
 
         function drawMaskBaseContent(context) {
@@ -250,7 +261,7 @@
             } else if (type === 'grid' || type === 'dots') {
                 context.save();
                 context.setTransform(1, 0, 0, 1, 0, 0);
-                context.fillStyle = '#050505';
+                context.fillStyle = getTheme().canvasBg;
                 context.fillRect(0, 0, canvas.width, canvas.height);
                 if (maskBg.patternCanvas) {
                     context.fillStyle = context.createPattern(maskBg.patternCanvas, 'repeat');
@@ -258,7 +269,7 @@
                 }
                 context.restore();
             } else {
-                context.fillStyle = '#000';
+                context.fillStyle = getTheme().canvasBg;
                 context.fillRect(0, 0, baseWidth, baseHeight);
             }
         }
@@ -271,7 +282,7 @@
         }
         function drawLogoMatrix(context, scroll, rot) {
             if (!logoImg) {
-                context.fillStyle = '#555';
+                context.fillStyle = getTheme().textSub;
                 context.font = 'bold 30px Arial';
                 context.textAlign = 'center';
                 context.fillText("Waiting for Logo...", baseWidth / 2, baseHeight / 2);

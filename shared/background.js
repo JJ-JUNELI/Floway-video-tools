@@ -31,6 +31,8 @@
  */
 
 import { drawMediaContain } from './utils.js';
+import { getTheme } from './themes.js';
+import { PaperTexture } from './paper-texture.js';
 
 export class Background {
     constructor(opts) {
@@ -49,6 +51,7 @@ export class Background {
         this.bgMedia = null;
         this.bgMediaType = null;
         this.patternCanvas = null;
+        this.paperTexture = new PaperTexture();
 
         // SVG 目标元素（可选，SVG 效果用）
         this.svgBgRect = (opts.svgTargets && opts.svgTargets.bgRect) || null;
@@ -78,6 +81,12 @@ export class Background {
                     if (patternRow) patternRow.style.display = 'flex';
                 } else {
                     if (patternRow) patternRow.style.display = 'none';
+                }
+
+                // 纸张纹理参数行
+                const paperRow = document.querySelector('#PaperParamsRow');
+                if (paperRow) {
+                    paperRow.style.display = (v === 'paper') ? 'flex' : 'none';
                 }
 
                 if (v === 'custom' && uploadInput) {
@@ -118,6 +127,19 @@ export class Background {
                 this.patternColor = e.target.value;
                 this._updatePatternCache();
                 this._syncSvg();
+            });
+        }
+
+        // 纸张纹理暖色调滑块
+        const paperWarmthEl = document.querySelector('#PaperWarmth');
+        const paperWarmthVal = document.querySelector('#PaperWarmthVal');
+        if (paperWarmthEl) {
+            paperWarmthEl.value = this.paperTexture.warmth;
+            if (paperWarmthVal) paperWarmthVal.textContent = this.paperTexture.warmth;
+            paperWarmthEl.addEventListener('input', (e) => {
+                const v = parseInt(e.target.value, 10);
+                this.paperTexture.setWarmth(v);
+                if (paperWarmthVal) paperWarmthVal.textContent = v;
             });
         }
     }
@@ -174,6 +196,9 @@ export class Background {
             this.svgBgRect.setAttribute('fill', mode);
         } else if (mode === 'grid' || mode === 'dots') {
             this._updateSvgPattern();
+        } else if (mode === 'paper') {
+            // SVG 无法渲染程序化纹理，回退到主题色
+            this.svgBgRect.setAttribute('fill', getTheme().canvasBg);
         }
     }
 
@@ -236,7 +261,7 @@ export class Background {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
 
         if (this.mode === 'grid' || this.mode === 'dots') {
-            ctx.fillStyle = '#050505';
+            ctx.fillStyle = getTheme().canvasBg;
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
             if (this.patternCanvas) {
                 const pat = ctx.createPattern(this.patternCanvas, 'repeat');
@@ -251,6 +276,14 @@ export class Background {
                 this._drawMediaContain(ctx, this.bgMedia);
             } else if (this.bgMediaType === 'image' && this.bgMedia.complete) {
                 this._drawMediaContain(ctx, this.bgMedia);
+            }
+        } else if (this.mode === 'paper') {
+            const texCanvas = this.paperTexture.getCanvas(ctx.canvas.width, ctx.canvas.height);
+            if (texCanvas) {
+                ctx.drawImage(texCanvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
+            } else {
+                ctx.fillStyle = getTheme().canvasBg;
+                ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
             }
         } else {
             // 纯色 (#000000, #00ff00, #0000ff 等)
@@ -289,10 +322,18 @@ export class Background {
                 ctx.drawImage(this.bgMedia, (width - w) / 2, (height - h) / 2, w, h);
             }
         } else if ((mode === 'grid' || mode === 'dots') && this.patternCanvas) {
-            ctx.fillStyle = '#050505';
+            ctx.fillStyle = getTheme().canvasBg;
             ctx.fillRect(0, 0, width, height);
             ctx.fillStyle = ctx.createPattern(this.patternCanvas, 'repeat');
             ctx.fillRect(0, 0, width, height);
+        } else if (mode === 'paper') {
+            const texCanvas = this.paperTexture.getCanvas(width, height);
+            if (texCanvas) {
+                ctx.drawImage(texCanvas, 0, 0, width, height);
+            } else {
+                ctx.fillStyle = getTheme().canvasBg;
+                ctx.fillRect(0, 0, width, height);
+            }
         } else {
             ctx.fillStyle = mode;
             ctx.fillRect(0, 0, width, height);

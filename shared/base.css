@@ -33,21 +33,55 @@ body {
 body.is-recording .sidebar { opacity: 0.9; }
 
 /* ========================================
-   Sidebar
+   Sidebar (浮动卡片风格 — 与 demo 一致)
    ======================================== */
 
 .sidebar {
-    width: 400px; background: var(--panel-bg);
-    border-right: 1px solid var(--border);
+    width: 440px; min-width: 280px; max-width: 700px;
+    background: var(--panel-bg);
+    border-radius: 18px;
     display: flex; flex-direction: column;
-    z-index: 100; box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+    z-index: 100;
     flex-shrink: 0;
+    overflow: hidden;
+    margin: 20px 0 20px 20px;
+    position: relative;
+    /* 浮动卡片阴影 */
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.04),
+        0 12px 32px rgba(0,0,0,0.07);
 }
+
+/* 侧边栏拖拽调节手柄 */
+.sidebar-resize-handle {
+    position: absolute; top: 8px; right: 0; bottom: 8px; width: 8px;
+    cursor: col-resize; z-index: 200;
+    border-top-right-radius: 14px; border-bottom-right-radius: 14px;
+    transition: background 0.15s;
+}
+.sidebar-resize-handle::before {
+    content: ''; position: absolute; top: 50%; right: 2px;
+    width: 2px; height: 28px; transform: translateY(-50%);
+    background: var(--text-sub); border-radius: 1px;
+    opacity: 0.25; transition: opacity 0.15s;
+    pointer-events: none;
+}
+.sidebar-resize-handle:hover { background: rgba(128,128,128,0.12); }
+.sidebar-resize-handle:hover::before { opacity: 0.7; }
+body.resizing { user-select: none !important; cursor: col-resize !important; }
+body.resizing * { pointer-events: none !important; }
+body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 
 .sidebar-header {
     padding: 18px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: baseline; justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between;
 }
+.sidebar-header .btn-icon {
+    width: 30px; height: 30px; font-size: 14px; display: inline-flex;
+    align-items: center; justify-content: center; background: none; border: none;
+    color: var(--text-sub); cursor: pointer; border-radius: 6px; transition: 0.2s;
+}
+.sidebar-header .btn-icon:hover { background: rgba(128,128,128,0.1); color: var(--text-main); }
 
 .app-title {
     font-family: 'Orbitron', sans-serif;
@@ -56,18 +90,17 @@ body.is-recording .sidebar { opacity: 0.9; }
 }
 
 .version-badge {
-    font-size: 10px; background: #333;
-    padding: 2px 6px; border-radius: 4px; color: #fff;
+    font-size: 10px; background: var(--card-bg);
+    padding: 2px 6px; border-radius: 4px; color: var(--text-sub);
 }
 
 .controls-container {
-    padding: 15px; overflow-y: auto; flex: 1;
+    padding: 14px 16px 20px; overflow-y: auto; flex: 1;
     display: flex; flex-direction: column; gap: 16px;
     -webkit-overflow-scrolling: touch;
 }
-
 .controls-container::-webkit-scrollbar { width: 4px; }
-.controls-container::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+.controls-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
 /* ========================================
    Control Groups
@@ -75,14 +108,14 @@ body.is-recording .sidebar { opacity: 0.9; }
 
 .control-group {
     background: var(--card-bg); border-radius: 6px; padding: 14px;
-    border: 1px solid #333;
+    border: 1px solid var(--border);
 }
 
 .group-title {
     font-size: 11px; font-weight: 700; color: var(--text-sub);
     text-transform: uppercase; margin-bottom: 12px;
     display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 1px solid #444; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border); padding-bottom: 6px;
     letter-spacing: 0.5px;
 }
 
@@ -98,7 +131,7 @@ body.is-recording .sidebar { opacity: 0.9; }
 
 .label-line {
     display: flex; justify-content: space-between;
-    font-size: 12px; color: #ccc; margin-bottom: 4px;
+    font-size: 12px; color: var(--text-main); margin-bottom: 4px;
 }
 .label-line span:last-child {
     color: var(--accent); font-family: monospace; font-weight: bold;
@@ -109,20 +142,20 @@ body.is-recording .sidebar { opacity: 0.9; }
    ======================================== */
 
 select, input[type="text"], .file-btn-wrapper {
-    width: 100%; background: #18181b; border: 1px solid #444; color: white;
+    width: 100%; background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main);
     padding: 8px 10px; border-radius: 4px; font-size: 12px; font-family: inherit;
     box-sizing: border-box; outline: none; transition: 0.2s; cursor: pointer;
 }
-select:hover, .file-btn-wrapper:hover { border-color: #666; }
+select:hover, .file-btn-wrapper:hover { border-color: var(--text-sub); }
 
 textarea {
-    width: 100%; background: #111; border: 1px solid #333; color: white;
+    width: 100%; background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main);
     padding: 8px; border-radius: 4px; font-family: inherit; font-size: 12px;
     box-sizing: border-box; transition: 0.2s; outline: none;
     resize: vertical; min-height: 60px; font-weight: bold; letter-spacing: 1px;
 }
 textarea:focus, select:focus, input[type="text"]:focus {
-    border-color: var(--accent); background: #1a1a1a;
+    border-color: var(--accent); background: var(--card-bg);
 }
 
 /* ========================================
@@ -134,7 +167,7 @@ input[type="range"] {
     cursor: pointer; margin: 8px 0; touch-action: none;
 }
 input[type="range"]::-webkit-slider-runnable-track {
-    width: 100%; height: 4px; background: #444; border-radius: 2px;
+    width: 100%; height: 4px; background: var(--border); border-radius: 2px;
 }
 
 /* Slider thumb — default 18px (text-animator) */
@@ -168,7 +201,7 @@ input[type="color"] {
 }
 input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
 input[type="color"]::-webkit-color-swatch {
-    border: 1px solid #444; border-radius: 4px;
+    border: 1px solid var(--border); border-radius: 4px;
 }
 
 /* ========================================
@@ -179,14 +212,14 @@ input[type="color"]::-webkit-color-swatch {
 input[type="checkbox"] {
     -webkit-appearance: none; appearance: none;
     width: 42px; height: 22px;
-    background: #2a2a2a; border: 1px solid #444; border-radius: 20px;
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px;
     position: relative; cursor: pointer; outline: none; flex-shrink: 0;
     transition: all 0.3s;
 }
 input[type="checkbox"]::after {
     content: ''; position: absolute; top: 50%; left: 3px;
     transform: translateY(-50%);
-    width: 14px; height: 14px; background: #666; border-radius: 50%;
+    width: 14px; height: 14px; background: var(--text-sub); border-radius: 50%;
     transition: all 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 input[type="checkbox"]:checked {
@@ -204,10 +237,10 @@ input[type="checkbox"]:checked::after {
 
 .switch-container {
     display: flex; align-items: center; justify-content: space-between;
-    background: rgba(0,0,0,0.2); padding: 8px 10px;
+    background: rgba(128,128,128,0.08); padding: 8px 10px;
     border-radius: 6px; margin-top: 5px;
 }
-.switch-label { font-size: 12px; color: #ccc; }
+.switch-label { font-size: 12px; color: var(--text-main); }
 .switch {
     position: relative; display: inline-block;
     width: 34px; height: 18px;
@@ -216,7 +249,7 @@ input[type="checkbox"]:checked::after {
 .slider {
     position: absolute; cursor: pointer;
     top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #444; transition: .4s; border-radius: 20px;
+    background-color: var(--border); transition: .4s; border-radius: 20px;
 }
 .slider:before {
     position: absolute; content: ""; height: 14px; width: 14px;
@@ -244,10 +277,10 @@ input:checked + .slider:before { transform: translateX(16px); }
 }
 .btn-record:hover { filter: brightness(1.1); }
 .btn-record:disabled {
-    background: #333; color: #666; cursor: wait; box-shadow: none;
+    background: var(--border); color: var(--text-sub); cursor: wait; box-shadow: none;
 }
 .btn-record.recording {
-    background: #222; color: var(--danger);
+    background: var(--card-bg); color: var(--danger);
     border: 1px solid var(--danger);
     animation: pulse-border 1.5s infinite;
 }
@@ -270,14 +303,13 @@ input:checked + .slider:before { transform: translateX(16px); }
 
 .preview-area {
     flex: 1; display: flex; justify-content: center; align-items: center;
-    background-color: #050505; position: relative; padding: 40px;
-    background-image: radial-gradient(#222 1px, transparent 1px);
-    background-size: 20px 20px;
+    background-color: var(--bg-dark); position: relative; padding: 28px;
+    margin: 20px 20px 20px 0;
+    border-radius: 18px;
     overflow: hidden;
 }
 
 canvas {
-    box-shadow: 0 20px 60px rgba(0,0,0,0.7);
     background: transparent;
     width: 100%; max-width: 100%; aspect-ratio: 4/3; display: block;
     border-radius: 2px;
@@ -285,7 +317,6 @@ canvas {
 
 /* SVG 容器 (stack-scan 用) */
 #mainSvg {
-    box-shadow: 0 20px 60px rgba(0,0,0,0.7);
     background: transparent;
     width: 100%; max-width: 1440px;
     aspect-ratio: 4/3; display: block;
@@ -333,13 +364,13 @@ body.logo canvas {
    ======================================== */
 
 #LibStatus { font-size: 10px; color: #666; margin-top: 5px; text-align: center; }
-.status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; background: #666; }
+.status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; background: var(--text-sub); }
 .status-ready { background: var(--accent); }
 .status-offline { background: orange; }
-.status-loading { background: #666; }
+.status-loading { background: var(--text-sub); }
 
 .tip-box {
-    font-size: 11px; color: #888; background: #111; padding: 10px;
+    font-size: 11px; color: var(--text-sub); background: var(--card-bg); padding: 10px;
     border-radius: 4px; margin-top: 5px; border-left: 3px solid var(--accent);
     line-height: 1.4;
 }
@@ -364,27 +395,23 @@ body.logo canvas {
    ======================================== */
 
 @media (max-width: 900px) {
-    body { flex-direction: column; }
+    body { flex-direction: column; overflow: auto; }
     .sidebar {
-        width: 100%; height: 60%;
-        border-right: none; border-top: 1px solid var(--border);
-        order: 2;
+        width: 100%; min-width: 0; height: 50%;
+        margin: 12px 12px 0 12px;
+        border-radius: 14px; order: 2;
     }
     .preview-area {
-        width: 100%; height: 40%; padding: 10px; order: 1;
+        width: 100%; height: 42%; padding: 12px;
+        margin: 0 12px 12px 12px;
+        border-radius: 14px; order: 1;
     }
-    canvas {
+    canvas, #mainSvg {
         max-width: 100%; max-height: 100%;
         width: auto; height: auto;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.5);
     }
-    #mainSvg {
-        max-width: 100%; max-height: 100%;
-        width: auto; height: auto;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-    }
-    .sidebar-header { padding: 10px 15px; }
-    .controls-container { padding: 15px; }
+    .sidebar-header { padding: 12px 16px; }
+    .controls-container { padding: 12px; }
 }
 
 /* ====================================
@@ -392,11 +419,196 @@ body.logo canvas {
    ======================================== */
 
 .effect-canvas {
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    border: 1px solid #333;
-    background: #000;
+    border: 1px solid var(--border);
+    background: var(--bg-dark);
     width: 100%;
     max-width: 1440px;
     aspect-ratio: 4/3;
     display: block;
+}
+
+/* ====================================
+   通用组件类（主题适配）
+   ==================================== */
+
+/* 渐变控制面板 */
+.gradient-panel {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+}
+
+/* 分隔线 — 虚线 */
+.divider-dash {
+    border-top: 1px dashed var(--border);
+}
+
+/* 分隔线 — 实线 */
+.divider-line {
+    height: 1px; background: var(--border);
+}
+
+/* 开关容器（去掉内联硬编码） */
+.switch-container {
+    background: rgba(0,0,0,0.06); padding: 8px 10px;
+    border-radius: 6px; margin-top: 5px;
+}
+[data-theme="light"] .switch-container {
+    background: rgba(0,0,0,0.04);
+}
+
+/* ====================================
+   Light Theme Overrides
+   通过 [data-theme="light"] 切换
+   ==================================== */
+
+[data-theme="light"] {
+    --bg-dark: #e5e5e5;
+    --panel-bg: #ffffff;
+    --card-bg: #fafafa;
+    --text-main: #333333;
+    --text-sub: #888888;
+    --border: #eeeeee;
+    --accent: #555555;
+    --danger: #cc3333;
+}
+
+/* ---- Sidebar (浮动卡片) ---- */
+[data-theme="light"] .sidebar {
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.04),
+        0 12px 32px rgba(0,0,0,0.06);
+}
+
+[data-theme="light"] .version-badge {
+    background: #eee; color: #888;
+}
+
+[data-theme="light"] .controls-container::-webkit-scrollbar-thumb { background: #ccc; }
+
+/* ---- Control Groups ---- */
+[data-theme="light"] .control-group {
+    border-color: #eee; background: #fafafa;
+}
+[data-theme="light"] .group-title {
+    color: #aaa; border-bottom-color: #eee;
+}
+
+/* ---- Labels ---- */
+[data-theme="light"] .label-line span:first-child { color: #777; }
+[data-theme="light"] .label-line span:last-child { color: #555; }
+[data-theme="light"] .switch-label { color: #777; }
+
+/* ---- Form Controls ---- */
+[data-theme="light"] select,
+[data-theme="light"] input[type="text"],
+[data-theme="light"] .file-btn-wrapper {
+    background: #fff; border: 1px solid #ddd; color: #333;
+}
+[data-theme="light"] select:hover,
+[data-theme="light"] .file-btn-wrapper:hover { border-color: #bbb; }
+
+[data-theme="light"] textarea {
+    background: #fff; border: 1px solid #ddd; color: #333;
+}
+[data-theme="light"] textarea:focus,
+[data-theme="light"] select:focus,
+[data-theme="light"] input[type="text"]:focus {
+    border-color: var(--accent); background: #fafafa;
+}
+
+/* ---- Slider ---- */
+[data-theme="light"] input[type="range"]::-webkit-slider-runnable-track {
+    background: #ddd;
+}
+[data-theme="light"] input[type="range"]::-webkit-slider-thumb {
+    background: #666; box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    border: 2px solid #fff;
+}
+[data-theme="light"] input[type="range"]:hover::-webkit-slider-thumb {
+    background: #444;
+}
+
+/* ---- Color Picker ---- */
+[data-theme="light"] input[type="color"]::-webkit-color-swatch {
+    border: 1px solid #ddd;
+}
+
+/* ---- Checkbox ---- */
+[data-theme="light"] input[type="checkbox"] {
+    background: #ddd; border: 1px solid #ccc;
+}
+[data-theme="light"] input[type="checkbox"]::after { background: #999; }
+[data-theme="light"] input[type="checkbox"]:checked {
+    background: rgba(85,85,85,0.15); border-color: var(--accent);
+}
+[data-theme="light"] input[type="checkbox"]:checked::after {
+    background: var(--accent);
+    box-shadow: 0 0 6px rgba(85,85,85,0.3);
+}
+
+/* ---- Switch ---- */
+[data-theme="light"] .switch-container { background: rgba(0,0,0,0.05); }
+[data-theme="light"] .slider { background-color: #ccc; }
+
+/* ---- Buttons ---- */
+[data-theme="light"] .btn-play {
+    background: linear-gradient(135deg, #666, #444);
+    color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+[data-theme="light"] .btn-primary {
+    background: linear-gradient(135deg, #666, #444);
+    color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+/* ---- Preview Area (浮动容器) ---- */
+[data-theme="light"] .preview-area {
+    background-color: #e5e5e5;
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.03),
+        0 10px 28px rgba(0,0,0,0.05);
+}
+[data-theme="light"] canvas,
+[data-theme="light"] .effect-canvas {
+    border: 1px solid #eee;
+}
+[data-theme="light"] #mainSvg {
+    border: 1px solid #eee;
+}
+
+/* ---- Logo checkerboard (亮色下用浅灰棋盘格) ---- */
+[data-theme="light"].logo canvas {
+    background-image:
+        linear-gradient(45deg, #eee 25%, transparent 25%),
+        linear-gradient(-45deg, #eee 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #eee 75%),
+        linear-gradient(-45deg, transparent 75%, #eee 75%);
+    background-size: 20px 20px;
+    background-color: #f5f5f5;
+}
+
+/* ---- Recording Indicator ---- */
+[data-theme="light"] #RecIndicator {
+    background: rgba(255,255,255,0.85); color: #cc3333;
+    border-color: rgba(204,51,51,0.3);
+}
+
+/* ---- Tips ---- */
+[data-theme="light"] .tip-box {
+    background: #f5f5f5; color: #666;
+}
+[data-theme="light"] .tip-box b { color: #333; }
+
+/* ---- Anim Panels ---- */
+[data-theme="light"] .anim-panel { border-left-color: #ddd; }
+[data-theme="light"] .anim-panel.start {
+    background: linear-gradient(90deg, rgba(204,51,51,0.04), transparent);
+}
+[data-theme="light"] .anim-panel.end {
+    background: linear-gradient(90deg, rgba(85,85,85,0.04), transparent);
+}
+
+/* ---- Mobile Responsive (Light) ---- */
+@media (max-width: 900px) {
+    [data-theme="light"] .sidebar { border-radius: 12px; }
+    [data-theme="light"] .preview-area { border-radius: 12px; }
 }

@@ -6,6 +6,7 @@
 import { Recorder } from './recorder.js';
 import { Background } from './background.js';
 import { lerp, hexToRgba, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, getEasing, loadFont, setupFontSelector, initFontSelector, FONT_LIST, fontSelectHTML, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped, bindUI, applyVignetteMask, calcGradCoords } from './utils.js';
+import { getTheme } from './themes.js';
 
 // ========== 面板 HTML 注入 ==========
 
@@ -13,7 +14,7 @@ export function injectPanels(opts = {}) {
     const placeholder = document.querySelector('#shared-controls-placeholder');
     if (!placeholder) return;
 
-    const defaultBgMode = opts.defaultBgMode || '#000000';
+    const defaultBgMode = opts.defaultBgMode || getTheme().canvasBg;
     const defaultPatternColor = opts.defaultPatternColor || '#333333';
     const skipBg = opts.skipBgPanel === true;
 
@@ -28,13 +29,18 @@ export function injectPanels(opts = {}) {
                     <option value="#0000ff">🟦 蓝幕</option>
                     <option value="grid">▦ 网格</option>
                     <option value="dots">::: 点阵</option>
+                    <option value="paper">📄 纸张纹理</option>
                     <option value="custom">📂 上传背景...</option>
                 </select>
             </div>
             <input type="file" id="BgUpload" accept="image/*,video/*" style="display:none">
             <div class="row" id="PatternColorRow" style="display:none; justify-content:space-between; align-items:center;">
-                <div style="font-size:11px; color:#aaa;">纹理颜色</div>
+                <div style="font-size:11px; color:var(--text-sub, #888);">纹理颜色</div>
                 <input type="color" id="PatternColor" value="${defaultPatternColor}">
+            </div>
+            <div class="row stack" id="PaperParamsRow" style="display:none;">
+                <div class="label-line"><span>暖色调 (Warmth)</span><span id="PaperWarmthVal">40</span></div>
+                <input type="range" id="PaperWarmth" min="0" max="100" step="1" value="40">
             </div>
         </div>
     `;
@@ -83,6 +89,9 @@ export function initEffect(opts) {
     // 1. 注入面板 HTML
     injectPanels(opts);
 
+    // 1.5 侧边栏拖拽调节
+    initSidebarResize();
+
     // 2. Canvas 初始化
     const baseWidth = opts.baseWidth || 1440;
     const baseHeight = opts.baseHeight || 1080;
@@ -99,7 +108,7 @@ export function initEffect(opts) {
         uploadInputId: '#BgUpload',
         patternColorId: '#PatternColor',
         patternRowId: '#PatternColorRow',
-        defaultMode: opts.defaultBgMode || '#000000',
+        defaultMode: opts.defaultBgMode || getTheme().canvasBg,
         defaultPatternColor: opts.defaultPatternColor || '#333333',
         baseWidth,
         baseHeight,
@@ -135,7 +144,7 @@ export function initEffect(opts) {
 
     function drawBg(timeMs) {
         if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
-            ctx.fillStyle = '#000000';
+            ctx.fillStyle = getTheme().canvasBg;
             ctx.fillRect(0, 0, baseWidth, baseHeight);
         }
         if (bg.mode !== 'transparent') {
@@ -222,4 +231,61 @@ export function initEffect(opts) {
         bindUI,
         applyVignetteMask, calcGradCoords,
     };
+}
+
+// ========== 侧边栏可拖拽调节宽度 ==========
+
+const SIDEBAR_WIDTH_KEY = 'floway-sidebar-width';
+const SIDEBAR_DEFAULT = 440;
+const SIDEBAR_MIN = 280;
+const SIDEBAR_MAX = 700;
+
+export function initSidebarResize() {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // 恢复上次宽度
+    const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+    const initialW = (saved) ? parseInt(saved, 10) : SIDEBAR_DEFAULT;
+    if (initialW >= SIDEBAR_MIN && initialW <= SIDEBAR_MAX) {
+        sidebar.style.width = initialW + 'px';
+    }
+
+    // 创建拖拽手柄
+    let handle = sidebar.querySelector('.sidebar-resize-handle');
+    if (!handle) {
+        handle = document.createElement('div');
+        handle.className = 'sidebar-resize-handle';
+        sidebar.appendChild(handle);
+    }
+
+    let startX = 0, startWidth = 0;
+
+    handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        startX = e.clientX;
+        startWidth = sidebar.getBoundingClientRect().width;
+        document.body.classList.add('resizing');
+
+        const onMove = (ev) => {
+            ev.preventDefault();
+            const delta = ev.clientX - startX;
+            let newW = Math.round(startWidth + delta);
+            newW = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, newW));
+            sidebar.style.width = newW + 'px';
+        };
+
+        const onUp = () => {
+            document.body.classList.remove('resizing');
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            // 持久化
+            const finalW = Math.round(sidebar.getBoundingClientRect().width);
+            localStorage.setItem(SIDEBAR_WIDTH_KEY, String(finalW));
+        };
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    });
 }
