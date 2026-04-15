@@ -54,52 +54,12 @@
         }
         .btn-add:hover { filter: brightness(1.1); }
 
-        /* CSS Grid 叠放：bgCanvas（全尺寸固定）和 .paper-card（卡片尺寸浮动） */
-        .canvas-grid {
-            display: grid;
+        /* WebGL 合成 canvas — 全尺寸，统一预览和录制 */
+        #glCanvas {
             width: 100%;
             max-width: 1440px;
-        }
-        .canvas-grid > * {
-            grid-area: 1 / 1;
-        }
-
-        /* 背景画布 — 全尺寸（100%），固定不动 */
-        #bgCanvas {
-            width: 100%;
             aspect-ratio: 4 / 3;
-            pointer-events: none;
-            z-index: 0;
         }
-
-        /* 卡片层 — 卡片大小（默认80%），居中，CSS 3D 漂浮 */
-        .paper-card {
-            width: 80%;
-            aspect-ratio: 4 / 3;
-            justify-self: center;
-            align-self: center;
-            z-index: 1;
-            background: transparent;
-            padding: 0;
-            overflow: visible;
-            transform-origin: center center;
-        }
-        .paper-card .effect-canvas {
-            border: none !important;
-            background: transparent !important;
-            width: 100% !important;
-            height: 100% !important;
-            max-width: none !important;
-            aspect-ratio: auto !important;
-        }
-
-        /* 录制中：paper-card 恢复全尺寸，禁用 CSS 3D，隐藏 bgCanvas */
-        body.is-recording .paper-card {
-            width: 100% !important;
-            transform: none !important;
-            box-shadow: none !important;
-        }
-        body.is-recording #bgCanvas { display: none !important; }
     </style>
 </head>
 <body>
@@ -377,56 +337,65 @@
     <!-- ====== 画布 ====== -->
     <div class="preview-area" id="previewArea">
         <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
-        <div class="canvas-grid">
-            <canvas id="bgCanvas"></canvas>
-            <div class="paper-card" id="paperCard">
-                <canvas id="mainCanvas" class="effect-canvas"></canvas>
-            </div>
-        </div>
+        <canvas id="glCanvas"></canvas>
     </div>
 
     <script type="module">
         import { initEffect } from '../shared/controls.js';
         import { getTheme, setTheme, toggleTheme } from '../shared/themes.js';
+        import { WebGLComposite } from '../shared/webgl-composite.js';
 
-        // ====== 初始化 ======
-        const { ctx, canvas, bg, baseWidth, baseHeight, scale, clearFrame, drawBg,
-                startPreviewLoop, resetAnimStart, recorder,
+        // ====== Canvas 初始化 ======
+        const baseWidth = 1440, baseHeight = 1080, scale = 2;
+        const fullW = baseWidth * scale, fullH = baseHeight * scale;
+
+        // WebGL canvas（最终输出，captureStream 录制此 canvas）
+        const glCanvas = document.getElementById('glCanvas');
+        glCanvas.width = fullW;
+        glCanvas.height = fullH;
+        const glComp = new WebGLComposite(glCanvas, baseWidth, baseHeight);
+
+        // 离屏 2D canvas（卡片内容绘制）
+        const offscreen = document.createElement('canvas');
+        offscreen.width = fullW;
+        offscreen.height = fullH;
+        const ctx = offscreen.getContext('2d', { alpha: true });
+        ctx.scale(scale, scale);
+
+        // 离屏 2D canvas（背景绘制）
+        const bgOffscreen = document.createElement('canvas');
+        bgOffscreen.width = fullW;
+        bgOffscreen.height = fullH;
+        const bgCtx = bgOffscreen.getContext('2d', { alpha: true });
+        bgCtx.scale(scale, scale);
+
+        // ====== 使用 initEffect 获取 bg、recorder 等模块 ======
+        // initEffect 需要 canvasId 来创建 2D context 和 recorder
+        // 但 glCanvas 是 WebGL context，不能同时获取 2D context
+        // 方案：创建隐藏 canvas 给 initEffect，手动把 recorder 重定向到 glCanvas
+        const dummyCanvas = document.createElement('canvas');
+        dummyCanvas.id = 'initDummy';
+        dummyCanvas.style.display = 'none';
+        document.body.appendChild(dummyCanvas);
+
+        const { bg, recorder, clearFrame, resetAnimStart,
                 clamp, hexToRgba, getEasing, bindUI,
                 createLinearGradient, fontSelectHTML, setupFontSelector } = initEffect({
-            canvasId: 'mainCanvas',
+            canvasId: 'initDummy',
             fileName: 'PaperChart',
+            baseWidth, baseHeight, scale,
             defaultBgMode: 'transparent',
+            // onFrame 传入 drawFrame，供 recorder 录制时调用
             onFrame: drawFrame,
         });
 
-        // ====== 背景画布（固定不动，不受 .paper-card CSS 3D 影响） ======
-        const bgCanvasEl = document.getElementById('bgCanvas');
-        bgCanvasEl.width = baseWidth * scale;
-        bgCanvasEl.height = baseHeight * scale;
-        const bgCtx = bgCanvasEl.getContext('2d', { alpha: true });
-        bgCtx.scale(scale, scale);
+        // 重定向 recorder 的 canvas 到 glCanvas（WebGL 输出）
+        recorder.canvas = glCanvas;
 
-        // 根据背景模式切换：transparent 用 .preview-area CSS，其他用 bgCanvas
-        function updateBgMode() {
-            const area = document.getElementById('previewArea');
-            if (bg.mode === 'transparent') {
-                // transparent：恢复 .preview-area CSS 背景，隐藏 bgCanvas
-                area.style.backgroundColor = '';
-                area.style.boxShadow = '';
-                bgCanvasEl.style.display = 'none';
-            } else {
-                // 其他模式：bgCanvas 显示，.preview-area 透明
-                area.style.backgroundColor = 'transparent';
-                area.style.boxShadow = 'none';
-                bgCanvasEl.style.display = '';
-            }
-        }
-
-        // 监听背景模式变化
-        const bgModeSelect = document.querySelector('#BgMode');
-        if (bgModeSelect) bgModeSelect.addEventListener('change', updateBgMode);
-        updateBgMode();
+        // 重写 resetAnimStart 让它也重置我们的预览时间
+        const _origReset = resetAnimStart;
+        // 注意：resetAnimStart 在 initEffect 内部定义，我们无法修改它
+        // 但我们可以在外面再包装一层
 
         // ====== 数据点 ======
         let dataPoints = [
@@ -488,7 +457,7 @@
         const titleFontSelectId = 'TitleFontSelect';
         document.getElementById('TitleFontMount').innerHTML = fontSelectHTML(titleFontSelectId, config.titleFont);
         setupFontSelector({ selectId: titleFontSelectId, configKey: 'titleFont', fileInputId: titleFontSelectId + 'Upload', config });
-        document.getElementById(titleFontSelectId).addEventListener('change', () => resetAnimStart());
+        document.getElementById(titleFontSelectId).addEventListener('change', () => myResetAnimStart());
 
         // ====== UI 绑定 ======
         bindUI(config, [
@@ -532,40 +501,28 @@
                 _paperTexCache = null;
                 _staticBgCache = null;
                 _pathPtsCache = null;
-                // 同步 .paper-card CSS 宽度 = cardScale
-                document.getElementById('paperCard').style.width = (config.cardScale * 100) + '%';
                 startFloatAnim();
-                resetAnimStart();
+                myResetAnimStart();
             }
         });
 
-        // ====== CSS 3D 漂浮（预览用，录制时自动禁用） ======
-        const paperCard = document.getElementById('paperCard');
-        paperCard.style.width = (config.cardScale * 100) + '%';
+        // ====== 漂浮动画（变量驱动，不操作 DOM） ======
+        let _currentRx = 0, _currentRy = 0;
         let _floatAnimId = null;
         let _floatStartTime = performance.now();
 
-        function applyCardFloat(rx, ry) {
-            const elev = config.elevation / 100;
-            const radius = config.cardRadius;
-            const sy = 4 + elev * 36, sb = 12 + elev * 44;
-            paperCard.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
-            paperCard.style.boxShadow = `0 ${sy}px ${sb}px ${elev*6}px rgba(0,0,0,${0.05+elev*0.10}), 0 ${sy*0.5}px ${sb*0.4}px rgba(0,0,0,${0.03+elev*0.04})`;
-            paperCard.style.borderRadius = radius + 'px';
-        }
-
         function floatAnimLoop(now) {
             if (!config.floatEnabled) {
-                applyCardFloat(config.rotateX, config.rotateY);
+                _currentRx = config.rotateX * Math.PI / 180;
+                _currentRy = config.rotateY * Math.PI / 180;
                 _floatAnimId = null;
                 return;
             }
             const elapsed = (now - _floatStartTime) / 1000;
             const dur = config.floatDuration;
             const phaseRad = (config.floatPhase / 100) * Math.PI * 2;
-            const rx = Math.sin(elapsed / dur * Math.PI * 2) * config.floatRotateX;
-            const ry = Math.sin(elapsed / dur * Math.PI * 2 + phaseRad) * config.floatRotateY;
-            applyCardFloat(rx, ry);
+            _currentRx = (Math.sin(elapsed / dur * Math.PI * 2) * config.floatRotateX + config.rotateX) * Math.PI / 180;
+            _currentRy = (Math.sin(elapsed / dur * Math.PI * 2 + phaseRad) * config.floatRotateY + config.rotateY) * Math.PI / 180;
             _floatAnimId = requestAnimationFrame(floatAnimLoop);
         }
 
@@ -612,9 +569,9 @@
             dataPoints = [{ label: 'A', value: 20 }, { label: 'B', value: 50 }, { label: 'C', value: 30 }, { label: 'D', value: 80 }, { label: 'E', value: 60 }];
             renderTable();
         };
-        document.getElementById('BtnPlay').addEventListener('click', () => resetAnimStart());
+        document.getElementById('BtnPlay').addEventListener('click', () => myResetAnimStart());
         document.getElementById('themeToggle').addEventListener('click', () => {
-            toggleTheme(); document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙'; resetAnimStart();
+            toggleTheme(); document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙'; myResetAnimStart();
         });
         document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
 
@@ -821,50 +778,34 @@
             ctx.drawImage(off, 0, 0, w, h);
         }
 
-        // ====== 绘制背景到指定 context ======
-        function drawBgTo(targetCtx, timeMs, isRec, fmt) {
-            targetCtx.save();
-            targetCtx.setTransform(1, 0, 0, 1, 0, 0);
-            targetCtx.clearRect(0, 0, targetCtx.canvas.width, targetCtx.canvas.height);
-            targetCtx.restore();
-            if (bg.mode === 'transparent') {
-                if (isRec) {
-                    // 录制时需要填充底色到 mainCanvas
-                    if (fmt !== 'png_seq') {
-                        targetCtx.fillStyle = '#000000';
-                    } else {
-                        targetCtx.fillStyle = getTheme().canvasBg;
-                    }
-                    targetCtx.fillRect(0, 0, baseWidth, baseHeight);
-                }
-                // 预览时不画（.preview-area CSS 负责背景）
-            } else {
-                bg.draw(targetCtx, timeMs, isRec, fmt);
-            }
-        }
-
         // ====== 主渲染函数 ======
         function drawFrame(timeMs) {
-            clearFrame();
+            // 1. 在 offscreen 2D canvas 上绘制卡片内容（全尺寸）
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, offscreen.width, offscreen.height);
+            ctx.restore();
 
-            if (recorder.isRecording) {
-                // 录制：背景画到 mainCanvas（CSS 3D 已禁用，canvas 全尺寸）
-                drawBgTo(ctx, timeMs, true, recorder.format);
+            // 2. 在 bgOffscreen 2D canvas 上绘制背景
+            bgCtx.save();
+            bgCtx.setTransform(1, 0, 0, 1, 0, 0);
+            bgCtx.clearRect(0, 0, bgOffscreen.width, bgOffscreen.height);
+            bgCtx.restore();
+
+            if (bg.mode === 'transparent') {
+                if (recorder.isRecording && recorder.format !== 'png_seq') {
+                    bgCtx.fillStyle = '#000000';
+                    bgCtx.fillRect(0, 0, baseWidth, baseHeight);
+                }
+                // 预览 + transparent：不填充，保持透明，让 .preview-area CSS 背景透出
             } else {
-                // 预览：背景画到 bgCanvas（固定不动）
-                drawBgTo(bgCtx, timeMs, false, 'webm');
+                bg.draw(bgCtx, timeMs, recorder.isRecording, recorder.format);
             }
 
-            const canvasW = baseWidth, canvasH = baseHeight;
-            // 预览时画满 canvas（CSS 已缩放 paper-card 为卡片大小）
-            // 录制时用 cardScale 画卡片（canvas 全尺寸）
-            const effectiveScale = recorder.isRecording ? config.cardScale : 1.0;
-            const w = Math.round(canvasW * effectiveScale);
-            const h = Math.round(canvasH * effectiveScale);
+            // 3. 卡片内容绘制（全尺寸，无 cardScale 缩放）
+            const w = baseWidth, h = baseHeight;
             const radius = config.cardRadius;
             const elev = config.elevation / 100;
-            const cardX = (canvasW - w) / 2;
-            const cardY = (canvasH - h) / 2;
 
             // 动画进度
             const isHold = !isFinite(timeMs);
@@ -872,22 +813,10 @@
             const rawProgress = isHold ? 1 : Math.min(timeMs / duration, 1);
             const progress = getEasing(config.animEasing)(rawProgress);
 
-            // 卡片阴影
-            ctx.save();
-            const sy = 4 + elev * 36, sb = 12 + elev * 44, ss = elev * 6;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = sy * 0.6;
-            ctx.shadowBlur = sb * 0.5;
-            ctx.shadowColor = `rgba(0,0,0,${0.05 + elev * 0.10})`;
-            ctx.fillStyle = 'rgba(0,0,0,0.01)';
-            ctx.beginPath();
-            roundRect(ctx, cardX, cardY, w, h, radius);
-            ctx.fill();
-            ctx.restore();
+            // 阴影由 WebGL 合成模块绘制，这里不画
 
-            // 卡片内容（translate + clip）
+            // 卡片内容（clip）
             ctx.save();
-            ctx.translate(cardX, cardY);
             ctx.beginPath();
             roundRect(ctx, 0, 0, w, h, radius);
             ctx.clip();
@@ -898,139 +827,182 @@
                 ctx.fillStyle = '#999'; ctx.font = `24px ${config.titleFont}`;
                 ctx.textAlign = 'center'; ctx.fillText('请添加数据点', w / 2, h / 2);
                 ctx.restore();
-                return;
-            }
+            } else {
+                // 标题
+                const titleAlpha = clamp(rawProgress * 2.5, 0, 1);
+                const subTitleAlpha = clamp((rawProgress - 0.3) * 2, 0, 1);
+                ctx.save();
+                ctx.globalAlpha = titleAlpha;
+                ctx.font = `700 ${config.mainTitleSize}px ${config.titleFont}`;
+                ctx.fillStyle = config.mainTitleColor;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(config.mainTitle, w / 2, 50);
+                ctx.globalAlpha = subTitleAlpha;
+                ctx.font = `400 ${config.subTitleSize}px ${config.titleFont}`;
+                ctx.fillStyle = config.subTitleColor;
+                ctx.textAlign = 'right';
+                ctx.fillText(config.subTitle, w - 90, h / 2);
+                ctx.restore();
 
-            // 标题
-            const titleAlpha = clamp(rawProgress * 2.5, 0, 1);
-            const subTitleAlpha = clamp((rawProgress - 0.3) * 2, 0, 1);
-            ctx.save();
-            ctx.globalAlpha = titleAlpha;
-            ctx.font = `700 ${config.mainTitleSize}px ${config.titleFont}`;
-            ctx.fillStyle = config.mainTitleColor;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(config.mainTitle, w / 2, 50);
-            ctx.globalAlpha = subTitleAlpha;
-            ctx.font = `400 ${config.subTitleSize}px ${config.titleFont}`;
-            ctx.fillStyle = config.subTitleColor;
-            ctx.textAlign = 'right';
-            ctx.fillText(config.subTitle, w - 90, h / 2);
-            ctx.restore();
+                // 路径点
+                const _pad = config.cardPad;
+                const padL = _pad + 98, padR = _pad + 98, padT = _pad + 50, padB = _pad + 55;
+                const cw = w - padL - padR, ch = h - padT - padB;
+                const { yMin, yMax } = getYRange();
+                const jitter = config.lineJitter / 100;
 
-            // 路径点
-            const _pad = config.cardPad;
-            const padL = _pad + 98, padR = _pad + 98, padT = _pad + 50, padB = _pad + 55;
-            const cw = w - padL - padR, ch = h - padT - padB;
-            const { yMin, yMax } = getYRange();
-            const jitter = config.lineJitter / 100;
+                const ptsCacheKey = `${dataPoints.length}|${jitter}|${config.cardPad}|${w}|${yMin}-${yMax}`;
+                if (!_pathPtsCache || _pathPtsCache.key !== ptsCacheKey) {
+                    const pts = dataPoints.map((d, i) => ({
+                        x: padL + (i / Math.max(dataPoints.length - 1, 1)) * cw,
+                        y: padT + ch - ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch
+                    }));
+                    _lineSeed = 54321;
+                    const pp = [{ x: pts[0].x, y: pts[0].y }];
+                    for (let i = 1; i < pts.length; i++) {
+                        const prev = pts[i - 1], curr = pts[i];
+                        for (let j = 1; j <= 12; j++) {
+                            const t = j / 12;
+                            pp.push({
+                                x: prev.x + (curr.x - prev.x) * t + (seededRandom() - 0.5) * jitter * 1.3,
+                                y: prev.y + (curr.y - prev.y) * t + (seededRandom() - 0.5) * jitter * 1.3
+                            });
+                        }
+                    }
+                    _pathPtsCache = { key: ptsCacheKey, pathPoints: pp, points: pts };
+                }
 
-            const ptsCacheKey = `${dataPoints.length}|${jitter}|${config.cardPad}|${w}|${yMin}-${yMax}`;
-            if (!_pathPtsCache || _pathPtsCache.key !== ptsCacheKey) {
-                const pts = dataPoints.map((d, i) => ({
-                    x: padL + (i / Math.max(dataPoints.length - 1, 1)) * cw,
-                    y: padT + ch - ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch
-                }));
-                _lineSeed = 54321;
-                const pp = [{ x: pts[0].x, y: pts[0].y }];
-                for (let i = 1; i < pts.length; i++) {
-                    const prev = pts[i - 1], curr = pts[i];
-                    for (let j = 1; j <= 12; j++) {
-                        const t = j / 12;
-                        pp.push({
-                            x: prev.x + (curr.x - prev.x) * t + (seededRandom() - 0.5) * jitter * 1.3,
-                            y: prev.y + (curr.y - prev.y) * t + (seededRandom() - 0.5) * jitter * 1.3
+                const pathPoints = _pathPtsCache.pathPoints;
+                const points = _pathPtsCache.points;
+                const totalPts = pathPoints.length;
+                const drawF = progress * (totalPts - 1);
+                const lineDrawn = Math.floor(drawF) + 1;
+                const frac = drawF - Math.floor(drawF);
+                const isComplete = lineDrawn >= totalPts;
+                let tipX, tipY;
+                if (isComplete) { tipX = pathPoints[totalPts - 1].x; tipY = pathPoints[totalPts - 1].y; }
+                else { const ti = lineDrawn - 1; tipX = pathPoints[ti].x + (pathPoints[ti+1].x - pathPoints[ti].x) * frac; tipY = pathPoints[ti].y + (pathPoints[ti+1].y - pathPoints[ti].y) * frac; }
+
+                // 填充
+                if (lineDrawn >= 2) {
+                    const bottomY = padT + ch;
+                    const alpha = config.areaOpacity / 100;
+                    const fillGrad = createLinearGradient(ctx, 0, padT, 0, bottomY, [
+                        { pos: 0, color: hexToRgba(config.areaColor, alpha) },
+                        { pos: 0.6, color: hexToRgba(config.areaColor, alpha * 0.5) },
+                        { pos: 1, color: hexToRgba(config.areaColor, 0) },
+                    ]);
+                    ctx.save(); ctx.fillStyle = fillGrad; ctx.beginPath();
+                    ctx.moveTo(pathPoints[0].x, bottomY);
+                    const fillEnd = isComplete ? totalPts : lineDrawn;
+                    for (let i = 0; i < fillEnd; i++) ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+                    if (!isComplete) ctx.lineTo(tipX, tipY);
+                    ctx.lineTo(isComplete ? pathPoints[totalPts-1].x : tipX, bottomY);
+                    ctx.closePath(); ctx.fill(); ctx.restore();
+                }
+
+                // 折线
+                if (lineDrawn >= 2) {
+                    ctx.save();
+                    ctx.lineWidth = config.lineWidth; ctx.strokeStyle = config.lineColor;
+                    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                    ctx.beginPath(); ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+                    const lineEnd = isComplete ? totalPts : lineDrawn;
+                    for (let i = 1; i < lineEnd; i++) ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+                    if (!isComplete) ctx.lineTo(tipX, tipY);
+                    ctx.stroke(); ctx.restore();
+                }
+
+                // 数据点
+                if (config.showPoints) {
+                    const dotDelay = rawProgress > 0.75 ? clamp((rawProgress - 0.75) / 0.20, 0, 1) : 0;
+                    const ps = config.pointSize * dotDelay;
+                    if (ps >= 0.5) {
+                        ctx.save();
+                        points.forEach((p) => {
+                            ctx.beginPath(); ctx.arc(p.x, p.y, ps * 1.8, 0, Math.PI * 2);
+                            ctx.fillStyle = hexToRgba(config.lineColor, 0.1 * dotDelay); ctx.fill();
+                            ctx.beginPath(); ctx.arc(p.x, p.y, ps, 0, Math.PI * 2);
+                            ctx.fillStyle = hexToRgba(config.lineColor, 0.65 * dotDelay); ctx.fill();
+                            ctx.beginPath(); ctx.arc(p.x, p.y, ps * 0.5, 0, Math.PI * 2);
+                            ctx.fillStyle = `rgba(255,255,255,${dotDelay})`; ctx.fill();
                         });
+                        ctx.restore();
                     }
                 }
-                _pathPtsCache = { key: ptsCacheKey, pathPoints: pp, points: pts };
-            }
 
-            const pathPoints = _pathPtsCache.pathPoints;
-            const points = _pathPtsCache.points;
-            const totalPts = pathPoints.length;
-            const drawF = progress * (totalPts - 1);
-            const lineDrawn = Math.floor(drawF) + 1;
-            const frac = drawF - Math.floor(drawF);
-            const isComplete = lineDrawn >= totalPts;
-            let tipX, tipY;
-            if (isComplete) { tipX = pathPoints[totalPts - 1].x; tipY = pathPoints[totalPts - 1].y; }
-            else { const ti = lineDrawn - 1; tipX = pathPoints[ti].x + (pathPoints[ti+1].x - pathPoints[ti].x) * frac; tipY = pathPoints[ti].y + (pathPoints[ti+1].y - pathPoints[ti].y) * frac; }
-
-            // 填充
-            if (lineDrawn >= 2) {
-                const bottomY = padT + ch;
-                const alpha = config.areaOpacity / 100;
-                const fillGrad = createLinearGradient(ctx, 0, padT, 0, bottomY, [
-                    { pos: 0, color: hexToRgba(config.areaColor, alpha) },
-                    { pos: 0.6, color: hexToRgba(config.areaColor, alpha * 0.5) },
-                    { pos: 1, color: hexToRgba(config.areaColor, 0) },
-                ]);
-                ctx.save(); ctx.fillStyle = fillGrad; ctx.beginPath();
-                ctx.moveTo(pathPoints[0].x, bottomY);
-                const fillEnd = isComplete ? totalPts : lineDrawn;
-                for (let i = 0; i < fillEnd; i++) ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
-                if (!isComplete) ctx.lineTo(tipX, tipY);
-                ctx.lineTo(isComplete ? pathPoints[totalPts-1].x : tipX, bottomY);
-                ctx.closePath(); ctx.fill(); ctx.restore();
-            }
-
-            // 折线
-            if (lineDrawn >= 2) {
-                ctx.save();
-                ctx.lineWidth = config.lineWidth; ctx.strokeStyle = config.lineColor;
-                ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-                ctx.beginPath(); ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
-                const lineEnd = isComplete ? totalPts : lineDrawn;
-                for (let i = 1; i < lineEnd; i++) ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
-                if (!isComplete) ctx.lineTo(tipX, tipY);
-                ctx.stroke(); ctx.restore();
-            }
-
-            // 数据点
-            if (config.showPoints) {
-                const dotDelay = rawProgress > 0.75 ? clamp((rawProgress - 0.75) / 0.20, 0, 1) : 0;
-                const ps = config.pointSize * dotDelay;
-                if (ps >= 0.5) {
+                // 数值标签
+                if (config.showValues && rawProgress > 0.94) {
+                    const labelAlpha = clamp((rawProgress - 0.94) / 0.06, 0, 1);
                     ctx.save();
-                    points.forEach((p) => {
-                        ctx.beginPath(); ctx.arc(p.x, p.y, ps * 1.8, 0, Math.PI * 2);
-                        ctx.fillStyle = hexToRgba(config.lineColor, 0.1 * dotDelay); ctx.fill();
-                        ctx.beginPath(); ctx.arc(p.x, p.y, ps, 0, Math.PI * 2);
-                        ctx.fillStyle = hexToRgba(config.lineColor, 0.65 * dotDelay); ctx.fill();
-                        ctx.beginPath(); ctx.arc(p.x, p.y, ps * 0.5, 0, Math.PI * 2);
-                        ctx.fillStyle = `rgba(255,255,255,${dotDelay})`; ctx.fill();
+                    ctx.font = `bold 11px ${config.titleFont}`;
+                    points.forEach((p, i) => {
+                        const txt = String(dataPoints[i].value);
+                        const tw = ctx.measureText(txt).width, th = 14;
+                        const bx = p.x - tw / 2 - 5, by = p.y - config.pointSize * 6 - th - 4;
+                        ctx.globalAlpha = labelAlpha * 0.7;
+                        ctx.beginPath();
+                        roundRect(ctx, bx, by, tw + 10, th, th / 2);
+                        ctx.fillStyle = hexToRgba(config.lineColor, 0.15); ctx.fill();
+                        ctx.strokeStyle = hexToRgba(config.lineColor, 0.3); ctx.lineWidth = 0.5; ctx.stroke();
+                        ctx.globalAlpha = labelAlpha; ctx.fillStyle = '#555';
+                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.fillText(txt, p.x, by + th / 2);
                     });
                     ctx.restore();
                 }
+
+                ctx.restore(); // clip
             }
 
-            // 数值标签
-            if (config.showValues && rawProgress > 0.94) {
-                const labelAlpha = clamp((rawProgress - 0.94) / 0.06, 0, 1);
-                ctx.save();
-                ctx.font = `bold 11px ${config.titleFont}`;
-                points.forEach((p, i) => {
-                    const txt = String(dataPoints[i].value);
-                    const tw = ctx.measureText(txt).width, th = 14;
-                    const bx = p.x - tw / 2 - 5, by = p.y - config.pointSize * 6 - th - 4;
-                    ctx.globalAlpha = labelAlpha * 0.7;
-                    ctx.beginPath();
-                    roundRect(ctx, bx, by, tw + 10, th, th / 2);
-                    ctx.fillStyle = hexToRgba(config.lineColor, 0.15); ctx.fill();
-                    ctx.strokeStyle = hexToRgba(config.lineColor, 0.3); ctx.lineWidth = 0.5; ctx.stroke();
-                    ctx.globalAlpha = labelAlpha; ctx.fillStyle = '#555';
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    ctx.fillText(txt, p.x, by + th / 2);
-                });
-                ctx.restore();
-            }
-
-            ctx.restore(); // clip + translate
+            // 4. WebGL 合成：背景 + 阴影 + 卡片（带透视）
+            glComp.render({
+                bgCanvas: bgOffscreen,
+                cardCanvas: offscreen,
+                rx: _currentRx,
+                ry: _currentRy,
+                perspective: 900,
+                elevation: config.elevation / 100,
+                cardScale: config.cardScale,
+                cardRadius: config.cardRadius,
+            });
         }
 
         // ====== 启动预览 ======
         renderTable();
-        startPreviewLoop(drawFrame, () => ({ duration: config.animDuration, hold: true }));
+
+        // 手动启动预览循环
+        let _animStartTime = performance.now();
+        let _previewRunning = false;
+
+        // 覆盖 resetAnimStart：initEffect 的内部 resetAnimStart 只影响它自己的 animStartTime
+        // 我们需要在 resetAnimStart 被调用时也重置我们的 _animStartTime
+        // 但 resetAnimStart 是 initEffect 内部的闭包，无法直接修改
+        // 解决：在 drawFrame 中使用 _animStartTime（我们自己的），initEffect 的 loop 也会调 drawFrame
+        // initEffect 内部的 startPreviewLoop 用 onFrame=drawFrame，所以它也在驱动 drawFrame
+        // 但我们也需要自己的 reset 逻辑
+        // 方案：监听 BtnPlay 和 onChange 来重置 _animStartTime
+        const origResetAnimStart = resetAnimStart;
+        function myResetAnimStart() {
+            _animStartTime = performance.now();
+            origResetAnimStart();
+        }
+
+        function startPreviewLoopCustom() {
+            if (_previewRunning) return;
+            _previewRunning = true;
+            function loop() {
+                if (!recorder.isRecording) {
+                    let time = performance.now() - _animStartTime;
+                    const dur = config.animDuration * 1000;
+                    if (dur > 0 && time > dur) time = Infinity;
+                    drawFrame(time);
+                }
+                requestAnimationFrame(loop);
+            }
+            requestAnimationFrame(loop);
+        }
+        startPreviewLoopCustom();
     </script>
 </body>
 </html>
