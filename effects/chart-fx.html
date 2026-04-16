@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>图表效果</title>
+
+    <!-- 固定加载顺序，不要改 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="../shared/mp4-muxer.js"></script>
+    <link rel="stylesheet" href="../shared/base.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700;900&family=Noto+Serif+SC:wght@200;300;400;500;700;900&family=Orbitron:wght@400;700;900&family=Chakra+Petch:wght@300;400;500;600;700&family=Exo+2:wght@100;300;400;500;600;700;800;900&family=Montserrat:wght@100;300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+
+    <style>
+        /* 数据表格 */
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 5px; table-layout: fixed; }
+        .data-table th { text-align: left; font-size: 10px; color: var(--text-sub, #888); padding: 6px 6px; border-bottom: 1px solid var(--border, #eee); white-space: nowrap; }
+        .data-table td { padding: 5px 4px; vertical-align: middle; }
+        .data-table tr + tr td { border-top: 1px solid rgba(128,128,128,0.12); }
+        .data-table input {
+            background: var(--card-bg, #fafafa); border: 1px solid var(--border, #ddd); color: var(--text-main, #333);
+            padding: 7px 8px; border-radius: 4px; font-size: 12px; width: 100%; outline: none;
+            box-sizing: border-box; height: 32px; transition: border-color 0.2s;
+        }
+        .data-table input:focus { border-color: var(--accent, #555); background: #fff; }
+
+        /* 行操作按钮 */
+        .btn-icon {
+            width: 28px; height: 32px; border: 1px solid var(--border, #ddd); background: var(--card-bg, #f5f5f5);
+            color: var(--text-sub, #888); border-radius: 4px; cursor: pointer; display: inline-flex;
+            align-items: center; justify-content: center; font-size: 13px; transition: 0.2s;
+            box-sizing: border-box; flex-shrink: 0; vertical-align: middle;
+        }
+        .btn-icon:hover { color: var(--text-main, #333); border-color: var(--accent, #555); background: #eee; }
+        .btn-icon.del:hover { color: var(--danger, #cc3333); border-color: var(--danger, #cc3333); }
+        .op-cell { white-space: nowrap; text-align: center; }
+        .btn-play {
+            background: var(--accent); color: #000; font-weight: bold;
+            border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer;
+            font-size: 11px; transition: 0.2s;
+        }
+        .btn-play:hover { filter: brightness(1.1); }
+        .btn-add {
+            background: var(--accent); color: #000; font-weight: bold;
+            border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;
+            font-size: 11px; width: 100%; margin-top: 10px; transition: 0.2s;
+        }
+        .btn-add:hover { filter: brightness(1.1); }
+
+        /* WebGL 合成 canvas */
+        #glCanvas { width: 100%; max-width: 1440px; aspect-ratio: 4 / 3; }
+
+        /* 模式切换显示控制 */
+        body.mode-cyber .paper-only { display: none !important; }
+        body.mode-paper .cyber-only { display: none !important; }
+
+        /* 子板块分区 */
+        .sub-section {
+            margin-top: 10px;
+            padding: 8px 10px 4px;
+            border-radius: 6px;
+            background: rgba(128,128,128,0.03);
+        }
+        .sub-section:first-of-type { margin-top: 6px; }
+        .sub-section-label {
+            font-size: 10px;
+            color: var(--text-sub, #888);
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .ss-blue   { border-left: 2px solid rgba(59,130,246,0.35); }
+        .ss-green  { border-left: 2px solid rgba(34,197,94,0.35); }
+        .ss-amber  { border-left: 2px solid rgba(245,158,11,0.35); }
+        .ss-purple { border-left: 2px solid rgba(168,85,247,0.35); }
+        .ss-rose   { border-left: 2px solid rgba(244,63,94,0.35); }
+        .ss-teal   { border-left: 2px solid rgba(20,184,166,0.35); }
+    </style>
+</head>
+<body class="mode-paper">
+
+    <!-- ====== 侧边栏 ====== -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="app-title">📈 图表效果 <span style="font-size:9px; color:var(--text-sub, #888)">v3.0</span></div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button id="themeToggle" class="btn-icon" title="切换主题">☀</button>
+                <div class="version-badge">MERGE</div>
+            </div>
+        </div>
+
+        <div class="controls-container">
+
+            <!-- 效果模式 -->
+            <div class="control-group">
+                <div class="group-title"><span>🎨 效果模式</span></div>
+                <div class="row stack">
+                    <select id="EffectMode">
+                        <option value="paper">📄 纸张风格</option>
+                        <option value="cyber">💠 赛博风格</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 数据管理 (shared) -->
+            <div class="control-group">
+                <div class="group-title">
+                    <span>📊 数据管理</span>
+                    <button class="btn-icon" onclick="resetData()" title="重置" style="width:28px;height:32px;font-size:13px;">↺</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th style="width:32%">名称</th><th style="width:36%">数值</th><th style="width:32%">操作</th></tr></thead>
+                    <tbody id="DataBody"></tbody>
+                </table>
+                <button class="btn-add" onclick="addRow()">+ 添加数据行</button>
+            </div>
+
+            <!-- 标题设置 (shared + mode-specific) -->
+            <div class="control-group">
+                <div class="group-title"><span>📝 标题设置</span></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">内容</div>
+                    <div class="row stack"><div class="label-line"><span>主标题</span></div>
+                        <input type="text" id="MainTitle" value="汽车零售销量新能源月度渗透率走势"></div>
+                    <div class="row stack"><div class="label-line"><span>副标题 (右侧文字)</span></div>
+                        <input type="text" id="SubTitle" value="新能源乘用车渗透率超 50%"></div>
+                    <div class="row stack"><div class="label-line"><span>标题字体</span></div>
+                        <div id="TitleFontMount" style="width:100%"></div></div>
+                </div>
+                <div class="sub-section ss-green">
+                    <div class="sub-section-label">样式</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题字号</span><span id="TitleSizeVal">26</span></div>
+                            <input type="range" id="TitleSize" min="12" max="72" step="2" value="26"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题字号</span><span id="SubTitleSizeVal">36</span></div>
+                            <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
+                    </div>
+                    <div class="row" style="justify-content:space-between; align-items:center;">
+                        <span style="font-size:12px; color:var(--text-sub, #888);">主标题颜色</span>
+                        <input type="color" id="TitleColor" value="#333333"></div>
+                    <div class="row" style="justify-content:space-between; align-items:center;">
+                        <span style="font-size:12px; color:var(--text-sub, #888);">副标题颜色</span>
+                        <input type="color" id="SubTitleColor" value="#999999"></div>
+                    <div class="sub-title cyber-only"><span>显示括号</span><input type="checkbox" id="ShowBrackets" checked></div>
+                    <div class="sub-title cyber-only"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow" checked></div>
+                </div>
+            </div>
+
+            <!-- 纸张纹理 (paper-only) -->
+            <div class="control-group paper-only" id="PaperPanel">
+                <div class="group-title"><span>📄 纸张纹理</span></div>
+                <div class="sub-section ss-amber">
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>色温</span><span id="PaperWarmthVal">45</span></div>
+                            <input type="range" id="PaperWarmth" min="0" max="100" step="1" value="45"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
+                            <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>纤维感</span><span id="FiberVal">20</span></div>
+                            <input type="range" id="FiberIntensity" min="0" max="100" step="1" value="20"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
+                            <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 赛博卡片 (cyber-only) -->
+            <div class="control-group cyber-only" id="CyberPanel">
+                <div class="group-title"><span>💠 赛博卡片</span></div>
+                <div class="sub-section ss-purple">
+                    <div class="row" style="justify-content:space-between; align-items:center;">
+                        <span style="font-size:12px; color:var(--text-sub, #888);">卡片底色</span>
+                        <input type="color" id="CardBg" value="#1a1a2e"></div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>边框粗细</span><span id="CardBorderVal">1</span></div>
+                            <input type="range" id="CardBorder" min="0" max="5" step="0.5" value="1"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>边框颜色</span></div>
+                            <input type="color" id="CardBorderColor" value="#333355"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 折线样式 (shared + mode-specific) -->
+            <div class="control-group">
+                <div class="group-title"><span>📈 折线样式</span></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">线条</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>线条粗细</span><span id="LineWidthVal">1.2</span></div>
+                            <input type="range" id="LineWidth" min="0.5" max="15" step="0.5" value="1.2"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>线条颜色</span></div>
+                            <input type="color" id="LineColor" value="#555555"></div>
+                    </div>
+                    <!-- 纸张专属：手绘风格 -->
+                    <div class="row paper-only">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>抖动幅度</span><span id="LineJitterVal">25</span></div>
+                            <input type="range" id="LineJitter" min="0" max="100" step="1" value="25"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>填充颜色</span></div>
+                            <input type="color" id="AreaColor" value="#b4a58c"></div>
+                    </div>
+                    <!-- 赛博专属：发光曲线 -->
+                    <div class="row cyber-only">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>曲线张力</span><span id="TensionVal">0.4</span></div>
+                            <input type="range" id="Tension" min="0" max="1" step="0.1" value="0.4"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="GlowBlurVal">30</span></div>
+                            <input type="range" id="GlowBlur" min="0" max="80" step="5" value="30"></div>
+                    </div>
+                    <div class="sub-title cyber-only"><span>渐变填充</span><input type="checkbox" id="ShowArea" checked></div>
+                    <div class="row cyber-only"><div style="flex:1" class="stack"><div class="label-line"><span>填充透明度</span><span id="AreaOpacityCyberVal">25%</span></div>
+                        <input type="range" id="AreaOpacityCyber" min="0" max="100" step="5" value="25"></div></div>
+                </div>
+                <div class="sub-section ss-green">
+                    <div class="sub-section-label">数据点 & 标签</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>数据点大小</span><span id="PointSizeVal">4</span></div>
+                            <input type="range" id="PointSize" min="1" max="20" step="0.5" value="4"></div>
+                    </div>
+                    <div class="sub-title"><span>显示数据点</span><input type="checkbox" id="ShowPoints" checked></div>
+                    <div class="sub-title"><span>显示数值标签</span><input type="checkbox" id="ShowValues"></div>
+                    <div class="row cyber-only">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>数值字号</span><span id="ValueSizeVal">11</span></div>
+                            <input type="range" id="ValueSize" min="8" max="30" step="1" value="11"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>数值颜色</span></div>
+                            <input type="color" id="ValueColor" value="#ffffff"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 网格与坐标 (shared + mode-specific) -->
+            <div class="control-group">
+                <div class="group-title"><span>▦ 网格与坐标</span></div>
+                <div class="sub-section ss-teal">
+                    <div class="sub-section-label">Y 轴</div>
+                    <div class="row stack"><div class="label-line"><span>Y轴模式</span></div>
+                        <select id="YAxisMode">
+                            <option value="zero" selected>从零开始</option>
+                            <option value="auto">自动取整</option>
+                            <option value="percent">百分比 (0-100)</option>
+                            <option value="custom">自定义范围</option>
+                        </select></div>
+                    <div id="YAxisCustomPanel" style="display:none; margin-top:8px; padding-top:6px; border-top: 1px dashed var(--border);">
+                        <div class="row">
+                            <div class="stack" style="flex:1"><div class="label-line"><span>最小值</span></div><input type="number" id="YMin" value="0"></div>
+                            <div class="stack" style="flex:1"><div class="label-line"><span>最大值</span></div><input type="number" id="YMax" value="100"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴刻度数</span><span id="GridYVal">4</span></div>
+                            <input type="range" id="GridY" min="2" max="15" step="1" value="4"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>标签字号</span><span id="AxisLabelSizeVal">11</span></div>
+                            <input type="range" id="AxisLabelSize" min="8" max="20" step="1" value="11"></div>
+                    </div>
+                    <div class="row" style="justify-content:space-between; align-items:center;">
+                        <span style="font-size:12px; color:var(--text-sub, #888);">标签颜色</span>
+                        <input type="color" id="AxisLabelColor" value="#999999"></div>
+                </div>
+                <div class="sub-section ss-amber">
+                    <div class="sub-section-label">网格线</div>
+                    <div class="sub-title"><span>虚线网格</span><input type="checkbox" id="DashedGrid"></div>
+                    <!-- 纸张专属 -->
+                    <div class="row paper-only"><div style="flex:1" class="stack"><div class="label-line"><span>网格强度</span><span id="GridIntensityVal">35</span></div>
+                        <input type="range" id="GridIntensity" min="0" max="100" step="1" value="35"></div></div>
+                    <!-- 赛博专属 -->
+                    <div class="sub-title cyber-only"><span>显示网格线</span><input type="checkbox" id="ShowGrid" checked></div>
+                    <div class="row cyber-only">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>网格颜色</span></div>
+                            <input type="color" id="GridColor" value="#333333"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>网格透明度</span><span id="GridOpacityVal">30%</span></div>
+                            <input type="range" id="GridOpacity" min="0" max="100" step="5" value="30"></div>
+                    </div>
+                </div>
+                <div class="sub-section cyber-only ss-rose">
+                    <div class="sub-section-label">布局边距</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>上下边距</span><span id="PadYVal">150</span></div>
+                            <input type="range" id="PadY" min="50" max="400" value="150"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>左右边距</span><span id="PadXVal">100</span></div>
+                            <input type="range" id="PadX" min="50" max="400" value="100"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 卡片漂浮 (shared — WebGL 3D) -->
+            <div class="control-group">
+                <div class="group-title"><span>🃏 卡片漂浮</span></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">透视角度</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
+                            <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
+                            <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
+                    </div>
+                    <div class="row stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
+                        <input type="range" id="CardScale" min="40" max="100" step="1" value="80"></div>
+                </div>
+                <div class="sub-section ss-green">
+                    <div class="sub-section-label">尺寸 & 外观</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>悬浮高度</span><span id="ElevationVal">50</span></div>
+                            <input type="range" id="Elevation" min="0" max="100" step="1" value="50"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
+                            <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
+                    </div>
+                    <div class="row stack"><div class="label-line"><span>内边距</span><span id="CardPadVal">32</span></div>
+                        <input type="range" id="CardPad" min="10" max="100" step="2" value="32"></div>
+                </div>
+                <div class="sub-section ss-purple">
+                    <div class="sub-section-label">漂浮动画</div>
+                    <div class="sub-title"><span>启用微动画</span><input type="checkbox" id="FloatEnabled" checked></div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴摆幅</span><span id="FloatRotateXVal">2.0°</span></div>
+                            <input type="range" id="FloatRotateX" min="0" max="8" step="0.5" value="2.0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴摆幅</span><span id="FloatRotateYVal">1.5°</span></div>
+                            <input type="range" id="FloatRotateY" min="0" max="8" step="0.5" value="1.5"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>周期 (秒)</span><span id="FloatDurationVal">4s</span></div>
+                            <input type="range" id="FloatDuration" min="1" max="10" step="0.5" value="4"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>相位差</span><span id="FloatPhaseVal">25%</span></div>
+                            <input type="range" id="FloatPhase" min="0" max="100" step="5" value="25"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 动画设置 (shared) -->
+            <div class="control-group" style="border-left: 3px solid var(--accent);">
+                <div class="group-title">
+                    <span>⚡ 动画设置</span>
+                    <button id="BtnPlay" class="btn-play">▶ 播放</button>
+                </div>
+                <div class="row stack"><div class="label-line"><span>动画时长 (秒)</span><span id="AnimDurationVal">3.5s</span></div>
+                    <input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="2.0"></div>
+                <div class="row stack"><div class="label-line"><span>动画曲线</span></div>
+                    <select id="AnimEasing">
+                        <option value="linear">线性 (Linear)</option>
+                        <option value="easeIn">先慢后快 (Ease In)</option>
+                        <option value="easeOut">先快后慢 (Ease Out)</option>
+                        <option value="easeInOut" selected>丝滑缓动 (Smooth)</option>
+                    </select></div>
+            </div>
+
+            <!-- 背景和导出面板由 shared/controls.js 自动注入 -->
+            <div id="shared-controls-placeholder"></div>
+        </div>
+    </div>
+
+    <!-- ====== 画布 ====== -->
+    <div class="preview-area" id="previewArea">
+        <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
+        <canvas id="glCanvas"></canvas>
+    </div>
+
+    <script type="module">
+        import { initEffect } from '../shared/controls.js';
+        import { getTheme, toggleTheme } from '../shared/themes.js';
+        import { WebGLComposite } from '../shared/webgl-composite.js';
+
+        // ====== Canvas 初始化 ======
+        const baseWidth = 1440, baseHeight = 1080, scale = 2;
+        const fullW = baseWidth * scale, fullH = baseHeight * scale;
+
+        // WebGL canvas
+        const glCanvas = document.getElementById('glCanvas');
+        glCanvas.width = fullW; glCanvas.height = fullH;
+        const glComp = new WebGLComposite(glCanvas, baseWidth, baseHeight);
+
+        // 离屏 2D — 卡片内容
+        const offscreen = document.createElement('canvas');
+        offscreen.width = fullW; offscreen.height = fullH;
+        const ctx = offscreen.getContext('2d', { alpha: true });
+        ctx.scale(scale, scale);
+
+        // 离屏 2D — 背景
+        const bgOffscreen = document.createElement('canvas');
+        bgOffscreen.width = fullW; bgOffscreen.height = fullH;
+        const bgCtx = bgOffscreen.getContext('2d', { alpha: true });
+        bgCtx.scale(scale, scale);
+
+        // initEffect（dummy canvas 给 recorder 初始化，后续重定向到 glCanvas）
+        const dummyCanvas = document.createElement('canvas');
+        dummyCanvas.id = 'initDummy'; dummyCanvas.style.display = 'none';
+        document.body.appendChild(dummyCanvas);
+
+        const { bg, recorder, resetAnimStart,
+                clamp, hexToRgba, getEasing, bindUI,
+                createLinearGradient, fontSelectHTML, setupFontSelector } = initEffect({
+            canvasId: 'initDummy',
+            fileName: 'ChartFX',
+            baseWidth, baseHeight, scale,
+            defaultBgMode: 'transparent',
+            onFrame: drawFrame,
+        });
+        recorder.canvas = glCanvas;
+
+        // ====== 数据点 ======
+        let dataPoints = [
+            { label: '1月', value: 41 },  { label: '2月', value: 49 },
+            { label: '3月', value: 51.5 }, { label: '4月', value: 52.5 },
+            { label: '5月', value: 53.5 }, { label: '6月', value: 52 },
+            { label: '7月', value: 52 },   { label: '8月', value: 55.5 },
+            { label: '9月', value: 58.5 }, { label: '10月', value: 57.5 },
+            { label: '11月', value: 59 },  { label: '12月', value: 58 }
+        ];
+
+        // ====== 配置 ======
+        let currentMode = 'paper';
+
+        const config = {
+            // 标题
+            mainTitle: '汽车零售销量新能源月度渗透率走势',
+            subTitle: '新能源乘用车渗透率超 50%',
+            titleFont: "'Noto Sans SC', sans-serif",
+            mainTitleSize: 26,
+            subTitleSize: 36,
+            mainTitleColor: '#333333',
+            subTitleColor: '#999999',
+            showBrackets: true,
+            subTitleGlow: true,
+            // 折线
+            lineWidth: 1.2,
+            lineColor: '#555555',
+            showPoints: true,
+            showValues: false,
+            pointSize: 4,
+            // 网格与坐标
+            gridY: 4,
+            yAxisMode: 'zero',
+            yMin: 0, yMax: 100,
+            dashedGrid: false,
+            axisLabelSize: 11,
+            axisLabelColor: '#999999',
+            // 卡片漂浮 (WebGL)
+            rotateX: 1.5, rotateY: -1,
+            elevation: 0.5,
+            cardRadius: 16,
+            cardScale: 0.8,
+            cardPad: 32,
+            floatEnabled: true,
+            floatRotateX: 2.0, floatRotateY: 1.5,
+            floatPhase: 25, floatDuration: 4,
+            // 动画
+            animDuration: 3.5,
+            animEasing: 'easeInOut',
+            // 纸张专属
+            paperWarmth: 45, noiseGrain: 35, fiberIntensity: 20, vignette: 15,
+            lineJitter: 25,
+            areaColor: '#b4a58c',
+            areaOpacity: 12,
+            gridIntensity: 35,
+            // 赛博专属
+            tension: 0.4,
+            glowBlur: 30,
+            cardBg: '#1a1a2e',
+            cardBorder: 1,
+            cardBorderColor: '#333355',
+            showArea: true,
+            areaOpacityCyber: 0.25,
+            valueSize: 11,
+            valueColor: '#ffffff',
+            showGrid: true,
+            gridColor: '#333333',
+            gridOpacity: 0.3,
+            padX: 100, padY: 150,
+        };
+
+        // ====== 模式预设 ======
+        const MODE_PRESETS = {
+            paper: {
+                mainTitleColor: '#333333', subTitleColor: '#999999',
+                mainTitleSize: 26, subTitleSize: 36,
+                lineWidth: 1.2, lineColor: '#555555',
+                areaOpacity: 12,
+                lineJitter: 25, gridIntensity: 35,
+                gridY: 4, yAxisMode: 'zero',
+                pointSize: 4, showValues: false,
+                axisLabelColor: '#999999',
+            },
+            cyber: {
+                mainTitleColor: '#ffffff', subTitleColor: '#ffffff',
+                mainTitleSize: 32, subTitleSize: 48,
+                lineWidth: 4, lineColor: '#00f2ff',
+                areaOpacityCyber: 0.25,
+                tension: 0.4, glowBlur: 30,
+                gridY: 7, yAxisMode: 'auto',
+                pointSize: 6, showValues: true,
+                axisLabelColor: '#aaaaaa',
+            },
+        };
+
+        function switchMode(mode) {
+            if (mode === currentMode) return;
+            currentMode = mode;
+            document.body.className = `mode-${mode}`;
+
+            const preset = MODE_PRESETS[mode];
+            Object.assign(config, preset);
+
+            // 同步 UI 控件
+            updateUI('TitleColor', config.mainTitleColor);
+            updateUI('SubTitleColor', config.subTitleColor);
+            updateUI('TitleSize', config.mainTitleSize, 'TitleSizeVal');
+            updateUI('SubTitleSize', config.subTitleSize, 'SubTitleSizeVal');
+            updateUI('LineWidth', config.lineWidth, 'LineWidthVal');
+            updateUI('LineColor', config.lineColor);
+            updateUI('PointSize', config.pointSize, 'PointSizeVal');
+            updateUI('GridY', config.gridY, 'GridYVal');
+            updateUI('YAxisMode', config.yAxisMode);
+            updateUI('AxisLabelSize', config.axisLabelSize, 'AxisLabelSizeVal');
+            updateUI('AxisLabelColor', config.axisLabelColor);
+
+            if (mode === 'paper') {
+                updateUI('LineJitter', config.lineJitter, 'LineJitterVal');
+                updateUI('GridIntensity', config.gridIntensity, 'GridIntensityVal');
+                updateUI('PaperWarmth', config.paperWarmth, 'PaperWarmthVal');
+                updateUI('NoiseGrain', config.noiseGrain, 'NoiseGrainVal');
+                updateUI('AreaColor', config.areaColor);
+                updateUI('ShowValues', config.showValues, null, true);
+                updateUI('DashedGrid', config.dashedGrid, null, true);
+                updateUI('ShowPoints', config.showPoints, null, true);
+            } else {
+                updateUI('Tension', config.tension, 'TensionVal');
+                updateUI('GlowBlur', config.glowBlur, 'GlowBlurVal');
+                updateUI('CardBg', config.cardBg);
+                updateUI('CardBorder', config.cardBorder, 'CardBorderVal');
+                updateUI('CardBorderColor', config.cardBorderColor);
+                updateUI('ShowBrackets', config.showBrackets, null, true);
+                updateUI('SubTitleGlow', config.subTitleGlow, null, true);
+                updateUI('ShowArea', config.showArea, null, true);
+                updateUI('AreaOpacityCyber', 25, 'AreaOpacityCyberVal');  // slider value (raw, before %)
+                updateUI('ShowValues', config.showValues, null, true);
+                updateUI('ValueSize', config.valueSize, 'ValueSizeVal');
+                updateUI('ValueColor', config.valueColor);
+                updateUI('ShowGrid', config.showGrid, null, true);
+                updateUI('GridColor', config.gridColor);
+                updateUI('GridOpacity', 30, 'GridOpacityVal');  // slider value (raw)
+                updateUI('PadX', config.padX, 'PadXVal');
+                updateUI('PadY', config.padY, 'PadYVal');
+                updateUI('DashedGrid', config.dashedGrid, null, true);
+                updateUI('ShowPoints', config.showPoints, null, true);
+            }
+
+            _paperTexCache = null;
+            _staticBgCache = null;
+            _pathPtsCache = null;
+            myResetAnimStart();
+        }
+
+        function updateUI(id, value, displayId, isCheckbox) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (isCheckbox) { el.checked = value; }
+            else { el.value = value; }
+            if (displayId) {
+                const disp = document.getElementById(displayId);
+                if (disp) disp.textContent = value;
+            }
+        }
+
+        // 模式切换事件
+        document.getElementById('EffectMode').addEventListener('change', (e) => switchMode(e.target.value));
+
+        // ====== 字体选择器 ======
+        const titleFontSelectId = 'TitleFontSelect';
+        document.getElementById('TitleFontMount').innerHTML = fontSelectHTML(titleFontSelectId, config.titleFont);
+        setupFontSelector({ selectId: titleFontSelectId, configKey: 'titleFont', fileInputId: titleFontSelectId + 'Upload', config });
+        document.getElementById(titleFontSelectId).addEventListener('change', () => myResetAnimStart());
+
+        // ====== UI 绑定 ======
+        bindUI(config, [
+            ['MainTitle',       'mainTitle'],
+            ['SubTitle',        'subTitle'],
+            ['TitleSize',       'mainTitleSize',  'int',   'TitleSizeVal'],
+            ['SubTitleSize',    'subTitleSize',   'int',   'SubTitleSizeVal'],
+            ['TitleColor',      'mainTitleColor'],
+            ['SubTitleColor',   'subTitleColor'],
+            ['ShowBrackets',    'showBrackets',   'checked'],
+            ['SubTitleGlow',    'subTitleGlow',   'checked'],
+            // 纸张
+            ['PaperWarmth',     'paperWarmth',    'int',   'PaperWarmthVal'],
+            ['NoiseGrain',      'noiseGrain',     'int',   'NoiseGrainVal'],
+            ['FiberIntensity',  'fiberIntensity', 'int',   'FiberVal'],
+            ['Vignette',        'vignette',       'int',   'VignetteVal'],
+            ['LineJitter',      'lineJitter',     'int',   'LineJitterVal'],
+            ['AreaColor',       'areaColor'],
+            ['GridIntensity',   'gridIntensity',  'int',   'GridIntensityVal'],
+            // 赛博
+            ['CardBg',          'cardBg'],
+            ['CardBorder',      'cardBorder',     'float', 'CardBorderVal'],
+            ['CardBorderColor', 'cardBorderColor'],
+            ['Tension',         'tension',        'float', 'TensionVal'],
+            ['GlowBlur',        'glowBlur',       'float', 'GlowBlurVal'],
+            ['ShowArea',         'showArea',       'checked'],
+            ['AreaOpacityCyber','areaOpacityCyber','%',     'AreaOpacityCyberVal', '%'],
+            ['ValueSize',       'valueSize',      'int',   'ValueSizeVal'],
+            ['ValueColor',      'valueColor'],
+            ['ShowGrid',        'showGrid',       'checked'],
+            ['GridColor',       'gridColor'],
+            ['GridOpacity',     'gridOpacity',    '%',     'GridOpacityVal', '%'],
+            ['PadX',            'padX',           'int',   'PadXVal'],
+            ['PadY',            'padY',           'int',   'PadYVal'],
+            // 折线
+            ['LineWidth',       'lineWidth',      'float', 'LineWidthVal'],
+            ['LineColor',       'lineColor'],
+            ['ShowPoints',      'showPoints',     'checked'],
+            ['PointSize',       'pointSize',      'float', 'PointSizeVal'],
+            ['ShowValues',      'showValues',     'checked'],
+            // 网格与坐标
+            ['GridY',           'gridY',          'int',   'GridYVal'],
+            ['YAxisMode',       'yAxisMode'],
+            ['YMin',            'yMin',           'float'],
+            ['YMax',            'yMax',           'float'],
+            ['DashedGrid',      'dashedGrid',     'checked'],
+            ['AxisLabelSize',   'axisLabelSize',  'int',   'AxisLabelSizeVal'],
+            ['AxisLabelColor',  'axisLabelColor'],
+            // 卡片漂浮
+            ['RotateX',         'rotateX',        'float', 'RotateXVal',   '°'],
+            ['RotateY',         'rotateY',        'float', 'RotateYVal',   '°'],
+            ['CardScale',       'cardScale',      '%',     'CardScaleVal', '%'],
+            ['Elevation',       'elevation',      '%',     'ElevationVal'],
+            ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal'],
+            ['CardPad',         'cardPad',        'int',   'CardPadVal'],
+            ['FloatEnabled',    'floatEnabled',   'checked'],
+            ['FloatRotateX',    'floatRotateX',   'float', 'FloatRotateXVal', '°'],
+            ['FloatRotateY',    'floatRotateY',   'float', 'FloatRotateYVal', '°'],
+            ['FloatPhase',      'floatPhase',     'int',   'FloatPhaseVal',   '%'],
+            ['FloatDuration',   'floatDuration',  'float', 'FloatDurationVal', 's'],
+            // 动画
+            ['AnimDuration',    'animDuration',   'float', 'AnimDurationVal', 's'],
+            ['AnimEasing',      'animEasing'],
+        ], {
+            onChange: (_, key) => {
+                if (key === 'yAxisMode') {
+                    document.getElementById('YAxisCustomPanel').style.display =
+                        config.yAxisMode === 'custom' ? 'block' : 'none';
+                }
+                _paperTexCache = null;
+                _staticBgCache = null;
+                _pathPtsCache = null;
+                myResetAnimStart();
+            }
+        });
+
+        // ====== 漂浮动画 ======
+        let _currentRx = 0, _currentRy = 0;
+        let _floatAnimId = null;
+        let _floatStartTime = performance.now();
+
+        function floatAnimLoop(now) {
+            if (!config.floatEnabled) {
+                _currentRx = config.rotateX * Math.PI / 180;
+                _currentRy = config.rotateY * Math.PI / 180;
+                _floatAnimId = null;
+                return;
+            }
+            const elapsed = (now - _floatStartTime) / 1000;
+            const dur = config.floatDuration;
+            const phaseRad = (config.floatPhase / 100) * Math.PI * 2;
+            _currentRx = (Math.sin(elapsed / dur * Math.PI * 2) * config.floatRotateX + config.rotateX) * Math.PI / 180;
+            _currentRy = (Math.sin(elapsed / dur * Math.PI * 2 + phaseRad) * config.floatRotateY + config.rotateY) * Math.PI / 180;
+            _floatAnimId = requestAnimationFrame(floatAnimLoop);
+        }
+
+        function startFloatAnim() {
+            if (_floatAnimId) { cancelAnimationFrame(_floatAnimId); _floatAnimId = null; }
+            _floatStartTime = performance.now();
+            _floatAnimId = requestAnimationFrame(floatAnimLoop);
+        }
+        startFloatAnim();
+
+        // ====== 数据表格 ======
+        function renderTable() {
+            const tbody = document.getElementById('DataBody');
+            tbody.innerHTML = '';
+            dataPoints.forEach((item, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" value="${item.label}" oninput="updateData(${i}, 'label', this.value)"></td>
+                    <td><input type="number" value="${item.value}" oninput="updateData(${i}, 'value', this.value)"></td>
+                    <td class="op-cell">
+                        <button class="btn-icon" onclick="moveRow(${i}, -1)" title="上移">↑</button>
+                        <button class="btn-icon" onclick="moveRow(${i}, 1)" title="下移">↓</button>
+                        <button class="btn-icon del" onclick="removeRow(${i})" title="删除">×</button>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        window.updateData = (i, k, v) => { dataPoints[i][k] = k === 'value' ? (parseFloat(v) || 0) : v; };
+        window.addRow = () => { dataPoints.push({ label: '新项', value: 0 }); renderTable(); };
+        window.removeRow = (i) => { if (dataPoints.length <= 2) { alert('至少保留两个数据点'); return; } dataPoints.splice(i, 1); renderTable(); };
+        window.moveRow = (i, dir) => { if (i+dir < 0 || i+dir >= dataPoints.length) return; const t = dataPoints[i]; dataPoints[i] = dataPoints[i+dir]; dataPoints[i+dir] = t; renderTable(); };
+        window.resetData = () => { dataPoints = [{ label:'A', value:20 },{ label:'B', value:50 },{ label:'C', value:30 },{ label:'D', value:80 },{ label:'E', value:60 }]; renderTable(); };
+
+        document.getElementById('BtnPlay').addEventListener('click', () => myResetAnimStart());
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            toggleTheme();
+            document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+            myResetAnimStart();
+        });
+        document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+
+        // ====== Y 轴范围 ======
+        function getYStep(span) {
+            const raw = span / 4;
+            const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+            const n = raw / mag;
+            let nice = n <= 1.5 ? 1 : n <= 3.5 ? 2 : n <= 7.5 ? 5 : 10;
+            return nice * mag;
+        }
+
+        function getYRange() {
+            const values = dataPoints.map(d => d.value);
+            if (!values.length) return { yMin: 0, yMax: 100 };
+
+            if (config.yAxisMode === 'percent') return { yMin: 0, yMax: 100 };
+            if (config.yAxisMode === 'custom') {
+                let yMin = config.yMin, yMax = config.yMax;
+                if (yMax <= yMin) yMax = yMin + 1;
+                return { yMin, yMax };
+            }
+
+            const dataMin = Math.min(...values), dataMax = Math.max(...values);
+            const span = dataMax - dataMin || 10;
+
+            if (config.yAxisMode === 'auto') {
+                const step = getYStep(span);
+                let yMin = Math.floor(dataMin / step) * step;
+                let yMax = Math.ceil(dataMax / step) * step;
+                if (yMax <= yMin) yMax = yMin + step;
+                if (dataMax >= yMax) yMax += step;
+                return { yMin, yMax };
+            }
+
+            // 'zero'
+            let yMin = 0, yMax = Math.max(dataMax, 0);
+            if (yMax === 0) yMax = 10;
+            const step = getYStep(yMax);
+            yMax = Math.ceil(yMax / step) * step;
+            if (yMax <= yMin) yMax = yMin + step;
+            return { yMin: 0, yMax };
+        }
+
+        // ====== 种子随机（纸张模式用） ======
+        let _lineSeed = 54321;
+        function seededRandom() { _lineSeed = (_lineSeed * 1664525 + 1013904223) & 0xffffffff; return ((_lineSeed >>> 0) % 10000) / 10000; }
+
+        let _texSeed = 42;
+        function texRnd() { _texSeed = (_texSeed * 1664525 + 1013904223) & 0xffffffff; return ((_texSeed >>> 0) % 10000) / 10000; }
+
+        function hash2(x, y) {
+            let h = x * 374761393 + y * 668265263;
+            h = (h ^ (h >> 13)) * 1274126177; h = h ^ (h >> 16);
+            return ((h % 10000) + 10000) % 10000 / 10000;
+        }
+
+        // ====== 纸张纹理生成 ======
+        let _paperTexCache = null;
+
+        function generatePaperTexture(texW, texH) {
+            const warmth = config.paperWarmth / 100, grain = config.noiseGrain / 100;
+            const fiber = config.fiberIntensity / 100, vig = config.vignette / 100;
+            const key = `${warmth.toFixed(2)}|${grain.toFixed(2)}|${fiber.toFixed(2)}|${vig.toFixed(2)}|${texW}|${texH}`;
+            if (_paperTexCache && _paperTexCache.key === key) return _paperTexCache.canvas;
+
+            const tw = Math.round(texW / 2), th = Math.round(texH / 2);
+            const tc = document.createElement('canvas'); tc.width = tw; tc.height = th;
+            const tctx = tc.getContext('2d');
+            const img = tctx.createImageData(tw, th);
+            const d = img.data;
+            const bgR = Math.round(250 - warmth * 12), bgG = Math.round(248 - warmth * 10), bgB = Math.round(243 - warmth * 5);
+            _texSeed = 42;
+
+            for (let y = 0; y < th; y++) {
+                for (let x = 0; x < tw; x++) {
+                    const idx = (y * tw + x) * 4;
+                    let r = bgR, g = bgG, b = bgB;
+                    if (grain > 0) { const n = (texRnd() - 0.5) * grain * 22; r += n; g += n * 0.97; b += n * 0.92; }
+                    if (grain > 0.1) {
+                        const scale = 80, nx = x / scale, ny = y / scale;
+                        const lx = Math.floor(nx), ly = Math.floor(ny), fx = nx - lx, fy = ny - ly;
+                        const s1 = hash2(lx,ly), s2 = hash2(lx+1,ly), s3 = hash2(lx,ly+1), s4 = hash2(lx+1,ly+1);
+                        const bump = ((s1*(1-fx)*(1-fy)+s2*fx*(1-fy)+s3*(1-fx)*fy+s4*fx*fy) - 0.5) * grain * 8;
+                        r += bump; g += bump * 0.98; b += bump * 0.95;
+                    }
+                    if (fiber > 0) {
+                        const proj = x * Math.cos(12*Math.PI/180) + y * Math.sin(12*Math.PI/180);
+                        const fv = Math.sin(proj * 0.35 + hash2(Math.floor(x/3), Math.floor(y/3)) * 10) * fiber * 3;
+                        r -= fv * 0.3; g -= fv * 0.28; b -= fv * 0.25;
+                    }
+                    if (vig > 0) {
+                        const cx = tw/2, cy = th/2, maxD = Math.sqrt(cx*cx+cy*cy);
+                        const dist = Math.sqrt(((x-cx)/maxD)**2 + ((y-cy)/maxD)**2);
+                        const vf = Math.pow(dist, 2.2) * vig * 18;
+                        r -= vf; g -= vf; b -= vf;
+                    }
+                    d[idx] = clamp(Math.round(r), 0, 255);
+                    d[idx+1] = clamp(Math.round(g), 0, 255);
+                    d[idx+2] = clamp(Math.round(b), 0, 255);
+                    d[idx+3] = 255;
+                }
+            }
+            tctx.putImageData(img, 0, 0);
+            _paperTexCache = { key, canvas: tc };
+            return tc;
+        }
+
+        // ====== 工具函数 ======
+        function roundRect(c, x, y, w, h, r) {
+            r = Math.min(r, w / 2, h / 2);
+            c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.arcTo(x + w, y, x + w, y + r, r);
+            c.lineTo(x + w, y + h - r); c.arcTo(x + w, y + h, x + w - r, y + h, r);
+            c.lineTo(x + r, y + h); c.arcTo(x, y + h, x, y + h - r, r);
+            c.lineTo(x, y + r); c.arcTo(x, y, x + r, y, r);
+        }
+
+        // Catmull-Rom 样条曲线（赛博模式）
+        function drawSmoothPath(ctx, points, tension) {
+            if (points.length < 2) return;
+            if (tension < 0.05) { for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y); return; }
+            for (let i = 0; i < points.length - 1; i++) {
+                const p0 = i > 0 ? points[i-1] : points[0];
+                const p1 = points[i], p2 = points[i+1];
+                const p3 = i < points.length - 2 ? points[i+2] : p2;
+                ctx.bezierCurveTo(
+                    p1.x + (p2.x - p0.x) / 6 * tension, p1.y + (p2.y - p0.y) / 6 * tension,
+                    p2.x - (p3.x - p1.x) / 6 * tension, p2.y - (p3.y - p1.y) / 6 * tension,
+                    p2.x, p2.y
+                );
+            }
+        }
+
+        // ====== 静态背景缓存（纸张模式） ======
+        let _staticBgCache = null;
+        let _pathPtsCache = null;
+
+        // ====== 纸张模式绘制 ======
+        function drawPaperContent(w, h, progress, rawProgress, isHold) {
+            const _pad = config.cardPad;
+            const padL = _pad + 98, padR = _pad + 98, padT = _pad + 50, padB = _pad + 55;
+            const cw = w - padL - padR, ch = h - padT - padB;
+            const { yMin, yMax } = getYRange();
+
+            // 裁剪圆角
+            ctx.save();
+            ctx.beginPath();
+            roundRect(ctx, 0, 0, w, h, config.cardRadius);
+            ctx.clip();
+
+            // 纸张背景
+            const warmth = config.paperWarmth / 100;
+            ctx.fillStyle = `rgb(${Math.round(250-warmth*12)},${Math.round(248-warmth*10)},${Math.round(243-warmth*5)})`;
+            ctx.fillRect(0, 0, w, h);
+            const tex = generatePaperTexture(w, h);
+            if (tex) ctx.drawImage(tex, 0, 0, w, h);
+
+            // 网格 + 标签
+            const gv = config.gridIntensity / 100;
+            if (gv > 0) {
+                ctx.save();
+                ctx.strokeStyle = `rgba(195,188,175,${gv * 0.45})`;
+                ctx.lineWidth = 0.5;
+                if (config.dashedGrid) ctx.setLineDash([3, 6]);
+                for (let i = 0; i < dataPoints.length; i++) {
+                    const x = padL + (i / Math.max(dataPoints.length - 1, 1)) * cw;
+                    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ch); ctx.stroke();
+                }
+                const yStep = (yMax - yMin) / config.gridY;
+                const yDec = yStep >= 1 ? 0 : (yStep >= 0.1 ? 1 : 2);
+                for (let i = 0; i <= config.gridY; i++) {
+                    const ratio = i / config.gridY;
+                    const y = padT + ch - ratio * ch;
+                    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cw, y); ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            // Y 轴标签
+            ctx.save();
+            ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
+            ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+            const yStep = (yMax - yMin) / config.gridY;
+            const yDec = yStep >= 1 ? 0 : (yStep >= 0.1 ? 1 : 2);
+            for (let i = 0; i <= config.gridY; i++) {
+                const ratio = i / config.gridY;
+                ctx.fillText((yMin + ratio * (yMax - yMin)).toFixed(yDec), padL - 14, padT + ch - ratio * ch);
+            }
+            ctx.restore();
+
+            // X 轴标签
+            ctx.save();
+            ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
+            ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+            dataPoints.forEach((d, i) => {
+                ctx.fillText(d.label, padL + (i / Math.max(dataPoints.length - 1, 1)) * cw, h - padB + 22);
+            });
+            ctx.restore();
+
+            // 标题
+            const titleAlpha = clamp(rawProgress * 2.5, 0, 1);
+            const subTitleAlpha = clamp((rawProgress - 0.3) * 2, 0, 1);
+            ctx.save();
+            ctx.globalAlpha = titleAlpha;
+            ctx.font = `700 ${config.mainTitleSize}px ${config.titleFont}`;
+            ctx.fillStyle = config.mainTitleColor;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(config.mainTitle, w / 2, 50);
+            ctx.globalAlpha = subTitleAlpha;
+            ctx.font = `400 ${config.subTitleSize}px ${config.titleFont}`;
+            ctx.fillStyle = config.subTitleColor;
+            ctx.textAlign = 'right';
+            ctx.fillText(config.subTitle, w - 90, h / 2);
+            ctx.restore();
+
+            if (!dataPoints.length) {
+                ctx.fillStyle = '#999'; ctx.font = `24px ${config.titleFont}`;
+                ctx.textAlign = 'center'; ctx.fillText('请添加数据点', w / 2, h / 2);
+                ctx.restore();
+                return;
+            }
+
+            // 路径点（带抖动）
+            const jitter = config.lineJitter / 100;
+            const ptsKey = `${dataPoints.length}|${jitter}|${config.cardPad}|${w}|${yMin}-${yMax}`;
+            if (!_pathPtsCache || _pathPtsCache.key !== ptsKey) {
+                const pts = dataPoints.map((d, i) => ({
+                    x: padL + (i / Math.max(dataPoints.length - 1, 1)) * cw,
+                    y: padT + ch - ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch
+                }));
+                _lineSeed = 54321;
+                const pp = [{ x: pts[0].x, y: pts[0].y }];
+                for (let i = 1; i < pts.length; i++) {
+                    const prev = pts[i-1], curr = pts[i];
+                    for (let j = 1; j <= 12; j++) {
+                        const t = j / 12;
+                        pp.push({
+                            x: prev.x + (curr.x - prev.x) * t + (seededRandom() - 0.5) * jitter * 1.3,
+                            y: prev.y + (curr.y - prev.y) * t + (seededRandom() - 0.5) * jitter * 1.3
+                        });
+                    }
+                }
+                _pathPtsCache = { key: ptsKey, pathPoints: pp, points: pts };
+            }
+
+            const pathPoints = _pathPtsCache.pathPoints;
+            const points = _pathPtsCache.points;
+            const totalPts = pathPoints.length;
+            const drawF = progress * (totalPts - 1);
+            const lineDrawn = Math.floor(drawF) + 1;
+            const frac = drawF - Math.floor(drawF);
+            const isComplete = lineDrawn >= totalPts;
+            let tipX, tipY;
+            if (isComplete) { tipX = pathPoints[totalPts-1].x; tipY = pathPoints[totalPts-1].y; }
+            else { const ti = lineDrawn - 1; tipX = pathPoints[ti].x + (pathPoints[ti+1].x - pathPoints[ti].x) * frac; tipY = pathPoints[ti].y + (pathPoints[ti+1].y - pathPoints[ti].y) * frac; }
+
+            // 填充
+            if (lineDrawn >= 2) {
+                const bottomY = padT + ch;
+                const alpha = config.areaOpacity / 100;
+                const fillGrad = createLinearGradient(ctx, 0, padT, 0, bottomY, [
+                    { pos: 0, color: hexToRgba(config.areaColor, alpha) },
+                    { pos: 0.6, color: hexToRgba(config.areaColor, alpha * 0.5) },
+                    { pos: 1, color: hexToRgba(config.areaColor, 0) },
+                ]);
+                ctx.save(); ctx.fillStyle = fillGrad; ctx.beginPath();
+                ctx.moveTo(pathPoints[0].x, bottomY);
+                const fillEnd = isComplete ? totalPts : lineDrawn;
+                for (let i = 0; i < fillEnd; i++) ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+                if (!isComplete) ctx.lineTo(tipX, tipY);
+                ctx.lineTo(isComplete ? pathPoints[totalPts-1].x : tipX, bottomY);
+                ctx.closePath(); ctx.fill(); ctx.restore();
+            }
+
+            // 折线
+            if (lineDrawn >= 2) {
+                ctx.save();
+                ctx.lineWidth = config.lineWidth; ctx.strokeStyle = config.lineColor;
+                ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                ctx.beginPath(); ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+                const lineEnd = isComplete ? totalPts : lineDrawn;
+                for (let i = 1; i < lineEnd; i++) ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+                if (!isComplete) ctx.lineTo(tipX, tipY);
+                ctx.stroke(); ctx.restore();
+            }
+
+            // 数据点
+            if (config.showPoints) {
+                const dotDelay = rawProgress > 0.75 ? clamp((rawProgress - 0.75) / 0.20, 0, 1) : 0;
+                const ps = config.pointSize * dotDelay;
+                if (ps >= 0.5) {
+                    ctx.save();
+                    points.forEach(p => {
+                        ctx.beginPath(); ctx.arc(p.x, p.y, ps * 1.8, 0, Math.PI * 2);
+                        ctx.fillStyle = hexToRgba(config.lineColor, 0.1 * dotDelay); ctx.fill();
+                        ctx.beginPath(); ctx.arc(p.x, p.y, ps, 0, Math.PI * 2);
+                        ctx.fillStyle = hexToRgba(config.lineColor, 0.65 * dotDelay); ctx.fill();
+                        ctx.beginPath(); ctx.arc(p.x, p.y, ps * 0.5, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255,255,255,${dotDelay})`; ctx.fill();
+                    });
+                    ctx.restore();
+                }
+            }
+
+            // 数值标签
+            if (config.showValues && rawProgress > 0.94) {
+                const labelAlpha = clamp((rawProgress - 0.94) / 0.06, 0, 1);
+                ctx.save();
+                ctx.font = `bold 11px ${config.titleFont}`;
+                points.forEach((p, i) => {
+                    const txt = String(dataPoints[i].value);
+                    const tw = ctx.measureText(txt).width, th = 14;
+                    const bx = p.x - tw / 2 - 5, by = p.y - config.pointSize * 6 - th - 4;
+                    ctx.globalAlpha = labelAlpha * 0.7;
+                    ctx.beginPath(); roundRect(ctx, bx, by, tw + 10, th, th / 2);
+                    ctx.fillStyle = hexToRgba(config.lineColor, 0.15); ctx.fill();
+                    ctx.strokeStyle = hexToRgba(config.lineColor, 0.3); ctx.lineWidth = 0.5; ctx.stroke();
+                    ctx.globalAlpha = labelAlpha; ctx.fillStyle = '#555';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(txt, p.x, by + th / 2);
+                });
+                ctx.restore();
+            }
+
+            ctx.restore(); // clip
+        }
+
+        // ====== 赛博模式绘制 ======
+        function drawCyberContent(w, h, progress, rawProgress, isHold) {
+            const chartLeft = config.padX, chartRight = w - config.padX;
+            const chartTop = config.padY, chartBottom = h - config.padY;
+            const contentW = chartRight - chartLeft, contentH = chartBottom - chartTop;
+            const { yMin, yMax } = getYRange();
+            const t = getTheme();
+
+            // 裁剪圆角
+            ctx.save();
+            ctx.beginPath();
+            roundRect(ctx, 0, 0, w, h, config.cardRadius);
+            ctx.clip();
+
+            // 卡片背景
+            ctx.fillStyle = config.cardBg;
+            ctx.fillRect(0, 0, w, h);
+
+            // 坐标轴
+            ctx.save();
+            ctx.strokeStyle = t.canvasAxisLine;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(chartLeft, chartTop); ctx.lineTo(chartRight, chartTop);
+            ctx.moveTo(chartLeft, chartBottom); ctx.lineTo(chartRight, chartBottom);
+            ctx.moveTo(chartLeft, chartTop); ctx.lineTo(chartLeft, chartBottom);
+            ctx.stroke();
+            ctx.restore();
+
+            // 网格线
+            if (config.showGrid) {
+                ctx.save();
+                ctx.strokeStyle = config.gridColor;
+                ctx.globalAlpha = config.gridOpacity * 0.55;
+                ctx.lineWidth = 0.5;
+                if (config.dashedGrid) ctx.setLineDash([4, 8]);
+                for (let i = 0; i <= config.gridY; i++) {
+                    const y = chartBottom - (i / config.gridY) * contentH;
+                    ctx.beginPath(); ctx.moveTo(chartLeft, y); ctx.lineTo(chartRight, y); ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            // Y 轴标签
+            ctx.save();
+            ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
+            ctx.fillStyle = config.axisLabelColor;
+            ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+            for (let i = 0; i <= config.gridY; i++) {
+                const yRatio = i / config.gridY;
+                ctx.fillText((yMin + yRatio * (yMax - yMin)).toFixed(1), chartLeft - 10, chartBottom - yRatio * contentH);
+            }
+            ctx.restore();
+
+            // X 轴标签
+            ctx.save();
+            ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
+            ctx.fillStyle = config.axisLabelColor;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+            dataPoints.forEach((d, i) => {
+                ctx.fillText(d.label, chartLeft + (i / Math.max(dataPoints.length - 1, 1)) * contentW, chartBottom + 14);
+            });
+            ctx.restore();
+
+            // 标题
+            const titleOpacity = isHold ? 1 : Math.min(rawProgress * 2, 1);
+            const subTitleOpacity = isHold ? 1 : Math.min(rawProgress * 1.5, 1);
+
+            ctx.save();
+            ctx.font = `${config.mainTitleSize}px ${config.titleFont}`;
+            ctx.fillStyle = config.mainTitleColor;
+            ctx.textAlign = 'center'; ctx.globalAlpha = titleOpacity;
+            let titleText = config.mainTitle;
+            if (config.showBrackets) titleText = `\u300C ${config.mainTitle} \u300D`;
+            ctx.fillText(titleText, w / 2, config.padY / 2 - 8);
+            ctx.restore();
+
+            // 副标题
+            ctx.save();
+            ctx.font = `${config.subTitleSize}px ${config.titleFont}`;
+            ctx.fillStyle = config.subTitleColor;
+            ctx.textAlign = 'right'; ctx.globalAlpha = subTitleOpacity * 0.9;
+            if (config.subTitleGlow) { ctx.shadowColor = config.subTitleColor; ctx.shadowBlur = 25; }
+            ctx.fillText(config.subTitle, chartRight - config.cardPad - 16, h / 2);
+            ctx.restore();
+
+            if (!dataPoints.length) {
+                ctx.fillStyle = t.textSub; ctx.font = `24px ${config.titleFont}`;
+                ctx.textAlign = 'center'; ctx.fillText('请添加数据点', w / 2, h / 2);
+                ctx.restore();
+                return;
+            }
+
+            // 坐标点
+            const points = dataPoints.map((d, i) => {
+                const x = chartLeft + (i / Math.max(dataPoints.length - 1, 1)) * contentW;
+                const y = chartBottom - ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * contentH;
+                return { x, y };
+            });
+
+            // 动画裁剪
+            const clipW = chartLeft + contentW * progress + 50;
+
+            // 填充区域
+            if (config.showArea && points.length >= 2) {
+                ctx.save();
+                ctx.beginPath(); ctx.rect(0, 0, clipW, h); ctx.clip();
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, chartBottom);
+                ctx.lineTo(points[0].x, points[0].y);
+                drawSmoothPath(ctx, points, config.tension);
+                ctx.lineTo(points[points.length-1].x, chartBottom);
+                ctx.closePath();
+                const grad = createLinearGradient(ctx, 0, chartTop, 0, chartBottom, [
+                    { pos: 0, color: hexToRgba(config.lineColor, config.areaOpacityCyber) },
+                    { pos: 1, color: hexToRgba(config.lineColor, 0) },
+                ]);
+                ctx.fillStyle = grad; ctx.fill();
+                ctx.restore();
+            }
+
+            // 折线
+            if (points.length >= 2) {
+                ctx.save();
+                ctx.beginPath(); ctx.rect(0, 0, clipW, h); ctx.clip();
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                drawSmoothPath(ctx, points, config.tension);
+                ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                ctx.lineWidth = config.lineWidth;
+                ctx.strokeStyle = config.lineColor;
+                ctx.shadowColor = config.lineColor;
+                ctx.shadowBlur = config.glowBlur;
+                ctx.stroke();
+                // 高亮内线
+                ctx.lineWidth = Math.max(1, config.lineWidth - 2);
+                ctx.strokeStyle = t.canvasLineHighlight;
+                ctx.shadowBlur = 0;
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 数据点
+            if (config.showPoints && config.pointSize > 0) {
+                const dotDelay = Math.max(0, (progress - 0.92) / 0.08);
+                points.forEach((p, i) => {
+                    if (p.x > clipW) return;
+                    const r = config.pointSize * dotDelay;
+                    if (r < 0.5) return;
+                    ctx.save();
+                    // 外发光
+                    ctx.beginPath(); ctx.arc(p.x, p.y, config.pointSize * 2.5, 0, Math.PI * 2);
+                    ctx.fillStyle = hexToRgba(config.lineColor, 0.18 * dotDelay); ctx.fill();
+                    // 内圈
+                    ctx.beginPath(); ctx.arc(p.x, p.y, config.pointSize * 1.2, 0, Math.PI * 2);
+                    ctx.fillStyle = hexToRgba(config.lineColor, 0.7); ctx.fill();
+                    // 白心
+                    ctx.beginPath(); ctx.arc(p.x, p.y, config.pointSize * 0.6, 0, Math.PI * 2);
+                    ctx.fillStyle = t.canvasPointWhite; ctx.fill();
+
+                    // 数值标签
+                    if (config.showValues && (isHold || progress > 0.98)) {
+                        const val = dataPoints[i].value;
+                        const txt = String(val);
+                        ctx.font = `bold ${config.valueSize}px ${config.titleFont}`;
+                        const tw = ctx.measureText(txt).width, th = config.valueSize + 6;
+                        const bx = p.x - tw / 2 - 6, by = p.y - config.pointSize - th - 8;
+                        const labelAlpha = Math.min(1, (progress - 0.95) / 0.05);
+                        ctx.globalAlpha = labelAlpha * 0.75;
+                        ctx.beginPath(); roundRect(ctx, bx, by, tw + 12, th, th / 2);
+                        ctx.fillStyle = hexToRgba(config.lineColor, 0.25); ctx.fill();
+                        ctx.strokeStyle = hexToRgba(config.lineColor, 0.4); ctx.lineWidth = 0.5; ctx.stroke();
+                        ctx.globalAlpha = labelAlpha;
+                        ctx.fillStyle = config.valueColor;
+                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.fillText(txt, p.x, by + th / 2);
+                    }
+                    ctx.restore();
+                });
+            }
+
+            // 边框
+            if (config.cardBorder > 0) {
+                ctx.beginPath();
+                roundRect(ctx, 0.5, 0.5, w - 1, h - 1, config.cardRadius);
+                ctx.strokeStyle = config.cardBorderColor;
+                ctx.lineWidth = config.cardBorder;
+                ctx.stroke();
+            }
+
+            ctx.restore(); // clip
+        }
+
+        // ====== 主渲染函数 ======
+        function drawFrame(timeMs) {
+            // 清空离屏 canvas
+            ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+            ctx.clearRect(0, 0, offscreen.width, offscreen.height);
+            ctx.restore();
+            bgCtx.save(); bgCtx.setTransform(1,0,0,1,0,0);
+            bgCtx.clearRect(0, 0, bgOffscreen.width, bgOffscreen.height);
+            bgCtx.restore();
+
+            // 背景绘制
+            if (bg.mode === 'transparent') {
+                if (recorder.isRecording && recorder.format !== 'png_seq') {
+                    bgCtx.fillStyle = '#000000';
+                    bgCtx.fillRect(0, 0, baseWidth, baseHeight);
+                }
+            } else {
+                bg.draw(bgCtx, timeMs, recorder.isRecording, recorder.format);
+            }
+
+            // 动画进度
+            const w = baseWidth, h = baseHeight;
+            const isHold = !isFinite(timeMs);
+            const duration = config.animDuration * 1000;
+            const rawProgress = isHold ? 1 : Math.min(timeMs / duration, 1);
+            const progress = getEasing(config.animEasing)(rawProgress);
+
+            // 模式分发
+            if (currentMode === 'paper') {
+                drawPaperContent(w, h, progress, rawProgress, isHold);
+            } else {
+                drawCyberContent(w, h, progress, rawProgress, isHold);
+            }
+
+            // WebGL 合成
+            glComp.render({
+                bgCanvas: bgOffscreen,
+                cardCanvas: offscreen,
+                rx: _currentRx,
+                ry: _currentRy,
+                perspective: 900,
+                elevation: config.elevation,
+                cardScale: config.cardScale,
+                cardRadius: config.cardRadius,
+            });
+        }
+
+        // ====== 预览循环 ======
+        renderTable();
+
+        let _animStartTime = performance.now();
+        let _previewRunning = false;
+        const origResetAnimStart = resetAnimStart;
+
+        function myResetAnimStart() {
+            _animStartTime = performance.now();
+            origResetAnimStart();
+        }
+
+        function startPreviewLoopCustom() {
+            if (_previewRunning) return;
+            _previewRunning = true;
+            function loop() {
+                if (!recorder.isRecording) {
+                    let time = performance.now() - _animStartTime;
+                    const dur = config.animDuration * 1000;
+                    if (dur > 0 && time > dur) time = Infinity;
+                    drawFrame(time);
+                }
+                requestAnimationFrame(loop);
+            }
+            requestAnimationFrame(loop);
+        }
+        startPreviewLoopCustom();
+    </script>
+</body>
+</html>
