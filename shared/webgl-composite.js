@@ -269,7 +269,8 @@ export class WebGLComposite {
      * CSS 等价: perspective(900px) rotateX(rx) rotateY(ry) scale(cardScale)
      * 物体在 z=0，只有旋转产生的 z 偏移才产生透视缩进
      */
-    _buildCardMVP(rx, ry, perspective, cardScale) {
+    _buildCardMVP(rx, ry, perspective, cardScale, offsetX = 0, offsetY = 0) {
+        const bw = this.baseWidth;
         const bh = this.baseHeight;
 
         // NDC perspective 距离：CSS 900px / (canvas半高540px) = 1.667 NDC单位
@@ -293,7 +294,17 @@ export class WebGLComposite {
         // P = perspective(d)，不加 translate
         const P = WebGLComposite.mat4Perspective(d);
 
-        return WebGLComposite.mat4Mul(P, WebGLComposite.mat4Mul(V, M));
+        let result = WebGLComposite.mat4Mul(P, WebGLComposite.mat4Mul(V, M));
+
+        // 屏幕空间偏移（投影后 NDC 空间，用于入场动画）
+        if (offsetX !== 0 || offsetY !== 0) {
+            const ndcOX = offsetX / (bw / 2);
+            const ndcOY = -offsetY / (bh / 2); // 翻转 Y：屏幕 Y 正方向向下，NDC Y 正方向向上
+            const T = WebGLComposite.mat4Translate(ndcOX, ndcOY, 0);
+            result = WebGLComposite.mat4Mul(T, result);
+        }
+
+        return result;
     }
 
     /** 构建全屏 quad 的 MVP（无旋转，用于背景） */
@@ -359,6 +370,11 @@ export class WebGLComposite {
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
+        // 入场动画参数
+        const offsetX = opts.offsetX || 0;
+        const offsetY = opts.offsetY || 0;
+        const cardAlpha = opts.cardAlpha !== undefined ? opts.cardAlpha : 1.0;
+
         // === Pass 1: 背景 ===
         if (opts.bgCanvas) {
             this._uploadTexture(opts.bgCanvas);
@@ -392,18 +408,18 @@ export class WebGLComposite {
 
             // 阴影用和卡片一样的 MVP（透视变换），但阴影偏移量通过 canvas 偏移实现
             this._uploadTexture(shadowCanvas);
-            const shadowMVP = this._buildCardMVP(opts.rx, opts.ry, perspective, cardScale);
-            this._drawQuad(shadowMVP, { x: 0, y: 0, w: 1, h: 1 }, 0, 0, 0.6);
+            const shadowMVP = this._buildCardMVP(opts.rx, opts.ry, perspective, cardScale, offsetX, offsetY);
+            this._drawQuad(shadowMVP, { x: 0, y: 0, w: 1, h: 1 }, 0, 0, 0.6 * cardAlpha);
         }
 
         // === Pass 3: 卡片内容（带透视旋转） ===
         if (opts.cardCanvas) {
             this._uploadTexture(opts.cardCanvas);
-            const cardMVP = this._buildCardMVP(opts.rx, opts.ry, perspective, cardScale);
+            const cardMVP = this._buildCardMVP(opts.rx, opts.ry, perspective, cardScale, offsetX, offsetY);
             // 圆角归一化（相对纹理尺寸）
             const rNorm = cardRadius / bw;
             // 卡片内容占满整个纹理 (0,0,1,1)
-            this._drawQuad(cardMVP, { x: 0, y: 0, w: 1, h: 1 }, rNorm, 1.0, 1.0);
+            this._drawQuad(cardMVP, { x: 0, y: 0, w: 1, h: 1 }, rNorm, 1.0, cardAlpha);
         }
     }
 
