@@ -3,245 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FLOWAY MEDIA TOOLS | 循流视频效果工具</title>
+    <title>Floway Media Tools</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared/base.css">
     <script src="shared/themes.js"></script>
 
     <style>
         /* ========================================
-           RESET & BASE — override base.css body rules
+           BASE RESET
            ======================================== */
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --index-bg: #0e1117;
-            --index-surface: #161b22;
-            --index-card: #1c2333;
-            --index-card-hover: #242d40;
-            --index-border: rgba(255,255,255,0.06);
-            --index-accent: #818cf8;
-            --index-accent-dim: rgba(129,140,248,0.1);
-            --index-glow: rgba(129,140,248,0.15);
-            --index-text: #e5e7eb;
-            --index-text-dim: #6b7280;
-            --index-radius: 16px;
-            --index-font-display: 'Orbitron', monospace;
-            --index-font-body: 'Noto Sans SC', -apple-system, sans-serif;
-            --index-font-mono: 'JetBrains Mono', monospace;
+            --bg: #0e1117;
+            --surface: #161b22;
+            --surface-hover: #1c2333;
+            --card: #1c2333;
+            --card-hover: #242d40;
+            --border: rgba(255,255,255,0.06);
+            --border-strong: rgba(255,255,255,0.1);
+            --accent: #818cf8;
+            --accent-dim: rgba(129,140,248,0.1);
+            --accent-glow: rgba(129,140,248,0.12);
+            --danger: #f87171;
+            --success: #34d399;
+            --text: #e5e7eb;
+            --text-dim: #6b7280;
+            --text-muted: #4b5563;
+            --radius: 14px;
+            --font-display: 'Orbitron', monospace;
+            --font-body: 'Noto Sans SC', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
         }
 
         [data-theme="light"] {
-            --index-bg: #f8fafc;
-            --index-surface: #ffffff;
-            --index-card: #ffffff;
-            --index-card-hover: #f1f5f9;
-            --index-border: rgba(0,0,0,0.06);
-            --index-accent: #6366f1;
-            --index-accent-dim: rgba(99,102,241,0.08);
-            --index-glow: rgba(99,102,241,0.1);
-            --index-text: #1e293b;
-            --index-text-dim: #94a3b8;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-hover: #f1f5f9;
+            --card: #ffffff;
+            --card-hover: #f1f5f9;
+            --border: rgba(0,0,0,0.06);
+            --border-strong: rgba(0,0,0,0.1);
+            --accent: #6366f1;
+            --accent-dim: rgba(99,102,241,0.08);
+            --accent-glow: rgba(99,102,241,0.1);
+            --danger: #ef4444;
+            --success: #10b981;
+            --text: #1e293b;
+            --text-dim: #94a3b8;
+            --text-muted: #cbd5e1;
         }
 
         [data-theme="glass"] {
-            --index-bg: #06060a;
-            --index-surface: rgba(12,12,20,0.6);
-            --index-card: rgba(255,255,255,0.035);
-            --index-card-hover: rgba(255,255,255,0.06);
-            --index-border: rgba(255,255,255,0.06);
-            --index-accent: #818cf8;
-            --index-accent-dim: rgba(129,140,248,0.06);
-            --index-glow: rgba(129,140,248,0.12);
-            --index-text: #e0e0ec;
-            --index-text-dim: #7070a0;
+            --bg: #06060a;
+            --surface: rgba(12,12,20,0.6);
+            --surface-hover: rgba(255,255,255,0.06);
+            --card: rgba(255,255,255,0.035);
+            --card-hover: rgba(255,255,255,0.06);
+            --border: rgba(255,255,255,0.06);
+            --border-strong: rgba(255,255,255,0.1);
+            --accent: #818cf8;
+            --accent-dim: rgba(129,140,248,0.06);
+            --accent-glow: rgba(129,140,248,0.12);
+            --text: #e0e0ec;
+            --text-dim: #7070a0;
+            --text-muted: #404060;
         }
 
         html, body {
             height: auto; min-height: 100vh;
             overflow-x: hidden;
-            background: var(--index-bg);
-            color: var(--index-text);
-            font-family: var(--index-font-body);
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-body);
             user-select: none;
             -webkit-font-smoothing: antialiased;
         }
 
         /* ========================================
-           BACKGROUND ATMOSPHERE
+           TOP NAV — Sticky
            ======================================== */
 
-        .bg-layer {
-            position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+        .top-nav {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; gap: 20px;
+            padding: 14px 32px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
         }
 
-        .bg-grid {
-            position: absolute; inset: 0;
-            background-image:
-                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 60px 60px;
-            mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 20%, transparent 70%);
-            -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 20%, transparent 70%);
+        .nav-logo {
+            font-family: var(--font-display);
+            font-weight: 900; font-size: 15px;
+            color: var(--accent);
+            letter-spacing: 1px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
-        [data-theme="light"] .bg-grid {
-            background-image:
-                linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+        .nav-search {
+            flex: 1; max-width: 480px; position: relative;
         }
 
-        .bg-glow-1, .bg-glow-2 {
-            position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.4;
+        .nav-search input {
+            width: 100%;
+            padding: 9px 14px 9px 38px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 13px;
+            font-family: var(--font-body);
+            outline: none;
+            transition: all 0.2s;
         }
-        .bg-glow-1 {
-            width: 600px; height: 600px;
-            top: -200px; right: -100px;
-            background: var(--index-accent);
-            opacity: 0.06;
-        }
-        .bg-glow-2 {
-            width: 400px; height: 400px;
-            bottom: 10%; left: -100px;
-            background: #a78bfa;
-            opacity: 0.04;
+        .nav-search input::placeholder { color: var(--text-dim); }
+        .nav-search input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
         }
 
-        [data-theme="light"] .bg-glow-1 { opacity: 0.08; }
-        [data-theme="light"] .bg-glow-2 { opacity: 0.05; }
+        .nav-search-icon {
+            position: absolute; left: 12px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim); font-size: 14px;
+            pointer-events: none;
+        }
 
-        /* Glass 主题 — 更明显的环境光 */
-        [data-theme="glass"] .bg-grid {
-            background-image:
-                linear-gradient(rgba(129,140,248,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(129,140,248,0.03) 1px, transparent 1px);
-            mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 70%);
-            -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 70%);
+        .nav-actions {
+            display: flex; align-items: center; gap: 8px;
+            flex-shrink: 0;
         }
-        [data-theme="glass"] .bg-glow-1 {
-            width: 800px; height: 800px; top: -250px; right: -200px;
-            background: #818cf8; opacity: 0.08;
+
+        .btn-theme {
+            width: 36px; height: 36px;
+            border-radius: 10px; border: 1px solid var(--border);
+            background: transparent; color: var(--text-dim);
+            cursor: pointer; font-size: 15px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
         }
-        [data-theme="glass"] .bg-glow-2 {
-            width: 500px; height: 500px; bottom: 5%; left: -150px;
-            background: #a78bfa; opacity: 0.06;
+        .btn-theme:hover {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-color: var(--border-strong);
         }
 
         /* ========================================
-           MAIN LAYOUT
+           MAIN CONTENT
            ======================================== */
 
-        .page-wrapper {
-            position: relative; z-index: 1;
-            max-width: 1100px; margin: 0 auto;
-            padding: 48px 32px 80px;
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 32px 64px;
         }
 
         /* ========================================
-           HEADER / HERO
+           FILTER BAR
            ======================================== */
 
-        .hero {
-            text-align: center; padding: 40px 0 48px;
-            position: relative;
+        .filter-bar {
+            display: flex; align-items: center; gap: 8px;
+            padding: 0 0 20px;
+            flex-wrap: wrap;
         }
 
-        .hero-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 5px 14px; border-radius: 20px;
-            font-size: 11px; font-weight: 600;
-            letter-spacing: 1.5px; text-transform: uppercase;
-            background: var(--index-accent-dim);
-            color: var(--index-accent);
-            border: 1px solid var(--index-accent);
-            opacity: 0;
-            animation: heroFadeIn 0.6s ease-out 0.1s forwards;
-            font-family: var(--index-font-mono);
-        }
-
-        .hero-badge::before {
-            content: ''; width: 6px; height: 6px;
-            border-radius: 50%; background: var(--index-accent);
-            box-shadow: 0 0 8px var(--index-accent);
-            animation: pulse-dot 2s infinite;
-        }
-
-        .hero h1 {
-            font-family: var(--index-font-display);
-            font-size: clamp(28px, 5vw, 52px);
-            font-weight: 900; letter-spacing: 4px;
-            line-height: 1.15; margin-top: 20px;
-            opacity: 0;
-            animation: heroSlideUp 0.7s ease-out 0.2s forwards;
-        }
-
-        .hero h1 span { color: var(--index-accent); }
-
-        .hero-sub {
-            font-size: 14px; color: var(--index-text-dim);
-            letter-spacing: 0.5px; margin-top: 12px;
-            opacity: 0;
-            animation: heroFadeIn 0.6s ease-out 0.35s forwards;
-        }
-
-        /* ========================================
-           SEARCH BAR
-           ======================================== */
-
-        .search-bar {
-            max-width: 480px; margin: 28px auto 0;
-            position: relative;
-            opacity: 0;
-            animation: heroFadeIn 0.6s ease-out 0.45s forwards;
-        }
-
-        .search-input {
-            width: 100%; padding: 14px 20px 14px 48px;
-            border-radius: 12px; border: 1px solid var(--index-border);
-            background: var(--index-surface);
-            color: var(--index-text);
-            font-size: 14px; font-family: var(--index-font-body);
-            outline: none; transition: all 0.25s;
-        }
-
-        .search-input::placeholder { color: var(--index-text-dim); }
-        .search-input:focus {
-            border-color: var(--index-accent);
-            box-shadow: 0 0 0 3px var(--index-accent-dim), 0 8px 32px var(--index-glow);
-        }
-
-        .search-icon {
-            position: absolute; left: 17px; top: 50%; transform: translateY(-50%);
-            color: var(--index-text-dim); font-size: 16px; pointer-events: none;
-        }
-
-        /* ========================================
-           CATEGORY FILTER TABS
-           ======================================== */
-
-        .filter-tabs {
-            display: flex; justify-content: center; gap: 6px;
-            margin: 36px 0 8px; flex-wrap: wrap;
-            opacity: 0;
-            animation: heroFadeIn 0.5s ease-out 0.55s forwards;
-        }
-
-        .filter-tab {
-            padding: 7px 18px; border-radius: 20px;
+        .filter-pill {
+            padding: 6px 16px;
+            border-radius: 20px;
             font-size: 12px; font-weight: 500;
-            cursor: pointer; transition: all 0.2s;
-            border: 1px solid transparent;
+            cursor: pointer;
+            border: 1px solid var(--border);
             background: transparent;
-            color: var(--index-text-dim);
-            font-family: var(--index-font-body);
+            color: var(--text-dim);
+            font-family: var(--font-body);
+            transition: all 0.2s;
+        }
+        .filter-pill:hover {
+            background: var(--accent-dim);
+            color: var(--text);
+            border-color: var(--border-strong);
+        }
+        .filter-pill.active {
+            background: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+            font-weight: 600;
         }
 
-        .filter-tab:hover { color: var(--index-text); background: var(--index-accent-dim); }
-        .filter-tab.active {
-            background: var(--index-accent); color: #000;
-            border-color: var(--index-accent);
-            font-weight: 700;
+        .filter-count {
+            font-size: 11px; color: var(--text-dim);
+            font-family: var(--font-mono);
+            margin-left: 8px;
         }
 
         /* ========================================
@@ -250,8 +207,8 @@
 
         .tool-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px;
         }
 
         /* ========================================
@@ -259,173 +216,159 @@
            ======================================== */
 
         .tool-card {
-            position: relative;
-            background: var(--index-card);
-            border: 1px solid var(--index-border);
-            border-radius: var(--index-radius);
-            padding: 28px 26px;
+            display: flex; flex-direction: column;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
             text-decoration: none;
             color: inherit;
-            display: flex; flex-direction: column;
+            transition: all 0.2s ease;
+            position: relative;
             overflow: hidden;
-            transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            opacity: 0; transform: translateY(24px);
-            /* stagger handled via inline style */
+            opacity: 0; transform: translateY(12px);
         }
 
         .tool-card.visible {
             opacity: 1; transform: translateY(0);
         }
 
-        .tool-card::before {
-            content: ''; position: absolute; inset: 0;
-            border-radius: var(--index-radius);
-            padding: 1px;
-            background: linear-gradient(135deg, transparent 40%, var(--index-accent) 100%);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: exclude; -webkit-mask-composite: xor;
-            opacity: 0; transition: opacity 0.35s;
-        }
-
         @media (hover: hover) {
             .tool-card:hover {
-                transform: translateY(-6px);
-                border-color: var(--index-accent);
-                box-shadow:
-                    0 12px 40px rgba(0,0,0,0.25),
-                    0 0 60px var(--index-glow);
+                background: var(--card-hover);
+                border-color: var(--border-strong);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 32px rgba(0,0,0,0.15);
             }
-            .tool-card:hover::before { opacity: 1; }
-            .tool-card:hover .card-icon {
-                transform: scale(1.08);
-                box-shadow: 0 0 24px var(--index-glow);
+            .tool-card:hover .card-go {
+                opacity: 1; transform: translateX(0);
             }
-            .tool-card:hover .card-arrow { transform: translateX(4px); opacity: 1; }
         }
 
         .tool-card:active { transform: scale(0.98); }
 
-        /* Disabled / Dev state */
+        /* Disabled cards */
         .tool-card.disabled {
-            opacity: 0.45;
-            filter: grayscale(0.6);
+            opacity: 0; transform: translateY(0);
             pointer-events: none;
+            filter: grayscale(0.4);
         }
-        .tool-card.disabled .card-status { color: var(--index-text-dim); }
-        .tool-card.disabled .card-status::after { content: 'DEV'; }
-
-        /* Card corner accent */
-        .card-corner {
-            position: absolute; top: 0; right: 0;
-            width: 0; height: 0;
-            border-style: solid;
-            border-width: 0 36px 36px 0;
-            border-color: transparent var(--index-accent-dim) transparent transparent;
-            transition: border-color 0.3s;
-        }
-        @media (hover: hover) {
-            .tool-card:hover .card-corner {
-                border-color: transparent var(--index-accent) transparent transparent;
-            }
+        .tool-card.disabled.visible {
+            opacity: 0.4;
         }
 
-        /* Card icon */
-        .card-icon {
-            width: 56px; height: 56px; border-radius: 14px;
+        /* Card top row: icon + info */
+        .card-top {
+            display: flex; align-items: flex-start; gap: 14px;
+            margin-bottom: 10px;
+        }
+
+        .card-emoji {
+            width: 44px; height: 44px;
+            border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 28px;
-            background: var(--index-accent-dim);
-            border: 1px solid var(--index-border);
-            margin-bottom: 18px;
-            transition: all 0.3s;
+            font-size: 22px;
+            background: var(--accent-dim);
             flex-shrink: 0;
         }
 
-        /* Card header */
-        .card-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
+        .card-meta { flex: 1; min-width: 0; }
 
-        .card-info h2 {
-            font-size: 17px; font-weight: 700; margin: 0 0 3px 0;
-            color: var(--index-text); display: flex; align-items: center; gap: 8px;
-            line-height: 1.3;
+        .card-meta h2 {
+            font-size: 14px; font-weight: 700;
+            line-height: 1.3; margin-bottom: 2px;
+            color: var(--text);
+        }
+
+        .card-subtitle {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: var(--text-dim);
+            letter-spacing: 0.3px;
         }
 
         .version-tag {
-            font-size: 9px; font-family: var(--index-font-mono);
-            background: var(--index-surface); color: var(--index-text-dim);
-            padding: 2px 7px; border-radius: 4px; font-weight: 600;
-            letter-spacing: 0.3px; border: 1px solid var(--index-border);
+            font-size: 9px;
+            font-family: var(--font-mono);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            background: var(--surface);
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+            letter-spacing: 0.3px;
+            vertical-align: middle;
+            margin-left: 6px;
         }
-
-        .version-tag.hot { color: var(--index-accent); border-color: var(--index-accent); background: var(--index-accent-dim); }
-
-        .card-type {
-            font-size: 10px; color: var(--index-text-dim);
-            letter-spacing: 1px; text-transform: uppercase;
-            font-family: var(--index-font-mono);
+        .version-tag.hot {
+            color: var(--accent);
+            border-color: rgba(129,140,248,0.2);
+            background: var(--accent-dim);
+        }
+        [data-theme="light"] .version-tag.hot {
+            color: var(--accent);
+            border-color: rgba(99,102,241,0.2);
         }
 
         /* Card description */
         .card-desc {
-            font-size: 13px; color: var(--index-text-dim);
-            line-height: 1.6; margin-bottom: 20px;
+            font-size: 12px;
+            color: var(--text-dim);
+            line-height: 1.5;
             flex: 1;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         /* Card footer */
-        .card-status {
-            font-size: 11px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1.2px;
-            color: var(--index-accent);
-            display: flex; align-items: center; justify-content: space-between;
-            border-top: 1px dashed var(--index-border);
-            padding-top: 14px;
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
         }
 
-        .card-arrow {
-            font-size: 14px; opacity: 0.4;
-            transition: all 0.25s;
-        }
-
-        /* Category label on card */
-        .card-category {
-            position: absolute; top: 16px; left: 16px;
-            font-size: 9px; font-family: var(--index-font-mono);
-            text-transform: uppercase; letter-spacing: 1px;
-            color: var(--index-text-dim);
-            opacity: 0.5;
-        }
-
-        /* ========================================
-           FOOTER
-           ======================================== */
-
-        footer {
-            text-align: center; padding: 48px 0 24px;
-            font-size: 11px; color: var(--index-text-dim);
+        .card-category-tag {
+            font-size: 10px;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
             letter-spacing: 0.5px;
-            border-top: 1px solid var(--index-border);
-            margin-top: 48px;
+            text-transform: uppercase;
         }
 
-        footer span { opacity: 0.5; }
+        .card-go {
+            font-size: 13px;
+            color: var(--accent);
+            opacity: 0.4;
+            transform: translateX(-4px);
+            transition: all 0.2s;
+        }
 
         /* ========================================
-           THEME TOGGLE (floating)
+           SECTION DIVIDER
            ======================================== */
 
-        .theme-toggle-float {
-            position: fixed; top: 20px; right: 20px; z-index: 100;
-            width: 40px; height: 40px; border-radius: 10px;
-            border: 1px solid var(--index-border);
-            background: var(--index-surface);
-            color: var(--index-text-dim); cursor: pointer;
-            font-size: 17px; display: flex; align-items: center;
-            justify-content: center; transition: all 0.25s;
+        .section-divider {
+            grid-column: 1 / -1;
+            display: flex; align-items: center; gap: 16px;
+            padding: 24px 0 8px;
         }
-        .theme-toggle-float:hover {
-            border-color: var(--index-accent); color: var(--index-accent);
-            box-shadow: 0 0 20px var(--index-glow);
+        .section-divider span {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .section-divider::after {
+            content: '';
+            flex: 1; height: 1px;
+            background: var(--border);
         }
 
         /* ========================================
@@ -433,28 +376,37 @@
            ======================================== */
 
         .no-results {
-            grid-column: 1 / -1; text-align: center;
-            padding: 60px 20px; color: var(--index-text-dim);
-            font-size: 14px; display: none;
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-dim);
+            display: none;
         }
         .no-results.show { display: block; }
-        .no-results-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+        .no-results-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.2; }
+        .no-results p { font-size: 14px; }
+
+        /* ========================================
+           FOOTER
+           ======================================== */
+
+        footer {
+            text-align: center;
+            padding: 32px;
+            font-size: 11px;
+            color: var(--text-dim);
+            border-top: 1px solid var(--border);
+            margin-top: 24px;
+        }
+        footer span { opacity: 0.5; }
 
         /* ========================================
            KEYFRAMES
            ======================================== */
 
-        @keyframes heroFadeIn {
-            from { opacity: 0; transform: translateY(8px); }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(12px); }
             to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes heroSlideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--index-accent); }
-            50%      { opacity: 0.4; box-shadow: 0 0 2px var(--index-accent); }
         }
 
         /* ========================================
@@ -462,20 +414,21 @@
            ======================================== */
 
         @media (max-width: 720px) {
-            .page-wrapper { padding: 28px 16px 60px; }
-            .hero { padding: 28px 0 36px; }
-            .hero h1 { letter-spacing: 2px; }
-            .search-bar { margin: 20px auto 0; }
-            .filter-tabs { gap: 4px; margin: 24px 0 4px; }
-            .filter-tab { padding: 6px 14px; font-size: 11px; }
-            .tool-grid { grid-template-columns: 1fr; gap: 14px; }
-            .tool-card { padding: 22px 20px; }
-            .theme-toggle-float { top: 12px; right: 12px; width: 36px; height: 36px; }
+            .top-nav {
+                padding: 12px 16px;
+                gap: 12px;
+                flex-wrap: wrap;
+            }
+            .nav-search { order: 3; max-width: none; flex-basis: 100%; }
+            .main-content { padding: 16px 16px 48px; }
+            .tool-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .tool-card { padding: 16px; }
+            .card-desc { -webkit-line-clamp: 2; }
         }
 
-        /* ========================================
-           REDUCED MOTION
-           ======================================== */
+        @media (max-width: 480px) {
+            .tool-grid { grid-template-columns: 1fr; }
+        }
 
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -484,238 +437,195 @@
             }
             .tool-card { opacity: 1; transform: none; }
         }
-
-        /* ========================================
-           GLASS THEME — 专属样式
-           ======================================== */
-
-        [data-theme="glass"] .search-input {
-            background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.06);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-        [data-theme="glass"] .search-input:focus {
-            background: rgba(255,255,255,0.06);
-            border-color: var(--index-accent);
-            box-shadow: 0 0 0 3px var(--index-accent-dim), 0 0 40px var(--index-glow);
-        }
-
-        [data-theme="glass"] .tool-card {
-            background: rgba(255,255,255,0.035);
-            border-color: rgba(255,255,255,0.05);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-        [data-theme="glass"] .tool-card::before {
-            background: linear-gradient(135deg, transparent 30%, var(--index-accent) 100%);
-        }
-        @media (hover: hover) {
-            [data-theme="glass"] .tool-card:hover {
-                border-color: var(--index-accent);
-                background: rgba(255,255,255,0.06);
-                box-shadow:
-                    0 12px 40px rgba(0,0,0,0.3),
-                    0 0 60px var(--index-glow);
-            }
-        }
-
-        [data-theme="glass"] .card-icon {
-            background: var(--index-accent-dim);
-            border-color: rgba(255,255,255,0.06);
-        }
-
-        [data-theme="glass"] .card-corner {
-            border-color: transparent rgba(129,140,248,0.08) transparent transparent;
-        }
-        @media (hover: hover) {
-            [data-theme="glass"] .tool-card:hover .card-corner {
-                border-color: transparent var(--index-accent) transparent transparent;
-            }
-        }
-
-        [data-theme="glass"] .version-tag {
-            background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.06);
-        }
-        [data-theme="glass"] .version-tag.hot {
-            color: var(--index-accent);
-            border-color: rgba(129,140,248,0.2);
-            background: var(--index-accent-dim);
-        }
-
-        [data-theme="glass"] .card-status {
-            border-top-color: rgba(255,255,255,0.05);
-        }
-
-        [data-theme="glass"] .filter-tab:hover {
-            background: rgba(129,140,248,0.06);
-        }
-        [data-theme="glass"] .filter-tab.active {
-            background: var(--index-accent);
-            color: #000;
-        }
-
-        [data-theme="glass"] .theme-toggle-float {
-            background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.06);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-
-        [data-theme="glass"] footer {
-            border-top-color: rgba(255,255,255,0.05);
-        }
     </style>
 </head>
 <body>
 
-    <!-- Background atmosphere -->
-    <div class="bg-layer">
-        <div class="bg-grid"></div>
-        <div class="bg-glow-1"></div>
-        <div class="bg-glow-2"></div>
-    </div>
-
-    <!-- Theme toggle -->
-    <button id="themeToggle" class="theme-toggle-float" title="切换主题">☀</button>
-
-    <div class="page-wrapper">
-
-        <!-- Hero -->
-        <header class="hero">
-            <div class="hero-badge">Internal Tools Platform</div>
-            <h1>MEDIA <span>TOOLS</span></h1>
-            <p class="hero-sub">视频效果生成工具矩阵 · Floway Media Internal</p>
-        </header>
-
-        <!-- Search -->
-        <div class="search-bar">
-            <span class="search-icon">⌕</span>
-            <input type="text" class="search-input" id="SearchInput" placeholder="搜索工具名称或功能..." autocomplete="off">
+    <!-- Sticky Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-logo">FLOWAY</div>
+        <div class="nav-search">
+            <span class="nav-search-icon">⌕</span>
+            <input type="text" id="SearchInput" placeholder="搜索工具..." autocomplete="off">
         </div>
+        <div class="nav-actions">
+            <button id="themeToggle" class="btn-theme" title="切换主题">☀</button>
+        </div>
+    </nav>
 
-        <!-- Filter tabs -->
-        <nav class="filter-tabs" id="FilterTabs">
-            <button class="filter-tab active" data-filter="all">全部</button>
-            <button class="filter-tab" data-filter="text">文字类</button>
-            <button class="filter-tab" data-filter="visual">视觉类</button>
-            <button class="filter-tab" data-filter="chart">图表类</button>
-            <button class="filter-tab" data-filter="particle">粒子类</button>
-        </nav>
+    <!-- Main Content -->
+    <div class="main-content">
+
+        <!-- Filter Pills -->
+        <div class="filter-bar" id="FilterTabs">
+            <button class="filter-pill active" data-filter="all">全部</button>
+            <button class="filter-pill" data-filter="text">文字类</button>
+            <button class="filter-pill" data-filter="visual">视觉类</button>
+            <button class="filter-pill" data-filter="chart">图表类</button>
+            <button class="filter-pill" data-filter="particle">粒子类</button>
+            <span class="filter-count" id="ToolCount">7 个工具</span>
+        </div>
 
         <!-- Tool Grid -->
         <main class="tool-grid" id="ToolGrid">
 
             <!-- Text Animator -->
             <a href="effects/text-animator.html" class="tool-card" data-category="text" data-name="文字动效 文字 标题 动画 VP9 录制 超采样 阴影 渐变 PNG MP4">
-                <span class="card-corner"></span>
-                <div class="card-icon">⚡</div>
-                <div class="card-header">
-                    <div class="card-info">
+                <div class="card-top">
+                    <div class="card-emoji">⚡</div>
+                    <div class="card-meta">
                         <h2>文字动效 <span class="version-tag hot">v60.6</span></h2>
-                        <div class="card-type">Text Animator</div>
+                        <div class="card-subtitle">Text Animator</div>
                     </div>
                 </div>
-                <p class="card-desc">生成科技感标题文字动画。支持 VP9 25Mbps 录制、2x 超采样、工业风阴影、透明度渐变、字体渐变颜色、透明底 PNG 序列及 MP4 导出。</p>
-                <div class="card-status"><span>启动程序</span><span class="card-arrow">→</span></div>
+                <p class="card-desc">科技感标题文字动画。支持 VP9 录制、2x 超采样、工业风阴影、渐变颜色、PNG 序列及 MP4 导出。</p>
+                <div class="card-footer">
+                    <span class="card-category-tag">文字类</span>
+                    <span class="card-go">→</span>
+                </div>
             </a>
 
             <!-- Stack Scan -->
             <a href="effects/stack-scan.html" class="tool-card" data-category="text" data-name="堆叠扫描 赛博朋克 文字 扫描 MP4 PNG">
-                <span class="card-corner"></span>
-                <div class="card-icon">📠</div>
-                <div class="card-header">
-                    <div class="card-info">
+                <div class="card-top">
+                    <div class="card-emoji">📠</div>
+                    <div class="card-meta">
                         <h2>堆叠扫描 <span class="version-tag hot">v19.4</span></h2>
-                        <div class="card-type">Stack Scan FX</div>
+                        <div class="card-subtitle">Stack Scan FX</div>
                     </div>
                 </div>
-                <p class="card-desc">生成赛博朋克风格堆叠扫描文字。支持 25Mbps MP4/PNG 序列导出、多字体斜体、透明度延迟及防掉帧渲染。</p>
-                <div class="card-status"><span>启动程序</span><span class="card-arrow">→</span></div>
+                <p class="card-desc">赛博朋克风格堆叠扫描文字。支持 25Mbps MP4/PNG 序列导出、多字体斜体、透明度延迟及防掉帧渲染。</p>
+                <div class="card-footer">
+                    <span class="card-category-tag">文字类</span>
+                    <span class="card-go">→</span>
+                </div>
             </a>
 
             <!-- Logo Matrix -->
             <a href="effects/logo-matrix.html" class="tool-card" data-category="visual" data-name="Logo 矩阵 循环 背景 阵列 羽化 纹理 H.264">
-                <span class="card-corner"></span>
-                <div class="card-icon">💠</div>
-                <div class="card-header">
-                    <div class="card-info">
+                <div class="card-top">
+                    <div class="card-emoji">💠</div>
+                    <div class="card-meta">
                         <h2>Logo 矩阵 <span class="version-tag">v25.0</span></h2>
-                        <div class="card-type">Matrix Generator</div>
+                        <div class="card-subtitle">Matrix Generator</div>
                     </div>
                 </div>
-                <p class="card-desc">生成循环 Logo 阵列背景。支持 25Mbps 帧同步录制、羽化遮罩、自定义底图及多种科技纹理（网格/点阵），可导出 PNG 序列以及 H.264。</p>
-                <div class="card-status"><span>启动程序</span><span class="card-arrow">→</span></div>
+                <p class="card-desc">循环 Logo 阵列背景。支持帧同步录制、羽化遮罩、自定义底图及多种科技纹理，可导出 PNG 序列及 H.264。</p>
+                <div class="card-footer">
+                    <span class="card-category-tag">视觉类</span>
+                    <span class="card-go">→</span>
+                </div>
             </a>
 
             <!-- Particle Field -->
             <a href="effects/particle-field.html" class="tool-card" data-category="particle" data-name="粒子场 动态 粒子 连线 效果">
-                <span class="card-corner"></span>
-                <div class="card-icon">✨</div>
-                <div class="card-header">
-                    <div class="card-info">
+                <div class="card-top">
+                    <div class="card-emoji">✨</div>
+                    <div class="card-meta">
                         <h2>粒子场 <span class="version-tag hot">v1.0</span></h2>
-                        <div class="card-type">Particle Field</div>
+                        <div class="card-subtitle">Particle Field</div>
                     </div>
                 </div>
-                <p class="card-desc">生成动态粒子连线场效果。可调节粒子数量、大小、速度及连线距离。</p>
-                <div class="card-status"><span>启动程序</span><span class="card-arrow">→</span></div>
+                <p class="card-desc">动态粒子连线场效果。可调节粒子数量、大小、速度及连线距离。</p>
+                <div class="card-footer">
+                    <span class="card-category-tag">粒子类</span>
+                    <span class="card-go">→</span>
+                </div>
             </a>
 
             <!-- Chart FX -->
             <a href="effects/chart-fx.html" class="tool-card" data-category="chart" data-name="图表 折线图 纸张 赛博 WebGL 3D 漂浮 数据可视化">
-                <span class="card-corner"></span>
-                <div class="card-icon">📈</div>
-                <div class="card-header">
-                    <div class="card-info">
+                <div class="card-top">
+                    <div class="card-emoji">📈</div>
+                    <div class="card-meta">
                         <h2>图表效果 <span class="version-tag hot">v3.0</span></h2>
-                        <div class="card-type">Chart FX</div>
+                        <div class="card-subtitle">Chart FX</div>
                     </div>
                 </div>
-                <p class="card-desc">双风格动态折线图。纸张模式：噪声纹理+手绘线条+暖色调。赛博模式：暗色卡片+发光曲线+冷色调。共用 WebGL 3D 漂浮合成，支持 MP4/WebM/PNG 序列导出。</p>
-                <div class="card-status"><span>启动程序</span><span class="card-arrow">→</span></div>
+                <p class="card-desc">双风格动态折线图。纸张模式：噪声纹理+手绘线条。赛博模式：暗色卡片+发光曲线。WebGL 3D 漂浮合成。</p>
+                <div class="card-footer">
+                    <span class="card-category-tag">图表类</span>
+                    <span class="card-go">→</span>
+                </div>
             </a>
+
+            <!-- Line Chart -->
+            <a href="effects/line-chart.html" class="tool-card" data-category="chart" data-name="折线图 简洁 数据 可视化 动画">
+                <div class="card-top">
+                    <div class="card-emoji">📉</div>
+                    <div class="card-meta">
+                        <h2>简洁折线图 <span class="version-tag">v2.0</span></h2>
+                        <div class="card-subtitle">Line Chart</div>
+                    </div>
+                </div>
+                <p class="card-desc">简洁风格动态折线图。支持自定义数据、动画时长调节、多种导出格式。</p>
+                <div class="card-footer">
+                    <span class="card-category-tag">图表类</span>
+                    <span class="card-go">→</span>
+                </div>
+            </a>
+
+            <!-- Paper Chart -->
+            <a href="effects/paper-chart.html" class="tool-card" data-category="chart" data-name="纸张 折线图 手绘 纹理 暖色 数据">
+                <div class="card-top">
+                    <div class="card-emoji">📋</div>
+                    <div class="card-meta">
+                        <h2>纸张折线图 <span class="version-tag">v2.0</span></h2>
+                        <div class="card-subtitle">Paper Chart</div>
+                    </div>
+                </div>
+                <p class="card-desc">纸张纹理风格折线图。噪声背景+手绘线条+暖色调。</p>
+                <div class="card-footer">
+                    <span class="card-category-tag">图表类</span>
+                    <span class="card-go">→</span>
+                </div>
+            </a>
+
+            <!-- Dev Section Divider -->
+            <div class="section-divider"><span>开发中</span></div>
 
             <!-- 3D Card (dev) -->
             <div class="tool-card disabled" data-category="visual" data-name="3D 卡片 悬浮 展示 图片 视频">
-                <span class="card-corner"></span>
-                <div class="card-icon">🧊</div>
-                <div class="card-header">
-                    <div class="card-info">
-                        <h2>3D 卡片 <span class="version-tag">v1.0</span></h2>
-                        <div class="card-type">Card Generator</div>
+                <div class="card-top">
+                    <div class="card-emoji">🧊</div>
+                    <div class="card-meta">
+                        <h2>3D 卡片 <span class="version-tag">DEV</span></h2>
+                        <div class="card-subtitle">Card Generator</div>
                     </div>
                 </div>
-                <p class="card-desc">生成伪 3D 悬浮展示卡片。支持图片/视频素材导入，自定义圆角、透视角度及动态高光。</p>
-                <div class="card-status"><span>开发中...</span><span style="font-size:14px;">🔒</span></div>
+                <p class="card-desc">伪 3D 悬浮展示卡片。支持图片/视频素材导入，自定义圆角、透视角度及动态高光。</p>
+                <div class="card-footer">
+                    <span class="card-category-tag">视觉类</span>
+                    <span class="card-go">🔒</span>
+                </div>
             </div>
 
             <!-- Holo Chart (dev) -->
             <div class="tool-card disabled" data-category="chart" data-name="全息 图表 柱状图 雷达图 赛博 数据可视化">
-                <span class="card-corner"></span>
-                <div class="card-icon">📊</div>
-                <div class="card-header">
-                    <div class="card-info">
+                <div class="card-top">
+                    <div class="card-emoji">📊</div>
+                    <div class="card-meta">
                         <h2>全息图表 <span class="version-tag">DEV</span></h2>
-                        <div class="card-type">Holo Chart</div>
+                        <div class="card-subtitle">Holo Chart</div>
                     </div>
                 </div>
-                <p class="card-desc">赛博风格数据可视化生成器。支持动态柱状图、雷达图生长动画。</p>
-                <div class="card-status"><span>开发中...</span><span style="font-size:14px;">🔒</span></div>
+                <p class="card-desc">赛博风格数据可视化。支持动态柱状图、雷达图生长动画。</p>
+                <div class="card-footer">
+                    <span class="card-category-tag">图表类</span>
+                    <span class="card-go">🔒</span>
+                </div>
             </div>
 
         </main>
 
         <!-- No results -->
         <div class="no-results" id="NoResults">
-            <div class="no-results-icon">∅</div>
+            <div class="no-results-icon">⌕</div>
             <p>没有找到匹配的工具</p>
         </div>
 
         <footer>
-            &copy; 2026 FlowayMedia Internal Tools.<br>
-            <span>Authorized Personnel Only.</span>
+            &copy; 2026 FlowayMedia Internal Tools · <span>Authorized Personnel Only</span>
         </footer>
 
     </div>
@@ -731,37 +641,40 @@
         });
         btn.textContent = getTheme().id === 'dark' ? '☀' : '🌙';
 
-        // ====== Staggered Card Entrance Animation ======
+        // ====== Staggered Card Entrance ======
         const cards = document.querySelectorAll('.tool-card:not(.disabled)');
+        const toolCount = document.getElementById('ToolCount');
+
         const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry, i) => {
+            entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                     const idx = Array.from(cards).indexOf(entry.target);
-                    entry.target.style.transitionDelay = `${idx * 0.07}s`;
+                    entry.target.style.transitionDelay = `${idx * 0.05}s`;
                     entry.target.classList.add('visible');
                     observer.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.1 });
+        }, { threshold: 0.05 });
 
         cards.forEach(card => observer.observe(card));
 
-        // Also show disabled cards after active ones finish
+        // Show disabled cards
         setTimeout(() => {
             document.querySelectorAll('.tool-card.disabled').forEach(card => {
                 card.style.transitionDelay = '0s';
-                card.style.opacity = '0.45';
-                card.style.transform = 'none';
+                card.classList.add('visible');
             });
-        }, cards.length * 70 + 400);
+        }, cards.length * 50 + 200);
 
-        // ====== Search Filter ======
+        // ====== Search + Filter ======
         const searchInput = document.getElementById('SearchInput');
         const noResults = document.getElementById('NoResults');
+        const sectionDivider = document.querySelector('.section-divider');
 
         function filterCards(query, category) {
             const q = query.toLowerCase().trim();
-            let visibleCount = 0;
+            let visibleActive = 0;
+            let visibleDev = 0;
 
             document.querySelectorAll('.tool-card').forEach(card => {
                 const nameMatch = !q || card.dataset.name.toLowerCase().includes(q);
@@ -771,33 +684,42 @@
                 if (nameMatch && catMatch) {
                     card.style.display = '';
                     if (!isDisabled && !card.classList.contains('visible')) {
-                        // If not yet revealed by intersection observer, reveal immediately
                         card.classList.add('visible');
                     }
-                    visibleCount++;
+                    if (isDisabled) visibleDev++;
+                    else visibleActive++;
                 } else {
                     card.style.display = 'none';
                 }
             });
 
-            noResults.classList.toggle('show', visibleCount === 0);
+            // Show/hide dev section divider
+            if (sectionDivider) {
+                sectionDivider.style.display = (visibleDev > 0 && (category === 'all' || visibleDev > 0)) ? '' : 'none';
+            }
+
+            // Update count
+            const total = visibleActive + visibleDev;
+            toolCount.textContent = `${visibleActive} 个工具` + (visibleDev > 0 ? ` · ${visibleDev} 开发中` : '');
+
+            noResults.classList.toggle('show', total === 0);
         }
 
         searchInput.addEventListener('input', (e) => {
-            const activeTab = document.querySelector('.filter-tab.active');
+            const activeTab = document.querySelector('.filter-pill.active');
             filterCards(e.target.value, activeTab?.dataset.filter || 'all');
         });
 
-        // ====== Category Tabs ======
+        // ====== Category Pills ======
         const filterTabs = document.getElementById('FilterTabs');
         filterTabs.addEventListener('click', (e) => {
-            const tab = e.target.closest('.filter-tab');
-            if (!tab) return;
+            const pill = e.target.closest('.filter-pill');
+            if (!pill) return;
 
-            filterTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
+            filterTabs.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
 
-            filterCards(searchInput.value, tab.dataset.filter);
+            filterCards(searchInput.value, pill.dataset.filter);
         });
     </script>
 </body>
