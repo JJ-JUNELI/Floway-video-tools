@@ -3,187 +3,690 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FLOWAY MEDIA TOOLS MATRIX | 循流视频效果工具</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>FLOWAY MEDIA TOOLS | 循流视频效果工具</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared/base.css">
     <script src="shared/themes.js"></script>
 
     <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex; flex-direction: column; align-items: center;
-            background-image:
-                linear-gradient(rgba(255,255,255,var(--theme-grid-opacity,0.03)) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,var(--theme-grid-opacity,0.03)) 1px, transparent 1px);
-            background-size: 30px 30px;
-        }
-        header { text-align: center; padding: 50px 20px 30px; width: 100%; box-sizing: border-box; }
-        h1 { font-family: 'Orbitron', sans-serif; font-size: 28px; margin: 0; color: #fff; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 0 15px var(--accent-glow, rgba(0,242,255,0.2)); }
-        h1 span { color: var(--accent); }
-        .subtitle { color: var(--text-sub); margin-top: 8px; font-size: 12px; letter-spacing: 1px; opacity: 0.8; }
-        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; max-width: 1000px; padding: 20px; box-sizing: border-box; }
-        .tool-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 25px; text-decoration: none; display: flex; flex-direction: column; position: relative; overflow: hidden; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; }
-        @media (hover: hover) { .tool-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 30px var(--card-glow, rgba(0,242,255,0.1)); } .tool-card:hover .arrow { transform: translateX(5px); } }
-        .tool-card:active { transform: scale(0.98); background: var(--card-hover); border-color: var(--accent); }
-        .tool-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-        .tool-icon { font-size: 32px; background: var(--icon-bg); width: 50px; height: 50px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); }
-        .tool-info h2 { font-size: 16px; margin: 0 0 4px 0; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
-        .version-tag { font-size: 9px; background: var(--version-bg); color: var(--text-sub); padding: 2px 5px; border-radius: 4px; font-weight: normal; font-family: monospace; }
-        .tool-desc { font-size: 12px; color: var(--text-sub); line-height: 1.5; margin-bottom: 20px; flex: 1; }
-        .tool-status { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed var(--border); padding-top: 15px; }
-        .arrow { transition: 0.2s; font-size: 14px; }
-        :root { --corner-color: rgba(139,92,246,0.25); }
-        .card-corner { position: absolute; top: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 30px 30px 0; border-color: transparent var(--corner-color) transparent transparent; transition: 0.3s; }
-        footer { margin-top: auto; padding: 30px; font-size: 10px; color: var(--footer-text); text-align: center; }
+        /* ========================================
+           RESET & BASE — override base.css body rules
+           ======================================== */
 
-        /* 亮色主题补充 */
-        [data-theme="light"] {
-            --theme-grid-opacity: 0.04;
-            --card-glow: rgba(0,0,0,0.08);
-            --icon-bg: rgba(0,0,0,0.04);
-            --card-hover: #f5f5f5;
-            --version-bg: #f0f0f0;
-            --corner-color: #f5f5f5;
-            --footer-text: #bbb;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --index-bg: #0a0a0f;
+            --index-surface: #12121a;
+            --index-card: #1a1a26;
+            --index-card-hover: #222233;
+            --index-border: #2a2a3a;
+            --index-accent: #00f2ff;
+            --index-accent-dim: rgba(0,242,255,0.08);
+            --index-glow: rgba(0,242,255,0.15);
+            --index-text: #e8e8f0;
+            --index-text-dim: #6b6b80;
+            --index-radius: 16px;
+            --index-font-display: 'Orbitron', monospace;
+            --index-font-body: 'Noto Sans SC', -apple-system, sans-serif;
+            --index-font-mono: 'JetBrains Mono', monospace;
         }
-        [data-theme="light"] body {
+
+        [data-theme="light"] {
+            --index-bg: #f0f0f5;
+            --index-surface: #ffffff;
+            --index-card: #ffffff;
+            --index-card-hover: #f8f8fc;
+            --index-border: #e0e0e8;
+            --index-accent: #0066cc;
+            --index-accent-dim: rgba(0,102,204,0.06);
+            --index-glow: rgba(0,102,204,0.08);
+            --index-text: #1a1a2e;
+            --index-text-dim: #888899;
+        }
+
+        html, body {
+            height: auto; min-height: 100vh;
+            overflow-x: hidden;
+            background: var(--index-bg);
+            color: var(--index-text);
+            font-family: var(--index-font-body);
+            user-select: none;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ========================================
+           BACKGROUND ATMOSPHERE
+           ======================================== */
+
+        .bg-layer {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+        }
+
+        .bg-grid {
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 20%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 20%, transparent 70%);
+        }
+
+        [data-theme="light"] .bg-grid {
             background-image:
                 linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
         }
-        [data-theme="light"] h1 { text-shadow: none; color: #222; }
-        [data-theme="light"] h1 span { color: #555; }
-        [data-theme="light"] .tool-card { box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-color: #eee; }
-        @media (hover: hover) {
-            [data-theme="light"] .tool-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.10); border-color: #ccc; }
-        }
-        [data-theme="light"] .tool-icon { background: rgba(0,0,0,0.04); border-color: #ddd; }
-        [data-theme="light"] .tool-info h2 { color: #222; }
-        [data-theme="light"] .tool-status { border-top-color: #eee; }
-        [data-theme="light"] .card-corner { border-color: transparent #f5f5f5 transparent transparent; }
 
-        @media (min-width: 768px) { h1 { font-size: 42px; } .subtitle { font-size: 14px; } .grid-container { padding: 40px; } }
+        .bg-glow-1, .bg-glow-2 {
+            position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.4;
+        }
+        .bg-glow-1 {
+            width: 600px; height: 600px;
+            top: -200px; right: -100px;
+            background: var(--index-accent);
+            opacity: 0.06;
+        }
+        .bg-glow-2 {
+            width: 400px; height: 400px;
+            bottom: 10%; left: -100px;
+            background: #7c3aed;
+            opacity: 0.04;
+        }
+
+        [data-theme="light"] .bg-glow-1 { opacity: 0.08; }
+        [data-theme="light"] .bg-glow-2 { opacity: 0.05; }
+
+        /* ========================================
+           MAIN LAYOUT
+           ======================================== */
+
+        .page-wrapper {
+            position: relative; z-index: 1;
+            max-width: 1100px; margin: 0 auto;
+            padding: 48px 32px 80px;
+        }
+
+        /* ========================================
+           HEADER / HERO
+           ======================================== */
+
+        .hero {
+            text-align: center; padding: 40px 0 48px;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 5px 14px; border-radius: 20px;
+            font-size: 11px; font-weight: 600;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            background: var(--index-accent-dim);
+            color: var(--index-accent);
+            border: 1px solid var(--index-accent);
+            opacity: 0;
+            animation: heroFadeIn 0.6s ease-out 0.1s forwards;
+            font-family: var(--index-font-mono);
+        }
+
+        .hero-badge::before {
+            content: ''; width: 6px; height: 6px;
+            border-radius: 50%; background: var(--index-accent);
+            box-shadow: 0 0 8px var(--index-accent);
+            animation: pulse-dot 2s infinite;
+        }
+
+        .hero h1 {
+            font-family: var(--index-font-display);
+            font-size: clamp(28px, 5vw, 52px);
+            font-weight: 900; letter-spacing: 4px;
+            line-height: 1.15; margin-top: 20px;
+            opacity: 0;
+            animation: heroSlideUp 0.7s ease-out 0.2s forwards;
+        }
+
+        .hero h1 span { color: var(--index-accent); }
+
+        .hero-sub {
+            font-size: 14px; color: var(--index-text-dim);
+            letter-spacing: 0.5px; margin-top: 12px;
+            opacity: 0;
+            animation: heroFadeIn 0.6s ease-out 0.35s forwards;
+        }
+
+        /* ========================================
+           SEARCH BAR
+           ======================================== */
+
+        .search-bar {
+            max-width: 480px; margin: 28px auto 0;
+            position: relative;
+            opacity: 0;
+            animation: heroFadeIn 0.6s ease-out 0.45s forwards;
+        }
+
+        .search-input {
+            width: 100%; padding: 14px 20px 14px 48px;
+            border-radius: 12px; border: 1px solid var(--index-border);
+            background: var(--index-surface);
+            color: var(--index-text);
+            font-size: 14px; font-family: var(--index-font-body);
+            outline: none; transition: all 0.25s;
+        }
+
+        .search-input::placeholder { color: var(--index-text-dim); }
+        .search-input:focus {
+            border-color: var(--index-accent);
+            box-shadow: 0 0 0 3px var(--index-accent-dim), 0 8px 32px var(--index-glow);
+        }
+
+        .search-icon {
+            position: absolute; left: 17px; top: 50%; transform: translateY(-50%);
+            color: var(--index-text-dim); font-size: 16px; pointer-events: none;
+        }
+
+        /* ========================================
+           CATEGORY FILTER TABS
+           ======================================== */
+
+        .filter-tabs {
+            display: flex; justify-content: center; gap: 6px;
+            margin: 36px 0 8px; flex-wrap: wrap;
+            opacity: 0;
+            animation: heroFadeIn 0.5s ease-out 0.55s forwards;
+        }
+
+        .filter-tab {
+            padding: 7px 18px; border-radius: 20px;
+            font-size: 12px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--index-text-dim);
+            font-family: var(--index-font-body);
+        }
+
+        .filter-tab:hover { color: var(--index-text); background: var(--index-accent-dim); }
+        .filter-tab.active {
+            background: var(--index-accent); color: #000;
+            border-color: var(--index-accent);
+            font-weight: 700;
+        }
+
+        /* ========================================
+           TOOL GRID
+           ======================================== */
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        /* ========================================
+           TOOL CARD
+           ======================================== */
+
+        .tool-card {
+            position: relative;
+            background: var(--index-card);
+            border: 1px solid var(--index-border);
+            border-radius: var(--index-radius);
+            padding: 28px 26px;
+            text-decoration: none;
+            color: inherit;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            opacity: 0; transform: translateY(24px);
+            /* stagger handled via inline style */
+        }
+
+        .tool-card.visible {
+            opacity: 1; transform: translateY(0);
+        }
+
+        .tool-card::before {
+            content: ''; position: absolute; inset: 0;
+            border-radius: var(--index-radius);
+            padding: 1px;
+            background: linear-gradient(135deg, transparent 40%, var(--index-accent) 100%);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude; -webkit-mask-composite: xor;
+            opacity: 0; transition: opacity 0.35s;
+        }
+
+        @media (hover: hover) {
+            .tool-card:hover {
+                transform: translateY(-6px);
+                border-color: var(--index-accent);
+                box-shadow:
+                    0 12px 40px rgba(0,0,0,0.25),
+                    0 0 60px var(--index-glow);
+            }
+            .tool-card:hover::before { opacity: 1; }
+            .tool-card:hover .card-icon {
+                transform: scale(1.08);
+                box-shadow: 0 0 24px var(--index-glow);
+            }
+            .tool-card:hover .card-arrow { transform: translateX(4px); opacity: 1; }
+        }
+
+        .tool-card:active { transform: scale(0.98); }
+
+        /* Disabled / Dev state */
+        .tool-card.disabled {
+            opacity: 0.45;
+            filter: grayscale(0.6);
+            pointer-events: none;
+        }
+        .tool-card.disabled .card-status { color: var(--index-text-dim); }
+        .tool-card.disabled .card-status::after { content: 'DEV'; }
+
+        /* Card corner accent */
+        .card-corner {
+            position: absolute; top: 0; right: 0;
+            width: 0; height: 0;
+            border-style: solid;
+            border-width: 0 36px 36px 0;
+            border-color: transparent var(--index-accent-dim) transparent transparent;
+            transition: border-color 0.3s;
+        }
+        @media (hover: hover) {
+            .tool-card:hover .card-corner {
+                border-color: transparent var(--index-accent) transparent transparent;
+            }
+        }
+
+        /* Card icon */
+        .card-icon {
+            width: 56px; height: 56px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            background: var(--index-accent-dim);
+            border: 1px solid var(--index-border);
+            margin-bottom: 18px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        /* Card header */
+        .card-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
+
+        .card-info h2 {
+            font-size: 17px; font-weight: 700; margin: 0 0 3px 0;
+            color: var(--index-text); display: flex; align-items: center; gap: 8px;
+            line-height: 1.3;
+        }
+
+        .version-tag {
+            font-size: 9px; font-family: var(--index-font-mono);
+            background: var(--index-surface); color: var(--index-text-dim);
+            padding: 2px 7px; border-radius: 4px; font-weight: 600;
+            letter-spacing: 0.3px; border: 1px solid var(--index-border);
+        }
+
+        .version-tag.hot { color: var(--index-accent); border-color: var(--index-accent); background: var(--index-accent-dim); }
+
+        .card-type {
+            font-size: 10px; color: var(--index-text-dim);
+            letter-spacing: 1px; text-transform: uppercase;
+            font-family: var(--index-font-mono);
+        }
+
+        /* Card description */
+        .card-desc {
+            font-size: 13px; color: var(--index-text-dim);
+            line-height: 1.6; margin-bottom: 20px;
+            flex: 1;
+        }
+
+        /* Card footer */
+        .card-status {
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.2px;
+            color: var(--index-accent);
+            display: flex; align-items: center; justify-content: space-between;
+            border-top: 1px dashed var(--index-border);
+            padding-top: 14px;
+        }
+
+        .card-arrow {
+            font-size: 14px; opacity: 0.4;
+            transition: all 0.25s;
+        }
+
+        /* Category label on card */
+        .card-category {
+            position: absolute; top: 16px; left: 16px;
+            font-size: 9px; font-family: var(--index-font-mono);
+            text-transform: uppercase; letter-spacing: 1px;
+            color: var(--index-text-dim);
+            opacity: 0.5;
+        }
+
+        /* ========================================
+           FOOTER
+           ======================================== */
+
+        footer {
+            text-align: center; padding: 48px 0 24px;
+            font-size: 11px; color: var(--index-text-dim);
+            letter-spacing: 0.5px;
+            border-top: 1px solid var(--index-border);
+            margin-top: 48px;
+        }
+
+        footer span { opacity: 0.5; }
+
+        /* ========================================
+           THEME TOGGLE (floating)
+           ======================================== */
+
+        .theme-toggle-float {
+            position: fixed; top: 20px; right: 20px; z-index: 100;
+            width: 40px; height: 40px; border-radius: 10px;
+            border: 1px solid var(--index-border);
+            background: var(--index-surface);
+            color: var(--index-text-dim); cursor: pointer;
+            font-size: 17px; display: flex; align-items: center;
+            justify-content: center; transition: all 0.25s;
+        }
+        .theme-toggle-float:hover {
+            border-color: var(--index-accent); color: var(--index-accent);
+            box-shadow: 0 0 20px var(--index-glow);
+        }
+
+        /* ========================================
+           NO RESULTS
+           ======================================== */
+
+        .no-results {
+            grid-column: 1 / -1; text-align: center;
+            padding: 60px 20px; color: var(--index-text-dim);
+            font-size: 14px; display: none;
+        }
+        .no-results.show { display: block; }
+        .no-results-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+
+        /* ========================================
+           KEYFRAMES
+           ======================================== */
+
+        @keyframes heroFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes heroSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--index-accent); }
+            50%      { opacity: 0.4; box-shadow: 0 0 2px var(--index-accent); }
+        }
+
+        /* ========================================
+           RESPONSIVE
+           ======================================== */
+
+        @media (max-width: 720px) {
+            .page-wrapper { padding: 28px 16px 60px; }
+            .hero { padding: 28px 0 36px; }
+            .hero h1 { letter-spacing: 2px; }
+            .search-bar { margin: 20px auto 0; }
+            .filter-tabs { gap: 4px; margin: 24px 0 4px; }
+            .filter-tab { padding: 6px 14px; font-size: 11px; }
+            .tool-grid { grid-template-columns: 1fr; gap: 14px; }
+            .tool-card { padding: 22px 20px; }
+            .theme-toggle-float { top: 12px; right: 12px; width: 36px; height: 36px; }
+        }
+
+        /* ========================================
+           REDUCED MOTION
+           ======================================== */
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+            .tool-card { opacity: 1; transform: none; }
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        <div style="display:flex; align-items:center; justify-content:space-between; max-width:1000px; margin:0 auto;">
-            <div style="text-align:left;">
-                <h1>MEDIA <span>TOOLS</span></h1>
-                <div class="subtitle">内部效果工具平台 · Internal Only</div>
-            </div>
-            <button id="themeToggle" title="切换主题" class="btn-icon" style="font-size:16px;">☀</button>
-        </div>
-    </header>
-
-    <div class="grid-container">
-
-        <a href="effects/text-animator.html" class="tool-card">
-            <div class="card-corner"></div>
-            <div class="tool-header">
-                <div class="tool-icon">⚡</div>
-                <div class="tool-info">
-                    <h2>文字动效 <span class="version-tag">v60.6</span></h2>
-                    <div style="font-size:10px; color:var(--text-sub);">TEXT ANIMATOR</div>
-                </div>
-            </div>
-            <div class="tool-desc">生成科技感标题文字。支持 VP9 25Mbps 录制、2x 超采样、工业风阴影、透明度过度调节、字体渐变颜色、透明底png序列、MP4格式导出。</div>
-            <div class="tool-status"><span>启动程序</span> <span class="arrow">→</span></div>
-        </a>
-
-        <a href="effects/stack-scan.html" class="tool-card">
-            <div class="card-corner"></div>
-            <div class="tool-header">
-                <div class="tool-icon">📠</div>
-                <div class="tool-info">
-                    <h2>堆叠扫描 <span class="version-tag" style="color:var(--accent)">v19.4</span></h2>
-                    <div style="font-size:10px; color:var(--text-sub);">STACK SCAN FX</div>
-                </div>
-            </div>
-            <div class="tool-desc">生成赛博朋克风格堆叠扫描文字。支持 25Mbps MP4/PNG 序列导出、多字体斜体、透明度延迟及防掉帧渲染。</div>
-            <div class="tool-status"><span>启动程序</span> <span class="arrow">→</span></div>
-        </a>
-
-        <a href="effects/logo-matrix.html" class="tool-card">
-            <div class="card-corner"></div>
-            <div class="tool-header">
-                <div class="tool-icon">💠</div>
-                <div class="tool-info">
-                    <h2>Logo 矩阵 <span class="version-tag">v25.0</span></h2>
-                    <div style="font-size:10px; color:var(--text-sub);">MATRIX GENERATOR</div>
-                </div>
-            </div>
-            <div class="tool-desc">生成循环 Logo 阵列背景。支持 25Mbps 帧同步录制、羽化遮罩、自定义底图及多种科技纹理（网格/点阵），可导出 PNG 序列以及 H.264。</div>
-            <div class="tool-status"><span>启动程序</span> <span class="arrow">→</span></div>
-        </a>
-
-        <a href="effects/particle-field.html" class="tool-card">
-            <div class="card-corner"></div>
-            <div class="tool-header">
-                <div class="tool-icon">✨</div>
-                <div class="tool-info">
-                    <h2>粒子场 <span class="version-tag" style="color:var(--accent)">v1.0</span></h2>
-                    <div style="font-size:10px; color:var(--text-sub);">PARTICLE FIELD</div>
-                </div>
-            </div>
-            <div class="tool-desc">生成动态粒子连线场效果。可调节粒子数量、大小、速度及连线距离。</div>
-            <div class="tool-status"><span>启动程序</span> <span class="arrow">→</span></div>
-        </a>
-
-        <div class="tool-card" style="opacity: 0.5; filter: grayscale(1);">
-            <div class="tool-header">
-                <div class="tool-icon">🧊</div>
-                <div class="tool-info">
-                    <h2>3D 卡片 <span class="version-tag">v1.0</span></h2>
-                    <div style="font-size:10px; color:var(--text-sub);">CARD GENERATOR</div>
-                </div>
-            </div>
-            <div class="tool-desc">生成伪 3D 悬浮展示卡片。支持图片/视频素材导入，自定义圆角、透视角度及动态高光。</div>
-            <div class="tool-status" style="color:var(--text-sub); border-top-color:var(--border);"><span>开发中...</span> <span>🔒</span></div>
-        </div>
-
-        <a href="effects/chart-fx.html" class="tool-card">
-            <div class="card-corner"></div>
-            <div class="tool-header">
-                <div class="tool-icon">📈</div>
-                <div class="tool-info">
-                    <h2>图表效果 <span class="version-tag" style="color:var(--accent)">v3.0</span></h2>
-                    <div style="font-size:10px; color:var(--text-sub);">CHART FX</div>
-                </div>
-            </div>
-            <div class="tool-desc">双风格动态折线图。纸张模式：噪声纹理+手绘线条+暖色调。赛博模式：暗色卡片+发光曲线+冷色调。共用 WebGL 3D 漂浮、数据表格、动画系统。支持 MP4/WebM/PNG 序列导出。</div>
-            <div class="tool-status"><span>启动程序</span> <span class="arrow">→</span></div>
-        </a>
-
-        <div class="tool-card" style="opacity: 0.5; filter: grayscale(1);">
-            <div class="tool-header">
-                <div class="tool-icon">📊</div>
-                <div class="tool-info">
-                    <h2>全息图表 <span class="version-tag">DEV</span></h2>
-                    <div style="font-size:10px; color:var(--text-sub);">HOLO CHART</div>
-                </div>
-            </div>
-            <div class="tool-desc">赛博风格数据可视化生成器。支持动态柱状图、雷达图生长动画。</div>
-            <div class="tool-status" style="color:var(--text-sub); border-top-color:var(--border);"><span>开发中...</span> <span>🔒</span></div>
-        </div>
-
+    <!-- Background atmosphere -->
+    <div class="bg-layer">
+        <div class="bg-grid"></div>
+        <div class="bg-glow-1"></div>
+        <div class="bg-glow-2"></div>
     </div>
 
-    <footer>
-        &copy; 2026 FlowayMedia Internal Tools.<br>Authorized Personnel Only.
-    </footer>
+    <!-- Theme toggle -->
+    <button id="themeToggle" class="theme-toggle-float" title="切换主题">☀</button>
+
+    <div class="page-wrapper">
+
+        <!-- Hero -->
+        <header class="hero">
+            <div class="hero-badge">Internal Tools Platform</div>
+            <h1>MEDIA <span>TOOLS</span></h1>
+            <p class="hero-sub">视频效果生成工具矩阵 · Floway Media Internal</p>
+        </header>
+
+        <!-- Search -->
+        <div class="search-bar">
+            <span class="search-icon">⌕</span>
+            <input type="text" class="search-input" id="SearchInput" placeholder="搜索工具名称或功能..." autocomplete="off">
+        </div>
+
+        <!-- Filter tabs -->
+        <nav class="filter-tabs" id="FilterTabs">
+            <button class="filter-tab active" data-filter="all">全部</button>
+            <button class="filter-tab" data-filter="text">文字类</button>
+            <button class="filter-tab" data-filter="visual">视觉类</button>
+            <button class="filter-tab" data-filter="chart">图表类</button>
+            <button class="filter-tab" data-filter="particle">粒子类</button>
+        </nav>
+
+        <!-- Tool Grid -->
+        <main class="tool-grid" id="ToolGrid">
+
+            <!-- Text Animator -->
+            <a href="effects/text-animator.html" class="tool-card" data-category="text" data-name="文字动效 文字 标题 动画 VP9 录制 超采样 阴影 渐变 PNG MP4">
+                <span class="card-corner"></span>
+                <div class="card-icon">⚡</div>
+                <div class="card-header">
+                    <div class="card-info">
+                        <h2>文字动效 <span class="version-tag hot">v60.6</span></h2>
+                        <div class="card-type">Text Animator</div>
+                    </div>
+                </div>
+                <p class="card-desc">生成科技感标题文字动画。支持 VP9 25Mbps 录制、2x 超采样、工业风阴影、透明度渐变、字体渐变颜色、透明底 PNG 序列及 MP4 导出。</p>
+                <div class="card-status"><span>启动程序</span><span class="card-arrow">→</span></div>
+            </a>
+
+            <!-- Stack Scan -->
+            <a href="effects/stack-scan.html" class="tool-card" data-category="text" data-name="堆叠扫描 赛博朋克 文字 扫描 MP4 PNG">
+                <span class="card-corner"></span>
+                <div class="card-icon">📠</div>
+                <div class="card-header">
+                    <div class="card-info">
+                        <h2>堆叠扫描 <span class="version-tag hot">v19.4</span></h2>
+                        <div class="card-type">Stack Scan FX</div>
+                    </div>
+                </div>
+                <p class="card-desc">生成赛博朋克风格堆叠扫描文字。支持 25Mbps MP4/PNG 序列导出、多字体斜体、透明度延迟及防掉帧渲染。</p>
+                <div class="card-status"><span>启动程序</span><span class="card-arrow">→</span></div>
+            </a>
+
+            <!-- Logo Matrix -->
+            <a href="effects/logo-matrix.html" class="tool-card" data-category="visual" data-name="Logo 矩阵 循环 背景 阵列 羽化 纹理 H.264">
+                <span class="card-corner"></span>
+                <div class="card-icon">💠</div>
+                <div class="card-header">
+                    <div class="card-info">
+                        <h2>Logo 矩阵 <span class="version-tag">v25.0</span></h2>
+                        <div class="card-type">Matrix Generator</div>
+                    </div>
+                </div>
+                <p class="card-desc">生成循环 Logo 阵列背景。支持 25Mbps 帧同步录制、羽化遮罩、自定义底图及多种科技纹理（网格/点阵），可导出 PNG 序列以及 H.264。</p>
+                <div class="card-status"><span>启动程序</span><span class="card-arrow">→</span></div>
+            </a>
+
+            <!-- Particle Field -->
+            <a href="effects/particle-field.html" class="tool-card" data-category="particle" data-name="粒子场 动态 粒子 连线 效果">
+                <span class="card-corner"></span>
+                <div class="card-icon">✨</div>
+                <div class="card-header">
+                    <div class="card-info">
+                        <h2>粒子场 <span class="version-tag hot">v1.0</span></h2>
+                        <div class="card-type">Particle Field</div>
+                    </div>
+                </div>
+                <p class="card-desc">生成动态粒子连线场效果。可调节粒子数量、大小、速度及连线距离。</p>
+                <div class="card-status"><span>启动程序</span><span class="card-arrow">→</span></div>
+            </a>
+
+            <!-- Chart FX -->
+            <a href="effects/chart-fx.html" class="tool-card" data-category="chart" data-name="图表 折线图 纸张 赛博 WebGL 3D 漂浮 数据可视化">
+                <span class="card-corner"></span>
+                <div class="card-icon">📈</div>
+                <div class="card-header">
+                    <div class="card-info">
+                        <h2>图表效果 <span class="version-tag hot">v3.0</span></h2>
+                        <div class="card-type">Chart FX</div>
+                    </div>
+                </div>
+                <p class="card-desc">双风格动态折线图。纸张模式：噪声纹理+手绘线条+暖色调。赛博模式：暗色卡片+发光曲线+冷色调。共用 WebGL 3D 漂浮合成，支持 MP4/WebM/PNG 序列导出。</p>
+                <div class="card-status"><span>启动程序</span><span class="card-arrow">→</span></div>
+            </a>
+
+            <!-- 3D Card (dev) -->
+            <div class="tool-card disabled" data-category="visual" data-name="3D 卡片 悬浮 展示 图片 视频">
+                <span class="card-corner"></span>
+                <div class="card-icon">🧊</div>
+                <div class="card-header">
+                    <div class="card-info">
+                        <h2>3D 卡片 <span class="version-tag">v1.0</span></h2>
+                        <div class="card-type">Card Generator</div>
+                    </div>
+                </div>
+                <p class="card-desc">生成伪 3D 悬浮展示卡片。支持图片/视频素材导入，自定义圆角、透视角度及动态高光。</p>
+                <div class="card-status"><span>开发中...</span><span style="font-size:14px;">🔒</span></div>
+            </div>
+
+            <!-- Holo Chart (dev) -->
+            <div class="tool-card disabled" data-category="chart" data-name="全息 图表 柱状图 雷达图 赛博 数据可视化">
+                <span class="card-corner"></span>
+                <div class="card-icon">📊</div>
+                <div class="card-header">
+                    <div class="card-info">
+                        <h2>全息图表 <span class="version-tag">DEV</span></h2>
+                        <div class="card-type">Holo Chart</div>
+                    </div>
+                </div>
+                <p class="card-desc">赛博风格数据可视化生成器。支持动态柱状图、雷达图生长动画。</p>
+                <div class="card-status"><span>开发中...</span><span style="font-size:14px;">🔒</span></div>
+            </div>
+
+        </main>
+
+        <!-- No results -->
+        <div class="no-results" id="NoResults">
+            <div class="no-results-icon">∅</div>
+            <p>没有找到匹配的工具</p>
+        </div>
+
+        <footer>
+            &copy; 2026 FlowayMedia Internal Tools.<br>
+            <span>Authorized Personnel Only.</span>
+        </footer>
+
+    </div>
 
     <script type="module">
         import { getTheme, toggleTheme } from './shared/themes.js';
 
+        // ====== Theme Toggle ======
         const btn = document.getElementById('themeToggle');
         btn.addEventListener('click', () => {
             toggleTheme();
             btn.textContent = getTheme().id === 'dark' ? '☀' : '🌙';
         });
         btn.textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+
+        // ====== Staggered Card Entrance Animation ======
+        const cards = document.querySelectorAll('.tool-card:not(.disabled)');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, i) => {
+                if (entry.isIntersecting) {
+                    const idx = Array.from(cards).indexOf(entry.target);
+                    entry.target.style.transitionDelay = `${idx * 0.07}s`;
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        cards.forEach(card => observer.observe(card));
+
+        // Also show disabled cards after active ones finish
+        setTimeout(() => {
+            document.querySelectorAll('.tool-card.disabled').forEach(card => {
+                card.style.transitionDelay = '0s';
+                card.style.opacity = '0.45';
+                card.style.transform = 'none';
+            });
+        }, cards.length * 70 + 400);
+
+        // ====== Search Filter ======
+        const searchInput = document.getElementById('SearchInput');
+        const noResults = document.getElementById('NoResults');
+
+        function filterCards(query, category) {
+            const q = query.toLowerCase().trim();
+            let visibleCount = 0;
+
+            document.querySelectorAll('.tool-card').forEach(card => {
+                const nameMatch = !q || card.dataset.name.toLowerCase().includes(q);
+                const catMatch = category === 'all' || card.dataset.category === category;
+                const isDisabled = card.classList.contains('disabled');
+
+                if (nameMatch && catMatch) {
+                    card.style.display = '';
+                    if (!isDisabled && !card.classList.contains('visible')) {
+                        // If not yet revealed by intersection observer, reveal immediately
+                        card.classList.add('visible');
+                    }
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            noResults.classList.toggle('show', visibleCount === 0);
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            const activeTab = document.querySelector('.filter-tab.active');
+            filterCards(e.target.value, activeTab?.dataset.filter || 'all');
+        });
+
+        // ====== Category Tabs ======
+        const filterTabs = document.getElementById('FilterTabs');
+        filterTabs.addEventListener('click', (e) => {
+            const tab = e.target.closest('.filter-tab');
+            if (!tab) return;
+
+            filterTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            filterCards(searchInput.value, tab.dataset.filter);
+        });
     </script>
 </body>
 </html>
