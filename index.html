@@ -16,16 +16,16 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --index-bg: #0a0a0f;
-            --index-surface: #12121a;
-            --index-card: #1a1a26;
-            --index-card-hover: #222233;
-            --index-border: #2a2a3a;
-            --index-accent: #00f2ff;
-            --index-accent-dim: rgba(0,242,255,0.08);
-            --index-glow: rgba(0,242,255,0.15);
-            --index-text: #e8e8f0;
-            --index-text-dim: #6b6b80;
+            --index-bg: #0e1117;
+            --index-surface: #161b22;
+            --index-card: #1c2333;
+            --index-card-hover: #242d40;
+            --index-border: rgba(255,255,255,0.06);
+            --index-accent: #818cf8;
+            --index-accent-dim: rgba(129,140,248,0.1);
+            --index-glow: rgba(129,140,248,0.15);
+            --index-text: #e5e7eb;
+            --index-text-dim: #6b7280;
             --index-radius: 16px;
             --index-font-display: 'Orbitron', monospace;
             --index-font-body: 'Noto Sans SC', -apple-system, sans-serif;
@@ -33,16 +33,29 @@
         }
 
         [data-theme="light"] {
-            --index-bg: #f0f0f5;
+            --index-bg: #f8fafc;
             --index-surface: #ffffff;
             --index-card: #ffffff;
-            --index-card-hover: #f8f8fc;
-            --index-border: #e0e0e8;
-            --index-accent: #0066cc;
-            --index-accent-dim: rgba(0,102,204,0.06);
-            --index-glow: rgba(0,102,204,0.08);
-            --index-text: #1a1a2e;
-            --index-text-dim: #888899;
+            --index-card-hover: #f1f5f9;
+            --index-border: rgba(0,0,0,0.06);
+            --index-accent: #6366f1;
+            --index-accent-dim: rgba(99,102,241,0.08);
+            --index-glow: rgba(99,102,241,0.1);
+            --index-text: #1e293b;
+            --index-text-dim: #94a3b8;
+        }
+
+        [data-theme="glass"] {
+            --index-bg: #06060a;
+            --index-surface: rgba(12,12,20,0.6);
+            --index-card: rgba(255,255,255,0.035);
+            --index-card-hover: rgba(255,255,255,0.06);
+            --index-border: rgba(255,255,255,0.06);
+            --index-accent: #818cf8;
+            --index-accent-dim: rgba(129,140,248,0.06);
+            --index-glow: rgba(129,140,248,0.12);
+            --index-text: #e0e0ec;
+            --index-text-dim: #7070a0;
         }
 
         html, body {
@@ -91,12 +104,29 @@
         .bg-glow-2 {
             width: 400px; height: 400px;
             bottom: 10%; left: -100px;
-            background: #7c3aed;
+            background: #a78bfa;
             opacity: 0.04;
         }
 
         [data-theme="light"] .bg-glow-1 { opacity: 0.08; }
         [data-theme="light"] .bg-glow-2 { opacity: 0.05; }
+
+        /* Glass 主题 — 更明显的环境光 */
+        [data-theme="glass"] .bg-grid {
+            background-image:
+                linear-gradient(rgba(129,140,248,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(129,140,248,0.03) 1px, transparent 1px);
+            mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 70%);
+        }
+        [data-theme="glass"] .bg-glow-1 {
+            width: 800px; height: 800px; top: -250px; right: -200px;
+            background: #818cf8; opacity: 0.08;
+        }
+        [data-theme="glass"] .bg-glow-2 {
+            width: 500px; height: 500px; bottom: 5%; left: -150px;
+            background: #a78bfa; opacity: 0.06;
+        }
 
         /* ========================================
            MAIN LAYOUT
@@ -453,6 +483,88 @@
                 transition-duration: 0.01ms !important;
             }
             .tool-card { opacity: 1; transform: none; }
+        }
+
+        /* ========================================
+           GLASS THEME — 专属样式
+           ======================================== */
+
+        [data-theme="glass"] .search-input {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(255,255,255,0.06);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        [data-theme="glass"] .search-input:focus {
+            background: rgba(255,255,255,0.06);
+            border-color: var(--index-accent);
+            box-shadow: 0 0 0 3px var(--index-accent-dim), 0 0 40px var(--index-glow);
+        }
+
+        [data-theme="glass"] .tool-card {
+            background: rgba(255,255,255,0.035);
+            border-color: rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        [data-theme="glass"] .tool-card::before {
+            background: linear-gradient(135deg, transparent 30%, var(--index-accent) 100%);
+        }
+        @media (hover: hover) {
+            [data-theme="glass"] .tool-card:hover {
+                border-color: var(--index-accent);
+                background: rgba(255,255,255,0.06);
+                box-shadow:
+                    0 12px 40px rgba(0,0,0,0.3),
+                    0 0 60px var(--index-glow);
+            }
+        }
+
+        [data-theme="glass"] .card-icon {
+            background: var(--index-accent-dim);
+            border-color: rgba(255,255,255,0.06);
+        }
+
+        [data-theme="glass"] .card-corner {
+            border-color: transparent rgba(129,140,248,0.08) transparent transparent;
+        }
+        @media (hover: hover) {
+            [data-theme="glass"] .tool-card:hover .card-corner {
+                border-color: transparent var(--index-accent) transparent transparent;
+            }
+        }
+
+        [data-theme="glass"] .version-tag {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(255,255,255,0.06);
+        }
+        [data-theme="glass"] .version-tag.hot {
+            color: var(--index-accent);
+            border-color: rgba(129,140,248,0.2);
+            background: var(--index-accent-dim);
+        }
+
+        [data-theme="glass"] .card-status {
+            border-top-color: rgba(255,255,255,0.05);
+        }
+
+        [data-theme="glass"] .filter-tab:hover {
+            background: rgba(129,140,248,0.06);
+        }
+        [data-theme="glass"] .filter-tab.active {
+            background: var(--index-accent);
+            color: #000;
+        }
+
+        [data-theme="glass"] .theme-toggle-float {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(255,255,255,0.06);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        [data-theme="glass"] footer {
+            border-top-color: rgba(255,255,255,0.05);
         }
     </style>
 </head>
