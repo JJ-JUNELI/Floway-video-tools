@@ -51,7 +51,7 @@ body {
 body.is-recording .sidebar { opacity: 0.95; }
 
 /* ========================================
-   Sidebar — 全高面板 + accent 竖线
+   Sidebar — 浮动圆角卡片
    ======================================== */
 
 .sidebar {
@@ -59,29 +59,33 @@ body.is-recording .sidebar { opacity: 0.95; }
     min-width: 280px;
     max-width: 700px;
     background: var(--panel-bg);
+    border-radius: 16px;
     display: flex;
     flex-direction: column;
     z-index: 100;
     flex-shrink: 0;
     overflow: hidden;
     position: relative;
-    /* 全高面板：去掉 margin 和 border-radius */
-    border-right: 1px solid var(--border);
-    /* 左侧 accent 竖线 */
-    border-left: 2px solid var(--accent);
+    margin: 16px 0 16px 16px;
+    border: 1px solid var(--border);
+    box-shadow:
+        0 2px 8px rgba(0,0,0,0.15),
+        0 8px 32px rgba(0,0,0,0.2);
 }
 
 /* 侧边栏拖拽调节手柄 */
 .sidebar-resize-handle {
     position: absolute;
-    top: 0; right: 0; bottom: 0;
-    width: 6px;
+    top: 8px; right: 0; bottom: 8px;
+    width: 8px;
     cursor: col-resize;
     z-index: 200;
+    border-top-right-radius: 14px;
+    border-bottom-right-radius: 14px;
     transition: background 0.2s;
 }
 .sidebar-resize-handle:hover {
-    background: rgba(129,140,248,0.08);
+    background: rgba(129,140,248,0.06);
 }
 body.resizing { user-select: none !important; cursor: col-resize !important; }
 body.resizing * { pointer-events: none !important; }
@@ -520,9 +524,10 @@ input:checked + .slider:before {
     background-color: var(--bg-dark);
     position: relative;
     padding: 28px;
-    /* 无圆角，与 sidebar 对接 */
+    margin: 16px 16px 16px 0;
+    border-radius: 16px;
     overflow: hidden;
-    /* 微妙的网格纹理背景 */
+    border: 1px solid var(--border);
     background-image:
         linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
@@ -718,15 +723,16 @@ body.logo canvas {
         width: 100%;
         min-width: 0;
         height: 50%;
-        border-right: none;
-        border-left: none;
-        border-top: 2px solid var(--accent);
+        margin: 12px 12px 0 12px;
+        border-radius: 14px;
         order: 2;
     }
     .preview-area {
         width: 100%;
         height: 42%;
         padding: 12px;
+        margin: 0 12px 12px 12px;
+        border-radius: 14px;
         order: 1;
     }
     canvas, #mainSvg {
@@ -760,9 +766,11 @@ body.logo canvas {
 
 /* Sidebar */
 [data-theme="light"] .sidebar {
-    border-right-color: rgba(0,0,0,0.06);
-    border-left-color: var(--accent);
+    border-color: rgba(0,0,0,0.06);
     background: #ffffff;
+    box-shadow:
+        0 2px 8px rgba(0,0,0,0.04),
+        0 8px 24px rgba(0,0,0,0.06);
 }
 [data-theme="light"] .sidebar-header {
     background: linear-gradient(180deg, rgba(99,102,241,0.03) 0%, transparent 100%);
@@ -887,6 +895,7 @@ body.logo canvas {
 /* Preview Area */
 [data-theme="light"] .preview-area {
     background-color: #f1f5f9;
+    border-color: rgba(0,0,0,0.06);
     background-image:
         linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px);
@@ -973,9 +982,8 @@ body.logo canvas {
     background: rgba(12, 12, 20, 0.72);
     backdrop-filter: blur(28px) saturate(1.3);
     -webkit-backdrop-filter: blur(28px) saturate(1.3);
-    border-right-color: rgba(255,255,255,0.04);
-    border-left-color: var(--accent);
-    box-shadow: 4px 0 32px rgba(0,0,0,0.3);
+    border-color: rgba(255,255,255,0.06);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
 }
 [data-theme="glass"] .sidebar-header {
     background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
