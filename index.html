@@ -4,146 +4,115 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Floway Media Tools</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="shared/base.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script src="shared/themes.js"></script>
-
     <style>
-        /* ========================================
-           BASE RESET
-           ======================================== */
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --bg: #0e1117;
-            --surface: #161b22;
-            --surface-hover: #1c2333;
-            --card: #1c2333;
-            --card-hover: #242d40;
-            --border: rgba(255,255,255,0.06);
-            --border-strong: rgba(255,255,255,0.1);
-            --accent: #818cf8;
-            --accent-dim: rgba(129,140,248,0.1);
-            --accent-glow: rgba(129,140,248,0.12);
-            --danger: #f87171;
-            --success: #34d399;
-            --text: #e5e7eb;
-            --text-dim: #6b7280;
-            --text-muted: #4b5563;
-            --radius: 14px;
-            --font-display: 'Orbitron', monospace;
-            --font-body: 'Noto Sans SC', -apple-system, sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
+            --bg:             #0e1117;
+            --surface:        #161b22;
+            --card:           #1c2333;
+            --card-hover:     #242d40;
+            --border:         rgba(255,255,255,0.08);
+            --border-subtle:  rgba(255,255,255,0.05);
+            --border-strong:  rgba(255,255,255,0.14);
+            --text-primary:   #e5e7eb;
+            --text-secondary: #98989d;
+            --text-muted:     #636366;
+            --accent:         #818cf8;
+            --accent-dim:     rgba(129,140,248,0.10);
+            --radius-sm:      8px;
+            --radius-md:      12px;
+            --radius-lg:      16px;
+            --font:           'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         [data-theme="light"] {
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --surface-hover: #f1f5f9;
-            --card: #ffffff;
-            --card-hover: #f1f5f9;
-            --border: rgba(0,0,0,0.06);
-            --border-strong: rgba(0,0,0,0.1);
-            --accent: #6366f1;
-            --accent-dim: rgba(99,102,241,0.08);
-            --accent-glow: rgba(99,102,241,0.1);
-            --danger: #ef4444;
-            --success: #10b981;
-            --text: #1e293b;
-            --text-dim: #94a3b8;
-            --text-muted: #cbd5e1;
+            --bg:             #f8fafc;
+            --surface:        #ffffff;
+            --card:           #ffffff;
+            --card-hover:     #f1f5f9;
+            --border:         rgba(0,0,0,0.07);
+            --border-subtle:  rgba(0,0,0,0.04);
+            --border-strong:  rgba(0,0,0,0.14);
+            --text-primary:   #1e293b;
+            --text-secondary: #64748b;
+            --text-muted:     #94a3b8;
+            --accent:         #6366f1;
+            --accent-dim:     rgba(99,102,241,0.08);
         }
 
-        [data-theme="glass"] {
-            --bg: #06060a;
-            --surface: rgba(12,12,20,0.6);
-            --surface-hover: rgba(255,255,255,0.06);
-            --card: rgba(255,255,255,0.035);
-            --card-hover: rgba(255,255,255,0.06);
-            --border: rgba(255,255,255,0.06);
-            --border-strong: rgba(255,255,255,0.1);
-            --accent: #818cf8;
-            --accent-dim: rgba(129,140,248,0.06);
-            --accent-glow: rgba(129,140,248,0.12);
-            --text: #e0e0ec;
-            --text-dim: #7070a0;
-            --text-muted: #404060;
-        }
-
-        html, body {
-            height: auto; min-height: 100vh;
-            overflow-x: hidden;
+        html { scroll-behavior: smooth; }
+        body {
             background: var(--bg);
-            color: var(--text);
-            font-family: var(--font-body);
-            user-select: none;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 14px;
+            line-height: 1.5;
             -webkit-font-smoothing: antialiased;
-            display: block;
+            overflow-x: hidden;
         }
+        a { text-decoration: none; color: inherit; }
+        button { font-family: inherit; cursor: pointer; border: none; background: none; }
+        input { font-family: inherit; outline: none; }
 
-        /* ========================================
-           TOP NAV — Sticky
-           ======================================== */
-
-        .top-nav {
-            position: sticky; top: 0; z-index: 100;
-            display: flex; align-items: center; gap: 20px;
-            padding: 14px 32px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+        /* ============================================
+           TOP NAVIGATION
+           ============================================ */
+        .nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            background: rgba(14,17,23,0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 0.5px solid var(--border);
         }
-
+        [data-theme="light"] .nav { background: rgba(248,250,252,0.88); }
+        .nav-left { display: flex; align-items: center; gap: 32px; }
         .nav-logo {
-            font-family: var(--font-display);
-            font-weight: 900; font-size: 15px;
-            color: var(--accent);
-            letter-spacing: 1px;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-
-        .nav-search {
-            flex: 1; max-width: 480px; position: relative;
-        }
-
-        .nav-search input {
-            width: 100%;
-            padding: 9px 14px 9px 38px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--text);
-            font-size: 13px;
-            font-family: var(--font-body);
-            outline: none;
-            transition: all 0.2s;
-        }
-        .nav-search input::placeholder { color: var(--text-dim); }
-        .nav-search input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-dim);
-        }
-
-        .nav-search-icon {
-            position: absolute; left: 12px; top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-dim); font-size: 14px;
-            pointer-events: none;
-        }
-
-        .nav-actions {
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: -0.3px;
             display: flex; align-items: center; gap: 8px;
-            flex-shrink: 0;
+            color: var(--accent);
         }
-
+        .nav-logo-icon {
+            width: 22px; height: 22px;
+            background: linear-gradient(135deg, #ff6b35, #f72585);
+            border-radius: 6px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+        .nav-links a {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: color 0.15s;
+        }
+        .nav-links a:hover,
+        .nav-links a.active { color: var(--text-primary); }
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
         .btn-theme {
             width: 36px; height: 36px;
-            border-radius: 10px; border: 1px solid var(--border);
-            background: transparent; color: var(--text-dim);
-            cursor: pointer; font-size: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 15px;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.2s;
         }
@@ -153,282 +122,570 @@
             border-color: var(--border-strong);
         }
 
-        /* ========================================
-           MAIN CONTENT
-           ======================================== */
+        /* ============================================
+           HERO SECTION
+           ============================================ */
+        .hero {
+            padding: 120px 40px 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-        .main-content {
-            max-width: 1200px;
+        /* Icon Cluster */
+        .hero-icons {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 44px;
+            padding: 52px 28px 42px;
+            border-radius: 22px;
+            overflow: visible;
+        }
+        .hero-icons::before {
+            content: "";
+            position: absolute;
+            inset: -20%;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 60% 50% at 50% 45%, rgba(99,102,241,0.06) 0%, transparent 70%);
+            border-radius: 30px;
+        }
+        .hero-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 2;
+        }
+        .hero-icon {
+            width: 74px; height: 74px;
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            background: rgba(13, 13, 17, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            box-shadow:
+                0 6px 24px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            position: relative;
+            z-index: 2;
+        }
+        [data-theme="light"] .hero-icon {
+            background: rgba(255,255,255,0.85);
+            border-color: rgba(0,0,0,0.08);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+
+        /* Hero Title */
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+            margin-bottom: 14px;
+        }
+        .hero-desc {
+            font-size: 17px;
+            color: var(--text-secondary);
+            max-width: 520px;
+            margin: 0 auto 32px;
+            line-height: 1.6;
+        }
+
+        /* Hero Search Bar */
+        .hero-search {
+            max-width: 520px;
             margin: 0 auto;
-            padding: 24px 32px 64px;
+            position: relative;
         }
-
-        /* ========================================
-           FILTER BAR
-           ======================================== */
-
-        .filter-bar {
-            display: flex; align-items: center; gap: 8px;
-            padding: 0 0 20px;
-            flex-wrap: wrap;
-        }
-
-        .filter-pill {
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 12px; font-weight: 500;
-            cursor: pointer;
+        .hero-search input {
+            width: 100%;
+            height: 48px;
+            padding: 0 110px 0 20px;
+            border-radius: var(--radius-lg);
             border: 1px solid var(--border);
-            background: transparent;
-            color: var(--text-dim);
-            font-family: var(--font-body);
+            background: var(--surface);
+            color: var(--text-primary);
+            font-size: 15px;
             transition: all 0.2s;
         }
-        .filter-pill:hover {
+        .hero-search input::placeholder { color: var(--text-muted); }
+        .hero-search input:focus {
+            border-color: var(--border-strong);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+        .search-shortcut {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-family: 'SF Mono', 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+        .kbd {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 6px;
+            border-radius: 5px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* ============================================
+           MAIN CONTENT AREA
+           ============================================ */
+        .main {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0 40px 80px;
+        }
+
+        /* Explore Header */
+        .explore-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .explore-header h2 {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+        .explore-header p {
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================
+           FEATURED SECTION
+           ============================================ */
+        .featured-section { margin-bottom: 56px; }
+        .section-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .section-sublabel {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 11px;
+        }
+
+        .featured-card {
+            background: linear-gradient(137deg, rgba(17,18,20,0.80) 0%, rgba(12,13,15,0.94) 100%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 36px 28px 28px;
+            text-align: center;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
+            text-decoration: none;
+            opacity: 0; transform: translateY(12px);
+        }
+        .featured-card.visible {
+            opacity: 1; transform: translateY(0);
+        }
+        [data-theme="light"] .featured-card {
+            background: linear-gradient(137deg, rgba(255,255,255,0.90) 0%, rgba(248,250,252,0.96) 100%);
+        }
+        .featured-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: transparent;
+            box-shadow:
+                0 0 20px 2px rgba(129,140,248,0.15),
+                0 0 50px 4px rgba(129,140,248,0.07),
+                0 0 90px 6px rgba(129,140,248,0.03);
+            z-index: -1;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .featured-card:hover {
+            border-color: var(--border-strong);
+            transform: translateY(-3px);
+        }
+        .featured-card:hover::before { opacity: 1; }
+
+        .featured-card-icon {
+            width: 96px; height: 96px;
+            border-radius: 24px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 42px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .featured-card-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.2px;
+        }
+        .featured-card-desc {
+            font-size: 13.5px;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+        .featured-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .author-avatar {
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background: var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .author-name {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+        }
+
+        .btn-install {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 20px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .btn-install:hover {
             background: var(--accent-dim);
-            color: var(--text);
+            border-color: var(--border-strong);
+            color: var(--accent);
+        }
+        .install-icon { font-size: 14px; }
+
+        .card-tags {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .tag-pill {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 3px 10px;
+            border-radius: 100px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-subtle);
+        }
+
+        /* ============================================
+           FILTER BAR
+           ============================================ */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            gap: 11px;
+            flex-wrap: wrap;
+        }
+        .filter-pills {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .filter-pill {
+            padding: 7px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: transparent;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .filter-pill:hover {
+            color: var(--text-primary);
             border-color: var(--border-strong);
         }
         .filter-pill.active {
             background: var(--accent);
-            color: #ffffff;
+            color: #fff;
             border-color: var(--accent);
-            font-weight: 600;
+        }
+        .filter-pill-count {
+            opacity: 0.55;
+            margin-left: 2px;
         }
 
-        .filter-count {
-            font-size: 11px; color: var(--text-dim);
-            font-family: var(--font-mono);
-            margin-left: 8px;
-        }
-
-        /* ========================================
-           TOOL GRID
-           ======================================== */
-
-        .tool-grid {
+        /* ============================================
+           EXTENSIONS GRID — Horizontal list cards
+           ============================================ */
+        .extensions-section { margin-bottom: 48px; }
+        .ext-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
         }
 
-        /* ========================================
-           TOOL CARD
-           ======================================== */
-
-        .tool-card {
-            display: flex; flex-direction: column;
-            background: var(--card);
+        .ext-card {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 16px 18px;
+            background: linear-gradient(137deg, rgba(17,18,20,0.76) 0%, rgba(12,13,15,0.90) 100%);
             border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
             text-decoration: none;
             color: inherit;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
             opacity: 0; transform: translateY(12px);
         }
-
-        .tool-card.visible {
+        .ext-card.visible {
             opacity: 1; transform: translateY(0);
         }
-
-        @media (hover: hover) {
-            .tool-card:hover {
-                background: var(--card-hover);
-                border-color: var(--border-strong);
-                transform: translateY(-2px);
-                box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-            }
-            .tool-card:hover .card-go {
-                opacity: 1; transform: translateX(0);
-            }
+        [data-theme="light"] .ext-card {
+            background: linear-gradient(137deg, rgba(255,255,255,0.86) 0%, rgba(248,250,252,0.94) 100%);
         }
-
-        .tool-card:active { transform: scale(0.98); }
-
-        /* Disabled cards */
-        .tool-card.disabled {
-            opacity: 0; transform: translateY(0);
+        .ext-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: transparent;
+            box-shadow:
+                0 0 16px 1.5px rgba(129,140,248,0.12),
+                0 0 40px 3px rgba(129,140,248,0.05),
+                0 0 72px 4px rgba(129,140,248,0.02);
+            z-index: -1;
+            opacity: 0;
             pointer-events: none;
-            filter: grayscale(0.4);
+            transition: opacity 0.4s ease;
         }
-        .tool-card.disabled.visible {
-            opacity: 0.4;
+        .ext-card:hover {
+            border-color: var(--border-strong);
         }
+        .ext-card:hover::before { opacity: 1; }
 
-        /* Card top row: icon + info */
-        .card-top {
-            display: flex; align-items: flex-start; gap: 14px;
-            margin-bottom: 10px;
-        }
-
-        .card-emoji {
-            width: 44px; height: 44px;
-            border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
-            background: var(--accent-dim);
+        .ext-icon {
+            width: 56px; height: 56px;
+            border-radius: 14px;
             flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.25);
         }
-
-        .card-meta { flex: 1; min-width: 0; }
-
-        .card-meta h2 {
-            font-size: 14px; font-weight: 700;
-            line-height: 1.3; margin-bottom: 2px;
-            color: var(--text);
+        .ext-info { flex: 1; min-width: 0; }
+        .ext-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 3px;
         }
-
-        .card-subtitle {
-            font-size: 11px;
-            font-family: var(--font-mono);
-            color: var(--text-dim);
-            letter-spacing: 0.3px;
+        .ext-title {
+            font-size: 14.5px;
+            font-weight: 650;
+            letter-spacing: -0.2px;
         }
-
         .version-tag {
-            font-size: 9px;
-            font-family: var(--font-mono);
+            font-size: 9.5px;
+            font-family: var(--font);
             padding: 2px 6px;
             border-radius: 4px;
             font-weight: 600;
             background: var(--surface);
-            color: var(--text-dim);
+            color: var(--text-muted);
             border: 1px solid var(--border);
             letter-spacing: 0.3px;
-            vertical-align: middle;
-            margin-left: 6px;
         }
         .version-tag.hot {
             color: var(--accent);
-            border-color: rgba(129,140,248,0.2);
+            border-color: rgba(129,140,248,0.25);
             background: var(--accent-dim);
         }
-        [data-theme="light"] .version-tag.hot {
-            color: var(--accent);
-            border-color: rgba(99,102,241,0.2);
+        .ext-badge-dev {
+            font-size: 9.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
         }
-
-        /* Card description */
-        .card-desc {
-            font-size: 12px;
-            color: var(--text-dim);
-            line-height: 1.5;
-            flex: 1;
-            margin-bottom: 12px;
+        .ext-desc {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            line-height: 1.45;
+            margin-bottom: 6px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
-
-        /* Card footer */
-        .card-footer {
+        .ext-meta {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding-top: 10px;
-            border-top: 1px solid var(--border);
-        }
-
-        .card-category-tag {
-            font-size: 10px;
-            font-family: var(--font-mono);
+            gap: 12px;
+            font-size: 11.5px;
             color: var(--text-muted);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
         }
-
-        .card-go {
-            font-size: 13px;
-            color: var(--accent);
-            opacity: 0.4;
-            transform: translateX(-4px);
-            transition: all 0.2s;
+        .ext-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
         }
-
-        /* ========================================
-           SECTION DIVIDER
-           ======================================== */
-
-        .section-divider {
-            grid-column: 1 / -1;
-            display: flex; align-items: center; gap: 16px;
-            padding: 24px 0 8px;
-        }
-        .section-divider span {
-            font-size: 11px;
-            font-family: var(--font-mono);
-            color: var(--text-dim);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-        .section-divider::after {
-            content: '';
-            flex: 1; height: 1px;
+        .ext-author-avatar {
+            width: 16px; height: 16px;
+            border-radius: 50%;
             background: var(--border);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 7px;
+            margin-right: 3px;
+            vertical-align: middle;
+        }
+        .ext-action { flex-shrink: 0; }
+        .ext-action .btn-install { padding: 7px 18px; font-size: 12.5px; }
+
+        .ext-card.dev { opacity: 0.38; }
+        .ext-card.dev:hover { opacity: 0.55; }
+        .ext-card.dev .btn-install {
+            pointer-events: none;
+            color: var(--text-muted);
+            border-color: var(--border-subtle);
         }
 
-        /* ========================================
+        /* ============================================
            NO RESULTS
-           ======================================== */
-
+           ============================================ */
         .no-results {
             grid-column: 1 / -1;
             text-align: center;
-            padding: 80px 20px;
-            color: var(--text-dim);
+            padding: 60px 20px;
+            color: var(--text-secondary);
             display: none;
         }
         .no-results.show { display: block; }
         .no-results-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.2; }
         .no-results p { font-size: 14px; }
 
-        /* ========================================
+        /* ============================================
+           PAGINATION
+           ============================================ */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            margin-top: 48px;
+        }
+        .page-num {
+            min-width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .page-num:hover { color: var(--text-primary); }
+        .page-num.active {
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+        }
+        .page-dots { color: var(--text-muted); font-size: 13px; padding: 0 4px; }
+
+        /* ============================================
            FOOTER
-           ======================================== */
-
-        footer {
+           ============================================ */
+        .footer {
             text-align: center;
-            padding: 32px;
-            font-size: 11px;
-            color: var(--text-dim);
-            border-top: 1px solid var(--border);
-            margin-top: 24px;
+            padding: 48px 40px;
+            border-top: 0.5px solid var(--border);
+            margin-top: 40px;
         }
-        footer span { opacity: 0.5; }
-
-        /* ========================================
-           KEYFRAMES
-           ======================================== */
-
-        @keyframes cardIn {
-            from { opacity: 0; transform: translateY(12px); }
-            to   { opacity: 1; transform: translateY(0); }
+        .footer p {
+            font-size: 12px;
+            color: var(--text-muted);
         }
+        .footer span { opacity: 0.5; }
 
-        /* ========================================
+        /* ============================================
            RESPONSIVE
-           ======================================== */
-
-        @media (max-width: 720px) {
-            .top-nav {
-                padding: 12px 16px;
-                gap: 12px;
-                flex-wrap: wrap;
-            }
-            .nav-search { order: 3; max-width: none; flex-basis: 100%; }
-            .main-content { padding: 16px 16px 48px; }
-            .tool-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .tool-card { padding: 16px; }
-            .card-desc { -webkit-line-clamp: 2; }
+           ============================================ */
+        @media (max-width: 1024px) {
+            .featured-grid { grid-template-columns: repeat(2, 1fr); }
+            .ext-grid { grid-template-columns: 1fr; }
         }
-
+        @media (max-width: 768px) {
+            .nav { padding: 0 20px; }
+            .nav-links { display: none; }
+            .hero { padding: 100px 20px 48px; }
+            .hero h1 { font-size: 40px; }
+            .hero-icons { gap: 12px; padding: 36px 16px 28px; }
+            .hero-row { gap: 10px; }
+            .hero-icon { width: 52px; height: 52px; font-size: 23px; border-radius: 14px; }
+            .main { padding: 0 20px 60px; }
+            .featured-grid { grid-template-columns: 1fr; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .filter-pills { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+        }
         @media (max-width: 480px) {
-            .tool-grid { grid-template-columns: 1fr; }
+            .hero-icon { width: 44px; height: 44px; font-size: 19px; }
+            .hero-row { gap: 8px; }
+            .hero-icons { gap: 10px; }
+            .ext-meta { flex-wrap: wrap; gap: 8px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -436,200 +693,272 @@
                 animation-duration: 0.01ms !important;
                 transition-duration: 0.01ms !important;
             }
-            .tool-card { opacity: 1; transform: none; }
+            .featured-card, .ext-card { opacity: 1; transform: none; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Sticky Top Navigation -->
-    <nav class="top-nav">
-        <div class="nav-logo">FLOWAY</div>
-        <div class="nav-search">
-            <span class="nav-search-icon">⌕</span>
-            <input type="text" id="SearchInput" placeholder="搜索工具..." autocomplete="off">
+    <!-- ========== NAV ========== -->
+    <nav class="nav">
+        <div class="nav-left">
+            <div class="nav-logo">
+                <div class="nav-logo-icon"></div>
+                Floway Tools
+            </div>
+            <div class="nav-links">
+                <a href="#" class="active">工具</a>
+                <a href="#">文档</a>
+                <a href="#">更新日志</a>
+            </div>
         </div>
-        <div class="nav-actions">
+        <div class="nav-right">
             <button id="themeToggle" class="btn-theme" title="切换主题">☀</button>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="main-content">
+    <!-- ========== HERO ========== -->
+    <header class="hero">
+        <div class="hero-icons">
+            <div class="hero-row">
+                <div class="hero-icon" style="width:68px;height:68px;transform:translateY(-2px) rotate(-1.5deg);opacity:0.78;">
+                    <svg width="34" height="34" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi1" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs><rect x="3" y="20" width="6" height="10" rx="1.5" fill="url(#gi1)" opacity=".5"/><rect x="12" y="13" width="6" height="17" rx="1.5" fill="url(#gi1)" opacity=".7"/><rect x="21" y="7" width="6" height="23" rx="1.5" fill="url(#gi1)"/><polyline points="5,19 14,11 24,5" stroke="#93c5fd" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="24" cy="5" r="2" fill="#bfdbfe"/></svg>
+                </div>
+                <div class="hero-icon" style="width:76px;height:76px;transform:translateY(-6px) rotate(-0.5deg);opacity:0.90;">
+                    <svg width="38" height="38" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi2" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#fbbf24"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><path d="M18 4l2.5 6.5L27 12l-5 4.5 1.5 7L18 20l-5.5 3.5 1.5-7-5-4.5 6.5-1.5z" fill="url(#gi2)"/><path d="M8 22l1.5 4L6 28l3.5-.5L12 30l1-4" stroke="#fcd34d" stroke-width="1.5" stroke-linecap="round" fill="none" opacity=".7"/><path d="M26 16l2 5-4 2 3 .5L30 27l-1-3.5" stroke="#fcd34d" stroke-width="1.2" stroke-linecap="round" fill="none" opacity=".5"/></svg>
+                </div>
+                <div class="hero-icon" style="width:82px;height:82px;transform:translateY(-12px) rotate(0deg);opacity:1;">
+                    <svg width="42" height="42" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi3" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs><rect x="6" y="8" width="24" height="18" rx="2" stroke="url(#gi3)" stroke-width="2" fill="none"/><line x1="6" y1="14" x2="30" y2="14" stroke="url(#gi3)" stroke-width="1.5" opacity=".5"/><rect x="10" y="17" width="16" height="2" rx="1" fill="url(#gi3)" opacity=".35"/><rect x="10" y="21" width="10" height="2" rx="1" fill="url(#gi3)" opacity=".25"/><line x1="15" y1="26" x2="21" y2="26" stroke="url(#gi3)" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="26" x2="18" y2="30" stroke="url(#gi3)" stroke-width="2"/></svg>
+                </div>
+                <div class="hero-icon" style="width:76px;height:76px;transform:translateY(-6px) rotate(0.5deg);opacity:0.90;">
+                    <svg width="38" height="38" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi4" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs><polygon points="18,3 33,12 33,24 18,33 3,24 3,12" stroke="url(#gi4)" stroke-width="1.8" fill="none"/><polygon points="18,9 27,14.5 27,21.5 18,27 9,21.5 9,14.5" fill="url(#gi4)" opacity=".25"/></svg>
+                </div>
+                <div class="hero-icon" style="width:68px;height:68px;transform:translateY(2px) rotate(1.5deg);opacity:0.78;">
+                    <svg width="34" height="34" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi5" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#fb923c"/><stop offset="100%" stop-color="#ea580c"/></linearGradient></defs><path d="M7 24c3-4 6-8 12-12s10-5 14-4" stroke="url(#gi5)" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="7" cy="24" r="2.2" fill="url(#gi5)"/><circle cx="19" cy="12" r="1.8" fill="#fed7aa"/></svg>
+                </div>
+            </div>
+            <div class="hero-row">
+                <div class="hero-icon" style="width:70px;height:70px;transform:translateY(4px) rotate(-1deg);opacity:0.72;">
+                    <svg width="35" height="35" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi6" x1="0" y1="36" x2="36" y2="0"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs><polyline points="4,28 12,18 20,22 32,8" stroke="url(#gi6)" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>
+                </div>
+                <div class="hero-icon" style="width:74px;height:74px;transform:translateY(4px) rotate(-0.5deg);opacity:0.80;">
+                    <svg width="37" height="37" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi7" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#d4a574"/><stop offset="100%" stop-color="#b8956e"/></linearGradient></defs><rect x="5" y="4" width="26" height="28" rx="2" fill="#faf6f1" stroke="url(#gi7)" stroke-width="1.5"/><polyline points="10,26 15,22 20,24 26,18" stroke="url(#gi7)" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="26" cy="18" r="1.5" fill="url(#gi7)"/></svg>
+                </div>
+                <div class="hero-icon" style="width:74px;height:74px;transform:translateY(4px) rotate(0.5deg);opacity:0.80;">
+                    <svg width="37" height="37" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi8a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient><linearGradient id="gi8b" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#0891b2"/></linearGradient></defs><path d="M4 10 L18 4 L32 10 L32 26 L18 32 L4 26 Z" fill="url(#gi8a)" opacity=".85"/><path d="M4 10 L18 16 L18 32 L4 26 Z" fill="url(#gi8b)" opacity=".6"/></svg>
+                </div>
+                <div class="hero-icon" style="width:70px;height:70px;transform:translateY(6px) rotate(1deg);opacity:0.72;">
+                    <svg width="35" height="35" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi9a" x1="0" y1="36" x2="0" y2="0"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#10b981"/></linearGradient><linearGradient id="gi9b" x1="0" y1="36" x2="0" y2="0"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient><linearGradient id="gi9c" x1="0" y1="36" x2="0" y2="0"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs><rect x="6" y="16" width="5" height="14" rx="1.5" fill="url(#gi9a)" opacity=".7"/><rect x="14" y="10" width="5" height="20" rx="1.5" fill="url(#gi9b)" opacity=".8"/><rect x="22" y="6" width="5" height="24" rx="1.5" fill="url(#gi9c)"/></svg>
+                </div>
+            </div>
+        </div>
 
-        <!-- Filter Pills -->
+        <h1>Floway Tools</h1>
+        <p class="hero-desc">专业视频效果生成工具集。连接你的创意，将日常视频工作流提升到新高度。</p>
+
+        <div class="hero-search">
+            <input type="text" id="HeroSearchInput" placeholder="搜索工具...">
+            <span class="search-shortcut"><span class="kbd">⌘</span><span class="kbd">K</span></span>
+        </div>
+    </header>
+
+    <!-- ========== MAIN ========== -->
+    <main class="main">
+
+        <section class="explore-header">
+            <h2>探索</h2>
+            <p>浏览并使用我们构建的视频效果生成工具</p>
+        </section>
+
+        <!-- Featured -->
+        <section class="featured-section">
+            <div class="section-label">精选推荐</div>
+            <div class="section-sublabel">我们的热门工具，助你快速上手 🎯</div>
+
+            <div class="featured-grid">
+                <a href="effects/chart-fx.html" class="featured-card" data-category="chart" data-name="图表 折线图 纸张 赛博 WebGL 3D 漂浮 数据可视化">
+                    <div class="featured-card-icon" style="background:linear-gradient(135deg,#1a1a2e,#16213e)">📈</div>
+                    <div class="featured-card-title">Chart FX</div>
+                    <p class="featured-card-desc">双风格动态折线图生成器。纸张模式：噪声纹理+手绘线条。赛博模式：暗色卡片+发光曲线。WebGL 3D 漂浮合成。</p>
+                    <div class="featured-author">
+                        <div class="author-avatar">F</div>
+                        <span class="author-name">Floway Team</span>
+                    </div>
+                    <button class="btn-install"><span class="install-icon">↓</span> 打开工具</button>
+                    <div class="card-tags">
+                        <span class="tag-pill">v3.0</span>
+                        <span class="tag-pill">热门</span>
+                    </div>
+                </a>
+
+                <a href="effects/text-animator.html" class="featured-card" data-category="text" data-name="文字动效 文字 标题 动画 VP9 录制 超采样 阴影 渐变 PNG MP4">
+                    <div class="featured-card-icon" style="background:linear-gradient(135deg,#0f0c29,#302b63,#24243e)">✨</div>
+                    <div class="featured-card-title">Text Animator</div>
+                    <p class="featured-card-desc">科技感标题动画引擎。支持 VP9 录制、2x 超采样、工业风阴影、渐变颜色、PNG 序列及 MP4 导出。</p>
+                    <div class="featured-author">
+                        <div class="author-avatar">F</div>
+                        <span class="author-name">Floway Team</span>
+                    </div>
+                    <button class="btn-install"><span class="install-icon">↓</span> 打开工具</button>
+                    <div class="card-tags">
+                        <span class="tag-pill">v60.6</span>
+                        <span class="tag-pill">热门</span>
+                    </div>
+                </a>
+
+                <a href="effects/stack-scan.html" class="featured-card" data-category="text" data-name="堆叠扫描 赛博朋克 文字 扫描 MP4 PNG">
+                    <div class="featured-card-icon" style="background:linear-gradient(135deg,#0d0d0d,#1a1a2e)">📠</div>
+                    <div class="featured-card-title">Stack Scanner</div>
+                    <p class="featured-card-desc">赛博朋克风格堆叠扫描文字。支持 25Mbps MP4/PNG 序列导出、多字体斜体、透明度延迟及防掉帧渲染。</p>
+                    <div class="featured-author">
+                        <div class="author-avatar">F</div>
+                        <span class="author-name">Floway Team</span>
+                    </div>
+                    <button class="btn-install"><span class="install-icon">↓</span> 打开工具</button>
+                    <div class="card-tags">
+                        <span class="tag-pill">v19.4</span>
+                        <span class="tag-pill">热门</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Filter Bar -->
         <div class="filter-bar" id="FilterTabs">
-            <button class="filter-pill active" data-filter="all">全部</button>
-            <button class="filter-pill" data-filter="text">文字类</button>
-            <button class="filter-pill" data-filter="visual">视觉类</button>
-            <button class="filter-pill" data-filter="chart">图表类</button>
-            <button class="filter-pill" data-filter="particle">粒子类</button>
-            <span class="filter-count" id="ToolCount">7 个工具</span>
+            <div class="filter-pills">
+                <button class="filter-pill active" data-filter="all">全部<span class="filter-pill-count" id="ToolCount">7</span></button>
+                <button class="filter-pill" data-filter="text">文字类</button>
+                <button class="filter-pill" data-filter="visual">视觉类</button>
+                <button class="filter-pill" data-filter="chart">图表类</button>
+                <button class="filter-pill" data-filter="particle">粒子类</button>
+            </div>
         </div>
 
-        <!-- Tool Grid -->
-        <main class="tool-grid" id="ToolGrid">
+        <!-- Extensions Grid -->
+        <section class="extensions-section">
+            <div class="section-label">全部工具</div>
+            <div class="section-sublabel">探索工具库，发现更多精彩作品</div>
 
-            <!-- Text Animator -->
-            <a href="effects/text-animator.html" class="tool-card" data-category="text" data-name="文字动效 文字 标题 动画 VP9 录制 超采样 阴影 渐变 PNG MP4">
-                <div class="card-top">
-                    <div class="card-emoji">⚡</div>
-                    <div class="card-meta">
-                        <h2>文字动效 <span class="version-tag hot">v60.6</span></h2>
-                        <div class="card-subtitle">Text Animator</div>
+            <div class="ext-grid" id="ToolGrid">
+
+                <a href="effects/chart-fx.html" class="ext-card" data-category="chart" data-name="图表 折线图 纸张 赛博 WebGL 3D 漂浮 数据可视化">
+                    <div class="ext-icon" style="background:linear-gradient(135deg,#1a1a2e,#16213e)">📈</div>
+                    <div class="ext-info">
+                        <div class="ext-title-row"><span class="ext-title">Chart FX</span><span class="version-tag hot">v3.0</span></div>
+                        <p class="ext-desc">双风格动态折线图。纸张模式 + 赛博模式，WebGL 3D 漂浮卡片合成。</p>
+                        <div class="ext-meta">
+                            <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
+                            <span class="ext-meta-item">·</span>
+                            <span class="ext-meta-item">图表类</span>
+                        </div>
                     </div>
-                </div>
-                <p class="card-desc">科技感标题文字动画。支持 VP9 录制、2x 超采样、工业风阴影、渐变颜色、PNG 序列及 MP4 导出。</p>
-                <div class="card-footer">
-                    <span class="card-category-tag">文字类</span>
-                    <span class="card-go">→</span>
-                </div>
-            </a>
+                    <div class="ext-action"><button class="btn-install">打开</button></div>
+                </a>
 
-            <!-- Stack Scan -->
-            <a href="effects/stack-scan.html" class="tool-card" data-category="text" data-name="堆叠扫描 赛博朋克 文字 扫描 MP4 PNG">
-                <div class="card-top">
-                    <div class="card-emoji">📠</div>
-                    <div class="card-meta">
-                        <h2>堆叠扫描 <span class="version-tag hot">v19.4</span></h2>
-                        <div class="card-subtitle">Stack Scan FX</div>
+                <a href="effects/text-animator.html" class="ext-card" data-category="text" data-name="文字动效 文字 标题 动画 VP9 录制 超采样 阴影 渐变 PNG MP4">
+                    <div class="ext-icon" style="background:linear-gradient(135deg,#0f0c29,#302b63)">✨</div>
+                    <div class="ext-info">
+                        <div class="ext-title-row"><span class="ext-title">Text Animator</span><span class="version-tag hot">v60.6</span></div>
+                        <p class="ext-desc">科技感标题动画引擎。VP9 录制、超采样、阴影渐变效果。</p>
+                        <div class="ext-meta">
+                            <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
+                            <span class="ext-meta-item">·</span>
+                            <span class="ext-meta-item">文字类</span>
+                        </div>
                     </div>
-                </div>
-                <p class="card-desc">赛博朋克风格堆叠扫描文字。支持 25Mbps MP4/PNG 序列导出、多字体斜体、透明度延迟及防掉帧渲染。</p>
-                <div class="card-footer">
-                    <span class="card-category-tag">文字类</span>
-                    <span class="card-go">→</span>
-                </div>
-            </a>
+                    <div class="ext-action"><button class="btn-install">打开</button></div>
+                </a>
 
-            <!-- Logo Matrix -->
-            <a href="effects/logo-matrix.html" class="tool-card" data-category="visual" data-name="Logo 矩阵 循环 背景 阵列 羽化 纹理 H.264">
-                <div class="card-top">
-                    <div class="card-emoji">💠</div>
-                    <div class="card-meta">
-                        <h2>Logo 矩阵 <span class="version-tag">v25.0</span></h2>
-                        <div class="card-subtitle">Matrix Generator</div>
+                <a href="effects/stack-scan.html" class="ext-card" data-category="text" data-name="堆叠扫描 赛博朋克 文字 扫描 MP4 PNG">
+                    <div class="ext-icon" style="background:linear-gradient(135deg,#0d0d0d,#1a1a2e)">📠</div>
+                    <div class="ext-info">
+                        <div class="ext-title-row"><span class="ext-title">Stack Scanner</span><span class="version-tag hot">v19.4</span></div>
+                        <p class="ext-desc">赛博朋克扫描文字效果。多字体斜体、透明度延迟、防掉帧渲染。</p>
+                        <div class="ext-meta">
+                            <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
+                            <span class="ext-meta-item">·</span>
+                            <span class="ext-meta-item">文字类</span>
+                        </div>
                     </div>
-                </div>
-                <p class="card-desc">循环 Logo 阵列背景。支持帧同步录制、羽化遮罩、自定义底图及多种科技纹理，可导出 PNG 序列及 H.264。</p>
-                <div class="card-footer">
-                    <span class="card-category-tag">视觉类</span>
-                    <span class="card-go">→</span>
-                </div>
-            </a>
+                    <div class="ext-action"><button class="btn-install">打开</button></div>
+                </a>
 
-            <!-- Particle Field -->
-            <a href="effects/particle-field.html" class="tool-card" data-category="particle" data-name="粒子场 动态 粒子 连线 效果">
-                <div class="card-top">
-                    <div class="card-emoji">✨</div>
-                    <div class="card-meta">
-                        <h2>粒子场 <span class="version-tag hot">v1.0</span></h2>
-                        <div class="card-subtitle">Particle Field</div>
+                <a href="effects/logo-matrix.html" class="ext-card" data-category="visual" data-name="Logo 矩阵 循环 背景 阵列 羽化 纹理 H.264">
+                    <div class="ext-icon" style="background:linear-gradient(135deg,#667eea,#764ba2)">💠</div>
+                    <div class="ext-info">
+                        <div class="ext-title-row"><span class="ext-title">Logo Matrix</span><span class="version-tag">v25.0</span></div>
+                        <p class="ext-desc">循环 Logo 阵列背景。帧同步录制、羽化遮罩、多种科技纹理。</p>
+                        <div class="ext-meta">
+                            <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
+                            <span class="ext-meta-item">·</span>
+                            <span class="ext-meta-item">视觉类</span>
+                        </div>
                     </div>
-                </div>
-                <p class="card-desc">动态粒子连线场效果。可调节粒子数量、大小、速度及连线距离。</p>
-                <div class="card-footer">
-                    <span class="card-category-tag">粒子类</span>
-                    <span class="card-go">→</span>
-                </div>
-            </a>
+                    <div class="ext-action"><button class="btn-install">打开</button></div>
+                </a>
 
-            <!-- Chart FX -->
-            <a href="effects/chart-fx.html" class="tool-card" data-category="chart" data-name="图表 折线图 纸张 赛博 WebGL 3D 漂浮 数据可视化">
-                <div class="card-top">
-                    <div class="card-emoji">📈</div>
-                    <div class="card-meta">
-                        <h2>图表效果 <span class="version-tag hot">v3.0</span></h2>
-                        <div class="card-subtitle">Chart FX</div>
+                <a href="effects/particle-field.html" class="ext-card" data-category="particle" data-name="粒子场 动态 粒子 连线 效果">
+                    <div class="ext-icon" style="background:linear-gradient(135deg,#11998e,#38ef7d)">⚡</div>
+                    <div class="ext-info">
+                        <div class="ext-title-row"><span class="ext-title">Particle Field</span><span class="version-tag hot">v1.0</span></div>
+                        <p class="ext-desc">动态粒子连线场效果。可调节数量、大小、速度及连线距离。</p>
+                        <div class="ext-meta">
+                            <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
+                            <span class="ext-meta-item">·</span>
+                            <span class="ext-meta-item">粒子类</span>
+                        </div>
                     </div>
-                </div>
-                <p class="card-desc">双风格动态折线图。纸张模式：噪声纹理+手绘线条。赛博模式：暗色卡片+发光曲线。WebGL 3D 漂浮合成。</p>
-                <div class="card-footer">
-                    <span class="card-category-tag">图表类</span>
-                    <span class="card-go">→</span>
-                </div>
-            </a>
+                    <div class="ext-action"><button class="btn-install">打开</button></div>
+                </a>
 
-            <!-- Line Chart -->
-            <a href="effects/line-chart.html" class="tool-card" data-category="chart" data-name="折线图 简洁 数据 可视化 动画">
-                <div class="card-top">
-                    <div class="card-emoji">📉</div>
-                    <div class="card-meta">
-                        <h2>简洁折线图 <span class="version-tag">v2.0</span></h2>
-                        <div class="card-subtitle">Line Chart</div>
+                <div class="ext-card dev" data-category="visual" data-name="3D 卡片 悬浮 展示 图片 视频">
+                    <div class="ext-icon" style="background:linear-gradient(135deg,#434343,#000000)">🧊</div>
+                    <div class="ext-info">
+                        <div class="ext-title-row"><span class="ext-title">3D Card</span><span class="ext-badge-dev">Dev</span></div>
+                        <p class="ext-desc">伪 3D 悬浮展示卡片。支持图片/视频素材导入，自定义圆角和透视角度。</p>
+                        <div class="ext-meta">
+                            <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
+                            <span class="ext-meta-item">·</span>
+                            <span class="ext-meta-item">视觉类</span>
+                        </div>
                     </div>
+                    <div class="ext-action"><button class="btn-install">开发中</button></div>
                 </div>
-                <p class="card-desc">简洁风格动态折线图。支持自定义数据、动画时长调节、多种导出格式。</p>
-                <div class="card-footer">
-                    <span class="card-category-tag">图表类</span>
-                    <span class="card-go">→</span>
-                </div>
-            </a>
 
-            <!-- Paper Chart -->
-            <a href="effects/paper-chart.html" class="tool-card" data-category="chart" data-name="纸张 折线图 手绘 纹理 暖色 数据">
-                <div class="card-top">
-                    <div class="card-emoji">📋</div>
-                    <div class="card-meta">
-                        <h2>纸张折线图 <span class="version-tag">v2.0</span></h2>
-                        <div class="card-subtitle">Paper Chart</div>
+                <div class="ext-card dev" data-category="chart" data-name="全息 图表 柱状图 雷达图 赛博 数据可视化">
+                    <div class="ext-icon" style="background:linear-gradient(135deg,#fc4a1a,#f7b733)">📊</div>
+                    <div class="ext-info">
+                        <div class="ext-title-row"><span class="ext-title">Holo Chart</span><span class="ext-badge-dev">Dev</span></div>
+                        <p class="ext-desc">赛博风格数据可视化。动态柱状图、雷达图生长动画。</p>
+                        <div class="ext-meta">
+                            <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
+                            <span class="ext-meta-item">·</span>
+                            <span class="ext-meta-item">图表类</span>
+                        </div>
                     </div>
+                    <div class="ext-action"><button class="btn-install">开发中</button></div>
                 </div>
-                <p class="card-desc">纸张纹理风格折线图。噪声背景+手绘线条+暖色调。</p>
-                <div class="card-footer">
-                    <span class="card-category-tag">图表类</span>
-                    <span class="card-go">→</span>
-                </div>
-            </a>
 
-            <!-- Dev Section Divider -->
-            <div class="section-divider"><span>开发中</span></div>
+            </div><!-- /ext-grid -->
 
-            <!-- 3D Card (dev) -->
-            <div class="tool-card disabled" data-category="visual" data-name="3D 卡片 悬浮 展示 图片 视频">
-                <div class="card-top">
-                    <div class="card-emoji">🧊</div>
-                    <div class="card-meta">
-                        <h2>3D 卡片 <span class="version-tag">DEV</span></h2>
-                        <div class="card-subtitle">Card Generator</div>
-                    </div>
-                </div>
-                <p class="card-desc">伪 3D 悬浮展示卡片。支持图片/视频素材导入，自定义圆角、透视角度及动态高光。</p>
-                <div class="card-footer">
-                    <span class="card-category-tag">视觉类</span>
-                    <span class="card-go">🔒</span>
-                </div>
+            <!-- No results -->
+            <div class="no-results" id="NoResults">
+                <div class="no-results-icon">⌕</div>
+                <p>没有找到匹配的工具</p>
             </div>
 
-            <!-- Holo Chart (dev) -->
-            <div class="tool-card disabled" data-category="chart" data-name="全息 图表 柱状图 雷达图 赛博 数据可视化">
-                <div class="card-top">
-                    <div class="card-emoji">📊</div>
-                    <div class="card-meta">
-                        <h2>全息图表 <span class="version-tag">DEV</span></h2>
-                        <div class="card-subtitle">Holo Chart</div>
-                    </div>
-                </div>
-                <p class="card-desc">赛博风格数据可视化。支持动态柱状图、雷达图生长动画。</p>
-                <div class="card-footer">
-                    <span class="card-category-tag">图表类</span>
-                    <span class="card-go">🔒</span>
-                </div>
+            <!-- Pagination (decorative) -->
+            <div class="pagination">
+                <span class="page-num active">1</span>
             </div>
+        </section>
 
-        </main>
+    </main>
 
-        <!-- No results -->
-        <div class="no-results" id="NoResults">
-            <div class="no-results-icon">⌕</div>
-            <p>没有找到匹配的工具</p>
-        </div>
-
-        <footer>
-            &copy; 2026 FlowayMedia Internal Tools · <span>Authorized Personnel Only</span>
-        </footer>
-
-    </div>
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 FlowayMedia Internal Tools &middot; <span>Authorized Personnel Only</span></p>
+    </footer>
 
     <script type="module">
         import { getTheme, toggleTheme } from './shared/themes.js';
@@ -643,13 +972,14 @@
         btn.textContent = getTheme().id === 'dark' ? '☀' : '🌙';
 
         // ====== Staggered Card Entrance ======
-        const cards = document.querySelectorAll('.tool-card:not(.disabled)');
-        const toolCount = document.getElementById('ToolCount');
+        const featuredCards = document.querySelectorAll('.featured-card');
+        const extCards = document.querySelectorAll('.ext-card:not(.dev)');
+        const allCards = [...featuredCards, ...extCards];
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                    const idx = Array.from(cards).indexOf(entry.target);
+                    const idx = allCards.indexOf(entry.target);
                     entry.target.style.transitionDelay = `${idx * 0.05}s`;
                     entry.target.classList.add('visible');
                     observer.unobserve(entry.target);
@@ -657,61 +987,69 @@
             });
         }, { threshold: 0.05 });
 
-        cards.forEach(card => observer.observe(card));
+        allCards.forEach(card => observer.observe(card));
 
-        // Show disabled cards
+        // Fallback: show all cards after 100ms even if IO didn't fire (e.g. Puppeteer)
         setTimeout(() => {
-            document.querySelectorAll('.tool-card.disabled').forEach(card => {
+            document.querySelectorAll('.featured-card:not(.visible), .ext-card:not(.dev):not(.visible)').forEach(card => {
+                card.classList.add('visible');
+            });
+            document.querySelectorAll('.ext-card.dev').forEach(card => {
                 card.style.transitionDelay = '0s';
                 card.classList.add('visible');
             });
-        }, cards.length * 50 + 200);
+        }, 120);
+
+        // Show dev cards after live cards animate in
+        setTimeout(() => {
+            document.querySelectorAll('.ext-card.dev').forEach(card => {
+                card.style.transitionDelay = '0s';
+                card.classList.add('visible');
+            });
+        }, allCards.length * 50 + 200);
 
         // ====== Search + Filter ======
-        const searchInput = document.getElementById('SearchInput');
+        const heroSearch = document.getElementById('HeroSearchInput');
         const noResults = document.getElementById('NoResults');
-        const sectionDivider = document.querySelector('.section-divider');
+        const toolCount = document.getElementById('ToolCount');
 
         function filterCards(query, category) {
             const q = query.toLowerCase().trim();
             let visibleActive = 0;
             let visibleDev = 0;
 
-            document.querySelectorAll('.tool-card').forEach(card => {
-                const nameMatch = !q || card.dataset.name.toLowerCase().includes(q);
+            document.querySelectorAll('.ext-card').forEach(card => {
+                const nameMatch = !q || (card.dataset.name || '').toLowerCase().includes(q);
                 const catMatch = category === 'all' || card.dataset.category === category;
-                const isDisabled = card.classList.contains('disabled');
+                const isDisabled = card.classList.contains('dev');
 
                 if (nameMatch && catMatch) {
                     card.style.display = '';
-                    if (!isDisabled && !card.classList.contains('visible')) {
-                        card.classList.add('visible');
-                    }
-                    if (isDisabled) visibleDev++;
-                    else visibleActive++;
+                    visibleDev += isDisabled ? 1 : 0;
+                    visibleActive += isDisabled ? 0 : 1;
                 } else {
                     card.style.display = 'none';
                 }
             });
 
-            // Show/hide dev section divider
-            if (sectionDivider) {
-                sectionDivider.style.display = (visibleDev > 0 && (category === 'all' || visibleDev > 0)) ? '' : 'none';
-            }
+            document.querySelectorAll('.featured-card').forEach(card => {
+                const nameMatch = !q || (card.dataset.name || '').toLowerCase().includes(q);
+                const catMatch = category === 'all' || card.dataset.category === category;
+                card.style.display = (nameMatch && catMatch) ? '' : 'none';
+            });
 
-            // Update count
             const total = visibleActive + visibleDev;
-            toolCount.textContent = `${visibleActive} 个工具` + (visibleDev > 0 ? ` · ${visibleDev} 开发中` : '');
+            toolCount.textContent = `${total}`;
 
             noResults.classList.toggle('show', total === 0);
         }
 
-        searchInput.addEventListener('input', (e) => {
+        heroSearch.addEventListener('input', (e) => {
             const activeTab = document.querySelector('.filter-pill.active');
             filterCards(e.target.value, activeTab?.dataset.filter || 'all');
         });
 
-        // ====== Category Pills ======
+        // Category Pills
         const filterTabs = document.getElementById('FilterTabs');
         filterTabs.addEventListener('click', (e) => {
             const pill = e.target.closest('.filter-pill');
@@ -720,7 +1058,7 @@
             filterTabs.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
             pill.classList.add('active');
 
-            filterCards(searchInput.value, pill.dataset.filter);
+            filterCards(heroSearch.value, pill.dataset.filter);
         });
     </script>
 </body>

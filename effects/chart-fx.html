@@ -483,7 +483,7 @@
         recorder.canvas = glCanvas;
 
         // ====== 数据点 ======
-        let dataPoints = [
+        const INITIAL_DATA = [
             { label: '1月', value: 41 },  { label: '2月', value: 49 },
             { label: '3月', value: 51.5 }, { label: '4月', value: 52.5 },
             { label: '5月', value: 53.5 }, { label: '6月', value: 52 },
@@ -491,6 +491,7 @@
             { label: '9月', value: 58.5 }, { label: '10月', value: 57.5 },
             { label: '11月', value: 59 },  { label: '12月', value: 58 }
         ];
+        let dataPoints = INITIAL_DATA.map(d => ({...d}));
 
         // ====== 配置 ======
         let currentMode = 'paper';
@@ -848,7 +849,7 @@
         window.addRow = () => { dataPoints.push({ label: '新项', value: 0 }); renderTable(); };
         window.removeRow = (i) => { if (dataPoints.length <= 2) { alert('至少保留两个数据点'); return; } dataPoints.splice(i, 1); renderTable(); };
         window.moveRow = (i, dir) => { if (i+dir < 0 || i+dir >= dataPoints.length) return; const t = dataPoints[i]; dataPoints[i] = dataPoints[i+dir]; dataPoints[i+dir] = t; renderTable(); };
-        window.resetData = () => { dataPoints = [{ label:'A', value:20 },{ label:'B', value:50 },{ label:'C', value:30 },{ label:'D', value:80 },{ label:'E', value:60 }]; renderTable(); };
+        window.resetData = () => { dataPoints = INITIAL_DATA.map(d => ({...d})); renderTable(); };
 
         document.getElementById('BtnPlay').addEventListener('click', () => myResetAnimStart());
         document.getElementById('themeToggle').addEventListener('click', () => {
@@ -1114,7 +1115,7 @@
             // === 路径点（张力平滑 + 可选抖动） ===
             const jitter = isPaper ? config.lineJitter / 100 : 0;
             const tens = config.tension;
-            const ptsKey = `${dataPoints.length}|${jitter}|${tens}|${config.cardPad}|${config.chartOffX}|${config.chartOffY}|${config.chartExtraW}|${config.chartExtraH}|${w}|${yMin}-${yMax}`;
+            const ptsKey = `${dataPoints.map(d=>d.value).join(',')}|${jitter}|${tens}|${config.cardPad}|${config.chartOffX}|${config.chartOffY}|${config.chartExtraW}|${config.chartExtraH}|${w}|${yMin}-${yMax}`;
             if (!_pathPtsCache || _pathPtsCache.key !== ptsKey) {
                 const pts = dataPoints.map((d, i) => ({
                     x: padL + (i / Math.max(dataPoints.length - 1, 1)) * cw,
