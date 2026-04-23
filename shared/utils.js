@@ -393,6 +393,21 @@ export function saveFile(blob, name) {
  */
 export function bindUI(config, rules, opts = {}) {
     const onChange = opts.onChange || (() => {});
+    // 节流：连续输入（滑块、颜色选择器）最多每帧触发一次重绘
+    let _throttleId = null;
+    let _throttlePending = false;
+
+    function scheduleUpdate(val, key, elemId) {
+        _throttlePending = true;
+        if (_throttleId !== null) return;
+        _throttleId = requestAnimationFrame(() => {
+            _throttleId = null;
+            if (_throttlePending) {
+                _throttlePending = false;
+                onChange(val, key, elemId);
+            }
+        });
+    }
 
     function transformValue(raw, transform) {
         if (typeof transform === 'function') return transform(raw);
@@ -430,9 +445,14 @@ export function bindUI(config, rules, opts = {}) {
                 const display = document.getElementById(displayId);
                 if (display) display.innerText = el.value + (suffix || '');
             }
-            // 传 transform 后的值（checkbox 时为布尔值，而非 value 属性）
             const raw = transform === 'checked' ? el.checked : el.value;
-            onChange(transformValue(raw, transform), configKey, elemId);
+            const val = transformValue(raw, transform);
+            // 连续输入节流，离散输入立即触发
+            if (isSelect || isCheckbox) {
+                onChange(val, configKey, elemId);
+            } else {
+                scheduleUpdate(val, configKey, elemId);
+            }
         });
     }
 

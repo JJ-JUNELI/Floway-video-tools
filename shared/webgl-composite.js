@@ -41,6 +41,16 @@ export class WebGLComposite {
         this._initShaders();
         this._initBuffers();
         this._initTextures();
+
+        // 预分配可复用的矩阵数组（避免每帧 new Float32Array）
+        this._m0 = new Float32Array(16);
+        this._m1 = new Float32Array(16);
+        this._m2 = new Float32Array(16);
+        this._m3 = new Float32Array(16);
+        this._m4 = new Float32Array(16);
+        this._m5 = new Float32Array(16);
+        // 阴影缓存：参数未变时跳过重绘
+        this._shadowCache = { rx: null, ry: null, perspective: null, cardScale: null, elevation: null, cardRadius: null };
     }
 
     // ========== 着色器 ==========
@@ -185,132 +195,79 @@ export class WebGLComposite {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, sourceCanvas);
     }
 
-    // ========== 矩阵工具 ==========
-
-    /**
-     * CSS 兼容的 perspective 矩阵
-     * 等价于 CSS transform: perspective(d)
-     */
-    static mat4Perspective(d) {
-        // prettier-ignore
-        return new Float32Array([
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, -1/d,
-            0, 0, 0, 1
-        ]);
+    // ========== 矩阵工具（零分配）==========
+    _mat4Perspective(out, d) {
+        out[0]=1;out[1]=0;out[2]=0;out[3]=0;
+        out[4]=0;out[5]=1;out[6]=0;out[7]=0;
+        out[8]=0;out[9]=0;out[10]=1;out[11]=-1/d;
+        out[12]=0;out[13]=0;out[14]=0;out[15]=1;
+        return out;
     }
-
-    /** 4×4 矩阵乘法（列优先） */
-    static mat4Mul(a, b) {
-        const o = new Float32Array(16);
+    _mat4Mul(out, a, b) {
         for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
-                o[j * 4 + i] =
-                    a[0 * 4 + i] * b[j * 4 + 0] +
-                    a[1 * 4 + i] * b[j * 4 + 1] +
-                    a[2 * 4 + i] * b[j * 4 + 2] +
-                    a[3 * 4 + i] * b[j * 4 + 3];
-            }
+            out[i]   =a[i]*b[0] +a[i+4]*b[1] +a[i+8]*b[2]  +a[i+12]*b[3];
+            out[i+4] =a[i]*b[4] +a[i+4]*b[5] +a[i+8]*b[6]  +a[i+12]*b[7];
+            out[i+8] =a[i]*b[8] +a[i+4]*b[9] +a[i+8]*b[10] +a[i+12]*b[11];
+            out[i+12]=a[i]*b[12]+a[i+4]*b[13]+a[i+8]*b[14]+a[i+12]*b[15];
         }
-        return o;
+        return out;
     }
-
-    /** 单位矩阵 */
-    static mat4Identity() {
-        // prettier-ignore
-        return new Float32Array([
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1
-        ]);
+    _mat4Identity(out) {
+        out[0]=1;out[1]=0;out[2]=0;out[3]=0;
+        out[4]=0;out[5]=1;out[6]=0;out[7]=0;
+        out[8]=0;out[9]=0;out[10]=1;out[11]=0;
+        out[12]=0;out[13]=0;out[14]=0;out[15]=1;
+        return out;
     }
-
-    /** 平移矩阵 */
-    static mat4Translate(tx, ty, tz) {
-        // prettier-ignore
-        return new Float32Array([
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            tx, ty, tz, 1
-        ]);
+    _mat4Translate(out, tx, ty, tz) {
+        out[0]=1;out[1]=0;out[2]=0;out[3]=0;
+        out[4]=0;out[5]=1;out[6]=0;out[7]=0;
+        out[8]=0;out[9]=0;out[10]=1;out[11]=0;
+        out[12]=tx;out[13]=ty;out[14]=tz;out[15]=1;
+        return out;
     }
-
-    /** 绕 X 轴旋转矩阵 */
-    static mat4RotateX(rad) {
+    _mat4RotateX(out, rad) {
         const c = Math.cos(rad), s = Math.sin(rad);
-        // prettier-ignore
-        return new Float32Array([
-            1, 0, 0, 0,
-            0, c, s, 0,
-            0, -s, c, 0,
-            0, 0, 0, 1
-        ]);
+        out[0]=1;out[1]=0;out[2]=0;out[3]=0;
+        out[4]=0;out[5]=c;out[6]=s;out[7]=0;
+        out[8]=0;out[9]=-s;out[10]=c;out[11]=0;
+        out[12]=0;out[13]=0;out[14]=0;out[15]=1;
+        return out;
     }
-
-    /** 绕 Y 轴旋转矩阵 */
-    static mat4RotateY(rad) {
+    _mat4RotateY(out, rad) {
         const c = Math.cos(rad), s = Math.sin(rad);
-        // prettier-ignore
-        return new Float32Array([
-            c, 0, -s, 0,
-            0, 1, 0, 0,
-            s, 0, c, 0,
-            0, 0, 0, 1
-        ]);
+        out[0]=c;out[1]=0;out[2]=-s;out[3]=0;
+        out[4]=0;out[5]=1;out[6]=0;out[7]=0;
+        out[8]=s;out[9]=0;out[10]=c;out[11]=0;
+        out[12]=0;out[13]=0;out[14]=0;out[15]=1;
+        return out;
     }
 
     /**
      * 构建卡片 quad 的 MVP 矩阵
-     * NDC quad → 缩放到 cardScale → 旋转 → perspective 透视
-     *
-     * CSS 等价: perspective(900px) rotateX(rx) rotateY(ry) scale(cardScale)
-     * 物体在 z=0，只有旋转产生的 z 偏移才产生透视缩进
      */
     _buildCardMVP(rx, ry, perspective, cardScale, offsetX = 0, offsetY = 0) {
         const bw = this.baseWidth;
         const bh = this.baseHeight;
-
-        // NDC perspective 距离：CSS 900px / (canvas半高540px) = 1.667 NDC单位
         const d = perspective / (bh / 2);
-
-        // M = scale(cardScale)
-        // prettier-ignore
-        const M = new Float32Array([
-            cardScale, 0, 0, 0,
-            0, cardScale, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1
-        ]);
-
-        // V = rotateX(rx) × rotateY(ry)
-        const V = WebGLComposite.mat4Mul(
-            WebGLComposite.mat4RotateX(rx),
-            WebGLComposite.mat4RotateY(ry)
-        );
-
-        // P = perspective(d)，不加 translate
-        const P = WebGLComposite.mat4Perspective(d);
-
-        let result = WebGLComposite.mat4Mul(P, WebGLComposite.mat4Mul(V, M));
-
-        // 屏幕空间偏移（投影后 NDC 空间，用于入场动画）
+        const m = this._m0; m[0]=cardScale;m[5]=cardScale;m[10]=1;m[15]=1; m[1]=m[2]=m[3]=m[4]=m[6]=m[7]=m[8]=m[9]=m[11]=m[12]=m[13]=m[14]=0;
+        const rxOut = this._m1; this._mat4RotateX(rxOut, rx);
+        const ryOut = this._m2; this._mat4RotateY(ryOut, ry);
+        const V = this._m3; this._mat4Mul(V, rxOut, ryOut);
+        const P = this._m4; this._mat4Perspective(P, d);
+        const VM = this._m5; this._mat4Mul(VM, V, m);
+        let result = this._m0; this._mat4Mul(result, P, VM);
         if (offsetX !== 0 || offsetY !== 0) {
             const ndcOX = offsetX / (bw / 2);
-            const ndcOY = -offsetY / (bh / 2); // 翻转 Y：屏幕 Y 正方向向下，NDC Y 正方向向上
-            const T = WebGLComposite.mat4Translate(ndcOX, ndcOY, 0);
-            result = WebGLComposite.mat4Mul(T, result);
+            const ndcOY = -offsetY / (bh / 2);
+            const T = this._m3; this._mat4Translate(T, ndcOX, ndcOY, 0);
+            this._mat4Mul(this._m4, T, result);
+            result = this._m4;
         }
-
         return result;
     }
 
-    /** 构建全屏 quad 的 MVP（无旋转，用于背景） */
-    _buildFullscreenMVP() {
-        return WebGLComposite.mat4Identity();
-    }
+    _buildFullscreenMVP() { return this._mat4Identity(this._m0); }
 
     // ========== 绘制 ==========
 
@@ -321,24 +278,11 @@ export class WebGLComposite {
         gl.uniform1f(this._uRadius, radius);
         gl.uniform1f(this._uIsCard, isCard);
         gl.uniform1f(this._uAlpha, alpha);
-
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
     }
 
     // ========== 主渲染接口 ==========
 
-    /**
-     * 渲染一帧
-     * @param {Object} opts
-     * @param {HTMLCanvasElement} opts.bgCanvas      - 背景内容 canvas
-     * @param {HTMLCanvasElement} opts.cardCanvas     - 卡片内容 canvas
-     * @param {number} opts.rx                       - X轴旋转弧度
-     * @param {number} opts.ry                       - Y轴旋转弧度
-     * @param {number} [opts.perspective=900]         - 透视距离
-     * @param {number} [opts.elevation=0.5]           - 悬浮高度 0-1
-     * @param {number} [opts.cardScale=0.8]           - 卡片占画布比例
-     * @param {number} [opts.cardRadius=16]           - 圆角像素
-     */
     render(opts) {
         const gl = this.gl;
         const bw = this.baseWidth;
@@ -354,11 +298,10 @@ export class WebGLComposite {
 
         gl.useProgram(this._program);
 
-        // 绑定顶点属性
         gl.bindBuffer(gl.ARRAY_BUFFER, this._quadBuffer);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer);
 
-        const stride = 4 * 4; // 4 floats × 4 bytes
+        const stride = 4 * 4;
         gl.enableVertexAttribArray(this._aPosition);
         gl.vertexAttribPointer(this._aPosition, 2, gl.FLOAT, false, stride, 0);
         gl.enableVertexAttribArray(this._aTexCoord);
@@ -370,7 +313,6 @@ export class WebGLComposite {
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-        // 入场动画参数
         const offsetX = opts.offsetX || 0;
         const offsetY = opts.offsetY || 0;
         const cardAlpha = opts.cardAlpha !== undefined ? opts.cardAlpha : 1.0;
@@ -378,48 +320,48 @@ export class WebGLComposite {
         // === Pass 1: 背景 ===
         if (opts.bgCanvas) {
             this._uploadTexture(opts.bgCanvas);
-            const bgMVP = this._buildFullscreenMVP();
-            this._drawQuad(bgMVP, { x: 0, y: 0, w: 1, h: 1 }, 0, 0, 1.0);
+            this._drawQuad(this._buildFullscreenMVP(), { x: 0, y: 0, w: 1, h: 1 }, 0, 0, 1.0);
         }
 
-        // === Pass 2: 卡片阴影 ===
-        // 阴影偏移量基于 elevation
+        // === Pass 2: 卡片阴影（带缓存）===
         {
+            const sc = this._shadowCache;
+            const paramsChanged = sc.rx !== opts.rx || sc.ry !== opts.ry ||
+                sc.perspective !== perspective || sc.cardScale !== cardScale ||
+                sc.elevation !== elevation || sc.cardRadius !== cardRadius;
+            if (paramsChanged) {
+                const shadowCanvas = this._getShadowCanvas();
+                const sctx = shadowCanvas.getContext('2d');
+                sctx.clearRect(0, 0, shadowCanvas.width, shadowCanvas.height);
+                const sy = 4 + elevation * 36;
+                const sb = 12 + elevation * 44;
+                sctx.save();
+                sctx.setTransform(1, 0, 0, 1, 0, 0);
+                sctx.scale(shadowCanvas.width / bw, shadowCanvas.height / bh);
+                sctx.shadowOffsetX = 0;
+                sctx.shadowOffsetY = sy * 0.6;
+                sctx.shadowBlur = sb * 0.5;
+                sctx.shadowColor = 'rgba(0,0,0,' + (0.05 + elevation * 0.10) + ')';
+                sctx.fillStyle = 'rgba(0,0,0,0.3)';
+                sctx.beginPath();
+                this._roundRect(sctx, 0, 0, bw, bh, cardRadius);
+                sctx.fill();
+                sctx.restore();
+                sc.rx = opts.rx; sc.ry = opts.ry; sc.perspective = perspective;
+                sc.cardScale = cardScale; sc.elevation = elevation; sc.cardRadius = cardRadius;
+            }
             const shadowCanvas = this._getShadowCanvas();
-            const sctx = shadowCanvas.getContext('2d');
-            sctx.clearRect(0, 0, shadowCanvas.width, shadowCanvas.height);
-
-            const sy = 4 + elevation * 36;
-            const sb = 12 + elevation * 44;
-
-            // 阴影 canvas 和卡片 canvas 同尺寸，居中画圆角矩形
-            sctx.save();
-            sctx.setTransform(1, 0, 0, 1, 0, 0);
-            sctx.scale(shadowCanvas.width / bw, shadowCanvas.height / bh);
-            sctx.shadowOffsetX = 0;
-            sctx.shadowOffsetY = sy * 0.6;
-            sctx.shadowBlur = sb * 0.5;
-            sctx.shadowColor = `rgba(0,0,0,${0.05 + elevation * 0.10})`;
-            sctx.fillStyle = 'rgba(0,0,0,0.3)';
-            sctx.beginPath();
-            this._roundRect(sctx, 0, 0, bw, bh, cardRadius);
-            sctx.fill();
-            sctx.restore();
-
-            // 阴影用和卡片一样的 MVP（透视变换），但阴影偏移量通过 canvas 偏移实现
             this._uploadTexture(shadowCanvas);
-            const shadowMVP = this._buildCardMVP(opts.rx, opts.ry, perspective, cardScale, offsetX, offsetY);
-            this._drawQuad(shadowMVP, { x: 0, y: 0, w: 1, h: 1 }, 0, 0, 0.6 * cardAlpha);
+            this._drawQuad(this._buildCardMVP(opts.rx, opts.ry, perspective, cardScale, offsetX, offsetY),
+                { x: 0, y: 0, w: 1, h: 1 }, 0, 0, 0.6 * cardAlpha);
         }
 
-        // === Pass 3: 卡片内容（带透视旋转） ===
+        // === Pass 3: 卡片内容 ===
         if (opts.cardCanvas) {
             this._uploadTexture(opts.cardCanvas);
-            const cardMVP = this._buildCardMVP(opts.rx, opts.ry, perspective, cardScale, offsetX, offsetY);
-            // 圆角归一化（相对纹理尺寸）
             const rNorm = cardRadius / bw;
-            // 卡片内容占满整个纹理 (0,0,1,1)
-            this._drawQuad(cardMVP, { x: 0, y: 0, w: 1, h: 1 }, rNorm, 1.0, cardAlpha);
+            this._drawQuad(this._buildCardMVP(opts.rx, opts.ry, perspective, cardScale, offsetX, offsetY),
+                { x: 0, y: 0, w: 1, h: 1 }, rNorm, 1.0, cardAlpha);
         }
     }
 
@@ -447,7 +389,6 @@ export class WebGLComposite {
         c.arcTo(x, y, x + r, y, r);
     }
 
-    /** 清理 WebGL 资源 */
     destroy() {
         const gl = this.gl;
         gl.deleteProgram(this._program);

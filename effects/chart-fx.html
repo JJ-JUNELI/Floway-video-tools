@@ -186,9 +186,11 @@
                 </div>
             </div>
 
-            <!-- 折线样式（公用 + 颜色） -->
+            <!-- 折线样式 -->
             <div class="control-group">
-                <div class="group-title"><span>📈 折线样式</span></div>
+                <div class="group-title"><span>📊 图表样式</span></div>
+                <div class="sub-title"><span>显示折线</span><input type="checkbox" id="ShowLine" checked></div>
+                <div id="LineOptions">
                 <div class="sub-section ss-blue">
                     <div class="sub-section-label">线条</div>
                     <div class="row">
@@ -215,8 +217,58 @@
                             <input type="range" id="DropLineOpacity" min="0" max="100" step="5" value="20"></div>
                     </div>
                 </div>
+                </div>
+                <div class="sub-title"><span>显示柱状图</span><input type="checkbox" id="ShowBars"></div>
+                <div id="BarOptions" style="display:none;">
+                <div class="sub-section ss-orange">
+                    <div class="sub-section-label">柱子样式</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>柱宽比例</span><span id="BarWidthVal">60%</span></div>
+                            <input type="range" id="BarWidth" min="10" max="100" step="5" value="60"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>顶部圆角</span><span id="BarRadiusVal">4</span></div>
+                            <input type="range" id="BarRadius" min="0" max="20" step="1" value="4"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>填充透明度</span><span id="BarOpacityVal">70%</span></div>
+                            <input type="range" id="BarOpacity" min="0" max="100" step="5" value="70"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>柱子颜色</span></div>
+                            <input type="color" id="BarColor" value="#888888"></div>
+                    </div>
+                    <div class="sub-title"><span>渐变填充</span><input type="checkbox" id="BarGradient"></div>
+                    <div class="row" id="BarGradientEndRow" style="display:none; justify-content:space-between; align-items:center;">
+                        <span style="font-size:12px; color:var(--text-sub, #888);">渐变终止色</span>
+                        <input type="color" id="BarGradientEnd" value="#cccccc">
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="BarStrokeWidthVal">0</span></div>
+                            <input type="range" id="BarStrokeWidth" min="0" max="6" step="0.5" value="0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>描边颜色</span></div>
+                            <input type="color" id="BarStrokeColor" value="#555555"></div>
+                    </div>
+                </div>
+                </div>
+                <!-- 动画设置 -->
+                <div class="sub-section ss-purple">
+                    <div class="sub-section-label" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>动画</span>
+                        <button id="BtnPlay" class="btn-play">▶ 播放</button>
+                    </div>
+                    <div class="row stack"><div class="label-line"><span>动画时长 (秒)</span><span id="AnimDurationVal">3.5s</span></div>
+                        <input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="3.5"></div>
+                    <div class="row stack"><div class="label-line"><span>动画曲线</span></div>
+                        <select id="AnimEasing">
+                            <option value="linear">线性 (Linear)</option>
+                            <option value="easeIn">先慢后快 (Ease In)</option>
+                            <option value="easeOut">先快后慢 (Ease Out)</option>
+                            <option value="easeInOut" selected>丝滑缓动 (Smooth)</option>
+                        </select></div>
+                </div>
+            </div>
+
+            <!-- 数据点 & 标签 -->
+            <div class="control-group">
+                <div class="group-title"><span>🔵 数据点 & 标签</span></div>
                 <div class="sub-section ss-green">
-                    <div class="sub-section-label">数据点 & 标签</div>
                     <div class="sub-title"><span>显示数据点</span><input type="checkbox" id="ShowPoints" checked></div>
                     <div id="PointSizeOpts" style="margin-top:6px;">
                         <div class="row">
@@ -232,6 +284,13 @@
                             <div style="flex:1" class="stack"><div class="label-line"><span>数值颜色</span></div>
                                 <input type="color" id="ValueColor" value="#ffffff"></div>
                         </div>
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>Y轴偏移</span><span id="ValueYOffsetVal">-20</span></div>
+                                <input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-20"></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>背景颜色</span></div>
+                                <input type="color" id="ValueBgColor" value="#555555"></div>
+                        </div>
+                        <div class="sub-title"><span>显示背景</span><input type="checkbox" id="ValueBgEnabled" checked></div>
                     </div>
                 </div>
             </div>
@@ -412,23 +471,6 @@
                 </div>
             </div>
 
-            <!-- 动画设置 -->
-            <div class="control-group" style="border-left: 3px solid var(--accent);">
-                <div class="group-title">
-                    <span>⚡ 动画设置</span>
-                    <button id="BtnPlay" class="btn-play">▶ 播放</button>
-                </div>
-                <div class="row stack"><div class="label-line"><span>动画时长 (秒)</span><span id="AnimDurationVal">3.5s</span></div>
-                    <input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="3.5"></div>
-                <div class="row stack"><div class="label-line"><span>动画曲线</span></div>
-                    <select id="AnimEasing">
-                        <option value="linear">线性 (Linear)</option>
-                        <option value="easeIn">先慢后快 (Ease In)</option>
-                        <option value="easeOut">先快后慢 (Ease Out)</option>
-                        <option value="easeInOut" selected>丝滑缓动 (Smooth)</option>
-                    </select></div>
-            </div>
-
             <!-- 背景和导出面板由 shared/controls.js 自动注入 -->
             <div id="shared-controls-placeholder"></div>
         </div>
@@ -513,11 +555,25 @@
             subTitleY: 0,
             showBrackets: true,
             // 折线
+            showLine: true,
             lineWidth: 1.2,
             lineColor: '#555555',
             showPoints: true,
             showValues: false,
+            valueYOffset: -20,
+            valueBgEnabled: true,
+            valueBgColor: '#555555',
             pointSize: 4,
+            // 柱状图
+            showBars: false,
+            barWidth: 0.6,
+            barColor: '',
+            barOpacity: 0.7,
+            barRadius: 4,
+            barGradient: false,
+            barGradientEnd: '',
+            barStrokeWidth: 0,
+            barStrokeColor: '',
             // 网格与坐标
             gridY: 4,
             yAxisMode: 'zero',
@@ -655,7 +711,7 @@
         const titleFontSelectId = 'TitleFontSelect';
         document.getElementById('TitleFontMount').innerHTML = fontSelectHTML(titleFontSelectId, config.titleFont);
         setupFontSelector({ selectId: titleFontSelectId, configKey: 'titleFont', fileInputId: titleFontSelectId + 'Upload', config });
-        document.getElementById(titleFontSelectId).addEventListener('change', () => { _pathPtsCache = null; });
+        document.getElementById(titleFontSelectId).addEventListener('change', () => { _pathPtsCache = null; startLoop(); });
 
         // ====== UI 绑定 ======
         bindUI(config, [
@@ -692,10 +748,23 @@
             ['FillOpacity',     'fillOpacity',    '%',     'FillOpacityVal', '%'],
             ['DropLineOpacity', 'dropLineOpacity', '%',    'DropLineOpacityVal', '%'],
             ['ShowPoints',      'showPoints',     'checked'],
+            ['ShowLine',        'showLine',       'checked'],
+            ['ShowBars',        'showBars',       'checked'],
+            ['BarWidth',        'barWidth',       '%',     'BarWidthVal',    '%'],
+            ['BarRadius',       'barRadius',      'int',   'BarRadiusVal'],
+            ['BarOpacity',      'barOpacity',     '%',     'BarOpacityVal',  '%'],
+            ['BarColor',        'barColor'],
+            ['BarGradient',     'barGradient',    'checked'],
+            ['BarGradientEnd',  'barGradientEnd'],
+            ['BarStrokeWidth',  'barStrokeWidth', 'float', 'BarStrokeWidthVal'],
+            ['BarStrokeColor',  'barStrokeColor'],
             ['PointSize',       'pointSize',      'float', 'PointSizeVal'],
             ['ShowValues',      'showValues',     'checked'],
             ['ValueSize',       'valueSize',      'int',   'ValueSizeVal'],
             ['ValueColor',      'valueColor'],
+            ['ValueYOffset',    'valueYOffset',   'int',   'ValueYOffsetVal'],
+            ['ValueBgEnabled',  'valueBgEnabled', 'checked'],
+            ['ValueBgColor',    'valueBgColor'],
             // 网格与坐标
             ['GridY',           'gridY',          'int',   'GridYVal'],
             ['YAxisMode',       'yAxisMode'],
@@ -745,8 +814,8 @@
                     document.getElementById('YAxisCustomPanel').style.display =
                         config.yAxisMode === 'custom' ? 'block' : 'none';
                 }
-                if (key === 'floatEnabled' && config.floatEnabled) {
-                    startFloatAnim();
+                if (key === 'floatEnabled') {
+                    _floatStartTime = performance.now();
                 }
                 if (key === 'entranceEnabled') {
                     const show = config.entranceEnabled;
@@ -756,15 +825,16 @@
                 _paperTexCache = null;
                 _staticBgCache = null;
                 _pathPtsCache = null;
+                startLoop();
             }
         });
 
-        // ====== 漂浮动画 ======
-        let _currentRx = 0, _currentRy = 0;
-        let _floatAnimId = null;
+        // ====== 漂浮动画（合并到主循环）======
+        let _currentRx = config.rotateX * Math.PI / 180;
+        let _currentRy = config.rotateY * Math.PI / 180;
         let _floatStartTime = performance.now();
 
-        function floatAnimLoop(now) {
+        function updateFloatRotation(now) {
             if (config.floatEnabled) {
                 const elapsed = (now - _floatStartTime) / 1000;
                 const dur = config.floatDuration;
@@ -775,15 +845,7 @@
                 _currentRx = config.rotateX * Math.PI / 180;
                 _currentRy = config.rotateY * Math.PI / 180;
             }
-            _floatAnimId = requestAnimationFrame(floatAnimLoop);
         }
-
-        function startFloatAnim() {
-            if (_floatAnimId) { cancelAnimationFrame(_floatAnimId); _floatAnimId = null; }
-            _floatStartTime = performance.now();
-            _floatAnimId = requestAnimationFrame(floatAnimLoop);
-        }
-        startFloatAnim();
 
         // ====== 入场动画预设 ======
         const ENTRANCE_PRESETS = {
@@ -845,17 +907,18 @@
                 tbody.appendChild(tr);
             });
         }
-        window.updateData = (i, k, v) => { dataPoints[i][k] = k === 'value' ? (parseFloat(v) || 0) : v; };
-        window.addRow = () => { dataPoints.push({ label: '新项', value: 0 }); renderTable(); };
-        window.removeRow = (i) => { if (dataPoints.length <= 2) { alert('至少保留两个数据点'); return; } dataPoints.splice(i, 1); renderTable(); };
-        window.moveRow = (i, dir) => { if (i+dir < 0 || i+dir >= dataPoints.length) return; const t = dataPoints[i]; dataPoints[i] = dataPoints[i+dir]; dataPoints[i+dir] = t; renderTable(); };
-        window.resetData = () => { dataPoints = INITIAL_DATA.map(d => ({...d})); renderTable(); };
+        window.updateData = (i, k, v) => { dataPoints[i][k] = k === 'value' ? (parseFloat(v) || 0) : v; _pathPtsCache = null; startLoop(); };
+        window.addRow = () => { dataPoints.push({ label: '新项', value: 0 }); renderTable(); _pathPtsCache = null; startLoop(); };
+        window.removeRow = (i) => { if (dataPoints.length <= 2) { alert('至少保留两个数据点'); return; } dataPoints.splice(i, 1); renderTable(); _pathPtsCache = null; startLoop(); };
+        window.moveRow = (i, dir) => { if (i+dir < 0 || i+dir >= dataPoints.length) return; const t = dataPoints[i]; dataPoints[i] = dataPoints[i+dir]; dataPoints[i+dir] = t; renderTable(); _pathPtsCache = null; startLoop(); };
+        window.resetData = () => { dataPoints = INITIAL_DATA.map(d => ({...d})); renderTable(); _pathPtsCache = null; startLoop(); };
 
         document.getElementById('BtnPlay').addEventListener('click', () => myResetAnimStart());
         document.getElementById('themeToggle').addEventListener('click', () => {
             toggleTheme();
             document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
             _paperTexCache = null; _staticBgCache = null;
+            startLoop();
         });
         document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
 
@@ -879,6 +942,27 @@
             areaColorRow.style.display = config.areaFollowLine ? 'none' : '';
         });
         if (config.areaFollowLine) areaColorRow.style.display = 'none';
+
+        // 条件显示：折线选项（关闭折线时折叠）
+        const lineOptsEl = document.getElementById('LineOptions');
+        document.getElementById('ShowLine').addEventListener('change', () => {
+            lineOptsEl.style.display = config.showLine ? '' : 'none';
+        });
+        if (!config.showLine) lineOptsEl.style.display = 'none';
+
+        // 条件显示：柱状图选项
+        const barOptsEl = document.getElementById('BarOptions');
+        document.getElementById('ShowBars').addEventListener('change', () => {
+            barOptsEl.style.display = config.showBars ? '' : 'none';
+        });
+        if (config.showBars) barOptsEl.style.display = '';
+
+        // 条件显示：渐变终止色
+        const barGradEndRow = document.getElementById('BarGradientEndRow');
+        document.getElementById('BarGradient').addEventListener('change', () => {
+            barGradEndRow.style.display = config.barGradient ? '' : 'none';
+        });
+        if (config.barGradient) barGradEndRow.style.display = '';
 
         // ====== Y 轴范围 ======
         function getYStep(span) {
@@ -994,6 +1078,14 @@
             c.lineTo(x, y + r); c.arcTo(x, y, x + r, y, r);
         }
 
+        function lightenColor(hex, amount) {
+            const c = hex.replace('#', '');
+            const r = Math.min(255, parseInt(c.slice(0, 2), 16) + amount);
+            const g = Math.min(255, parseInt(c.slice(2, 4), 16) + amount);
+            const b = Math.min(255, parseInt(c.slice(4, 6), 16) + amount);
+            return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+        }
+
         // Catmull-Rom 样条曲线（赛博模式）
         function drawSmoothPath(ctx, points, tension) {
             if (points.length < 2) return;
@@ -1013,11 +1105,48 @@
         // ====== 静态背景缓存（纸张模式） ======
         let _staticBgCache = null;
         let _pathPtsCache = null;
+        let _colorCache = null;
+        let _labelMeasureCache = null; // 数值标签文字宽度缓存
+
+        function getLabelMeasures() {
+            const key = `${dataPoints.map(d=>d.value).join(',')}|${config.valueSize}|${config.titleFont}`;
+            if (!_labelMeasureCache || _labelMeasureCache.key !== key) {
+                const mCtx = offscreen.getContext('2d');
+                mCtx.font = `bold ${config.valueSize}px ${config.titleFont}`;
+                _labelMeasureCache = {
+                    key,
+                    widths: dataPoints.map(d => mCtx.measureText(String(d.value)).width),
+                    th: config.valueSize + 6,
+                };
+            }
+            return _labelMeasureCache;
+        }
+
+        function getColorCache() {
+            const key = `${config.lineColor}|${config.barColor||''}|${config.barGradientEnd||''}|${config.barOpacity}|${config.valueBgColor}|${config.valueColor}|${config.gridColor}|${config.areaColor}|${config.fillOpacity}`;
+            if (!_colorCache || _colorCache.key !== key) {
+                const bc = config.barColor || config.lineColor;
+                const gEnd = config.barGradientEnd || lightenColor(bc, 40);
+                _colorCache = {
+                    key,
+                    lineRgba: config.lineColor,
+                    barFill: hexToRgba(bc, config.barOpacity),
+                    barGradEnd: hexToRgba(gEnd, config.barOpacity),
+                    valueBgFill: hexToRgba(config.valueBgColor, 0.15),
+                    valueBgStroke: hexToRgba(config.valueBgColor, 0.3),
+                    gridRgba: hexToRgba(config.gridColor, 0.5),
+                    gridAxisRgba: hexToRgba(config.gridColor, 0.5),
+                    areaFill: config.areaFollowLine ? null : hexToRgba(config.areaColor, config.fillOpacity),
+                };
+            }
+            return _colorCache;
+        }
 
         // ====== 统一绘制函数 ======
         function drawContent(w, h, progress, rawProgress, isHold) {
             const isPaper = currentMode === 'paper';
             const t = getTheme();
+            const cc = getColorCache(); // 颜色缓存，避免每帧重复解析
 
             // 布局计算
             const _pad = config.cardPad;
@@ -1026,6 +1155,9 @@
             const cw = (w - (_pad + 98) * 2) + config.chartExtraW;
             const ch = (h - (_pad + 50) - (_pad + 55)) + config.chartExtraH;
             const { yMin, yMax } = getYRange();
+            // 图表内容整体右移半个柱宽，避开Y轴标签区（Y轴标签位置不变）
+            const barHalfW = (cw / Math.max(dataPoints.length, 1)) * config.barWidth / 2;
+            const chartX = padL + barHalfW; // 图表内容实际起始x（整体右移半个柱宽）
 
             // 裁剪圆角
             ctx.save();
@@ -1046,20 +1178,34 @@
             if (config.showGrid && config.gridOpacity > 0) {
                 const gv = config.gridOpacity;
                 ctx.save();
-                ctx.strokeStyle = hexToRgba(config.gridColor, gv * 0.5);
+                ctx.strokeStyle = cc.gridRgba;
                 ctx.lineWidth = 0.5;
                 if (config.dashedGrid) ctx.setLineDash([3, 6]);
                 // 竖线（每个数据点）
                 for (let i = 0; i < dataPoints.length; i++) {
-                    const x = padL + (i / Math.max(dataPoints.length - 1, 1)) * cw;
+                    const x = chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw;
                     ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ch); ctx.stroke();
                 }
-                // 横线（Y轴刻度）
+                // 横线（Y轴刻度，从图表区开始到结束）
                 for (let i = 0; i <= config.gridY; i++) {
                     const ratio = i / config.gridY;
                     const y = padT + ch - ratio * ch;
-                    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cw, y); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(chartX, y); ctx.lineTo(chartX + cw, y); ctx.stroke();
                 }
+                ctx.restore();
+            }
+
+            // === X轴基线（无Y轴竖线，仅覆盖图表区域）===
+            if (dataPoints.length > 0) {
+                ctx.save();
+                const axisAlpha = isHold ? 1 : clamp(rawProgress * 1.5, 0, 0.35);
+                ctx.strokeStyle = cc.gridAxisRgba;
+                ctx.lineWidth = 1;
+                // X轴基线：左边不动（padL），右边延伸到图表区末尾
+                ctx.beginPath();
+                ctx.moveTo(padL, padT + ch);
+                ctx.lineTo(chartX + cw, padT + ch);
+                ctx.stroke();
                 ctx.restore();
             }
 
@@ -1080,7 +1226,7 @@
             ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
             ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
             dataPoints.forEach((d, i) => {
-                ctx.fillText(d.label, padL + (i / Math.max(dataPoints.length - 1, 1)) * cw, padT + ch + 22);
+                ctx.fillText(d.label, chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw, padT + ch + 22);
             });
             ctx.restore();
 
@@ -1096,19 +1242,14 @@
             ctx.fillText(titleText, 720 + config.mainTitleX, 540 + config.mainTitleY);
             ctx.restore();
 
-            // 副标题
-            ctx.save();
-            ctx.font = `${config.subTitleWeight} ${config.subTitleSize}px ${config.titleFont}`;
-            ctx.fillStyle = config.subTitleColor;
-            ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.globalAlpha = subTitleAlpha;
-            if (config.subTitleGlow) { ctx.shadowColor = config.subTitleColor; ctx.shadowBlur = 25; }
-            ctx.fillText(config.subTitle, 720 + config.subTitleX, 540 + config.subTitleY);
-            ctx.restore();
+            // 副标题已移至最顶层绘制
 
             if (!dataPoints.length) {
+                ctx.save();
                 ctx.fillStyle = t.textSub; ctx.font = `24px ${config.titleFont}`;
                 ctx.textAlign = 'center'; ctx.fillText('请添加数据点', w / 2, h / 2);
                 ctx.restore();
+                ctx.restore(); // clip
                 return;
             }
 
@@ -1118,7 +1259,7 @@
             const ptsKey = `${dataPoints.map(d=>d.value).join(',')}|${jitter}|${tens}|${config.cardPad}|${config.chartOffX}|${config.chartOffY}|${config.chartExtraW}|${config.chartExtraH}|${w}|${yMin}-${yMax}`;
             if (!_pathPtsCache || _pathPtsCache.key !== ptsKey) {
                 const pts = dataPoints.map((d, i) => ({
-                    x: padL + (i / Math.max(dataPoints.length - 1, 1)) * cw,
+                    x: chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw,
                     y: padT + ch - ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch
                 }));
                 _lineSeed = 54321;
@@ -1190,6 +1331,73 @@
                 tipY = pathPoints[lo].y + (pathPoints[lineDrawn].y - pathPoints[lo].y) * frac;
             }
 
+            // === 柱状图 ===
+            if (config.showBars) {
+                const barCount = dataPoints.length;
+                const slotW = cw / Math.max(barCount, 1);
+                const bw = slotW * config.barWidth;
+                const bColor = config.barColor || config.lineColor;
+                const sColor = config.barStrokeColor || bColor;
+                const barProgress = isHold ? 1 : clamp(progress, 0, 1);
+                const baseY = padT + ch;
+                // 颜色从缓存读取
+                const fillBase = cc.barFill;
+                const useGrad = config.barGradient;
+                const gradEndRgba = useGrad ? cc.barGradEnd : null;
+                const sw = config.barStrokeWidth;
+
+                ctx.save();
+                dataPoints.forEach((d, i) => {
+                    const barCx = chartX + (i / Math.max(barCount - 1, 1)) * cw;
+                    const bx = barCx - bw / 2;
+                    const valH = ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch * barProgress;
+                    const bh = valH;
+                    const by = baseY - valH;
+
+                    if (bh < 1) return;
+
+                    const r = Math.min(config.barRadius, bw / 2, bh / 2);
+
+                    // 填充（仅渐变时创建gradient对象）
+                    if (useGrad && bh > r * 2) {
+                        ctx.fillStyle = createLinearGradient(ctx, bx, by, bx, by + bh,
+                            [{ pos: 0, color: fillBase }, { pos: 1, color: gradEndRgba }]);
+                    } else {
+                        ctx.fillStyle = fillBase;
+                    }
+
+                    // 仅顶部圆角路径
+                    ctx.beginPath();
+                    ctx.moveTo(bx + r, by);
+                    ctx.lineTo(bx + bw - r, by);
+                    ctx.arcTo(bx + bw, by, bx + bw, by + r, r);
+                    ctx.lineTo(bx + bw, by + bh);
+                    ctx.lineTo(bx, by + bh);
+                    ctx.lineTo(bx, by + r);
+                    ctx.arcTo(bx, by, bx + r, by, r);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // 三边描边
+                    if (sw > 0) {
+                        ctx.strokeStyle = sColor;
+                        ctx.lineWidth = sw;
+                        ctx.beginPath();
+                        ctx.moveTo(bx + r, by);
+                        ctx.lineTo(bx + bw - r, by);
+                        ctx.arcTo(bx + bw, by, bx + bw, by + r, r);
+                        ctx.lineTo(bx + bw, by + bh);
+                        ctx.moveTo(bx, by + bh);
+                        ctx.lineTo(bx, by + r);
+                        ctx.arcTo(bx, by, bx + r, by, r);
+                        ctx.stroke();
+                    }
+                });
+                ctx.restore();
+            }
+
+            // === 折线相关 ===
+            if (config.showLine) {
             // === 填充 ===
             if (config.showArea && lineDrawn >= 2) {
                 const bottomY = padT + ch;
@@ -1253,6 +1461,7 @@
                 });
                 ctx.restore();
             }
+            } // end if (config.showLine)
 
             // === 数据点 ===
             if (config.showPoints) {
@@ -1298,18 +1507,37 @@
             // === 数值标签 ===
             if (config.showValues && rawProgress > 0.94) {
                 const labelAlpha = clamp((rawProgress - 0.94) / 0.06, 0, 1);
+                const lm = getLabelMeasures(); // 缓存的文字宽度
+                const vBgOn = config.valueBgEnabled;
+                const yOffset = config.valueYOffset;
+                const th = lm.th;
+
                 ctx.save();
+                // 先批量画背景（避免每标签切换 fillStyle）
+                if (vBgOn) {
+                    ctx.fillStyle = cc.valueBgFill;
+                    points.forEach((p, i) => {
+                        const tw = lm.widths[i];
+                        const bx = p.x - tw / 2 - 5;
+                        const by = p.y + yOffset - th;
+                        ctx.fillRect(bx, by, tw + 10, th);
+                    });
+                    ctx.strokeStyle = cc.valueBgStroke; ctx.lineWidth = 0.5;
+                    points.forEach((p, i) => {
+                        const tw = lm.widths[i];
+                        const bx = p.x - tw / 2 - 5;
+                        const by = p.y + yOffset - th;
+                        ctx.strokeRect(bx, by, tw + 10, th);
+                    });
+                }
+                // 批量画文字
                 ctx.font = `bold ${config.valueSize}px ${config.titleFont}`;
+                ctx.fillStyle = config.valueColor;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.globalAlpha = labelAlpha;
                 points.forEach((p, i) => {
                     const txt = String(dataPoints[i].value);
-                    const tw = ctx.measureText(txt).width, th = config.valueSize + 6;
-                    const bx = p.x - tw / 2 - 5, by = p.y - config.pointSize * 6 - th - 4;
-                    ctx.beginPath(); roundRect(ctx, bx, by, tw + 10, th, th / 2);
-                    ctx.fillStyle = hexToRgba(config.lineColor, 0.15); ctx.fill();
-                    ctx.strokeStyle = hexToRgba(config.lineColor, 0.3); ctx.lineWidth = 0.5; ctx.stroke();
-                    ctx.globalAlpha = labelAlpha; ctx.fillStyle = config.valueColor;
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    ctx.fillText(txt, p.x, by + th / 2);
+                    ctx.fillText(txt, p.x, p.y + yOffset - th / 2);
                 });
                 ctx.restore();
             }
@@ -1321,6 +1549,18 @@
                 ctx.strokeStyle = config.cardBorderColor;
                 ctx.lineWidth = config.cardBorder;
                 ctx.stroke();
+            }
+
+            // === 副标题（最顶层）===
+            {
+                const subTitleAlpha = isHold ? 1 : clamp((rawProgress - 0.3) * 2, 0, 1);
+                ctx.save();
+                ctx.font = `${config.subTitleWeight} ${config.subTitleSize}px ${config.titleFont}`;
+                ctx.fillStyle = config.subTitleColor;
+                ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.globalAlpha = subTitleAlpha;
+                if (config.subTitleGlow) { ctx.shadowColor = config.subTitleColor; ctx.shadowBlur = 25; }
+                ctx.fillText(config.subTitle, 720 + config.subTitleX, 540 + config.subTitleY);
+                ctx.restore();
             }
 
             ctx.restore(); // clip
@@ -1395,34 +1635,48 @@
             });
         }
 
-        // ====== 预览循环 ======
+        // ====== 预览循环（按需启停）======
         renderTable();
 
         let _animStartTime = performance.now();
-        let _previewRunning = false;
+        let _loopId = null;
         const origResetAnimStart = resetAnimStart;
 
         function myResetAnimStart() {
             _animStartTime = performance.now();
             origResetAnimStart();
+            startLoop();
         }
 
-        function startPreviewLoopCustom() {
-            if (_previewRunning) return;
-            _previewRunning = true;
-            function loop() {
-                if (!recorder.isRecording) {
-                    let time = performance.now() - _animStartTime;
-                    const entranceDur = config.entranceEnabled ? config.entranceDuration * 1000 : 0;
-                    const totalDur = Math.max(entranceDur, (config.lineDelay + config.animDuration) * 1000);
-                    if (totalDur > 0 && time > totalDur) time = Infinity;
-                    drawFrame(time);
-                }
-                requestAnimationFrame(loop);
-            }
-            requestAnimationFrame(loop);
+        function startLoop() {
+            if (_loopId !== null) return;
+            _loopId = requestAnimationFrame(mainLoop);
         }
-        startPreviewLoopCustom();
+
+        function mainLoop(now) {
+            _loopId = null;
+
+            if (recorder.isRecording) {
+                _loopId = requestAnimationFrame(mainLoop);
+                return;
+            }
+
+            updateFloatRotation(now);
+
+            let time = now - _animStartTime;
+            const entranceDur = config.entranceEnabled ? config.entranceDuration * 1000 : 0;
+            const totalDur = Math.max(entranceDur, (config.lineDelay + config.animDuration) * 1000);
+            const animDone = totalDur > 0 && time > totalDur;
+
+            if (animDone) time = Infinity;
+            drawFrame(time);
+
+            if (!animDone || config.floatEnabled) {
+                _loopId = requestAnimationFrame(mainLoop);
+            }
+        }
+
+        startLoop();
     </script>
 </body>
 </html>
