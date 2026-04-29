@@ -328,9 +328,11 @@ export class WebGLComposite {
         const cardAlpha = opts.cardAlpha !== undefined ? opts.cardAlpha : 1.0;
 
         // 计算效果所需的 padding（像素）
+        const customPad = opts.effectPadding || 0;
         const effectPad = Math.ceil(Math.max(
             borderWidth > 0 ? borderWidth : 0,
-            glowWidth > 0 ? glowWidth * 3 : 0
+            glowWidth > 0 ? glowWidth * 3 : 0,
+            customPad
         )) + 2;
 
         // 给卡片内容加 padding：创建更大的画布，把原内容画在中心
