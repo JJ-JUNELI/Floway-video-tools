@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../shared/base.css">
 
     <style>
-        #glCanvas, #flatCanvas { width: 100%; max-width: 1440px; aspect-ratio: 4 / 3; }
+        #glCanvas { width: 100%; max-width: 1440px; aspect-ratio: 4 / 3; }
 
         .sub-section {
             margin-top: 10px;
@@ -105,6 +105,7 @@
                     <input type="file" id="MediaUpload" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" style="display:none">
                 </label>
                 <div id="MediaInfo" class="media-info" style="display:none;"></div>
+                <button id="RemoveMedia" class="file-input-label" style="display:none; color:#f87171; border-color:rgba(248,113,113,0.3);">✕ 移除素材</button>
                 <div class="row" style="margin-top:8px; justify-content:space-between; align-items:center;">
                     <span style="font-size:12px; color:var(--text-sub, #888);">适配模式</span>
                     <select id="MediaFit" style="width:120px;">
@@ -144,7 +145,7 @@
             <div class="control-group">
                 <div class="group-title"><span>✴️ 边框样式</span></div>
                 <div class="row">
-                    <select id="BorderStyle" style="flex:1;background:var(--bg-input,#1a1a2e);color:var(--text-main,#ccc);border:1px solid var(--border,#333);border-radius:6px;padding:6px 10px;font-size:12px">
+                    <select id="BorderStyle" style="flex:1;background:var(--bg-input);color:var(--text-main);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px">
                         <option value="none">无边框</option>
                         <option value="solid-glow">实线 + 辉光</option>
                         <option value="edge-feather">边缘羽化</option>
@@ -193,7 +194,7 @@
                     <div class="sub-section ss-blue">
                         <div class="sub-section-label">浏览器 UI</div>
                         <div class="row"><span style="font-size:12px;color:var(--text-sub,#888)">标题栏色</span><input type="color" id="ChromeBarColor" value="#1e1e2e"></div>
-                        <div class="row"><input type="text" id="ChromeUrlText" value="floway.tools" style="flex:1;background:var(--bg-input,#0f0f23);border:1px solid var(--border,#333);border-radius:4px;color:var(--text-main,#ccc);padding:3px 8px;font-size:11px"></div>
+                        <div class="row"><input type="text" id="ChromeUrlText" value="floway.tools" style="flex:1;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text-main);padding:3px 8px;font-size:11px"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>分割线透明</span><span id="ChromeSepAlphaVal">30%</span></div><input type="range" id="ChromeSepAlpha" min="0" max="100" value="30"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>URL栏透明</span><span id="ChromeUrlAlphaVal">30%</span></div><input type="range" id="ChromeUrlAlpha" min="0" max="100" value="30"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>URL字透明</span><span id="ChromeTextAlphaVal">50%</span></div><input type="range" id="ChromeTextAlpha" min="0" max="100" value="50"></div></div>
@@ -211,7 +212,7 @@
                         <div class="sub-section-label">描边</div>
                         <div class="row" style="justify-content:space-between;align-items:center">
                             <span style="font-size:12px;color:var(--text-sub,#888)">背景模式</span>
-                            <select id="RotatingBgMode" style="width:120px;background:var(--bg-input,#1a1a2e);color:var(--text-main,#ccc);border:1px solid var(--border,#333);border-radius:6px;padding:6px 10px;font-size:12px">
+                            <select id="RotatingBgMode" style="width:120px;background:var(--bg-input);color:var(--text-main);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px">
                                 <option value="none">无背景</option>
                                 <option value="dark">深色背景</option>
                                 <option value="blobs" selected>光斑背景</option>
@@ -342,7 +343,6 @@
     <div class="preview-area" id="previewArea">
         <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
         <canvas id="glCanvas"></canvas>
-        <canvas id="flatCanvas" style="display:none"></canvas>
     </div>
 
     <script type="module">
@@ -369,10 +369,6 @@
         const bgCtx = bgOffscreen.getContext('2d', { alpha: true });
         bgCtx.scale(scale, scale);
 
-        const flatCanvas = document.getElementById('flatCanvas');
-        flatCanvas.width = fullW; flatCanvas.height = fullH;
-        const flatCtx = flatCanvas.getContext('2d');
-
         const dummyCanvas = document.createElement('canvas');
         dummyCanvas.id = 'initDummy'; dummyCanvas.style.display = 'none';
         document.body.appendChild(dummyCanvas);
@@ -391,7 +387,7 @@
         const config = {
             cardScale: 0.8,
             cardRadius: 16,
-            cardBgColor: '#faf8f3',
+            cardBgColor: '#000000',
             elevation: 0.5,
             rotateX: 1.5, rotateY: -1,
             floatEnabled: true,
@@ -450,6 +446,8 @@
                     currentMedia = img;
                     currentMediaType = 'image';
                     currentMediaName = file.name;
+                    config.cardShape = 'follow';
+                    document.getElementById('CardShape').value = 'follow';
                     updateMediaUI(file.name, img.naturalWidth, img.naturalHeight);
                     startLoop();
                 };
@@ -463,6 +461,8 @@
                     currentMedia = vid;
                     currentMediaType = 'video';
                     currentMediaName = file.name;
+                    config.cardShape = 'follow';
+                    document.getElementById('CardShape').value = 'follow';
                     vid.play();
                     updateMediaUI(file.name, vid.videoWidth, vid.videoHeight);
                     startLoop();
@@ -479,12 +479,33 @@
             zone.classList.add('has-media');
             zone.querySelector('.upload-zone-text').innerHTML =
                 `<div style="font-size:20px; margin-bottom:4px;">✅</div>${name}<br><span style="opacity:0.5">${w}×${h}</span>`;
+            document.getElementById('RemoveMedia').style.display = '';
+        }
+
+        function removeMedia() {
+            if (currentMedia) {
+                if (currentMediaType === 'video') { currentMedia.pause(); currentMedia.src = ''; }
+                currentMedia = null;
+            }
+            currentMediaType = null;
+            currentMediaName = '';
+            document.getElementById('MediaInfo').style.display = 'none';
+            document.getElementById('RemoveMedia').style.display = 'none';
+            const zone = document.getElementById('DropZone');
+            zone.classList.remove('has-media');
+            zone.querySelector('.upload-zone-text').innerHTML =
+                `<div style="font-size:24px; margin-bottom:4px;">📤</div>拖拽图片/视频到这里<br>或点击下方按钮上传`;
+            config.cardShape = 'fixed';
+            document.getElementById('CardShape').value = 'fixed';
+            document.getElementById('MediaUpload').value = '';
+            startLoop();
         }
 
         // 文件上传
         document.getElementById('MediaUpload').addEventListener('change', (e) => {
             loadFile(e.target.files[0]);
         });
+        document.getElementById('RemoveMedia').addEventListener('click', removeMedia);
 
         // 拖拽
         const dropZone = document.getElementById('DropZone');
@@ -676,15 +697,8 @@
         }
 
         function drawPlaceholder(ctx, w, h) {
-            ctx.fillStyle = 'rgba(128,128,128,0.08)';
+            ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, w, h);
-            ctx.fillStyle = 'rgba(128,128,128,0.25)';
-            ctx.font = '48px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('📷', w / 2, h / 2 - 24);
-            ctx.font = '16px sans-serif';
-            ctx.fillText('上传图片或视频', w / 2, h / 2 + 28);
         }
 
         // 计算图片在画布中 contain 居中的像素区域
@@ -724,6 +738,15 @@
             ctx.restore();
         }
 
+        // 预计算 Canvas 2D 效果视觉延伸范围（逻辑像素）
+        function getEffectPad(style, config) {
+            if (style === 'solid-glow') return (config.solidBorderWidth || 0) + (config.solidGlowWidth || 0);
+            if (style === 'edge-feather') return (config.featherBlur || 0) * (config.featherIntensity || 0);
+            if (style === 'browser-chrome') return (config.chromeBorderWidth || 0) + (config.chromeGlowWidth || 0);
+            if (style === 'rotating-light') return config.rotatingBorderWidth || 0;
+            return 0;
+        }
+
         // ====== 主渲染函数 ======
         function drawFrame(timeMs) {
             const w = baseWidth, h = baseHeight;
@@ -731,11 +754,6 @@
             const timeSec = (isHold ? performance.now() : timeMs) * 0.001;
             const style = config.borderStyle;
             const isCanvas2D = style !== 'none';
-
-            // 切换显示画布
-            glCanvas.style.display = isCanvas2D ? 'none' : '';
-            flatCanvas.style.display = isCanvas2D ? '' : 'none';
-            recorder.canvas = isCanvas2D ? flatCanvas : glCanvas;
 
             // 入场动画进度
             let entranceProgress = 1;
@@ -751,31 +769,48 @@
                 if (isFinite(t)) currentMedia.currentTime = t;
             }
 
+            // 清除画布（Canvas 2D 模式下扩大 canvas 给效果留空间）
+            const c2dHalfPad = isCanvas2D ? getEffectPad(style, config) : 0;
+            const c2dPad = isCanvas2D ? (c2dHalfPad * 2 + 10) : 0;
+            const c2dPhysPad = c2dPad * scale;
+            const needW = fullW + c2dPhysPad * 2;
+            const needH = fullH + c2dPhysPad * 2;
+            if (offscreen.width !== needW || offscreen.height !== needH) {
+                offscreen.width = needW;
+                offscreen.height = needH;
+            }
+            ctx.setTransform(scale, 0, 0, scale, c2dPhysPad, c2dPhysPad);
+            ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+            ctx.clearRect(0, 0, offscreen.width, offscreen.height);
+            ctx.restore();
+            bgCtx.save(); bgCtx.setTransform(1,0,0,1,0,0);
+            bgCtx.clearRect(0, 0, bgOffscreen.width, bgOffscreen.height);
+            bgCtx.restore();
+
+            // 背景（所有模式共用）
+            if (bg.mode === 'transparent') {
+                if (recorder.isRecording && recorder.format !== 'png_seq') {
+                    bgCtx.fillStyle = '#000000';
+                    bgCtx.fillRect(0, 0, baseWidth, baseHeight);
+                }
+            } else {
+                bg.draw(bgCtx, timeMs, recorder.isRecording, recorder.format);
+            }
+
             const baseBounds = config.cardShape === 'follow' && currentMedia
                 ? getImgBounds(w, h) : { x: 0, y: 0, w, h };
 
+            // 入场动画插值
+            const entranceX = lerp(config.entranceStartX, config.entranceEndX, entranceProgress);
+            const entranceY = lerp(config.entranceStartY, config.entranceEndY, entranceProgress);
+            const entranceAlpha = lerp(config.entranceStartOpacity / 100, config.entranceEndOpacity / 100, entranceProgress);
+            const entranceScale = lerp(config.entranceStartScale / 100, config.entranceEndScale / 100, entranceProgress);
+            const imgBounds = config.cardShape === 'follow' && currentMedia ? getImgBounds(w, h) : undefined;
+
+            let effectPadding = 0;
+
             if (isCanvas2D) {
-                // ====== 平面 2D 渲染（跳过 WebGL） ======
-                ctx.save(); ctx.setTransform(1,0,0,1,0,0);
-                ctx.clearRect(0, 0, offscreen.width, offscreen.height);
-                ctx.restore();
-
-                // 入场动画插值
-                const entranceX = lerp(config.entranceStartX, config.entranceEndX, entranceProgress);
-                const entranceY = lerp(config.entranceStartY, config.entranceEndY, entranceProgress);
-                const entranceAlpha = lerp(config.entranceStartOpacity / 100, config.entranceEndOpacity / 100, entranceProgress);
-                const entranceScale = lerp(config.entranceStartScale / 100, config.entranceEndScale / 100, entranceProgress);
-
-                // 把 cardScale + entranceScale 直接算进卡片坐标，留出效果空间
-                const sc = config.cardScale * entranceScale;
-                const midX = w / 2, midY = h / 2;
-                const flatBounds = {
-                    x: midX - (midX - baseBounds.x) * sc + entranceX,
-                    y: midY - (midY - baseBounds.y) * sc + entranceY,
-                    w: baseBounds.w * sc,
-                    h: baseBounds.h * sc,
-                };
-
+                // Canvas 2D 效果画到 offscreen（canvas 已扩大），3D 变换交给 WebGL
                 const drawMedia = (c, cx, cy, cw, ch) => {
                     c.save();
                     c.translate(cx, cy);
@@ -793,11 +828,11 @@
                     const cr = config.solidCornerRadius;
                     ctx.save();
                     ctx.beginPath();
-                    rrect(ctx, flatBounds.x, flatBounds.y, flatBounds.w, flatBounds.h, cr);
+                    rrect(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h, cr);
                     ctx.clip();
-                    drawMedia(ctx, flatBounds.x, flatBounds.y, flatBounds.w, flatBounds.h);
+                    drawMedia(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
                     ctx.restore();
-                    drawSolidGlow(ctx, flatBounds, {
+                    effectPadding = drawSolidGlow(ctx, baseBounds, {
                         borderWidth: config.solidBorderWidth,
                         borderColor: config.solidBorderColor,
                         glowWidth: config.solidGlowWidth,
@@ -806,86 +841,62 @@
                         cornerRadius: cr,
                     });
                 } else if (style === 'edge-feather') {
-                    drawMedia(ctx, flatBounds.x, flatBounds.y, flatBounds.w, flatBounds.h);
-                    drawEdgeFeather(ctx, flatBounds, {
+                    drawMedia(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
+                    // drawEdgeFeather 读 canvas 物理像素，需要补偿 canvas 扩大的偏移
+                    const feCard = { x: baseBounds.x + c2dPad, y: baseBounds.y + c2dPad, w: baseBounds.w, h: baseBounds.h };
+                    effectPadding = drawEdgeFeather(ctx, feCard, {
                         featherBlur: config.featherBlur,
                         featherIntensity: config.featherIntensity,
                         featherCornerRadius: config.featherCornerRadius,
                     }, offscreen);
                 } else if (style === 'browser-chrome') {
-                    drawBrowserChrome(ctx, flatBounds, config, drawMedia);
+                    effectPadding = drawBrowserChrome(ctx, baseBounds, config, drawMedia);
                 } else if (style === 'rotating-light') {
-                    drawRotatingBlobs(ctx, flatBounds, config, timeSec);
+                    drawRotatingBlobs(ctx, baseBounds, config, timeSec);
                     const cr = config.rotatingCornerRadius;
                     const bgMode = config.rotatingBgMode || 'blobs';
                     ctx.save();
                     ctx.beginPath();
-                    rrect(ctx, flatBounds.x, flatBounds.y, flatBounds.w, flatBounds.h, cr);
+                    rrect(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h, cr);
                     ctx.clip();
                     if (bgMode === 'none') {
-                        // 无背景：正常画卡片底色 + 内容
-                        drawMedia(ctx, flatBounds.x, flatBounds.y, flatBounds.w, flatBounds.h);
+                        drawMedia(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
                     } else {
-                        // 有背景时：只画媒体/占位符，不填底色，让背景透出来
-                        ctx.translate(flatBounds.x, flatBounds.y);
+                        ctx.translate(baseBounds.x, baseBounds.y);
                         if (currentMedia) {
-                            drawMediaFit(ctx, currentMedia, flatBounds.w, flatBounds.h);
+                            drawMediaFit(ctx, currentMedia, baseBounds.w, baseBounds.h);
                         }
                     }
                     ctx.restore();
-                    drawRotatingStroke(ctx, flatBounds, config, timeSec);
+                    effectPadding = drawRotatingStroke(ctx, baseBounds, config, timeSec);
                 }
-
-                // 直接复制到 flatCanvas（不再二次缩放）
-                flatCtx.save();
-                flatCtx.setTransform(1,0,0,1,0,0);
-                flatCtx.clearRect(0, 0, flatCanvas.width, flatCanvas.height);
-                flatCtx.globalAlpha = entranceAlpha;
-                flatCtx.drawImage(offscreen, 0, 0);
-                flatCtx.restore();
-
             } else {
-                // ====== WebGL 渲染（原有流程） ======
-                ctx.save(); ctx.setTransform(1,0,0,1,0,0);
-                ctx.clearRect(0, 0, offscreen.width, offscreen.height);
-                ctx.restore();
-                bgCtx.save(); bgCtx.setTransform(1,0,0,1,0,0);
-                bgCtx.clearRect(0, 0, bgOffscreen.width, bgOffscreen.height);
-                bgCtx.restore();
-
-                if (bg.mode === 'transparent') {
-                    if (recorder.isRecording && recorder.format !== 'png_seq') {
-                        bgCtx.fillStyle = '#000000';
-                        bgCtx.fillRect(0, 0, baseWidth, baseHeight);
-                    }
-                } else {
-                    bg.draw(bgCtx, timeMs, recorder.isRecording, recorder.format);
-                }
-
                 drawCardContent(w, h);
-
-                const entranceX = lerp(config.entranceStartX, config.entranceEndX, entranceProgress);
-                const entranceY = lerp(config.entranceStartY, config.entranceEndY, entranceProgress);
-                const entranceAlpha = lerp(config.entranceStartOpacity / 100, config.entranceEndOpacity / 100, entranceProgress);
-                const entranceScale = lerp(config.entranceStartScale / 100, config.entranceEndScale / 100, entranceProgress);
-
-                const imgBounds = config.cardShape === 'follow' && currentMedia ? getImgBounds(w, h) : undefined;
-
-                glComp.render({
-                    bgCanvas: bgOffscreen,
-                    cardCanvas: offscreen,
-                    rx: _currentRx,
-                    ry: _currentRy,
-                    perspective: 900,
-                    elevation: config.elevation,
-                    cardScale: config.cardScale * entranceScale,
-                    cardRadius: config.cardRadius,
-                    offsetX: entranceX,
-                    offsetY: entranceY,
-                    cardAlpha: entranceAlpha,
-                    cardBounds: imgBounds,
-                });
             }
+
+            // 统一通过 WebGL 渲染（3D 变换 + 阴影）
+            // Canvas 2D 模式：canvas 已扩大，用 scaleX/scaleY 分别补偿宽高比
+            const baseCardScale = config.cardScale * entranceScale;
+            glComp.render({
+                bgCanvas: bgOffscreen,
+                cardCanvas: offscreen,
+                rx: _currentRx,
+                ry: _currentRy,
+                perspective: 900,
+                elevation: config.elevation,
+                cardScale: baseCardScale,
+                scaleX: isCanvas2D ? baseCardScale * offscreen.width / fullW : undefined,
+                scaleY: isCanvas2D ? baseCardScale * offscreen.height / fullH : undefined,
+                cardRadius: isCanvas2D ? 0 : config.cardRadius,
+                offsetX: entranceX,
+                offsetY: entranceY,
+                cardAlpha: entranceAlpha,
+                cardBounds: isCanvas2D
+                    ? { x: c2dPad, y: c2dPad, w: baseWidth, h: baseHeight }
+                    : imgBounds,
+                effectPadding: 0,
+                skipSDF: isCanvas2D,
+            });
         }
 
         // ====== 主循环 ======

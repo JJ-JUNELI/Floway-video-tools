@@ -343,8 +343,13 @@ export class WebGLComposite {
         let cardPixelW, cardPixelH;
 
         if (effectPad > 2 && opts.cardCanvas) {
-            const padW = bw + effectPad * 2;
-            const padH = bh + effectPad * 2;
+            const srcW = opts.cardCanvas.width;
+            const srcH = opts.cardCanvas.height;
+            const sx = srcW / bw;
+            const physPad = Math.ceil(effectPad * sx);
+
+            const padW = srcW + physPad * 2;
+            const padH = srcH + physPad * 2;
 
             const pc = this._getOffscreenCanvas('_paddedCanvas');
             if (pc.width !== padW || pc.height !== padH) {
@@ -353,19 +358,16 @@ export class WebGLComposite {
             }
             const pctx = pc.getContext('2d');
             pctx.clearRect(0, 0, padW, padH);
-            // 把原始卡片画布画到 padded canvas 中心
-            pctx.drawImage(opts.cardCanvas, effectPad, effectPad);
+            pctx.drawImage(opts.cardCanvas, physPad, physPad);
 
             cardTexture = pc;
-            // 新的 normBounds：卡片内容在 padded canvas 中的位置
             cardNormBounds = {
-                x: (effectPad + cb.x) / padW,
-                y: (effectPad + cb.y) / padH,
-                w: cb.w / padW,
-                h: cb.h / padH,
+                x: (physPad + cb.x * sx) / padW,
+                y: (physPad + cb.y * sx) / padH,
+                w: cb.w * sx / padW,
+                h: cb.h * sx / padH,
             };
-            // 放大 scale 补偿 padding，保持视觉卡片大小不变
-            effectiveScale = cardScale * padW / bw;
+            effectiveScale = cardScale * padW / srcW;
         }
 
         // SDF 像素尺寸 = 视觉卡片大小（不受 padding 影响）
@@ -414,7 +416,7 @@ export class WebGLComposite {
         ));
 
         // === Pass 2: 阴影（Canvas shadowBlur，用原始 normBounds 和原始 scale）===
-        {
+        if (!opts.skipSDF) {
             const sc = this._shadowCache;
             const rCompensated = cardRadius / cardScale;
             const keys = [
@@ -454,7 +456,7 @@ export class WebGLComposite {
         // === Pass 3: 卡片内容（SDF 裁剪 + 描边 + 辉光）===
         if (cardTexture) {
             this._uploadTexture(cardTexture);
-            this._drawQuad(mvp, cardNormBounds, cardRadius, 1.0, cardAlpha);
+            this._drawQuad(mvp, cardNormBounds, cardRadius, opts.skipSDF ? 0 : 1.0, cardAlpha);
         }
     }
 
