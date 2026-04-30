@@ -32,6 +32,7 @@
         .ss-teal   { border-left: 2px solid rgba(20,184,166,0.35); }
 
         .upload-zone {
+            position: relative;
             border: 2px dashed rgba(128,128,128,0.25);
             border-radius: 8px;
             cursor: pointer;
@@ -40,6 +41,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
         .upload-zone:hover, .upload-zone.drag-over {
             border-color: var(--accent, #555);
@@ -62,6 +64,27 @@
             text-align: center;
             margin-top: 8px;
         }
+        .remove-media-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            width: 100%;
+            padding: 7px 0;
+            margin-top: 8px;
+            background: transparent;
+            border: 1px solid rgba(248,113,113,0.15);
+            border-radius: 6px;
+            color: rgba(248,113,113,0.7);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .remove-media-btn:hover {
+            background: rgba(248,113,113,0.08);
+            border-color: rgba(248,113,113,0.3);
+            color: #f87171;
+        }
         .file-input-label {
             display: block;
             text-align: center;
@@ -75,6 +98,72 @@
             transition: 0.2s;
         }
         .file-input-label:hover { background: rgba(128,128,128,0.05); }
+
+        /* 裁切相关 */
+        .crop-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: none;
+            z-index: 2;
+        }
+        .crop-overlay.active { display: block; }
+        .crop-box {
+            position: absolute;
+            border: 2px solid rgba(255,255,255,0.8);
+            cursor: move;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
+        }
+        .crop-grid-line { position: absolute; background: rgba(255,255,255,0.2); }
+        .crop-grid-h1, .crop-grid-h2 { left: 0; right: 0; height: 1px; }
+        .crop-grid-v1, .crop-grid-v2 { top: 0; bottom: 0; width: 1px; }
+        .crop-grid-h1 { top: 33.33%; }
+        .crop-grid-h2 { top: 66.66%; }
+        .crop-grid-v1 { left: 33.33%; }
+        .crop-grid-v2 { left: 66.66%; }
+        .crop-handle {
+            position: absolute;
+            width: 10px; height: 10px;
+            background: #fff;
+            border-radius: 2px;
+            z-index: 2;
+        }
+        .crop-handle.nw  { top:-5px; left:-5px; cursor:nw-resize; }
+        .crop-handle.ne  { top:-5px; right:-5px; cursor:ne-resize; }
+        .crop-handle.sw  { bottom:-5px; left:-5px; cursor:sw-resize; }
+        .crop-handle.se  { bottom:-5px; right:-5px; cursor:se-resize; }
+        .crop-handle.n   { top:-5px; left:50%; transform:translateX(-50%); cursor:n-resize; }
+        .crop-handle.s   { bottom:-5px; left:50%; transform:translateX(-50%); cursor:s-resize; }
+        .crop-handle.w   { top:50%; left:-5px; transform:translateY(-50%); cursor:w-resize; }
+        .crop-handle.e   { top:50%; right:-5px; transform:translateY(-50%); cursor:e-resize; }
+        .crop-size-label {
+            position: absolute;
+            bottom: -22px; left: 50%; transform: translateX(-50%);
+            font-size: 10px; color: rgba(255,255,255,0.5);
+            background: rgba(0,0,0,0.5);
+            padding: 1px 6px; border-radius: 3px;
+            white-space: nowrap; pointer-events: none;
+        }
+        .crop-btn-row {
+            display: flex; gap: 6px; margin-top: 8px; width: 100%;
+        }
+        .crop-btn-row .btn { flex: 1; padding: 5px 0; font-size: 11px; }
+        .ratio-input {
+            width: 40px;
+            text-align: center;
+            background: rgba(255,255,255,0.04);
+            color: var(--text-main, #e5e7eb);
+            border: 1px solid var(--border, rgba(255,255,255,0.08));
+            border-radius: 5px;
+            padding: 4px 2px;
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .ratio-input:focus { border-color: var(--accent, #818cf8); }
+        .ratio-input::-webkit-inner-spin-button,
+        .ratio-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .ratio-input { -moz-appearance: textfield; }
     </style>
 </head>
 <body>
@@ -99,26 +188,45 @@
                         <div style="font-size:24px; margin-bottom:4px;">📤</div>
                         拖拽图片/视频到这里<br>或点击下方按钮上传
                     </div>
+                    <img id="CropThumb" style="display:none; width:100%; height:100%; object-fit:contain; pointer-events:none; position:relative; z-index:1;">
+                    <div id="CropOverlay" class="crop-overlay">
+                        <div id="CropBox" class="crop-box">
+                            <div class="crop-grid-line crop-grid-h1"></div>
+                            <div class="crop-grid-line crop-grid-h2"></div>
+                            <div class="crop-grid-line crop-grid-v1"></div>
+                            <div class="crop-grid-line crop-grid-v2"></div>
+                            <div class="crop-handle nw" data-dir="nw"></div>
+                            <div class="crop-handle ne" data-dir="ne"></div>
+                            <div class="crop-handle sw" data-dir="sw"></div>
+                            <div class="crop-handle se" data-dir="se"></div>
+                            <div class="crop-handle n"  data-dir="n"></div>
+                            <div class="crop-handle s"  data-dir="s"></div>
+                            <div class="crop-handle w"  data-dir="w"></div>
+                            <div class="crop-handle e"  data-dir="e"></div>
+                            <div id="CropSizeLabel" class="crop-size-label">-</div>
+                        </div>
+                    </div>
                 </div>
                 <label class="file-input-label">
                     + 上传图片/视频
                     <input type="file" id="MediaUpload" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" style="display:none">
                 </label>
                 <div id="MediaInfo" class="media-info" style="display:none;"></div>
-                <button id="RemoveMedia" class="file-input-label" style="display:none; color:#f87171; border-color:rgba(248,113,113,0.3);">✕ 移除素材</button>
-                <div class="row" style="margin-top:8px; justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; color:var(--text-sub, #888);">适配模式</span>
-                    <select id="MediaFit" style="width:120px;">
-                        <option value="contain">适应 (Contain)</option>
-                        <option value="cover">铺满 (Cover)</option>
-                    </select>
+                <button id="RemoveMedia" class="remove-media-btn" style="display:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    移除素材
+                </button>
+                <div id="CropBtnRow" class="crop-btn-row" style="display:none;">
+                    <button id="CropBtnReset" class="btn btn-ghost">重选区域</button>
+                    <button id="CropBtnConfirm" class="btn btn-primary">确认裁切</button>
                 </div>
-                <div class="row" style="margin-top:6px; justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; color:var(--text-sub, #888);">卡片形状</span>
-                    <select id="CardShape" style="width:120px;">
-                        <option value="fixed">固定 4:3</option>
-                        <option value="follow">跟随图片</option>
-                    </select>
+                <div id="RatioRow" class="row" style="margin-top:8px; justify-content:space-between; align-items:center; transition: opacity 0.2s;">
+                    <span style="font-size:12px; color:var(--text-sub, #888);">卡片比例</span>
+                    <div style="display:flex; align-items:center; gap:3px;">
+                        <input type="number" id="CardRatioW" value="4" min="1" max="21" step="1" class="ratio-input">
+                        <span style="color:var(--text-sub, #555); font-size:12px; font-weight:700; user-select:none;">:</span>
+                        <input type="number" id="CardRatioH" value="3" min="1" max="21" step="1" class="ratio-input">
+                    </div>
                 </div>
             </div>
 
@@ -161,7 +269,6 @@
                         <div class="sub-section-label">描边</div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="SolidBorderWidthVal">8</span></div><input type="range" id="SolidBorderWidth" min="0" max="25" value="8"></div></div>
                         <div class="row"><span style="font-size:12px;color:var(--text-sub,#888)">描边颜色</span><input type="color" id="SolidBorderColor" value="#ffffff"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>圆角</span><span id="SolidCornerRadiusVal">16</span></div><input type="range" id="SolidCornerRadius" min="0" max="60" value="16"></div></div>
                     </div>
                     <div class="sub-section ss-blue">
                         <div class="sub-section-label">辉光</div>
@@ -191,7 +298,6 @@
                 <div id="BrowserChromeOpts" class="border-opts" style="display:none">
                     <div class="sub-section ss-amber">
                         <div class="sub-section-label">描边 + 辉光</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>圆角</span><span id="ChromeCornerRadiusVal">10</span></div><input type="range" id="ChromeCornerRadius" min="0" max="30" value="10"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="ChromeBorderWidthVal">2</span></div><input type="range" id="ChromeBorderWidth" min="0" max="20" value="2"></div></div>
                         <div class="row"><span style="font-size:12px;color:var(--text-sub,#888)">描边颜色</span><input type="color" id="ChromeBorderColor" value="#ffffff"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="ChromeGlowWidthVal">15</span></div><input type="range" id="ChromeGlowWidth" min="0" max="60" value="15"></div></div>
@@ -218,19 +324,14 @@
                     <div class="sub-section ss-amber">
                         <div class="sub-section-label">描边</div>
                         <div class="row" style="justify-content:space-between;align-items:center">
-                            <span style="font-size:12px;color:var(--text-sub,#888)">背景模式</span>
-                            <select id="RotatingBgMode" style="width:120px;background:var(--bg-input);color:var(--text-main);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px">
-                                <option value="none">无背景</option>
-                                <option value="dark">深色背景</option>
-                                <option value="blobs" selected>光斑背景</option>
-                            </select>
+                            <span style="font-size:12px;color:var(--text-sub,#888)">启用光斑</span>
+                            <input type="checkbox" id="RotatingBgMode" checked>
                         </div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>旋转速度</span><span id="RotatingSpeedVal">30</span></div><input type="range" id="RotatingSpeed" min="0" max="100" value="30"></div></div>
                         <div class="row"><span style="font-size:12px;color:var(--text-sub,#888)">亮边颜色</span><input type="color" id="RotatingLightColor" value="#60a5fa"></div>
                         <div class="row"><span style="font-size:12px;color:var(--text-sub,#888)">暗边颜色</span><input type="color" id="RotatingDimColor" value="#1e1e3a"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="RotatingBorderWidthVal">3</span></div><input type="range" id="RotatingBorderWidth" min="0" max="20" value="3"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>亮段数量</span><span id="RotatingSegmentsVal">1</span></div><input type="range" id="RotatingSegments" min="1" max="8" value="1"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>圆角</span><span id="RotatingCornerRadiusVal">16</span></div><input type="range" id="RotatingCornerRadius" min="0" max="60" value="16"></div></div>
                     </div>
                     <div class="sub-section ss-blue">
                         <div class="sub-section-label">光斑</div>
@@ -410,26 +511,25 @@
             entranceEndX: 0, entranceEndY: 0,
             entranceStartOpacity: 0, entranceEndOpacity: 100,
             entranceStartScale: 100, entranceEndScale: 100,
-            mediaFit: 'contain',
-            cardShape: 'fixed',
+            cardRatioW: 4,
+            cardRatioH: 3,
             borderStyle: 'none',
             // ① 实线+辉光
             solidBorderWidth: 8, solidBorderColor: '#ffffff',
             solidGlowWidth: 30, solidGlowColor: '#3b82f6', solidGlowIntensity: 0.7,
             solidGlowDir: 'outer',
-            solidCornerRadius: 16,
             // ② 边缘羽化
             featherBlur: 20, featherIntensity: 0.7,
             // ③ 浏览器窗口
-            chromeCornerRadius: 10, chromeBorderWidth: 2, chromeBorderColor: '#ffffff',
+            chromeBorderWidth: 2, chromeBorderColor: '#ffffff',
             chromeGlowWidth: 15, chromeGlowColor: '#3b82f6', chromeGlowIntensity: 0.5,
             chromeBarColor: '#1e1e2e', chromeUrlText: 'floway.tools',
             chromeSepAlpha: 0.3, chromeUrlAlpha: 0.3, chromeTextAlpha: 0.5,
             chromeInnerWidth: 4, chromeInnerColor: '#333344',
             // ④ 旋转光边
             rotatingSpeed: 30, rotatingLightColor: '#60a5fa', rotatingDimColor: '#1e1e3a',
-            rotatingBorderWidth: 3, rotatingSegments: 1, rotatingCornerRadius: 16,
-            rotatingBgMode: 'blobs',
+            rotatingBorderWidth: 3, rotatingSegments: 1,
+            rotatingBgMode: true,
             rotatingBlob1: '#3b82f6', rotatingBlob2: '#8b5cf6', rotatingBlob3: '#ec4899',
             rotatingBlobSize: 300, rotatingBlobSpeed: 30,
         };
@@ -438,6 +538,22 @@
         let currentMedia = null;
         let currentMediaType = null;
         let currentMediaName = '';
+        let originalImage = null;   // 裁切前的原始 Image
+        let croppedCanvas = null;   // 裁切后的 canvas（用作 currentMedia）
+        let cropActive = false;     // 裁切模式是否激活
+
+        function setRatioLocked(locked) {
+            const row = document.getElementById('RatioRow');
+            if (!row) return;
+            row.style.opacity = locked ? '0.4' : '1';
+            row.style.pointerEvents = locked ? 'none' : '';
+        }
+
+        // 有图片 + 非光斑模式 → 锁定；其他情况 → 解锁
+        function syncRatioLock() {
+            const isBlobBg = config.borderStyle === 'rotating-light' && config.rotatingBgMode;
+            setRatioLocked(!!currentMedia && !isBlobBg);
+        }
 
         function loadFile(file) {
             if (!file) return;
@@ -448,17 +564,20 @@
                 if (currentMediaType === 'video') { currentMedia.pause(); currentMedia.src = ''; }
                 currentMedia = null;
             }
+            originalImage = null;
+            croppedCanvas = null;
+            cropActive = false;
+            document.getElementById('CropBtnRow').style.display = 'none';
+            document.getElementById('CropOverlay').classList.remove('active');
+            document.getElementById('CropThumb').style.display = 'none';
 
             if (file.type.startsWith('image/')) {
                 const img = new Image();
                 img.onload = () => {
-                    currentMedia = img;
-                    currentMediaType = 'image';
+                    originalImage = img;
                     currentMediaName = file.name;
-                    config.cardShape = 'follow';
-                    document.getElementById('CardShape').value = 'follow';
-                    updateMediaUI(file.name, img.naturalWidth, img.naturalHeight);
-                    startLoop();
+                    // 进入裁切模式
+                    enterCropMode(file.name, img.naturalWidth, img.naturalHeight);
                 };
                 img.src = url;
             } else if (file.type.startsWith('video/')) {
@@ -470,10 +589,10 @@
                     currentMedia = vid;
                     currentMediaType = 'video';
                     currentMediaName = file.name;
-                    config.cardShape = 'follow';
-                    document.getElementById('CardShape').value = 'follow';
+                    syncRatioLock();
                     vid.play();
                     updateMediaUI(file.name, vid.videoWidth, vid.videoHeight);
+                    startLoop();
                     startLoop();
                 };
                 vid.src = url;
@@ -498,17 +617,173 @@
             }
             currentMediaType = null;
             currentMediaName = '';
+            originalImage = null;
+            croppedCanvas = null;
+            cropActive = false;
             document.getElementById('MediaInfo').style.display = 'none';
             document.getElementById('RemoveMedia').style.display = 'none';
+            document.getElementById('CropBtnRow').style.display = 'none';
+            document.getElementById('CropOverlay').classList.remove('active');
+            document.getElementById('CropThumb').style.display = 'none';
             const zone = document.getElementById('DropZone');
             zone.classList.remove('has-media');
-            zone.querySelector('.upload-zone-text').innerHTML =
+            const txt = zone.querySelector('.upload-zone-text');
+            txt.style.display = '';
+            txt.innerHTML =
                 `<div style="font-size:24px; margin-bottom:4px;">📤</div>拖拽图片/视频到这里<br>或点击下方按钮上传`;
-            config.cardShape = 'fixed';
-            document.getElementById('CardShape').value = 'fixed';
+            syncRatioLock();
+            startLoop();
             document.getElementById('MediaUpload').value = '';
             startLoop();
         }
+
+        // ====== 图片裁切系统 ======
+        const cropThumb = document.getElementById('CropThumb');
+        const cropOverlay = document.getElementById('CropOverlay');
+        const cropBox = document.getElementById('CropBox');
+        const cropSizeLabel = document.getElementById('CropSizeLabel');
+        const cropBtnRow = document.getElementById('CropBtnRow');
+        let thumbRect = {};       // 缩略图在 DropZone 中的实际显示区域
+        let cropRect = { x: 0, y: 0, w: 0, h: 0 }; // 相对 DropZone 的绝对像素坐标
+        const MIN_CROP = 20;
+
+        function enterCropMode(name, iw, ih) {
+            cropActive = true;
+            cropThumb.src = originalImage.src;
+            cropThumb.style.display = 'block';
+            const zone = document.getElementById('DropZone');
+            zone.querySelector('.upload-zone-text').style.display = 'none';
+            zone.classList.add('has-media');
+            document.getElementById('RemoveMedia').style.display = '';
+            cropBtnRow.style.display = 'flex';
+
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                calcThumbRect();
+                initCropBox();
+                cropOverlay.classList.add('active');
+            }));
+        }
+
+        function calcThumbRect() {
+            const zone = document.getElementById('DropZone');
+            const zw = zone.clientWidth;
+            const zh = zone.clientHeight;
+            const iw = originalImage.naturalWidth;
+            const ih = originalImage.naturalHeight;
+            const s = Math.min(zw / iw, zh / ih);
+            const dw = iw * s, dh = ih * s;
+            thumbRect = { x: (zw - dw) / 2, y: (zh - dh) / 2, w: dw, h: dh, scale: s };
+        }
+
+        function initCropBox() {
+            const m = 0.1;
+            cropRect.x = thumbRect.x + thumbRect.w * m;
+            cropRect.y = thumbRect.y + thumbRect.h * m;
+            cropRect.w = thumbRect.w * (1 - 2 * m);
+            cropRect.h = thumbRect.h * (1 - 2 * m);
+            updateCropBox();
+        }
+
+        function updateCropBox() {
+            cropBox.style.left   = cropRect.x + 'px';
+            cropBox.style.top    = cropRect.y + 'px';
+            cropBox.style.width  = cropRect.w + 'px';
+            cropBox.style.height = cropRect.h + 'px';
+            const pw = Math.round(cropRect.w / thumbRect.scale);
+            const ph = Math.round(cropRect.h / thumbRect.scale);
+            cropSizeLabel.textContent = pw + ' × ' + ph;
+        }
+
+        // 拖拽交互
+        let cropDragging = null;
+        cropBox.addEventListener('mousedown', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            const dir = e.target.dataset.dir;
+            if (dir) {
+                cropDragging = { type: 'resize', dir, sx: e.clientX, sy: e.clientY, sc: { ...cropRect } };
+            } else {
+                cropDragging = { type: 'move', dir: null, sx: e.clientX, sy: e.clientY, sc: { ...cropRect } };
+            }
+        });
+        document.addEventListener('mousemove', e => {
+            if (!cropDragging) return;
+            const dx = e.clientX - cropDragging.sx;
+            const dy = e.clientY - cropDragging.sy;
+            const sc = cropDragging.sc;
+
+            if (cropDragging.type === 'move') {
+                cropRect.x = Math.max(thumbRect.x, Math.min(sc.x + dx, thumbRect.x + thumbRect.w - sc.w));
+                cropRect.y = Math.max(thumbRect.y, Math.min(sc.y + dy, thumbRect.y + thumbRect.h - sc.h));
+                cropRect.w = sc.w;
+                cropRect.h = sc.h;
+            } else {
+                const dir = cropDragging.dir;
+                let nx = sc.x, ny = sc.y, nw = sc.w, nh = sc.h;
+                if (dir.includes('w')) { nx = sc.x + dx; nw = sc.w - dx; }
+                if (dir.includes('e')) { nw = sc.w + dx; }
+                if (dir.includes('n')) { ny = sc.y + dy; nh = sc.h - dy; }
+                if (dir.includes('s')) { nh = sc.h + dy; }
+                if (nw < MIN_CROP) { if (dir.includes('w')) nx = sc.x + sc.w - MIN_CROP; nw = MIN_CROP; }
+                if (nh < MIN_CROP) { if (dir.includes('n')) ny = sc.y + sc.h - MIN_CROP; nh = MIN_CROP; }
+                const bx = thumbRect.x, by = thumbRect.y;
+                const br = thumbRect.x + thumbRect.w, bb = thumbRect.y + thumbRect.h;
+                if (nx < bx) { nw += nx - bx; nx = bx; }
+                if (ny < by) { nh += ny - by; ny = by; }
+                if (nx + nw > br) nw = br - nx;
+                if (ny + nh > bb) nh = bb - ny;
+                cropRect.x = nx; cropRect.y = ny; cropRect.w = nw; cropRect.h = nh;
+            }
+            updateCropBox();
+        });
+        document.addEventListener('mouseup', () => { cropDragging = null; });
+
+        // 确认裁切
+        document.getElementById('CropBtnConfirm').addEventListener('click', () => {
+            if (!originalImage) return;
+            const sx = (cropRect.x - thumbRect.x) / thumbRect.scale;
+            const sy = (cropRect.y - thumbRect.y) / thumbRect.scale;
+            const sw = cropRect.w / thumbRect.scale;
+            const sh = cropRect.h / thumbRect.scale;
+
+            croppedCanvas = document.createElement('canvas');
+            croppedCanvas.width = Math.round(sw);
+            croppedCanvas.height = Math.round(sh);
+            const cctx = croppedCanvas.getContext('2d');
+            cctx.drawImage(originalImage, sx, sy, sw, sh, 0, 0, croppedCanvas.width, croppedCanvas.height);
+
+            currentMedia = croppedCanvas;
+            currentMediaType = 'image';
+            cropActive = false;
+            cropOverlay.classList.remove('active');
+
+            // 显示裁切后的缩略图
+            cropThumb.src = croppedCanvas.toDataURL();
+            cropThumb.style.display = 'block';
+
+            // 保留裁切按钮（改为重新裁切）
+            document.getElementById('CropBtnReset').textContent = '重新裁切';
+            document.getElementById('CropBtnConfirm').style.display = 'none';
+
+            updateMediaUI(currentMediaName + ' (裁切)', croppedCanvas.width, croppedCanvas.height);
+            syncRatioLock();
+            startLoop();
+        });
+
+        // 重选区域 / 重新裁切
+        document.getElementById('CropBtnReset').addEventListener('click', () => {
+            if (!originalImage) return;
+            cropActive = true;
+            cropThumb.src = originalImage.src;
+            cropThumb.style.display = 'block';
+            document.getElementById('CropBtnReset').textContent = '重选区域';
+            document.getElementById('CropBtnConfirm').style.display = '';
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                calcThumbRect();
+                initCropBox();
+                cropOverlay.classList.add('active');
+            }));
+        });
 
         // 文件上传
         document.getElementById('MediaUpload').addEventListener('change', (e) => {
@@ -518,7 +793,10 @@
 
         // 拖拽
         const dropZone = document.getElementById('DropZone');
-        dropZone.addEventListener('click', () => document.getElementById('MediaUpload').click());
+        dropZone.addEventListener('click', () => {
+            if (cropActive) return;
+            document.getElementById('MediaUpload').click();
+        });
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
         dropZone.addEventListener('drop', (e) => {
@@ -552,8 +830,8 @@
             ['EntranceEndOpacity',    'entranceEndOpacity',    'int',   'EntranceEndOpacityVal',    '%'],
             ['EntranceStartScale',    'entranceStartScale',    'int',   'EntranceStartScaleVal',    '%'],
             ['EntranceEndScale',      'entranceEndScale',      'int',   'EntranceEndScaleVal',      '%'],
-            ['MediaFit',  'mediaFit'],
-            ['CardShape', 'cardShape'],
+            ['CardRatioW', 'cardRatioW', 'int'],
+            ['CardRatioH', 'cardRatioH', 'int'],
             // ① 实线+辉光
             ['SolidBorderWidth', 'solidBorderWidth', 'int', 'SolidBorderWidthVal'],
             ['SolidBorderColor', 'solidBorderColor'],
@@ -561,12 +839,10 @@
             ['SolidGlowColor', 'solidGlowColor'],
             ['SolidGlowIntensity', 'solidGlowIntensity', '%', 'SolidGlowIntensityVal', '%'],
             ['SolidGlowDir', 'solidGlowDir'],
-            ['SolidCornerRadius', 'solidCornerRadius', 'int', 'SolidCornerRadiusVal'],
             // ② 边缘羽化
             ['FeatherBlur', 'featherBlur', 'int', 'FeatherBlurVal'],
             ['FeatherIntensity', 'featherIntensity', '%', 'FeatherIntensityVal', '%'],
             // ③ 浏览器窗口
-            ['ChromeCornerRadius', 'chromeCornerRadius', 'int', 'ChromeCornerRadiusVal'],
             ['ChromeBorderWidth', 'chromeBorderWidth', 'int', 'ChromeBorderWidthVal'],
             ['ChromeBorderColor', 'chromeBorderColor'],
             ['ChromeGlowWidth', 'chromeGlowWidth', 'int', 'ChromeGlowWidthVal'],
@@ -585,8 +861,7 @@
             ['RotatingDimColor', 'rotatingDimColor'],
             ['RotatingBorderWidth', 'rotatingBorderWidth', 'int', 'RotatingBorderWidthVal'],
             ['RotatingSegments', 'rotatingSegments', 'int', 'RotatingSegmentsVal'],
-            ['RotatingCornerRadius', 'rotatingCornerRadius', 'int', 'RotatingCornerRadiusVal'],
-            ['RotatingBgMode', 'rotatingBgMode'],
+            ['RotatingBgMode', 'rotatingBgMode', 'checked'],
             ['RotatingBlob1', 'rotatingBlob1'],
             ['RotatingBlob2', 'rotatingBlob2'],
             ['RotatingBlob3', 'rotatingBlob3'],
@@ -600,6 +875,12 @@
                 if (key === 'entranceEnabled') {
                     document.getElementById('EntranceOpts').style.display = config.entranceEnabled ? '' : 'none';
                     document.getElementById('EntranceDetailOpts').style.display = config.entranceEnabled ? '' : 'none';
+                }
+                if (key === 'cardRatioW' || key === 'cardRatioH') {
+                    startLoop();
+                }
+                if (key === 'rotatingBgMode') {
+                    syncRatioLock();
                 }
                 startLoop();
             }
@@ -617,6 +898,7 @@
             document.querySelectorAll('.border-opts').forEach(el => el.style.display = 'none');
             const panelId = borderPanelMap[config.borderStyle];
             if (panelId) document.getElementById(panelId).style.display = '';
+            syncRatioLock();
             resetAnimStart();
         });
 
@@ -699,30 +981,48 @@
             const mw = media.videoWidth || media.naturalWidth || media.width;
             const mh = media.videoHeight || media.naturalHeight || media.height;
             if (!mw || !mh) return;
-            const s = config.mediaFit === 'cover'
-                ? Math.max(w / mw, h / mh)
-                : Math.min(w / mw, h / mh);
+            const s = Math.min(w / mw, h / mh);
             const dw = mw * s, dh = mh * s;
             ctx.drawImage(media, (w - dw) / 2, (h - dh) / 2, dw, dh);
+        }
+
+        function getMediaSize(media) {
+            return {
+                w: media.videoWidth || media.naturalWidth || media.width || 0,
+                h: media.videoHeight || media.naturalHeight || media.height || 0,
+            };
         }
 
         function drawPlaceholder(ctx, w, h) {
         }
 
-        // 计算图片在画布中 contain 居中的像素区域
-        function getImgBounds(w, h) {
-            if (!currentMedia) return { x: 0, y: 0, w, h };
-            const mw = currentMedia.videoWidth || currentMedia.naturalWidth || 0;
-            const mh = currentMedia.videoHeight || currentMedia.naturalHeight || 0;
-            if (!mw || !mh) return { x: 0, y: 0, w, h };
-            const s = Math.min(w / mw, h / mh);
-            return { x: (w - mw * s) / 2, y: (h - mh * s) / 2, w: mw * s, h: mh * s };
+        // 卡片在画布中的区域
+        // 旋转光边+光斑模式：忽略图片，用用户比例
+        // 有素材时：跟随素材比例（contain 居中）
+        // 无素材时：按用户设定的 W:H 比例居中
+        function getCardBounds(w, h) {
+            const isBlobBg = config.borderStyle === 'rotating-light' && config.rotatingBgMode;
+            if (currentMedia && !isBlobBg) {
+                const { w: mw, h: mh } = getMediaSize(currentMedia);
+                if (mw && mh) {
+                    const s = Math.min(w / mw, h / mh);
+                    return { x: (w - mw * s) / 2, y: (h - mh * s) / 2, w: mw * s, h: mh * s };
+                }
+            }
+            const rw = Math.max(1, config.cardRatioW || 4);
+            const rh = Math.max(1, config.cardRatioH || 3);
+            const targetRatio = rw / rh;
+            const canvasRatio = w / h;
+            let cw, ch;
+            if (targetRatio > canvasRatio) { cw = w; ch = w / targetRatio; }
+            else { ch = h; cw = h * targetRatio; }
+            return { x: (w - cw) / 2, y: (h - ch) / 2, w: cw, h: ch };
         }
 
         function drawCardContent(w, h) {
             ctx.save();
 
-            const bounds = config.cardShape === 'follow' ? getImgBounds(w, h) : { x: 0, y: 0, w, h };
+            const bounds = getCardBounds(w, h);
 
             ctx.beginPath();
             ctx.rect(bounds.x, bounds.y, bounds.w, bounds.h);
@@ -808,15 +1108,14 @@
                 bg.draw(bgCtx, timeMs, recorder.isRecording, recorder.format);
             }
 
-            const baseBounds = config.cardShape === 'follow' && currentMedia
-                ? getImgBounds(w, h) : { x: 0, y: 0, w, h };
+            const baseBounds = getCardBounds(w, h);
 
             // 入场动画插值
             const entranceX = lerp(config.entranceStartX, config.entranceEndX, entranceProgress);
             const entranceY = lerp(config.entranceStartY, config.entranceEndY, entranceProgress);
             const entranceAlpha = lerp(config.entranceStartOpacity / 100, config.entranceEndOpacity / 100, entranceProgress);
             const entranceScale = lerp(config.entranceStartScale / 100, config.entranceEndScale / 100, entranceProgress);
-            const imgBounds = config.cardShape === 'follow' && currentMedia ? getImgBounds(w, h) : undefined;
+            const imgBounds = getCardBounds(w, h);
 
             let effectPadding = 0;
 
@@ -840,7 +1139,7 @@
                 };
 
                 if (style === 'solid-glow') {
-                    const cr = config.solidCornerRadius;
+                    const cr = config.cardRadius;
                     ctx.save();
                     ctx.beginPath();
                     rrect(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h, cr);
@@ -887,7 +1186,8 @@
                     };
                     effectPadding = drawBrowserChrome(ctx, baseBounds, config, drawChromeContent);
                 } else if (style === 'rotating-light') {
-                    const cr = config.rotatingCornerRadius;
+                    const cr = config.cardRadius;
+                    const blobMode = config.rotatingBgMode;
                     ctx.save();
                     ctx.beginPath();
                     rrect(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h, cr);
@@ -897,10 +1197,12 @@
                     ctx.fillStyle = config.cardBgColor;
                     ctx.fillRect(baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
                     ctx.globalAlpha = 1;
-                    // 层 1：光斑（画在底色之上）
-                    drawRotatingBlobs(ctx, baseBounds, config, timeSec);
-                    // 层 2：内容（图片）
-                    if (currentMedia) {
+                    // 层 1：光斑（仅在光斑模式下绘制）
+                    if (blobMode) {
+                        drawRotatingBlobs(ctx, baseBounds, config, timeSec);
+                    }
+                    // 层 2：内容（图片，光斑模式下不画）
+                    if (currentMedia && !blobMode) {
                         ctx.translate(baseBounds.x, baseBounds.y);
                         drawMediaFit(ctx, currentMedia, baseBounds.w, baseBounds.h);
                     }
@@ -979,6 +1281,7 @@
             }
         }
 
+        startLoop();
         startLoop();
 
         // ====== 播放按钮 ======

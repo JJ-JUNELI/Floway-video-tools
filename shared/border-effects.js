@@ -288,7 +288,7 @@ export function drawEdgeFeather(ctx, card, cfg, sourceCanvas) {
 // ── ③ 浏览器窗口 ──
 
 export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
-    const cr = cfg.chromeCornerRadius || 0;
+    const cr = cfg.cardRadius || cfg.chromeCornerRadius || 0;
     const bw = cfg.chromeBorderWidth || 0;
     const bc = cfg.chromeBorderColor || '#ffffff';
     const gw = cfg.chromeGlowWidth || 0;
@@ -308,7 +308,7 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
 
     // 整个浏览器窗口区域：card 内容区上方额外扩展 tH
     const winX = card.x, winY = card.y - tH, winW = card.w, winH = card.h + tH;
-    const winR = Math.max(cr, tH * 0.5);
+    const winR = cr;
 
     // 辉光
     if (gw > 0) {
@@ -441,69 +441,58 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
 
 // 画旋转光边背景（在卡片底色之上、内容之前调用）
 export function drawRotatingBlobs(ctx, card, cfg, time) {
-    const bgMode = cfg.rotatingBgMode || 'blobs';
+    const colors = [
+        cfg.rotatingBlob1 || '#3b82f6',
+        cfg.rotatingBlob2 || '#8b5cf6',
+        cfg.rotatingBlob3 || '#ec4899',
+    ];
+    const bSize = cfg.rotatingBlobSize || 150;
+    const bSpeed = (cfg.rotatingBlobSpeed || 30) / 100;
+    const cx = card.x + card.w / 2;
+    const cy = card.y + card.h / 2;
 
-    if (bgMode === 'none') return;
+    const blobSeeds = [
+        { px: 0, py: 1.5, sm: 1 },
+        { px: 2.5, py: 0.8, sm: 0.6 },
+        { px: 4.2, py: 3.1, sm: 0.8 },
+        { px: 1.1, py: 5.3, sm: 0.5 },
+    ];
+    for (let bi = 0; bi < blobSeeds.length; bi++) {
+        const blob = blobSeeds[bi];
+        const color = colors[bi % colors.length];
+        const bx = cx + Math.sin(time * bSpeed * blob.sm + blob.px) * card.w * 0.3;
+        const by = cy + Math.cos(time * bSpeed * blob.sm * 0.7 + blob.py) * card.h * 0.3;
 
-    if (bgMode === 'blobs') {
-        const colors = [
-            cfg.rotatingBlob1 || '#3b82f6',
-            cfg.rotatingBlob2 || '#8b5cf6',
-            cfg.rotatingBlob3 || '#ec4899',
-        ];
-        const bSize = cfg.rotatingBlobSize || 150;
-        const bSpeed = (cfg.rotatingBlobSpeed || 30) / 100;
-        const cx = card.x + card.w / 2;
-        const cy = card.y + card.h / 2;
-
-        // 4 个光斑，循环使用 3 种颜色
-        const blobSeeds = [
-            { px: 0, py: 1.5, sm: 1 },
-            { px: 2.5, py: 0.8, sm: 0.6 },
-            { px: 4.2, py: 3.1, sm: 0.8 },
-            { px: 1.1, py: 5.3, sm: 0.5 },
-        ];
-        for (let bi = 0; bi < blobSeeds.length; bi++) {
-            const blob = blobSeeds[bi];
-            const color = colors[bi % colors.length];
-            // 光斑整体缓慢漂移
-            const bx = cx + Math.sin(time * bSpeed * blob.sm + blob.px) * card.w * 0.3;
-            const by = cy + Math.cos(time * bSpeed * blob.sm * 0.7 + blob.py) * card.h * 0.3;
-
-            // 12 个边界控制点，小幅度振荡 → 充盈饱满的有机变形
-            const N = 12;
-            const step = Math.PI * 2 / N;
-            const pts = [];
-            for (let i = 0; i < N; i++) {
-                const a = i * step;
-                const r = bSize * (
-                    0.85
-                    + 0.1 * Math.sin(time * bSpeed * (0.35 + i * 0.19) + i * 2.39 + blob.px)
-                    + 0.05 * Math.cos(time * bSpeed * (0.55 + i * 0.15) + i * 1.73 + blob.py)
-                );
-                pts.push({ x: bx + Math.cos(a) * r, y: by + Math.sin(a) * r });
-            }
-
-            // quadratic bezier 平滑闭合曲线
-            ctx.save();
-            ctx.filter = `blur(${bSize * 0.22}px)`;
-            ctx.beginPath();
-            ctx.moveTo((pts[N - 1].x + pts[0].x) / 2, (pts[N - 1].y + pts[0].y) / 2);
-            for (let i = 0; i < N; i++) {
-                const c = pts[i], n = pts[(i + 1) % N];
-                ctx.quadraticCurveTo(c.x, c.y, (c.x + n.x) / 2, (c.y + n.y) / 2);
-            }
-            ctx.closePath();
-            // 径向渐变填充：中心亮、边缘淡
-            const g = ctx.createRadialGradient(bx, by, 0, bx, by, bSize * 0.85);
-            g.addColorStop(0, hexToRGBA(color, 0.55));
-            g.addColorStop(0.4, hexToRGBA(color, 0.3));
-            g.addColorStop(0.75, hexToRGBA(color, 0.1));
-            g.addColorStop(1, hexToRGBA(color, 0));
-            ctx.fillStyle = g;
-            ctx.fill();
-            ctx.restore();
+        const N = 12;
+        const step = Math.PI * 2 / N;
+        const pts = [];
+        for (let i = 0; i < N; i++) {
+            const a = i * step;
+            const r = bSize * (
+                0.85
+                + 0.1 * Math.sin(time * bSpeed * (0.35 + i * 0.19) + i * 2.39 + blob.px)
+                + 0.05 * Math.cos(time * bSpeed * (0.55 + i * 0.15) + i * 1.73 + blob.py)
+            );
+            pts.push({ x: bx + Math.cos(a) * r, y: by + Math.sin(a) * r });
         }
+
+        ctx.save();
+        ctx.filter = `blur(${bSize * 0.22}px)`;
+        ctx.beginPath();
+        ctx.moveTo((pts[N - 1].x + pts[0].x) / 2, (pts[N - 1].y + pts[0].y) / 2);
+        for (let i = 0; i < N; i++) {
+            const c = pts[i], n = pts[(i + 1) % N];
+            ctx.quadraticCurveTo(c.x, c.y, (c.x + n.x) / 2, (c.y + n.y) / 2);
+        }
+        ctx.closePath();
+        const g = ctx.createRadialGradient(bx, by, 0, bx, by, bSize * 0.85);
+        g.addColorStop(0, hexToRGBA(color, 0.55));
+        g.addColorStop(0.4, hexToRGBA(color, 0.3));
+        g.addColorStop(0.75, hexToRGBA(color, 0.1));
+        g.addColorStop(1, hexToRGBA(color, 0));
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.restore();
     }
 }
 
@@ -514,7 +503,7 @@ export function drawRotatingStroke(ctx, card, cfg, time) {
     const dimC = cfg.rotatingDimColor || '#1e1e3a';
     const bw = cfg.rotatingBorderWidth || 0;
     const segCount = cfg.rotatingSegments || 1;
-    const cr = cfg.rotatingCornerRadius || 0;
+    const cr = cfg.cardRadius || cfg.rotatingCornerRadius || 0;
 
     if (bw < 0.5) return 0;
 
