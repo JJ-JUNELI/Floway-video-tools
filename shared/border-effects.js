@@ -95,33 +95,35 @@ export function drawSolidGlow(ctx, card, cfg) {
     const dir = cfg.glowDir || 'outer';
 
     if (gw > 0) {
-        const passes = Math.max(2, Math.ceil(gi * 4));
+        // passes 控制 brightness，固定 stroke alpha 保证低值也可见
+        const rawPasses = gi * 6;
+        const fullPasses = Math.floor(rawPasses);
+        const fracPass = rawPasses - fullPasses;
+        const glowA = 0.7;
         const cardPath = (c) => {
             c.beginPath();
             rrect(c, card.x - bw, card.y - bw, card.w + bw * 2, card.h + bw * 2, cr + bw);
         };
 
-        // shadowBlur / filter blur 在物理像素空间操作，需要乘 scale
         const s = ctx.getTransform().a;
 
-        // 内辉光：shadowBlur stroke（GPU 加速）
+        // 内辉光
         if (dir === 'inner' || dir === 'both') {
             ctx.save();
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 0;
             ctx.shadowBlur = gw * s;
-            ctx.shadowColor = hexToRGBA(gc, gi);
+            ctx.shadowColor = hexToRGBA(gc, glowA);
             ctx.strokeStyle = gc;
             ctx.lineWidth = Math.max(bw * 2, 2);
             ctx.lineJoin = 'round';
             cardPath(ctx);
-            for (let p = 0; p < passes; p++) ctx.stroke();
+            for (let p = 0; p < fullPasses; p++) ctx.stroke();
+            if (fracPass > 0.01) { ctx.globalAlpha = fracPass; ctx.stroke(); ctx.globalAlpha = 1; }
             ctx.restore();
         }
 
-        // 外辉光：临时 canvas + stroke + filter blur + destination-out
-        // 用描边做模糊源：描边严格沿路径走，圆角处和直边一样均匀
-        // 模糊后 destination-out 挖掉内部，只留向外延伸的辉光
+        // 外辉光
         if (dir === 'outer' || dir === 'both') {
             if (!_glowTmp) _glowTmp = document.createElement('canvas');
             const cw = ctx.canvas.width, ch = ctx.canvas.height;
@@ -145,12 +147,13 @@ export function drawSolidGlow(ctx, card, cfg) {
 
             // 用 filter blur 画模糊描边（描边沿卡片边缘走，圆角精确跟随）
             tc.filter = `blur(${gw * t.a}px)`;
-            tc.strokeStyle = hexToRGBA(gc, gi);
+            tc.strokeStyle = hexToRGBA(gc, glowA);
             tc.lineWidth = gw * t.a * 0.5;
             tc.lineJoin = 'round';
             tc.beginPath();
             rrect(tc, card.x, card.y, card.w, card.h, cr);
-            for (let p = 0; p < passes; p++) tc.stroke();
+            for (let p = 0; p < fullPasses; p++) tc.stroke();
+            if (fracPass > 0.01) { tc.globalAlpha = fracPass; tc.stroke(); tc.globalAlpha = 1; }
             tc.filter = 'none';
 
             // destination-out 挖掉卡片矩形内部
@@ -193,7 +196,22 @@ export function drawEdgeFeather(ctx, card, cfg, sourceCanvas) {
     const cr = cfg.featherCornerRadius || 0;
     const feather = blurW * gi;
 
-    if (feather < 0.5) return 0;
+    if (feather < 0.5) {
+        // 模糊为零时仍保留圆角裁剪
+        if (cr > 0.5) {
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.fillStyle = '#fff';
+            const sx2 = sourceCanvas.width / (card.w + card.x * 2 || 1);
+            ctx.beginPath();
+            rrect(ctx, card.x * sx2, card.y * sx2, card.w * sx2, card.h * sx2, cr * sx2);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.restore();
+        }
+        return 0;
+    }
 
     // 临时画布用原始像素尺寸（绕过 scale 变换）
     const pw = sourceCanvas.width;
@@ -310,14 +328,17 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
 
         const t = ctx.getTransform();
         tc.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
-        const passes = Math.max(2, Math.ceil(gi * 4));
+        const rawP = gi * 6;
+        const fullP = Math.floor(rawP);
+        const fracP = rawP - fullP;
         tc.filter = `blur(${gw * t.a}px)`;
-        tc.strokeStyle = hexToRGBA(gc, gi);
+        tc.strokeStyle = hexToRGBA(gc, 0.7);
         tc.lineWidth = gw * t.a * 0.5;
         tc.lineJoin = 'round';
         tc.beginPath();
         rrect(tc, winX - bw, winY - bw, winW + bw * 2, winH + bw * 2, winR + bw);
-        for (let p = 0; p < passes; p++) tc.stroke();
+        for (let p = 0; p < fullP; p++) tc.stroke();
+        if (fracP > 0.01) { tc.globalAlpha = fracP; tc.stroke(); tc.globalAlpha = 1; }
         tc.filter = 'none';
 
         tc.setTransform(1, 0, 0, 1, 0, 0);
@@ -398,25 +419,17 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
         ctx.textBaseline = 'alphabetic';
     }
 
-    // 内容区（card 完整区域，不被标题栏压缩）
+    // 内容区：背景 + 内容 + 内描边
+    if (drawContentFn) {
+        drawContentFn(ctx, card.x, card.y, card.w, card.h);
+    }
     if (innerW > 0.5) {
-        ctx.fillStyle = innerC;
-        ctx.fillRect(card.x, card.y, card.w, card.h);
-
-        ctx.save();
+        ctx.strokeStyle = innerC;
+        ctx.lineWidth = innerW;
         ctx.beginPath();
-        rrect(ctx, card.x + innerW, card.y + innerW, card.w - innerW * 2, card.h - innerW * 2, Math.max(0, cr - innerW));
-        ctx.clip();
-
-        if (drawContentFn) {
-            drawContentFn(ctx, card.x + innerW, card.y + innerW, card.w - innerW * 2, card.h - innerW * 2);
-        }
-
-        ctx.restore();
-    } else {
-        if (drawContentFn) {
-            drawContentFn(ctx, card.x, card.y, card.w, card.h);
-        }
+        rrectBottom(ctx, card.x + innerW / 2, card.y + innerW / 2,
+              card.w - innerW, card.h - innerW, Math.max(0, winR - innerW / 2));
+        ctx.stroke();
     }
 
     ctx.restore();
@@ -426,21 +439,11 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
 
 // ── ④ 旋转光边 ──
 
-// 画旋转光边背景（内容之前调用）
+// 画旋转光边背景（在卡片底色之上、内容之前调用）
 export function drawRotatingBlobs(ctx, card, cfg, time) {
-    const cr = cfg.rotatingCornerRadius || 0;
     const bgMode = cfg.rotatingBgMode || 'blobs';
 
     if (bgMode === 'none') return;
-
-    ctx.save();
-    ctx.beginPath();
-    rrect(ctx, card.x, card.y, card.w, card.h, cr);
-    ctx.clip();
-
-    ctx.fillStyle = '#0a0a1a';
-    ctx.globalAlpha = 1;
-    ctx.fillRect(card.x, card.y, card.w, card.h);
 
     if (bgMode === 'blobs') {
         const colors = [
@@ -502,8 +505,6 @@ export function drawRotatingBlobs(ctx, card, cfg, time) {
             ctx.restore();
         }
     }
-
-    ctx.restore();
 }
 
 // 画旋转描边（内容之后调用）

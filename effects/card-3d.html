@@ -184,7 +184,6 @@
                         <div class="sub-section-label">羽化参数</div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>模糊范围</span><span id="FeatherBlurVal">20</span></div><input type="range" id="FeatherBlur" min="0" max="60" value="20"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>模糊强度</span><span id="FeatherIntensityVal">70%</span></div><input type="range" id="FeatherIntensity" min="0" max="100" value="70"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>圆角</span><span id="FeatherCornerRadiusVal">16</span></div><input type="range" id="FeatherCornerRadius" min="0" max="60" value="16"></div></div>
                     </div>
                 </div>
 
@@ -420,7 +419,7 @@
             solidGlowDir: 'outer',
             solidCornerRadius: 16,
             // ② 边缘羽化
-            featherBlur: 20, featherIntensity: 0.7, featherCornerRadius: 16,
+            featherBlur: 20, featherIntensity: 0.7,
             // ③ 浏览器窗口
             chromeCornerRadius: 10, chromeBorderWidth: 2, chromeBorderColor: '#ffffff',
             chromeGlowWidth: 15, chromeGlowColor: '#3b82f6', chromeGlowIntensity: 0.5,
@@ -566,7 +565,6 @@
             // ② 边缘羽化
             ['FeatherBlur', 'featherBlur', 'int', 'FeatherBlurVal'],
             ['FeatherIntensity', 'featherIntensity', '%', 'FeatherIntensityVal', '%'],
-            ['FeatherCornerRadius', 'featherCornerRadius', 'int', 'FeatherCornerRadiusVal'],
             // ③ 浏览器窗口
             ['ChromeCornerRadius', 'chromeCornerRadius', 'int', 'ChromeCornerRadiusVal'],
             ['ChromeBorderWidth', 'chromeBorderWidth', 'int', 'ChromeBorderWidthVal'],
@@ -709,8 +707,6 @@
         }
 
         function drawPlaceholder(ctx, w, h) {
-            ctx.fillStyle = config.cardBgColor;
-            ctx.fillRect(0, 0, w, h);
         }
 
         // 计算图片在画布中 contain 居中的像素区域
@@ -726,8 +722,6 @@
         function drawCardContent(w, h) {
             ctx.save();
 
-            // 裁剪区域：fixed 用全屏，follow 用图片区域
-            // 注意：不做圆角裁剪，圆角完全由 WebGL SDF 统一处理
             const bounds = config.cardShape === 'follow' ? getImgBounds(w, h) : { x: 0, y: 0, w, h };
 
             ctx.beginPath();
@@ -736,15 +730,17 @@
 
             ctx.translate(bounds.x, bounds.y);
 
+            // 底色层：受 cardBgAlpha 控制
+            const bgA = (config.cardBgAlpha ?? 100) / 100;
+            ctx.globalAlpha = bgA;
             ctx.fillStyle = config.cardBgColor;
             ctx.fillRect(0, 0, bounds.w, bounds.h);
+            ctx.globalAlpha = 1;
 
             if (currentMedia) {
                 if ((currentMediaType === 'video' && currentMedia.readyState >= 2) || currentMediaType === 'image') {
                     drawMediaFit(ctx, currentMedia, bounds.w, bounds.h);
                 }
-            } else {
-                drawPlaceholder(ctx, bounds.w, bounds.h);
             }
 
             ctx.restore();
@@ -826,15 +822,19 @@
 
             if (isCanvas2D) {
                 // Canvas 2D 效果画到 offscreen（canvas 已扩大），3D 变换交给 WebGL
+                // 统一的内容绘制函数：底色（带透明度）→ 图片（全不透明）
+                const bgA = (config.cardBgAlpha ?? 100) / 100;
                 const drawMedia = (c, cx, cy, cw, ch) => {
                     c.save();
                     c.translate(cx, cy);
+                    // 底色层：受 cardBgAlpha 控制
+                    c.globalAlpha = bgA;
                     c.fillStyle = config.cardBgColor;
                     c.fillRect(0, 0, cw, ch);
+                    // 内容层：始终全不透明
+                    c.globalAlpha = 1;
                     if (currentMedia) {
                         drawMediaFit(c, currentMedia, cw, ch);
-                    } else {
-                        drawPlaceholder(c, cw, ch);
                     }
                     c.restore();
                 };
@@ -863,13 +863,17 @@
                     effectPadding = drawEdgeFeather(ctx, feCard, {
                         featherBlur: config.featherBlur,
                         featherIntensity: config.featherIntensity,
-                        featherCornerRadius: config.featherCornerRadius,
+                        featherCornerRadius: config.cardRadius,
                     }, offscreen);
                 } else if (style === 'browser-chrome') {
                     // 浏览器窗口内容区强制 cover 模式，不留黑边
                     const drawChromeContent = (c, cx, cy, cw, ch) => {
                         c.save();
                         c.translate(cx, cy);
+                        c.globalAlpha = bgA;
+                        c.fillStyle = config.cardBgColor;
+                        c.fillRect(0, 0, cw, ch);
+                        c.globalAlpha = 1;
                         if (currentMedia) {
                             const mw = currentMedia.videoWidth || currentMedia.naturalWidth || currentMedia.width;
                             const mh = currentMedia.videoHeight || currentMedia.naturalHeight || currentMedia.height;
@@ -878,30 +882,24 @@
                                 const dw = mw * s, dh = mh * s;
                                 c.drawImage(currentMedia, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
                             }
-                        } else {
-                            c.fillStyle = config.cardBgColor;
-                            c.fillRect(0, 0, cw, ch);
-                            drawPlaceholder(c, cw, ch);
                         }
                         c.restore();
                     };
                     effectPadding = drawBrowserChrome(ctx, baseBounds, config, drawChromeContent);
                 } else if (style === 'rotating-light') {
-                    drawRotatingBlobs(ctx, baseBounds, config, timeSec);
                     const cr = config.rotatingCornerRadius;
-                    const bgMode = config.rotatingBgMode || 'blobs';
                     ctx.save();
                     ctx.beginPath();
                     rrect(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h, cr);
                     ctx.clip();
-                    // 底色覆盖层（透明度可调，alpha=0 纯光斑，alpha=1 完全覆盖光斑）
-                    const bgA = (config.cardBgAlpha ?? 100) / 100;
-                    if (bgA > 0.001) {
-                        ctx.globalAlpha = bgA;
-                        ctx.fillStyle = config.cardBgColor;
-                        ctx.fillRect(baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
-                        ctx.globalAlpha = 1;
-                    }
+                    // 层 0：卡片底色（用户控制的背景色 + 透明度）
+                    ctx.globalAlpha = bgA;
+                    ctx.fillStyle = config.cardBgColor;
+                    ctx.fillRect(baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
+                    ctx.globalAlpha = 1;
+                    // 层 1：光斑（画在底色之上）
+                    drawRotatingBlobs(ctx, baseBounds, config, timeSec);
+                    // 层 2：内容（图片）
                     if (currentMedia) {
                         ctx.translate(baseBounds.x, baseBounds.y);
                         drawMediaFit(ctx, currentMedia, baseBounds.w, baseBounds.h);
