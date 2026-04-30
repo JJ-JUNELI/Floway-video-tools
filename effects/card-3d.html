@@ -137,7 +137,8 @@
                     </div>
                     <div class="row" style="justify-content:space-between; align-items:center;">
                         <span style="font-size:12px; color:var(--text-sub, #888);">卡片底色</span>
-                        <input type="color" id="CardBg" value="#faf8f3"></div>
+                        <input type="color" id="CardBg" value="#1a1a2e"></div>
+                    <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>底色透明度</span><span id="CardBgAlphaVal">100</span></div><input type="range" id="CardBgAlpha" min="0" max="100" value="80"></div></div>
                 </div>
             </div>
 
@@ -164,6 +165,13 @@
                     </div>
                     <div class="sub-section ss-blue">
                         <div class="sub-section-label">辉光</div>
+                        <div class="row" style="justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--text-sub,#888)">辉光方向</span>
+                            <select id="SolidGlowDir" style="width:100px;background:var(--bg-input);color:var(--text-main);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px">
+                                <option value="outer">外辉光</option>
+                                <option value="inner">内辉光</option>
+                                <option value="both">双向</option>
+                            </select>
+                        </div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="SolidGlowWidthVal">30</span></div><input type="range" id="SolidGlowWidth" min="0" max="80" value="30"></div></div>
                         <div class="row"><span style="font-size:12px;color:var(--text-sub,#888)">辉光颜色</span><input type="color" id="SolidGlowColor" value="#3b82f6"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="SolidGlowIntensityVal">70%</span></div><input type="range" id="SolidGlowIntensity" min="0" max="100" value="70"></div></div>
@@ -222,7 +230,7 @@
                         <div class="row"><span style="font-size:12px;color:var(--text-sub,#888)">亮边颜色</span><input type="color" id="RotatingLightColor" value="#60a5fa"></div>
                         <div class="row"><span style="font-size:12px;color:var(--text-sub,#888)">暗边颜色</span><input type="color" id="RotatingDimColor" value="#1e1e3a"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="RotatingBorderWidthVal">3</span></div><input type="range" id="RotatingBorderWidth" min="0" max="20" value="3"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>亮段数量</span><span id="RotatingSegmentsVal">4</span></div><input type="range" id="RotatingSegments" min="1" max="8" value="4"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>亮段数量</span><span id="RotatingSegmentsVal">1</span></div><input type="range" id="RotatingSegments" min="1" max="8" value="1"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>圆角</span><span id="RotatingCornerRadiusVal">16</span></div><input type="range" id="RotatingCornerRadius" min="0" max="60" value="16"></div></div>
                     </div>
                     <div class="sub-section ss-blue">
@@ -230,7 +238,7 @@
                         <div class="row"><span style="font-size:12px;color:var(--text-sub,#888)">光斑1色</span><input type="color" id="RotatingBlob1" value="#3b82f6"></div>
                         <div class="row"><span style="font-size:12px;color:var(--text-sub,#888)">光斑2色</span><input type="color" id="RotatingBlob2" value="#8b5cf6"></div>
                         <div class="row"><span style="font-size:12px;color:var(--text-sub,#888)">光斑3色</span><input type="color" id="RotatingBlob3" value="#ec4899"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>光斑大小</span><span id="RotatingBlobSizeVal">150</span></div><input type="range" id="RotatingBlobSize" min="50" max="600" value="150"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>光斑大小</span><span id="RotatingBlobSizeVal">300</span></div><input type="range" id="RotatingBlobSize" min="50" max="1200" value="300"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>光斑速度</span><span id="RotatingBlobSpeedVal">30</span></div><input type="range" id="RotatingBlobSpeed" min="0" max="100" value="30"></div></div>
                     </div>
                 </div>
@@ -387,7 +395,8 @@
         const config = {
             cardScale: 0.8,
             cardRadius: 16,
-            cardBgColor: '#000000',
+            cardBgColor: '#1a1a2e',
+            cardBgAlpha: 80,
             elevation: 0.5,
             rotateX: 1.5, rotateY: -1,
             floatEnabled: true,
@@ -408,6 +417,7 @@
             // ① 实线+辉光
             solidBorderWidth: 8, solidBorderColor: '#ffffff',
             solidGlowWidth: 30, solidGlowColor: '#3b82f6', solidGlowIntensity: 0.7,
+            solidGlowDir: 'outer',
             solidCornerRadius: 16,
             // ② 边缘羽化
             featherBlur: 20, featherIntensity: 0.7, featherCornerRadius: 16,
@@ -419,10 +429,10 @@
             chromeInnerWidth: 4, chromeInnerColor: '#333344',
             // ④ 旋转光边
             rotatingSpeed: 30, rotatingLightColor: '#60a5fa', rotatingDimColor: '#1e1e3a',
-            rotatingBorderWidth: 3, rotatingSegments: 4, rotatingCornerRadius: 16,
+            rotatingBorderWidth: 3, rotatingSegments: 1, rotatingCornerRadius: 16,
             rotatingBgMode: 'blobs',
             rotatingBlob1: '#3b82f6', rotatingBlob2: '#8b5cf6', rotatingBlob3: '#ec4899',
-            rotatingBlobSize: 150, rotatingBlobSpeed: 30,
+            rotatingBlobSize: 300, rotatingBlobSpeed: 30,
         };
 
         // ====== 素材管理 ======
@@ -524,6 +534,7 @@
             ['CardRadius',  'cardRadius',   'int', 'CardRadiusVal'],
             ['Elevation',   'elevation',    '%',   'ElevationVal'],
             ['CardBg',      'cardBgColor'],
+            ['CardBgAlpha', 'cardBgAlpha', 'int', 'CardBgAlphaVal'],
             ['RotateX',     'rotateX',      'float', 'RotateXVal',   '°'],
             ['RotateY',     'rotateY',      'float', 'RotateYVal',   '°'],
             ['FloatEnabled',   'floatEnabled',   'checked'],
@@ -550,6 +561,7 @@
             ['SolidGlowWidth', 'solidGlowWidth', 'int', 'SolidGlowWidthVal'],
             ['SolidGlowColor', 'solidGlowColor'],
             ['SolidGlowIntensity', 'solidGlowIntensity', '%', 'SolidGlowIntensityVal', '%'],
+            ['SolidGlowDir', 'solidGlowDir'],
             ['SolidCornerRadius', 'solidCornerRadius', 'int', 'SolidCornerRadiusVal'],
             // ② 边缘羽化
             ['FeatherBlur', 'featherBlur', 'int', 'FeatherBlurVal'],
@@ -697,7 +709,7 @@
         }
 
         function drawPlaceholder(ctx, w, h) {
-            ctx.fillStyle = '#000000';
+            ctx.fillStyle = config.cardBgColor;
             ctx.fillRect(0, 0, w, h);
         }
 
@@ -742,7 +754,10 @@
         function getEffectPad(style, config) {
             if (style === 'solid-glow') return (config.solidBorderWidth || 0) + (config.solidGlowWidth || 0);
             if (style === 'edge-feather') return (config.featherBlur || 0) * (config.featherIntensity || 0);
-            if (style === 'browser-chrome') return (config.chromeBorderWidth || 0) + (config.chromeGlowWidth || 0);
+            if (style === 'browser-chrome') {
+                const tH = Math.round(baseWidth * 0.04);
+                return (config.chromeBorderWidth || 0) + (config.chromeGlowWidth || 0) + tH;
+            }
             if (style === 'rotating-light') return config.rotatingBorderWidth || 0;
             return 0;
         }
@@ -838,6 +853,7 @@
                         glowWidth: config.solidGlowWidth,
                         glowColor: config.solidGlowColor,
                         glowIntensity: config.solidGlowIntensity,
+                        glowDir: config.solidGlowDir,
                         cornerRadius: cr,
                     });
                 } else if (style === 'edge-feather') {
@@ -850,7 +866,26 @@
                         featherCornerRadius: config.featherCornerRadius,
                     }, offscreen);
                 } else if (style === 'browser-chrome') {
-                    effectPadding = drawBrowserChrome(ctx, baseBounds, config, drawMedia);
+                    // 浏览器窗口内容区强制 cover 模式，不留黑边
+                    const drawChromeContent = (c, cx, cy, cw, ch) => {
+                        c.save();
+                        c.translate(cx, cy);
+                        if (currentMedia) {
+                            const mw = currentMedia.videoWidth || currentMedia.naturalWidth || currentMedia.width;
+                            const mh = currentMedia.videoHeight || currentMedia.naturalHeight || currentMedia.height;
+                            if (mw && mh) {
+                                const s = Math.max(cw / mw, ch / mh);
+                                const dw = mw * s, dh = mh * s;
+                                c.drawImage(currentMedia, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+                            }
+                        } else {
+                            c.fillStyle = config.cardBgColor;
+                            c.fillRect(0, 0, cw, ch);
+                            drawPlaceholder(c, cw, ch);
+                        }
+                        c.restore();
+                    };
+                    effectPadding = drawBrowserChrome(ctx, baseBounds, config, drawChromeContent);
                 } else if (style === 'rotating-light') {
                     drawRotatingBlobs(ctx, baseBounds, config, timeSec);
                     const cr = config.rotatingCornerRadius;
@@ -859,13 +894,17 @@
                     ctx.beginPath();
                     rrect(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h, cr);
                     ctx.clip();
-                    if (bgMode === 'none') {
-                        drawMedia(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
-                    } else {
+                    // 底色覆盖层（透明度可调，alpha=0 纯光斑，alpha=1 完全覆盖光斑）
+                    const bgA = (config.cardBgAlpha ?? 100) / 100;
+                    if (bgA > 0.001) {
+                        ctx.globalAlpha = bgA;
+                        ctx.fillStyle = config.cardBgColor;
+                        ctx.fillRect(baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
+                        ctx.globalAlpha = 1;
+                    }
+                    if (currentMedia) {
                         ctx.translate(baseBounds.x, baseBounds.y);
-                        if (currentMedia) {
-                            drawMediaFit(ctx, currentMedia, baseBounds.w, baseBounds.h);
-                        }
+                        drawMediaFit(ctx, currentMedia, baseBounds.w, baseBounds.h);
                     }
                     ctx.restore();
                     effectPadding = drawRotatingStroke(ctx, baseBounds, config, timeSec);
@@ -929,12 +968,14 @@
             const entranceDur = config.entranceEnabled ? config.entranceDuration * 1000 : 0;
             const animDone = entranceDur > 0 && time > entranceDur;
 
-            if (animDone) time = Infinity;
+            // 旋转光边需要持续动画，动画结束后继续用真实时间
+            const isContinuousAnim = config.borderStyle === 'rotating-light';
+            if (animDone && !isContinuousAnim) time = Infinity;
             drawFrame(time);
 
             // 视频持续播放需要循环，漂浮也需要
             const needLoop = !animDone || config.floatEnabled || currentMediaType === 'video'
-                || config.borderStyle === 'rotating-light';
+                || isContinuousAnim;
             if (needLoop) {
                 _loopId = requestAnimationFrame(mainLoop);
             }

@@ -42,38 +42,25 @@ export function rrectBottom(ctx, x, y, w, h, r) {
 
 function buildSegGradient(ctx, angle, cx, cy, lightC, dimC, segCount) {
     const bright = hexToRGBA(lightC, 1);
-    const mid = hexToRGBA(lightC, 0.4);
     const dim = dimC;
-
-    const segs = [];
-    let pos = 0;
-    for (let i = 0; i < segCount; i++) {
-        const w = 0.05 + prand(i) * 0.06;
-        const gap = 0.06 + prand(i + 50) * 0.12;
-        segs.push({ s: pos, e: pos + w });
-        pos += w + gap;
-    }
-    const total = pos;
-    for (const s of segs) { s.s /= total; s.e /= total; }
+    const n = Math.max(1, segCount);
+    const segArc = 1 / n;
+    // 每段中亮部过渡区占 40%（两侧各 20%），中间 20% 保持 dim
+    const bw = segArc * 0.2;
 
     const grad = ctx.createConicGradient(angle, cx, cy);
-    let prev = 0;
 
-    for (const seg of segs) {
-        const tr = (seg.e - seg.s) * 0.3;
-        if (seg.s > prev + 0.003) {
-            grad.addColorStop(prev, dim);
-            grad.addColorStop(seg.s, dim);
-        }
-        grad.addColorStop(seg.s, dim);
-        grad.addColorStop(Math.min(seg.s + tr, seg.e), mid);
-        grad.addColorStop((seg.s + seg.e) / 2, bright);
-        grad.addColorStop(Math.max(seg.e - tr, seg.s), mid);
-        grad.addColorStop(seg.e, dim);
-        prev = seg.e;
+    for (let i = 0; i < n; i++) {
+        const s = i * segArc;
+        const mid = s + segArc / 2;
+
+        grad.addColorStop(s, dim);
+        grad.addColorStop(mid - bw, dim);
+        grad.addColorStop(mid, bright);
+        grad.addColorStop(mid + bw, dim);
     }
-    grad.addColorStop(Math.min(prev, 0.999), dim);
     grad.addColorStop(1, dim);
+
     return grad;
 }
 
@@ -96,6 +83,8 @@ function drawImgCover(ctx, img, x, y, w, h) {
 
 // ── ① 实线描边 + 辉光 ──
 
+let _glowTmp = null;
+
 export function drawSolidGlow(ctx, card, cfg) {
     const bw = cfg.borderWidth || 0;
     const bc = cfg.borderColor || '#ffffff';
@@ -103,20 +92,84 @@ export function drawSolidGlow(ctx, card, cfg) {
     const gw = cfg.glowWidth || 0;
     const gc = cfg.glowColor || '#3b82f6';
     const gi = cfg.glowIntensity || 0;
+    const dir = cfg.glowDir || 'outer';
 
     if (gw > 0) {
-        const layers = 12;
-        for (let i = layers; i >= 1; i--) {
-            const t = i / layers;
-            const halfLW = bw + gw * t;
+        const passes = Math.max(2, Math.ceil(gi * 4));
+        const cardPath = (c) => {
+            c.beginPath();
+            rrect(c, card.x - bw, card.y - bw, card.w + bw * 2, card.h + bw * 2, cr + bw);
+        };
+
+        // shadowBlur / filter blur 在物理像素空间操作，需要乘 scale
+        const s = ctx.getTransform().a;
+
+        // 内辉光：shadowBlur stroke（GPU 加速）
+        if (dir === 'inner' || dir === 'both') {
             ctx.save();
-            ctx.globalAlpha = gi * Math.pow(1 - t, 1.5);
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.shadowBlur = gw * s;
+            ctx.shadowColor = hexToRGBA(gc, gi);
             ctx.strokeStyle = gc;
-            ctx.lineWidth = halfLW * 2;
+            ctx.lineWidth = Math.max(bw * 2, 2);
             ctx.lineJoin = 'round';
-            ctx.beginPath();
-            rrect(ctx, card.x - halfLW, card.y - halfLW, card.w + halfLW * 2, card.h + halfLW * 2, cr + halfLW);
-            ctx.stroke();
+            cardPath(ctx);
+            for (let p = 0; p < passes; p++) ctx.stroke();
+            ctx.restore();
+        }
+
+        // 外辉光：临时 canvas + stroke + filter blur + destination-out
+        // 用描边做模糊源：描边严格沿路径走，圆角处和直边一样均匀
+        // 模糊后 destination-out 挖掉内部，只留向外延伸的辉光
+        if (dir === 'outer' || dir === 'both') {
+            if (!_glowTmp) _glowTmp = document.createElement('canvas');
+            const cw = ctx.canvas.width, ch = ctx.canvas.height;
+            if (_glowTmp.width !== cw || _glowTmp.height !== ch) {
+                _glowTmp.width = cw; _glowTmp.height = ch;
+            }
+            const tc = _glowTmp.getContext('2d');
+
+            // 完全重置临时 canvas 状态
+            tc.globalCompositeOperation = 'source-over';
+            tc.globalAlpha = 1;
+            tc.shadowBlur = 0;
+            tc.shadowColor = 'rgba(0,0,0,0)';
+            tc.filter = 'none';
+            tc.setTransform(1, 0, 0, 1, 0, 0);
+            tc.clearRect(0, 0, cw, ch);
+
+            // 复制主 canvas 的坐标变换
+            const t = ctx.getTransform();
+            tc.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
+
+            // 用 filter blur 画模糊描边（描边沿卡片边缘走，圆角精确跟随）
+            tc.filter = `blur(${gw * t.a}px)`;
+            tc.strokeStyle = hexToRGBA(gc, gi);
+            tc.lineWidth = gw * t.a * 0.5;
+            tc.lineJoin = 'round';
+            tc.beginPath();
+            rrect(tc, card.x, card.y, card.w, card.h, cr);
+            for (let p = 0; p < passes; p++) tc.stroke();
+            tc.filter = 'none';
+
+            // destination-out 挖掉卡片矩形内部
+            tc.setTransform(1, 0, 0, 1, 0, 0);
+            tc.globalCompositeOperation = 'destination-out';
+            tc.fillStyle = '#000000';
+            const px = card.x * t.a + t.e;
+            const py = card.y * t.d + t.f;
+            const pw = card.w * t.a;
+            const ph = card.h * t.d;
+            const pr = cr * t.a;
+            tc.beginPath();
+            rrect(tc, px, py, pw, ph, pr);
+            tc.fill();
+
+            // 合成到主画布（像素对齐）
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.drawImage(_glowTmp, 0, 0);
             ctx.restore();
         }
     }
@@ -231,24 +284,58 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
     const innerW = cfg.chromeInnerWidth || 0;
     const innerC = cfg.chromeInnerColor || '#333344';
 
-    const tH = Math.round(card.h * 0.076); // 标题栏高度按卡片比例缩放
+    // 标题栏高度：基于内容区宽度比例，不占用 card 内容区
+    const tH = Math.round(card.w * 0.04);
+    const pad = Math.round(tH * 0.4);
+
+    // 整个浏览器窗口区域：card 内容区上方额外扩展 tH
+    const winX = card.x, winY = card.y - tH, winW = card.w, winH = card.h + tH;
+    const winR = Math.max(cr, tH * 0.5);
 
     // 辉光
     if (gw > 0) {
-        const layers = 12;
-        for (let i = layers; i >= 1; i--) {
-            const t = i / layers;
-            const halfLW = bw + gw * t;
-            ctx.save();
-            ctx.globalAlpha = gi * Math.pow(1 - t, 1.5);
-            ctx.strokeStyle = gc;
-            ctx.lineWidth = halfLW * 2;
-            ctx.lineJoin = 'round';
-            ctx.beginPath();
-            rrect(ctx, card.x - halfLW, card.y - halfLW, card.w + halfLW * 2, card.h + halfLW * 2, cr + halfLW);
-            ctx.stroke();
-            ctx.restore();
+        if (!_glowTmp) _glowTmp = document.createElement('canvas');
+        const cw = ctx.canvas.width, ch_ = ctx.canvas.height;
+        if (_glowTmp.width !== cw || _glowTmp.height !== ch_) {
+            _glowTmp.width = cw; _glowTmp.height = ch_;
         }
+        const tc = _glowTmp.getContext('2d');
+        tc.globalCompositeOperation = 'source-over';
+        tc.globalAlpha = 1;
+        tc.shadowBlur = 0;
+        tc.shadowColor = 'rgba(0,0,0,0)';
+        tc.filter = 'none';
+        tc.setTransform(1, 0, 0, 1, 0, 0);
+        tc.clearRect(0, 0, cw, ch_);
+
+        const t = ctx.getTransform();
+        tc.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
+        const passes = Math.max(2, Math.ceil(gi * 4));
+        tc.filter = `blur(${gw * t.a}px)`;
+        tc.strokeStyle = hexToRGBA(gc, gi);
+        tc.lineWidth = gw * t.a * 0.5;
+        tc.lineJoin = 'round';
+        tc.beginPath();
+        rrect(tc, winX - bw, winY - bw, winW + bw * 2, winH + bw * 2, winR + bw);
+        for (let p = 0; p < passes; p++) tc.stroke();
+        tc.filter = 'none';
+
+        tc.setTransform(1, 0, 0, 1, 0, 0);
+        tc.globalCompositeOperation = 'destination-out';
+        tc.fillStyle = '#000000';
+        const px = (winX - bw) * t.a + t.e;
+        const py = (winY - bw) * t.d + t.f;
+        const pw = (winW + bw * 2) * t.a;
+        const ph = (winH + bw * 2) * t.d;
+        const pr = (winR + bw) * t.a;
+        tc.beginPath();
+        rrect(tc, px, py, pw, ph, pr);
+        tc.fill();
+
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.drawImage(_glowTmp, 0, 0);
+        ctx.restore();
     }
 
     // 描边
@@ -257,79 +344,84 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
         ctx.lineWidth = bw * 2;
         ctx.lineJoin = 'miter';
         ctx.beginPath();
-        rrect(ctx, card.x - bw, card.y - bw, card.w + bw * 2, card.h + bw * 2, cr + bw);
+        rrect(ctx, winX - bw, winY - bw, winW + bw * 2, winH + bw * 2, winR + bw);
         ctx.stroke();
     }
 
+    // 裁剪到整个窗口
     ctx.save();
-    ctx.beginPath(); rrect(ctx, card.x, card.y, card.w, card.h, cr); ctx.clip();
+    ctx.beginPath(); rrect(ctx, winX, winY, winW, winH, winR); ctx.clip();
 
-    // 标题栏
+    // 标题栏（顶部 tH 区域）
     ctx.fillStyle = barColor;
-    ctx.fillRect(card.x, card.y, card.w, tH);
+    ctx.fillRect(winX, winY, winW, tH);
 
     // 分割线
     if (sepA > 0.01) {
         ctx.strokeStyle = `rgba(255,255,255,${sepA})`;
         ctx.lineWidth = 0.5;
         ctx.beginPath();
-        ctx.moveTo(card.x, card.y + tH);
-        ctx.lineTo(card.x + card.w, card.y + tH);
+        ctx.moveTo(winX, winY + tH);
+        ctx.lineTo(winX + winW, winY + tH);
         ctx.stroke();
     }
 
     // 红绿灯
-    const dotR = Math.max(3, tH * 0.15);
-    const dotGap = dotR * 3.6;
-    const dy = card.y + tH / 2;
+    const dotR = Math.max(3, tH * 0.14);
+    const dotGap = dotR * 3.2;
+    const dy = winY + tH / 2;
+    const dotStartX = winX + pad + dotR;
     ['#ff5f57', '#febc2e', '#28c840'].forEach((c, i) => {
         ctx.fillStyle = c;
         ctx.beginPath();
-        ctx.arc(card.x + dotR * 2 + i * dotGap, dy, dotR, 0, Math.PI * 2);
+        ctx.arc(dotStartX + i * dotGap, dy, dotR, 0, Math.PI * 2);
         ctx.fill();
     });
 
-    // URL 栏
-    const ux = card.x + dotR * 2 + dotGap * 3 + 8;
-    const uy = card.y + tH * 0.15;
-    const uw = card.w - (ux - card.x) - 16;
-    const uh = tH * 0.55;
+    // URL 栏（垂直水平居中）
+    const ux = dotStartX + dotGap * 3 + pad * 0.5;
+    const uh = tH * 0.52;
+    const uy = winY + (tH - uh) / 2;
+    const uw = winX + winW - pad - ux;
     if (urlA > 0.01) {
         ctx.fillStyle = `rgba(255,255,255,${urlA})`;
         ctx.beginPath(); rrect(ctx, ux, uy, uw, uh, uh * 0.25); ctx.fill();
     }
     if (textA > 0.01) {
         ctx.fillStyle = `rgba(255,255,255,${textA})`;
-        ctx.font = `${Math.round(uh * 0.65)}px system-ui`;
-        ctx.fillText(urlText, ux + uh * 0.4, uy + uh * 0.78);
+        const fontSize = Math.round(uh * 0.6);
+        ctx.font = `${fontSize}px system-ui`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(urlText, ux + uw / 2, uy + uh / 2);
+        ctx.textAlign = 'start';
+        ctx.textBaseline = 'alphabetic';
     }
 
-    // 内容区
-    const cy = card.y + tH, ch = card.h - tH;
-
+    // 内容区（card 完整区域，不被标题栏压缩）
     if (innerW > 0.5) {
         ctx.fillStyle = innerC;
-        ctx.fillRect(card.x, cy, card.w, ch);
+        ctx.fillRect(card.x, card.y, card.w, card.h);
 
         ctx.save();
         ctx.beginPath();
-        rrectBottom(ctx, card.x + innerW, cy + innerW, card.w - innerW * 2, ch - innerW * 2, Math.max(0, cr - innerW));
+        rrect(ctx, card.x + innerW, card.y + innerW, card.w - innerW * 2, card.h - innerW * 2, Math.max(0, cr - innerW));
         ctx.clip();
 
         if (drawContentFn) {
-            drawContentFn(ctx, card.x + innerW, cy + innerW, card.w - innerW * 2, ch - innerW * 2);
+            drawContentFn(ctx, card.x + innerW, card.y + innerW, card.w - innerW * 2, card.h - innerW * 2);
         }
 
         ctx.restore();
     } else {
         if (drawContentFn) {
-            drawContentFn(ctx, card.x, cy, card.w, ch);
+            drawContentFn(ctx, card.x, card.y, card.w, card.h);
         }
     }
 
     ctx.restore();
 
-    return bw + gw;
+    return bw + gw + tH;
 }
 
 // ── ④ 旋转光边 ──
@@ -347,32 +439,67 @@ export function drawRotatingBlobs(ctx, card, cfg, time) {
     ctx.clip();
 
     ctx.fillStyle = '#0a0a1a';
+    ctx.globalAlpha = 1;
     ctx.fillRect(card.x, card.y, card.w, card.h);
 
     if (bgMode === 'blobs') {
-        const b1 = cfg.rotatingBlob1 || '#3b82f6';
-        const b2 = cfg.rotatingBlob2 || '#8b5cf6';
-        const b3 = cfg.rotatingBlob3 || '#ec4899';
+        const colors = [
+            cfg.rotatingBlob1 || '#3b82f6',
+            cfg.rotatingBlob2 || '#8b5cf6',
+            cfg.rotatingBlob3 || '#ec4899',
+        ];
         const bSize = cfg.rotatingBlobSize || 150;
         const bSpeed = (cfg.rotatingBlobSpeed || 30) / 100;
-
         const cx = card.x + card.w / 2;
         const cy = card.y + card.h / 2;
 
-        const blobs = [
-            { color: b1, phase: 0 },
-            { color: b2, phase: 2.094 },
-            { color: b3, phase: 4.189 },
+        // 4 个光斑，循环使用 3 种颜色
+        const blobSeeds = [
+            { px: 0, py: 1.5, sm: 1 },
+            { px: 2.5, py: 0.8, sm: 0.6 },
+            { px: 4.2, py: 3.1, sm: 0.8 },
+            { px: 1.1, py: 5.3, sm: 0.5 },
         ];
-        for (const blob of blobs) {
-            const bx = cx + Math.sin(time * bSpeed + blob.phase) * card.w * 0.28;
-            const by = cy + Math.cos(time * bSpeed * 0.7 + blob.phase * 1.3) * card.h * 0.28;
-            const g = ctx.createRadialGradient(bx, by, 0, bx, by, bSize);
-            g.addColorStop(0, hexToRGBA(blob.color, 0.55));
-            g.addColorStop(0.4, hexToRGBA(blob.color, 0.2));
-            g.addColorStop(1, hexToRGBA(blob.color, 0));
+        for (let bi = 0; bi < blobSeeds.length; bi++) {
+            const blob = blobSeeds[bi];
+            const color = colors[bi % colors.length];
+            // 光斑整体缓慢漂移
+            const bx = cx + Math.sin(time * bSpeed * blob.sm + blob.px) * card.w * 0.3;
+            const by = cy + Math.cos(time * bSpeed * blob.sm * 0.7 + blob.py) * card.h * 0.3;
+
+            // 12 个边界控制点，小幅度振荡 → 充盈饱满的有机变形
+            const N = 12;
+            const step = Math.PI * 2 / N;
+            const pts = [];
+            for (let i = 0; i < N; i++) {
+                const a = i * step;
+                const r = bSize * (
+                    0.85
+                    + 0.1 * Math.sin(time * bSpeed * (0.35 + i * 0.19) + i * 2.39 + blob.px)
+                    + 0.05 * Math.cos(time * bSpeed * (0.55 + i * 0.15) + i * 1.73 + blob.py)
+                );
+                pts.push({ x: bx + Math.cos(a) * r, y: by + Math.sin(a) * r });
+            }
+
+            // quadratic bezier 平滑闭合曲线
+            ctx.save();
+            ctx.filter = `blur(${bSize * 0.22}px)`;
+            ctx.beginPath();
+            ctx.moveTo((pts[N - 1].x + pts[0].x) / 2, (pts[N - 1].y + pts[0].y) / 2);
+            for (let i = 0; i < N; i++) {
+                const c = pts[i], n = pts[(i + 1) % N];
+                ctx.quadraticCurveTo(c.x, c.y, (c.x + n.x) / 2, (c.y + n.y) / 2);
+            }
+            ctx.closePath();
+            // 径向渐变填充：中心亮、边缘淡
+            const g = ctx.createRadialGradient(bx, by, 0, bx, by, bSize * 0.85);
+            g.addColorStop(0, hexToRGBA(color, 0.55));
+            g.addColorStop(0.4, hexToRGBA(color, 0.3));
+            g.addColorStop(0.75, hexToRGBA(color, 0.1));
+            g.addColorStop(1, hexToRGBA(color, 0));
             ctx.fillStyle = g;
-            ctx.fillRect(card.x, card.y, card.w, card.h);
+            ctx.fill();
+            ctx.restore();
         }
     }
 
@@ -385,7 +512,7 @@ export function drawRotatingStroke(ctx, card, cfg, time) {
     const lightC = cfg.rotatingLightColor || '#60a5fa';
     const dimC = cfg.rotatingDimColor || '#1e1e3a';
     const bw = cfg.rotatingBorderWidth || 0;
-    const segCount = cfg.rotatingSegments || 4;
+    const segCount = cfg.rotatingSegments || 1;
     const cr = cfg.rotatingCornerRadius || 0;
 
     if (bw < 0.5) return 0;
