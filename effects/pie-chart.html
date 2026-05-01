@@ -273,6 +273,8 @@
                         <div class="row">
                             <div style="flex:1" class="stack"><div class="label-line"><span>标签字号</span><span id="LabelFontSizeVal">14</span></div>
                                 <input type="range" id="LabelFontSize" min="8" max="30" step="1" value="14"></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>行间距</span><span id="LabelLineGapVal">0</span></div>
+                                <input type="range" id="LabelLineGap" min="-10" max="20" step="1" value="0"></div>
                         </div>
                         <div class="row" style="justify-content:space-between; align-items:center;">
                             <span style="font-size:12px; color:var(--text-sub, #888);">标签颜色</span>
@@ -531,6 +533,7 @@
             leaderLineWidth: 1,
             showPercentage: true,
             labelFontSize: 13,
+            labelLineGap: 0,
             labelDistance: 60,
             labelColor: '#555555',
 
@@ -626,6 +629,7 @@
             ['LeaderLineWidth', 'leaderLineWidth', 'float', 'LeaderLineWidthVal'],
             ['ShowPercentage',  'showPercentage', 'checked'],
             ['LabelFontSize',   'labelFontSize',  'int',   'LabelFontSizeVal'],
+            ['LabelLineGap',    'labelLineGap',   'int',   'LabelLineGapVal'],
             ['LabelDistance',   'labelDistance',  'int',   'LabelDistanceVal'],
             ['LabelColor',      'labelColor'],
             // 卡片漂浮
@@ -1121,27 +1125,38 @@
                             if (config.showPercentage) {
                                 ctx.font = `700 ${config.labelFontSize}px ${config.titleFont}`;
                                 ctx.fillStyle = '#ffffff';
-                                ctx.fillText(pct, lx, ly - config.labelFontSize * 0.4);
+                                ctx.fillText(pct, lx, ly - config.labelFontSize * 0.4 - config.labelLineGap / 2);
                             }
                             ctx.font = `400 ${config.labelFontSize - 2}px ${config.titleFont}`;
                             ctx.fillStyle = 'rgba(255,255,255,0.85)';
-                            ctx.fillText(slice.label, lx, ly + config.labelFontSize * 0.5);
+                            ctx.fillText(slice.label, lx, ly + config.labelFontSize * 0.5 + config.labelLineGap / 2);
                         } else {
-                            // 外部标签（原有逻辑）
+                            // 外部标签
                             const edgeX = cx + Math.cos(midAngle) * sliceR;
                             const edgeY = cy + Math.sin(midAngle) * sliceR;
-                            const labelR = sliceR + config.labelDistance;
-                            const labelX = cx + Math.cos(midAngle) * labelR;
-                            const labelY = cy + Math.sin(midAngle) * labelR;
                             const isRight = Math.cos(midAngle) > 0;
-                            const elbowLen = 25;
+
+                            // 拐点长度渐变：≤40 缩到 0，≥70 完整 25
+                            const elbowLen = config.labelDistance <= 40 ? 0
+                                : Math.min(25, (config.labelDistance - 40) * 25 / 30);
+                            const hasElbow = elbowLen >= 1;
+                            const hOff = (hasElbow ? elbowLen : 0) + 6;
+
+                            // 修正 labelR：水平拐点对径向距离的贡献 = hOff * |cos(θ)|
+                            // 补偿 hOff * (1 - |cos(θ)|) 使总径向距离恒定为 labelDistance + hOff
+                            const cosA = Math.abs(Math.cos(midAngle));
+                            const adjustedR = config.showLeaderLines
+                                ? sliceR + config.labelDistance + hOff * (1 - cosA)
+                                : sliceR + config.labelDistance;
+                            const labelX = cx + Math.cos(midAngle) * adjustedR;
+                            const labelY = cy + Math.sin(midAngle) * adjustedR;
 
                             if (config.showLeaderLines) {
                                 const elbowX = labelX + (isRight ? elbowLen : -elbowLen);
                                 ctx.beginPath();
                                 ctx.moveTo(edgeX, edgeY);
                                 ctx.lineTo(labelX, labelY);
-                                ctx.lineTo(elbowX, labelY);
+                                if (hasElbow) ctx.lineTo(elbowX, labelY);
                                 ctx.strokeStyle = config.leaderLineColor;
                                 ctx.lineWidth = config.leaderLineWidth;
                                 ctx.stroke();
@@ -1151,27 +1166,50 @@
                                 ctx.fillStyle = slice.color;
                                 ctx.fill();
 
-                                ctx.beginPath();
-                                ctx.arc(elbowX, labelY, 2, 0, Math.PI * 2);
-                                ctx.fillStyle = config.leaderLineColor;
-                                ctx.fill();
+                                if (hasElbow) {
+                                    ctx.beginPath();
+                                    ctx.arc(elbowX, labelY, 2, 0, Math.PI * 2);
+                                    ctx.fillStyle = config.leaderLineColor;
+                                    ctx.fill();
+                                }
                             }
 
-                            const textX = labelX + (isRight ? elbowLen + 6 : -(elbowLen + 6));
+                            let textX, textY, tAlign;
+                            if (config.showLeaderLines) {
+                                textX = labelX + (isRight ? hOff : -hOff);
+                                textY = labelY;
+                                tAlign = isRight ? 'left' : 'right';
+                            } else {
+                                // 无引线：测量文字尺寸，补偿使内边缘到饼的距离一致
+                                ctx.font = `400 ${config.labelFontSize - 1}px ${config.titleFont}`;
+                                const tw = ctx.measureText(slice.label).width;
+                                ctx.font = `700 ${config.labelFontSize + 1}px ${config.titleFont}`;
+                                const pw = config.showPercentage ? ctx.measureText(pct).width : 0;
+                                const halfW = Math.max(tw, pw) / 2;
+                                const halfH = config.labelFontSize;
+                                const ac = Math.abs(Math.cos(midAngle));
+                                const as = Math.abs(Math.sin(midAngle));
+                                const innerDist = ac < 0.001 ? halfH
+                                    : as < 0.001 ? halfW
+                                    : Math.min(halfW / ac, halfH / as);
+                                textX = cx + Math.cos(midAngle) * (adjustedR + innerDist);
+                                textY = cy + Math.sin(midAngle) * (adjustedR + innerDist);
+                                tAlign = 'center';
+                            }
 
                             if (config.showPercentage) {
                                 ctx.font = `700 ${config.labelFontSize + 1}px ${config.titleFont}`;
-                                ctx.textAlign = isRight ? 'left' : 'right';
+                                ctx.textAlign = tAlign;
                                 ctx.textBaseline = 'bottom';
                                 ctx.fillStyle = slice.color;
-                                ctx.fillText(pct, textX, labelY - 1);
+                                ctx.fillText(pct, textX, textY - 1);
                             }
 
                             ctx.font = `400 ${config.labelFontSize - 1}px ${config.titleFont}`;
-                            ctx.textAlign = isRight ? 'left' : 'right';
+                            ctx.textAlign = tAlign;
                             ctx.textBaseline = 'top';
                             ctx.fillStyle = config.labelColor;
-                            ctx.fillText(slice.label, textX, labelY + 1);
+                            ctx.fillText(slice.label, textX, textY + 1);
                         }
 
                         angle += sliceAngle;
