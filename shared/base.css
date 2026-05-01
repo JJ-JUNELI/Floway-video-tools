@@ -237,7 +237,25 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
    Form Controls — Select / Text / Textarea
    ======================================== */
 
-select, input[type="text"], .file-btn-wrapper {
+input[type="text"], input[type="number"], .file-btn-wrapper {
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: inherit;
+    box-sizing: border-box;
+    outline: none;
+    transition: all 0.2s;
+}
+input[type="text"]:focus, input[type="number"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+select, .file-btn-wrapper {
     width: 100%;
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -262,7 +280,7 @@ select:hover, .file-btn-wrapper:hover {
     border-color: var(--accent);
     background-color: color-mix(in srgb, var(--accent) 6%, var(--card-bg));
 }
-select:focus, input[type="text"]:focus {
+select:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-dim);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 7.5L6 4.5L9 7.5' stroke='%23818cf8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
@@ -965,8 +983,18 @@ body.logo canvas {
 [data-theme="light"] .switch-label { color: #64748b; }
 
 /* Form Controls */
-[data-theme="light"] select,
 [data-theme="light"] input[type="text"],
+[data-theme="light"] input[type="number"] {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.08);
+    color: #1e293b;
+}
+[data-theme="light"] input[type="text"]:focus,
+[data-theme="light"] input[type="number"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+[data-theme="light"] select,
 [data-theme="light"] .file-btn-wrapper {
     background-color: #ffffff;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
@@ -978,8 +1006,7 @@ body.logo canvas {
     border-color: var(--accent);
     background-color: color-mix(in srgb, var(--accent) 6%, #ffffff);
 }
-[data-theme="light"] select:focus,
-[data-theme="light"] input[type="text"]:focus {
+[data-theme="light"] select:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-dim);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 7.5L6 4.5L9 7.5' stroke='%236366f1' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
