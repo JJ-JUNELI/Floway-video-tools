@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>饼图效果</title>
+
+    <!-- 固定加载顺序，不要改 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="../shared/mp4-muxer.js"></script>
+    <link rel="stylesheet" href="../shared/base.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700;900&family=Noto+Serif+SC:wght@200;300;400;500;700;900&family=Orbitron:wght@400;700;900&family=Chakra+Petch:wght@300;400;500;600;700&family=Exo+2:wght@100;300;400;500;600;700;800;900&family=Montserrat:wght@100;300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+
+    <style>
+        /* 数据表格 */
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 5px; table-layout: fixed; }
+        .data-table th { text-align: left; font-size: 10px; color: var(--text-sub, #888); padding: 6px 6px; border-bottom: 1px solid var(--border, #eee); white-space: nowrap; }
+        .data-table td { padding: 5px 4px; vertical-align: middle; }
+        .data-table tr + tr td { border-top: 1px solid rgba(128,128,128,0.12); }
+        .data-table input[type="text"], .data-table input[type="number"] {
+            background: var(--card-bg, #fafafa); border: 1px solid var(--border, #ddd); color: var(--text-main, #333);
+            padding: 7px 8px; border-radius: 4px; font-size: 12px; width: 100%; outline: none;
+            box-sizing: border-box; height: 32px; transition: border-color 0.2s;
+        }
+        .data-table input:focus { border-color: var(--accent, #555); background: #fff; }
+        .data-table input[type="color"] {
+            width: 100%; height: 32px; padding: 2px; cursor: pointer; border: 1px solid var(--border, #ddd);
+            border-radius: 4px; background: var(--card-bg, #fafafa); box-sizing: border-box;
+        }
+
+        /* 行操作按钮 */
+        .btn-icon {
+            width: 28px; height: 32px; border: 1px solid var(--border, #ddd); background: var(--card-bg, #f5f5f5);
+            color: var(--text-sub, #888); border-radius: 4px; cursor: pointer; display: inline-flex;
+            align-items: center; justify-content: center; font-size: 13px; transition: 0.2s;
+            box-sizing: border-box; flex-shrink: 0; vertical-align: middle;
+        }
+        .btn-icon:hover { color: var(--text-main, #333); border-color: var(--accent, #555); background: #eee; }
+        .btn-icon.del:hover { color: var(--danger, #cc3333); border-color: var(--danger, #cc3333); }
+        .op-cell { white-space: nowrap; text-align: center; }
+        .btn-play {
+            background: var(--accent); color: #000; font-weight: bold;
+            border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer;
+            font-size: 11px; transition: 0.2s;
+        }
+        .btn-play:hover { filter: brightness(1.1); }
+        .btn-add {
+            background: var(--accent); color: #000; font-weight: bold;
+            border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;
+            font-size: 11px; width: 100%; margin-top: 10px; transition: 0.2s;
+        }
+        .btn-add:hover { filter: brightness(1.1); }
+
+        /* WebGL 合成 canvas */
+        #glCanvas { width: 100%; max-width: 1440px; aspect-ratio: 4 / 3; box-shadow: none; border-radius: 0; }
+
+        /* 子板块分区 */
+        .sub-section {
+            margin-top: 10px;
+            padding: 8px 10px 4px;
+            border-radius: 6px;
+            background: rgba(128,128,128,0.03);
+        }
+        .sub-section:first-of-type { margin-top: 6px; }
+        .sub-section-label {
+            font-size: 10px;
+            color: var(--text-sub, #888);
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .ss-blue   { border-left: 2px solid rgba(59,130,246,0.35); }
+        .ss-green  { border-left: 2px solid rgba(34,197,94,0.35); }
+        .ss-amber  { border-left: 2px solid rgba(245,158,11,0.35); }
+        .ss-purple { border-left: 2px solid rgba(168,85,247,0.35); }
+        .ss-rose   { border-left: 2px solid rgba(244,63,94,0.35); }
+        .ss-teal   { border-left: 2px solid rgba(20,184,166,0.35); }
+    </style>
+</head>
+<body>
+
+    <!-- ====== 侧边栏 ====== -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="app-title">🥧 饼图效果 <span style="font-size:9px; color:var(--text-sub, #888)">v1.0</span></div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button id="themeToggle" class="btn-icon" title="切换主题">☀</button>
+                <div class="version-badge">NEW</div>
+            </div>
+        </div>
+
+        <div class="controls-container">
+
+            <!-- 数据管理 -->
+            <div class="control-group">
+                <div class="group-title">
+                    <span>📊 数据管理</span>
+                    <button class="btn-icon" onclick="resetData()" title="重置" style="width:28px;height:32px;font-size:13px;">↺</button>
+                </div>
+                <table class="data-table">
+                    <thead id="DataHead"><tr><th style="width:28%">名称</th><th style="width:18%">数值</th><th style="width:18%">颜色</th><th style="width:36%">操作</th></tr></thead>
+                    <tbody id="DataBody"></tbody>
+                </table>
+                <button class="btn-add" onclick="addRow()">+ 添加数据行</button>
+            </div>
+
+            <!-- 标题设置 -->
+            <div class="control-group">
+                <div class="group-title"><span>📝 标题设置</span></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">内容</div>
+                    <div class="row stack"><div class="label-line"><span>主标题</span></div>
+                        <input type="text" id="MainTitle" value="汽车市场份额分布"></div>
+                    <div class="row stack"><div class="label-line"><span>副标题 (右侧文字)</span></div>
+                        <input type="text" id="SubTitle" value="2024 年度销售数据"></div>
+                    <div class="row stack"><div class="label-line"><span>标题字体</span></div>
+                        <div id="TitleFontMount" style="width:100%"></div></div>
+                </div>
+                <div class="sub-section ss-teal" id="CenterTextSection">
+                    <div class="sub-section-label">中心文字 (环形图)</div>
+                    <div class="row stack"><div class="label-line"><span>中心文字</span></div>
+                        <input type="text" id="CenterText" value="公司业务收入占比"></div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>字号</span><span id="CenterFontSizeVal">18</span></div>
+                            <input type="range" id="CenterFontSize" min="10" max="36" step="1" value="18"></div>
+                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>颜色</span></div>
+                            <input type="color" id="CenterColor" value="#333333"></div>
+                    </div>
+                </div>
+                <div class="sub-section ss-green">
+                    <div class="sub-section-label">样式</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题字号</span><span id="TitleSizeVal">26</span></div>
+                            <input type="range" id="TitleSize" min="12" max="72" step="2" value="26"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题字号</span><span id="SubTitleSizeVal">36</span></div>
+                            <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题字重</span><span id="MainTitleWeightVal">700</span></div>
+                            <input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题字重</span><span id="SubTitleWeightVal">400</span></div>
+                            <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
+                    </div>
+                    <div class="row" style="justify-content:space-between; align-items:center;">
+                        <span style="font-size:12px; color:var(--text-sub, #888);">主标题颜色</span>
+                        <input type="color" id="TitleColor" value="#333333"></div>
+                    <div class="row" style="justify-content:space-between; align-items:center;">
+                        <span style="font-size:12px; color:var(--text-sub, #888);">副标题颜色</span>
+                        <input type="color" id="SubTitleColor" value="#999999"></div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题 X</span><span id="MainTitleXVal">0</span></div>
+                            <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题 Y</span><span id="MainTitleYVal">-490</span></div>
+                            <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题 X</span><span id="SubTitleXVal">630</span></div>
+                            <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题 Y</span><span id="SubTitleYVal">0</span></div>
+                            <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
+                    </div>
+                    <div class="sub-title"><span>显示括号</span><input type="checkbox" id="ShowBrackets" checked></div>
+                    <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
+                </div>
+            </div>
+
+            <!-- 卡片背景 -->
+            <div class="control-group">
+                <div class="group-title"><span>🖌️ 卡片背景</span></div>
+                <div class="sub-section ss-amber">
+                    <div class="sub-section-label">背景模式</div>
+                    <div class="sub-title"><span>透明背景</span><input type="checkbox" id="CardBgTransparent"></div>
+                    <div id="CardBgColorRow" class="row" style="justify-content:space-between; align-items:center;">
+                        <span style="font-size:12px; color:var(--text-sub, #888);">卡片底色</span>
+                        <input type="color" id="CardBg" value="#f0f5fa"></div>
+                </div>
+                <div class="sub-section ss-blue" id="TextureSection">
+                    <div class="sub-section-label">纸张纹理</div>
+                    <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
+                        <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div></div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
+                            <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 饼图样式 -->
+            <div class="control-group">
+                <div class="group-title"><span>🥧 饼图样式</span></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">类型</div>
+                    <div class="row stack"><div class="label-line"><span>饼图类型</span></div>
+                        <select id="PieType">
+                            <option value="solid">实心饼图</option>
+                            <option value="donut" selected>环形图 (Donut)</option>
+                        </select></div>
+                    <div id="DonutOpts" style="margin-top:6px;">
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>环宽比例</span><span id="DonutWidthVal">35%</span></div>
+                            <input type="range" id="DonutWidth" min="20" max="80" step="5" value="35"></div></div>
+                    </div>
+                </div>
+                <div class="sub-section ss-green">
+                    <div class="sub-section-label">布局</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>半径</span><span id="PieRadiusVal">250</span></div>
+                            <input type="range" id="PieRadius" min="100" max="400" step="5" value="250"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>起始角度</span><span id="StartAngleVal">0°</span></div>
+                            <input type="range" id="StartAngle" min="0" max="360" step="5" value="0"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>圆心 X</span><span id="PieCenterXVal">0</span></div>
+                            <input type="range" id="PieCenterX" min="-300" max="300" step="5" value="0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>圆心 Y</span><span id="PieCenterYVal">0</span></div>
+                            <input type="range" id="PieCenterY" min="-300" max="300" step="5" value="0"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>间隔宽度</span><span id="SliceGapVal">3px</span></div>
+                            <input type="range" id="SliceGap" min="0" max="20" step="1" value="3"></div>
+                    </div>
+                    <div class="sub-title" style="margin-top:8px"><span>阶梯缩放</span><input type="checkbox" id="StairScale"></div>
+                    <div id="StairOpts" style="display:none">
+                        <div id="StairAutoOpts">
+                            <div class="row stack"><div class="label-line"><span>排序方式</span></div>
+                                <select id="StairSort" style="flex:1">
+                                    <option value="desc">数值降序</option>
+                                    <option value="asc">数值升序</option>
+                                    <option value="none">原始顺序</option>
+                                </select></div>
+                            <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>缩放范围</span><span id="StairRangeVal">30%</span></div>
+                                <input type="range" id="StairRange" min="0" max="80" step="5" value="30"></div></div>
+                        </div>
+                        <div class="sub-title"><span>手动模式</span><input type="checkbox" id="StairManual"></div>
+                    </div>
+                </div>
+                <div class="sub-section ss-rose">
+                    <div class="sub-section-label">效果</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>透明度</span><span id="SliceOpacityVal">100%</span></div>
+                            <input type="range" id="SliceOpacity" min="10" max="100" step="5" value="100"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光</span><span id="SliceGlowVal">0</span></div>
+                            <input type="range" id="SliceGlow" min="0" max="100" step="2" value="0"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 标签设置 -->
+            <div class="control-group">
+                <div class="group-title"><span>🏷️ 标签设置</span></div>
+                <div class="sub-section ss-teal">
+                    <div class="sub-title"><span>显示标签</span><input type="checkbox" id="ShowLabels" checked></div>
+                    <div id="LabelOpts">
+                        <div class="row stack"><div class="label-line"><span>标签模式</span></div>
+                            <select id="LabelMode" style="flex:1">
+                                <option value="outside">外部标签</option>
+                                <option value="inside">扇形内部</option>
+                            </select></div>
+                        <div id="OutsideLabelOpts">
+                            <div class="sub-title"><span>显示引线</span><input type="checkbox" id="ShowLeaderLines" checked></div>
+                            <div class="row">
+                                <div style="flex:1" class="stack"><div class="label-line"><span>引线距离</span><span id="LabelDistanceVal">60</span></div>
+                                    <input type="range" id="LabelDistance" min="5" max="150" step="5" value="60"></div>
+                                <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>引线颜色</span></div>
+                                    <input type="color" id="LeaderLineColor" value="#999999"></div>
+                            </div>
+                            <div class="row">
+                                <div style="flex:1" class="stack"><div class="label-line"><span>引线粗细</span><span id="LeaderLineWidthVal">1</span></div>
+                                    <input type="range" id="LeaderLineWidth" min="0.5" max="4" step="0.5" value="1"></div>
+                            </div>
+                        </div>
+                        <div class="sub-title"><span>显示百分比</span><input type="checkbox" id="ShowPercentage" checked></div>
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>标签字号</span><span id="LabelFontSizeVal">14</span></div>
+                                <input type="range" id="LabelFontSize" min="8" max="30" step="1" value="14"></div>
+                        </div>
+                        <div class="row" style="justify-content:space-between; align-items:center;">
+                            <span style="font-size:12px; color:var(--text-sub, #888);">标签颜色</span>
+                            <input type="color" id="LabelColor" value="#555555"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 动画设置 -->
+            <div class="control-group">
+                <div class="group-title"><span>🎬 动画</span></div>
+                <div class="sub-section ss-rose">
+                    <div class="sub-section-label" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>动画</span>
+                        <button id="BtnPlay" class="btn-play">▶ 播放</button>
+                    </div>
+                    <div class="row stack"><div class="label-line"><span>动画时长 (秒)</span><span id="AnimDurationVal">2.5s</span></div>
+                        <input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="2.5"></div>
+                    <div class="row stack"><div class="label-line"><span>动画曲线</span></div>
+                        <select id="AnimEasing">
+                            <option value="linear">线性 (Linear)</option>
+                            <option value="easeIn">先慢后快 (Ease In)</option>
+                            <option value="easeOut">先快后慢 (Ease Out)</option>
+                            <option value="easeInOut" selected>丝滑缓动 (Smooth)</option>
+                        </select></div>
+                </div>
+            </div>
+
+            <!-- 卡片漂浮 -->
+            <div class="control-group">
+                <div class="group-title"><span>🃏 卡片漂浮</span></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">透视角度</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
+                            <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
+                            <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
+                    </div>
+                    <div class="row stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
+                        <input type="range" id="CardScale" min="40" max="100" step="1" value="80"></div>
+                </div>
+                <div class="sub-section ss-green">
+                    <div class="sub-section-label">尺寸 & 外观</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>悬浮高度</span><span id="ElevationVal">50</span></div>
+                            <input type="range" id="Elevation" min="0" max="100" step="1" value="50"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
+                            <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
+                            <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
+                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>描边颜色</span></div>
+                            <input type="color" id="CardBorderColor" value="#ffffff"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
+                            <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
+                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>辉光颜色</span></div>
+                            <input type="color" id="CardGlowColor" value="#3b82f6"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
+                            <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
+                    </div>
+                </div>
+                <div class="sub-section ss-purple">
+                    <div class="sub-section-label">漂浮动画</div>
+                    <div class="sub-title"><span>启用微动画</span><input type="checkbox" id="FloatEnabled" checked></div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴摆幅</span><span id="FloatRotateXVal">2.0°</span></div>
+                            <input type="range" id="FloatRotateX" min="0" max="8" step="0.5" value="2.0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴摆幅</span><span id="FloatRotateYVal">1.5°</span></div>
+                            <input type="range" id="FloatRotateY" min="0" max="8" step="0.5" value="1.5"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>周期 (秒)</span><span id="FloatDurationVal">4s</span></div>
+                            <input type="range" id="FloatDuration" min="1" max="10" step="0.5" value="4"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>相位差</span><span id="FloatPhaseVal">25%</span></div>
+                            <input type="range" id="FloatPhase" min="0" max="100" step="5" value="25"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 入场动画 -->
+            <div class="control-group">
+                <div class="group-title"><span>🎬 入场动画</span></div>
+                <div class="sub-section ss-teal">
+                    <div class="sub-section-label">预设 & 曲线</div>
+                    <div class="sub-title"><span>启用入场动画</span><input type="checkbox" id="EntranceEnabled" checked></div>
+                    <div id="EntranceOpts">
+                        <div class="row stack" style="margin-top:4px"><div class="label-line"><span>预设动画</span></div>
+                            <select id="EntrancePreset">
+                                <option value="none">无</option>
+                                <option value="slideUp" selected>从下浮现</option>
+                                <option value="fadeIn">纯淡入</option>
+                                <option value="slideLeft">从右滑入</option>
+                                <option value="slideRight">从左滑入</option>
+                                <option value="zoomIn">缩放进入</option>
+                            </select></div>
+                        <div class="row" style="margin-top:6px">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>入场时长</span><span id="EntranceDurationVal">0.8s</span></div>
+                                <input type="range" id="EntranceDuration" min="0.1" max="3" step="0.1" value="0.8"></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>入场曲线</span></div>
+                                <select id="EntranceEasing">
+                                    <option value="linear">线性</option>
+                                    <option value="easeIn">先慢后快</option>
+                                    <option value="easeOut" selected>先快后慢</option>
+                                    <option value="easeInOut">丝滑缓动</option>
+                                </select></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="EntranceDetailOpts">
+                    <div class="sub-section ss-blue">
+                        <div class="sub-section-label">位置</div>
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>起始 X</span><span id="EntranceStartXVal">0</span></div>
+                                <input type="range" id="EntranceStartX" min="-1000" max="1000" step="10" value="0"></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>起始 Y</span><span id="EntranceStartYVal">300</span></div>
+                                <input type="range" id="EntranceStartY" min="-1000" max="1000" step="10" value="300"></div>
+                        </div>
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>结束 X</span><span id="EntranceEndXVal">0</span></div>
+                                <input type="range" id="EntranceEndX" min="-1000" max="1000" step="10" value="0"></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>结束 Y</span><span id="EntranceEndYVal">0</span></div>
+                                <input type="range" id="EntranceEndY" min="-1000" max="1000" step="10" value="0"></div>
+                        </div>
+                    </div>
+                    <div class="sub-section ss-green">
+                        <div class="sub-section-label">透明度 & 缩放</div>
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>起始透明度</span><span id="EntranceStartOpacityVal">0%</span></div>
+                                <input type="range" id="EntranceStartOpacity" min="0" max="100" step="5" value="0"></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>结束透明度</span><span id="EntranceEndOpacityVal">100%</span></div>
+                                <input type="range" id="EntranceEndOpacity" min="0" max="100" step="5" value="100"></div>
+                        </div>
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>起始缩放</span><span id="EntranceStartScaleVal">100%</span></div>
+                                <input type="range" id="EntranceStartScale" min="0" max="200" step="5" value="100"></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>结束缩放</span><span id="EntranceEndScaleVal">100%</span></div>
+                                <input type="range" id="EntranceEndScale" min="0" max="200" step="5" value="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 背景和导出面板由 shared/controls.js 自动注入 -->
+            <div id="shared-controls-placeholder"></div>
+        </div>
+    </div>
+
+    <!-- ====== 画布 ====== -->
+    <div class="preview-area">
+        <div id="RecIndicator"><div class="rec-dot"></div> RENDERING...</div>
+        <canvas id="glCanvas"></canvas>
+    </div>
+
+    <script type="module">
+        import { WebGLComposite } from '../shared/webgl-composite.js';
+        import { initEffect } from '../shared/controls.js';
+        import { getTheme, toggleTheme } from '../shared/themes.js';
+        import { drawSolidGlow } from '../shared/border-effects.js';
+
+        // ====== Canvas 初始化 ======
+        const baseWidth = 1440, baseHeight = 1080, scale = 2;
+        const fullW = baseWidth * scale, fullH = baseHeight * scale;
+
+        // WebGL canvas
+        const glCanvas = document.getElementById('glCanvas');
+        glCanvas.width = fullW; glCanvas.height = fullH;
+        const glComp = new WebGLComposite(glCanvas, baseWidth, baseHeight);
+
+        // 离屏 2D — 卡片内容
+        const offscreen = document.createElement('canvas');
+        offscreen.width = fullW; offscreen.height = fullH;
+        const ctx = offscreen.getContext('2d', { alpha: true });
+        ctx.scale(scale, scale);
+
+        // 离屏 2D — 背景
+        const bgOffscreen = document.createElement('canvas');
+        bgOffscreen.width = fullW; bgOffscreen.height = fullH;
+        const bgCtx = bgOffscreen.getContext('2d', { alpha: true });
+        bgCtx.scale(scale, scale);
+
+        // initEffect（dummy canvas 给 recorder 初始化，后续重定向到 glCanvas）
+        const dummyCanvas = document.createElement('canvas');
+        dummyCanvas.id = 'initDummy'; dummyCanvas.style.display = 'none';
+        document.body.appendChild(dummyCanvas);
+
+        const { bg, recorder, resetAnimStart,
+                clamp, hexToRgba, getEasing, bindUI,
+                fontSelectHTML, setupFontSelector } = initEffect({
+            canvasId: 'initDummy',
+            fileName: 'PieChartFX',
+            baseWidth, baseHeight, scale,
+            defaultBgMode: 'transparent',
+            onFrame: drawFrame,
+        });
+        recorder.canvas = glCanvas;
+
+        // ====== 数据点 ======
+        const INITIAL_DATA = [
+            { label: '产品研发', value: 47, color: '#7c3aed' },
+            { label: '技术服务', value: 30, color: '#3b82f6' },
+            { label: '市场推广', value: 14, color: '#94a3b8' },
+            { label: '运营管理', value: 9, color: '#d4a574' },
+        ];
+        let dataPoints = INITIAL_DATA.map(d => ({...d}));
+
+        // ====== 配置 ======
+        const config = {
+            // 标题
+            mainTitle: '汽车市场份额分布',
+            subTitle: '2024 年度销售数据',
+            titleFont: "'Noto Sans SC', sans-serif",
+            mainTitleSize: 26,
+            subTitleSize: 36,
+            mainTitleWeight: 700,
+            subTitleWeight: 400,
+            mainTitleColor: '#333333',
+            subTitleColor: '#999999',
+            mainTitleX: 0,
+            mainTitleY: -490,
+            subTitleX: 630,
+            subTitleY: 0,
+            showBrackets: true,
+            subTitleGlow: false,
+
+            // 饼图样式
+            pieType: 'donut',
+            donutWidth: 35,
+            startAngle: 0,
+            sliceGap: 3,
+            pieRadius: 250,
+            pieCenterX: 0,
+            pieCenterY: 0,
+            sliceOpacity: 100,
+            sliceGlow: 0,
+            stairScale: false,
+            stairSort: 'desc',
+            stairRange: 30,
+            stairManual: false,
+
+            // 中心文字
+            centerText: '公司业务收入占比',
+            centerFontSize: 18,
+            centerColor: '#333333',
+
+            // 标签
+            showLabels: true,
+            labelMode: 'outside',
+            showLeaderLines: true,
+            leaderLineColor: '#999999',
+            leaderLineWidth: 1,
+            showPercentage: true,
+            labelFontSize: 13,
+            labelDistance: 60,
+            labelColor: '#555555',
+
+            // 卡片漂浮 (WebGL)
+            rotateX: 1.5, rotateY: -1,
+            elevation: 0.5,
+            cardRadius: 16,
+            cardScale: 0.8,
+            floatEnabled: true,
+            floatRotateX: 2.0, floatRotateY: 1.5,
+            floatPhase: 25, floatDuration: 4,
+
+            // 动画
+            animDuration: 2.5,
+            animEasing: 'easeInOut',
+
+            // 入场动画
+            entranceEnabled: true,
+            entrancePreset: 'slideUp',
+            entranceDuration: 0.8,
+            entranceEasing: 'easeOut',
+            entranceStartX: 0,
+            entranceStartY: 300,
+            entranceEndX: 0,
+            entranceEndY: 0,
+            entranceStartOpacity: 0,
+            entranceEndOpacity: 100,
+            entranceStartScale: 100,
+            entranceEndScale: 100,
+
+            // 纸张纹理
+            noiseGrain: 35, vignette: 15,
+
+            // 卡片外观
+            cardBg: '#f0f5fa',
+            cardBgTransparent: false,
+            cardBorderWidth: 0,
+            cardBorderColor: '#ffffff',
+            cardGlowWidth: 0,
+            cardGlowColor: '#3b82f6',
+            cardGlowIntensity: 70,
+        };
+
+        // ====== 字体选择器 ======
+        const titleFontSelectId = 'TitleFontSelect';
+        document.getElementById('TitleFontMount').innerHTML = fontSelectHTML(titleFontSelectId, config.titleFont);
+        setupFontSelector({ selectId: titleFontSelectId, configKey: 'titleFont', fileInputId: titleFontSelectId + 'Upload', config });
+
+        // ====== UI 绑定 ======
+        bindUI(config, [
+            // 标题设置
+            ['MainTitle',       'mainTitle'],
+            ['SubTitle',        'subTitle'],
+            ['TitleSize',       'mainTitleSize',  'int',   'TitleSizeVal'],
+            ['SubTitleSize',    'subTitleSize',   'int',   'SubTitleSizeVal'],
+            ['MainTitleWeight', 'mainTitleWeight','int',   'MainTitleWeightVal'],
+            ['SubTitleWeight',  'subTitleWeight', 'int',   'SubTitleWeightVal'],
+            ['TitleColor',      'mainTitleColor'],
+            ['SubTitleColor',   'subTitleColor'],
+            ['MainTitleX',      'mainTitleX',     'int',   'MainTitleXVal'],
+            ['MainTitleY',      'mainTitleY',     'int',   'MainTitleYVal'],
+            ['SubTitleX',       'subTitleX',      'int',   'SubTitleXVal'],
+            ['SubTitleY',       'subTitleY',      'int',   'SubTitleYVal'],
+            // 卡片背景
+            ['ShowBrackets',    'showBrackets',   'checked'],
+            ['SubTitleGlow',    'subTitleGlow',   'checked'],
+            ['CardBgTransparent','cardBgTransparent','checked'],
+            ['CardBg',          'cardBg'],
+            ['NoiseGrain',      'noiseGrain',     'int',   'NoiseGrainVal'],
+            ['Vignette',        'vignette',       'int',   'VignetteVal'],
+            // 饼图样式
+            ['PieType',         'pieType'],
+            ['DonutWidth',      'donutWidth',     'int',   'DonutWidthVal', '%'],
+            ['StartAngle',      'startAngle',     'int',   'StartAngleVal', '°'],
+            ['SliceGap',        'sliceGap',       'int',   'SliceGapVal', 'px'],
+            ['PieRadius',       'pieRadius',      'int',   'PieRadiusVal'],
+            ['PieCenterX',      'pieCenterX',     'int',   'PieCenterXVal'],
+            ['PieCenterY',      'pieCenterY',     'int',   'PieCenterYVal'],
+            ['SliceOpacity',   'sliceOpacity',    'int',   'SliceOpacityVal', '%'],
+            ['SliceGlow',      'sliceGlow',       'int',   'SliceGlowVal'],
+            ['StairScale',     'stairScale',      'checked'],
+            ['StairSort',      'stairSort'],
+            ['StairRange',     'stairRange',      'int',   'StairRangeVal', '%'],
+            ['StairManual',    'stairManual',     'checked'],
+            ['CenterText',      'centerText'],
+            ['CenterFontSize',  'centerFontSize', 'int',   'CenterFontSizeVal'],
+            ['CenterColor',     'centerColor'],
+            // 标签
+            ['ShowLabels',      'showLabels',     'checked'],
+            ['LabelMode',       'labelMode'],
+            ['ShowLeaderLines', 'showLeaderLines', 'checked'],
+            ['LeaderLineColor', 'leaderLineColor'],
+            ['LeaderLineWidth', 'leaderLineWidth', 'float', 'LeaderLineWidthVal'],
+            ['ShowPercentage',  'showPercentage', 'checked'],
+            ['LabelFontSize',   'labelFontSize',  'int',   'LabelFontSizeVal'],
+            ['LabelDistance',   'labelDistance',  'int',   'LabelDistanceVal'],
+            ['LabelColor',      'labelColor'],
+            // 卡片漂浮
+            ['RotateX',         'rotateX',        'float', 'RotateXVal',   '°'],
+            ['RotateY',         'rotateY',        'float', 'RotateYVal',   '°'],
+            ['CardScale',       'cardScale',      '%',     'CardScaleVal', '%'],
+            ['Elevation',       'elevation',      '%',     'ElevationVal'],
+            ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal'],
+            ['CardBorderWidth',  'cardBorderWidth', 'int',   'CardBorderWidthVal'],
+            ['CardBorderColor',  'cardBorderColor'],
+            ['CardGlowWidth',    'cardGlowWidth',   'int',   'CardGlowWidthVal'],
+            ['CardGlowColor',    'cardGlowColor'],
+            ['CardGlowIntensity','cardGlowIntensity','int',  'CardGlowIntensityVal','%'],
+            ['FloatEnabled',    'floatEnabled',   'checked'],
+            ['FloatRotateX',    'floatRotateX',   'float', 'FloatRotateXVal', '°'],
+            ['FloatRotateY',    'floatRotateY',   'float', 'FloatRotateYVal', '°'],
+            ['FloatPhase',      'floatPhase',     'int',   'FloatPhaseVal',   '%'],
+            ['FloatDuration',   'floatDuration',  'float', 'FloatDurationVal', 's'],
+            // 动画
+            ['AnimDuration',    'animDuration',   'float', 'AnimDurationVal', 's'],
+            ['AnimEasing',      'animEasing'],
+            // 入场动画
+            ['EntranceEnabled', 'entranceEnabled', 'checked'],
+            ['EntranceDuration','entranceDuration','float', 'EntranceDurationVal', 's'],
+            ['EntranceEasing',  'entranceEasing'],
+            ['EntranceStartX',  'entranceStartX', 'int',   'EntranceStartXVal'],
+            ['EntranceStartY',  'entranceStartY', 'int',   'EntranceStartYVal'],
+            ['EntranceEndX',    'entranceEndX',   'int',   'EntranceEndXVal'],
+            ['EntranceEndY',    'entranceEndY',   'int',   'EntranceEndYVal'],
+            ['EntranceStartOpacity', 'entranceStartOpacity', 'int', 'EntranceStartOpacityVal', '%'],
+            ['EntranceEndOpacity',   'entranceEndOpacity',   'int', 'EntranceEndOpacityVal', '%'],
+            ['EntranceStartScale',   'entranceStartScale',   'int', 'EntranceStartScaleVal', '%'],
+            ['EntranceEndScale',     'entranceEndScale',     'int', 'EntranceEndScaleVal', '%'],
+        ], {
+            onChange: (_, key) => {
+                if (key === 'pieType') {
+                    document.getElementById('DonutOpts').style.display =
+                        config.pieType === 'donut' ? '' : 'none';
+                    document.getElementById('CenterTextSection').style.display =
+                        config.pieType === 'donut' ? '' : 'none';
+                }
+                if (key === 'showLabels') {
+                    document.getElementById('LabelOpts').style.display =
+                        config.showLabels ? '' : 'none';
+                }
+                if (key === 'labelMode' || key === 'showLabels') {
+                    document.getElementById('OutsideLabelOpts').style.display =
+                        config.showLabels && config.labelMode === 'outside' ? '' : 'none';
+                }
+                if (key === 'stairScale' || key === 'stairManual') {
+                    document.getElementById('StairOpts').style.display =
+                        config.stairScale ? '' : 'none';
+                    document.getElementById('StairAutoOpts').style.display =
+                        config.stairScale && !config.stairManual ? '' : 'none';
+                    if (key === 'stairManual') renderTable();
+                }
+                if (key === 'entranceEnabled') {
+                    const show = config.entranceEnabled;
+                    document.getElementById('EntranceOpts').style.display = show ? '' : 'none';
+                    document.getElementById('EntranceDetailOpts').style.display = show ? '' : 'none';
+                }
+                if (key === 'floatEnabled') {
+                    _floatStartTime = performance.now();
+                }
+                if (key === 'cardBgTransparent') {
+                    const transparent = config.cardBgTransparent;
+                    document.getElementById('CardBgColorRow').style.display = transparent ? 'none' : '';
+                    document.getElementById('TextureSection').style.display = transparent ? 'none' : '';
+                    if (transparent) {
+                        config.floatEnabled = false;
+                        document.getElementById('FloatEnabled').checked = false;
+                        config.cardBorderWidth = 0;
+                        document.getElementById('CardBorderWidth').value = 0;
+                        document.getElementById('CardBorderWidthVal').textContent = '0';
+                        config.cardGlowWidth = 0;
+                        document.getElementById('CardGlowWidth').value = 0;
+                        document.getElementById('CardGlowWidthVal').textContent = '0';
+                        config.cardGlowIntensity = 0;
+                        document.getElementById('CardGlowIntensity').value = 0;
+                        document.getElementById('CardGlowIntensityVal').textContent = '0%';
+                    }
+                }
+                _paperTexCache = null;
+                startLoop();
+            }
+        });
+
+        // ====== 漂浮动画 ======
+        let _currentRx = config.rotateX * Math.PI / 180;
+        let _currentRy = config.rotateY * Math.PI / 180;
+        let _floatStartTime = performance.now();
+
+        function updateFloatRotation(now) {
+            if (config.floatEnabled) {
+                const elapsed = (now - _floatStartTime) / 1000;
+                const dur = config.floatDuration;
+                const phaseRad = (config.floatPhase / 100) * Math.PI * 2;
+                _currentRx = (Math.sin(elapsed / dur * Math.PI * 2) * config.floatRotateX + config.rotateX) * Math.PI / 180;
+                _currentRy = (Math.sin(elapsed / dur * Math.PI * 2 + phaseRad) * config.floatRotateY + config.rotateY) * Math.PI / 180;
+            } else {
+                _currentRx = config.rotateX * Math.PI / 180;
+                _currentRy = config.rotateY * Math.PI / 180;
+            }
+        }
+
+        // ====== 入场动画预设 ======
+        const ENTRANCE_PRESETS = {
+            none:       { startX: 0,   startY: 0,   startOpacity: 100, endOpacity: 100, startScale: 100, endScale: 100 },
+            slideUp:    { startX: 0,   startY: 300, startOpacity: 0,   endOpacity: 100, startScale: 100, endScale: 100 },
+            fadeIn:     { startX: 0,   startY: 0,   startOpacity: 0,   endOpacity: 100, startScale: 100, endScale: 100 },
+            slideLeft:  { startX: 500, startY: 0,   startOpacity: 0,   endOpacity: 100, startScale: 100, endScale: 100 },
+            slideRight: { startX:-500, startY: 0,   startOpacity: 0,   endOpacity: 100, startScale: 100, endScale: 100 },
+            zoomIn:     { startX: 0,   startY: 0,   startOpacity: 0,   endOpacity: 100, startScale: 40,  endScale: 100 },
+        };
+
+        function applyEntrancePreset(name) {
+            const p = ENTRANCE_PRESETS[name];
+            if (!p) return;
+            config.entranceStartX = p.startX;
+            config.entranceStartY = p.startY;
+            config.entranceStartOpacity = p.startOpacity;
+            config.entranceEndOpacity = p.endOpacity;
+            config.entranceStartScale = p.startScale;
+            config.entranceEndScale = p.endScale;
+            const sync = (id, val, suffix) => {
+                document.getElementById(id).value = val;
+                const dEl = document.getElementById(id + 'Val');
+                if (dEl) dEl.textContent = val + (suffix || '');
+            };
+            sync('EntranceStartX', p.startX);
+            sync('EntranceStartY', p.startY);
+            sync('EntranceEndX', 0);
+            sync('EntranceEndY', 0);
+            sync('EntranceStartOpacity', p.startOpacity, '%');
+            sync('EntranceEndOpacity', p.endOpacity, '%');
+            sync('EntranceStartScale', p.startScale, '%');
+            sync('EntranceEndScale', p.endScale, '%');
+            myResetAnimStart();
+        }
+
+        document.getElementById('EntrancePreset').addEventListener('change', (e) => {
+            applyEntrancePreset(e.target.value);
+        });
+
+        // ====== 工具函数 ======
+        function lerp(a, b, t) { return a + (b - a) * t; }
+
+        function lightenColor(hex, amount) {
+            hex = hex.replace('#', '');
+            let r = parseInt(hex.substring(0,2), 16);
+            let g = parseInt(hex.substring(2,4), 16);
+            let b = parseInt(hex.substring(4,6), 16);
+            r = Math.min(255, r + amount);
+            g = Math.min(255, g + amount);
+            b = Math.min(255, b + amount);
+            return '#' + [r,g,b].map(c => c.toString(16).padStart(2,'0')).join('');
+        }
+
+        function roundRect(c, x, y, w, h, r) {
+            r = Math.min(r, w / 2, h / 2);
+            c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.arcTo(x + w, y, x + w, y + r, r);
+            c.lineTo(x + w, y + h - r); c.arcTo(x + w, y + h, x + w - r, y + h, r);
+            c.lineTo(x + r, y + h); c.arcTo(x, y + h, x, y + h - r, r);
+            c.lineTo(x, y + r); c.arcTo(x, y, x + r, y, r);
+        }
+
+        // ====== 纸张纹理生成 ======
+        let _paperTexCache = null;
+        let _texSeed = 42;
+        function texRnd() { _texSeed = (_texSeed * 16807) % 2147483647; return (_texSeed - 1) / 2147483646; }
+        function hash2(x, y) { let h = (x * 374761393 + y * 668265263) | 0; h = ((h ^ (h >> 13)) * 1274126177) | 0; return ((h ^ (h >> 16)) & 0x7fffffff) / 0x7fffffff; }
+
+        function generatePaperTexture(texW, texH) {
+            const grain = config.noiseGrain / 100;
+            const vig = config.vignette / 100;
+            const key = `${config.cardBg}|${grain.toFixed(2)}|${vig.toFixed(2)}|${texW}|${texH}`;
+            if (_paperTexCache && _paperTexCache.key === key) return _paperTexCache.canvas;
+
+            const tw = Math.round(texW / 2), th = Math.round(texH / 2);
+            const tc = document.createElement('canvas'); tc.width = tw; tc.height = th;
+            const tctx = tc.getContext('2d');
+            const img = tctx.createImageData(tw, th);
+            const d = img.data;
+            _texSeed = 42;
+
+            const bgHex = config.cardBg.replace('#', '');
+            const bgR = parseInt(bgHex.substring(0,2), 16);
+            const bgG = parseInt(bgHex.substring(2,4), 16);
+            const bgB = parseInt(bgHex.substring(4,6), 16);
+
+            for (let y = 0; y < th; y++) {
+                for (let x = 0; x < tw; x++) {
+                    const idx = (y * tw + x) * 4;
+                    let r = bgR, g = bgG, b = bgB;
+                    if (grain > 0) { const n = (texRnd() - 0.5) * grain * 22; r += n; g += n * 0.97; b += n * 0.92; }
+                    if (grain > 0.1) {
+                        const scale = 80, nx = x / scale, ny = y / scale;
+                        const lx = Math.floor(nx), ly = Math.floor(ny), fx = nx - lx, fy = ny - ly;
+                        const s1 = hash2(lx,ly), s2 = hash2(lx+1,ly), s3 = hash2(lx,ly+1), s4 = hash2(lx+1,ly+1);
+                        const bump = ((s1*(1-fx)*(1-fy)+s2*fx*(1-fy)+s3*(1-fx)*fy+s4*fx*fy) - 0.5) * grain * 8;
+                        r += bump; g += bump * 0.98; b += bump * 0.95;
+                    }
+                    if (vig > 0) {
+                        const cx = tw/2, cy = th/2, maxD = Math.sqrt(cx*cx+cy*cy);
+                        const dist = Math.sqrt(((x-cx)/maxD)**2 + ((y-cy)/maxD)**2);
+                        const vf = Math.pow(dist, 2.2) * vig * 18;
+                        r -= vf; g -= vf; b -= vf;
+                    }
+                    d[idx] = clamp(Math.round(r), 0, 255);
+                    d[idx+1] = clamp(Math.round(g), 0, 255);
+                    d[idx+2] = clamp(Math.round(b), 0, 255);
+                    d[idx+3] = 255;
+                }
+            }
+            tctx.putImageData(img, 0, 0);
+            _paperTexCache = { key, canvas: tc };
+            return tc;
+        }
+
+        // ====== 数据表格 ======
+        function renderTable() {
+            const showScale = config.stairScale && config.stairManual;
+            const thead = document.getElementById('DataHead');
+            thead.innerHTML = showScale
+                ? '<tr><th style="width:22%">名称</th><th style="width:14%">数值</th><th style="width:14%">颜色</th><th style="width:14%">缩放%</th><th style="width:36%">操作</th></tr>'
+                : '<tr><th style="width:28%">名称</th><th style="width:18%">数值</th><th style="width:18%">颜色</th><th style="width:36%">操作</th></tr>';
+            const tbody = document.getElementById('DataBody');
+            tbody.innerHTML = '';
+            dataPoints.forEach((item, i) => {
+                const tr = document.createElement('tr');
+                const scaleCol = showScale
+                    ? `<td><input type="number" min="50" max="200" step="5" value="${item.scale || 100}" oninput="updateData(${i}, 'scale', this.value)"></td>` : '';
+                tr.innerHTML = `
+                    <td><input type="text" value="${item.label}" oninput="updateData(${i}, 'label', this.value)"></td>
+                    <td><input type="number" value="${item.value}" oninput="updateData(${i}, 'value', this.value)"></td>
+                    <td><input type="color" value="${item.color}" oninput="updateData(${i}, 'color', this.value)"></td>
+                    ${scaleCol}
+                    <td class="op-cell">
+                        <button class="btn-icon" onclick="moveRow(${i}, -1)" title="上移">↑</button>
+                        <button class="btn-icon" onclick="moveRow(${i}, 1)" title="下移">↓</button>
+                        <button class="btn-icon del" onclick="removeRow(${i})" title="删除">×</button>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        window.updateData = (i, k, v) => { dataPoints[i][k] = (k === 'value' || k === 'scale') ? (parseFloat(v) || 0) : v; startLoop(); };
+        window.addRow = () => {
+            const colors = ['#3b82f6','#ef4444','#22c55e','#f59e0b','#8b5cf6','#ec4899'];
+            dataPoints.push({ label: '新项', value: 10, color: colors[dataPoints.length % colors.length], scale: 100 });
+            renderTable(); startLoop();
+        };
+        window.removeRow = (i) => {
+            if (dataPoints.length <= 2) { alert('至少保留两个数据'); return; }
+            dataPoints.splice(i, 1); renderTable(); startLoop();
+        };
+        window.moveRow = (i, dir) => {
+            if (i+dir < 0 || i+dir >= dataPoints.length) return;
+            const t = dataPoints[i]; dataPoints[i] = dataPoints[i+dir];
+            dataPoints[i+dir] = t; renderTable(); startLoop();
+        };
+        window.resetData = () => {
+            dataPoints = INITIAL_DATA.map(d => ({...d}));
+            renderTable(); startLoop();
+        };
+
+        document.getElementById('BtnPlay').addEventListener('click', () => myResetAnimStart());
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            toggleTheme();
+            document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+            _paperTexCache = null;
+            startLoop();
+        });
+        document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+
+        // 条件显示
+        if (config.pieType !== 'donut') {
+            document.getElementById('DonutOpts').style.display = 'none';
+            document.getElementById('CenterTextSection').style.display = 'none';
+        }
+        if (!config.showLabels) document.getElementById('LabelOpts').style.display = 'none';
+        if (!config.showLabels || config.labelMode !== 'outside') document.getElementById('OutsideLabelOpts').style.display = 'none';
+
+        // ====== 绘制函数 ======
+        function drawContent(w, h, progress, rawProgress, isHold) {
+            const t = getTheme();
+            const isTransparent = config.cardBgTransparent;
+
+            // 裁剪圆角
+            ctx.save();
+            ctx.beginPath();
+            roundRect(ctx, 0, 0, w, h, config.cardRadius);
+            ctx.clip();
+
+            // === 背景 ===
+            if (!isTransparent) {
+                ctx.fillStyle = config.cardBg;
+                ctx.fillRect(0, 0, w, h);
+                if (config.noiseGrain > 0 || config.vignette > 0) {
+                    const tex = generatePaperTexture(w, h);
+                    if (tex) ctx.drawImage(tex, 0, 0, w, h);
+                }
+            }
+
+            // === 主标题 ===
+            {
+                const titleAlpha = isHold ? 1 : clamp(rawProgress * 3, 0, 1);
+                ctx.save();
+                ctx.font = `${config.mainTitleWeight} ${config.mainTitleSize}px ${config.titleFont}`;
+                ctx.fillStyle = config.mainTitleColor;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.globalAlpha = titleAlpha;
+                let titleText = config.mainTitle;
+                if (config.showBrackets && titleText) titleText = '「' + titleText + '」';
+                ctx.fillText(titleText, 720 + config.mainTitleX, 540 + config.mainTitleY);
+                ctx.restore();
+            }
+
+            // === 饼图 ===
+            const cx = w / 2 + config.pieCenterX;
+            const cy = h / 2 + config.pieCenterY;
+            const total = dataPoints.reduce((s, d) => s + d.value, 0);
+
+            if (total > 0) {
+                const radius = Math.min(
+                    config.pieRadius,
+                    w / 2 - 80,
+                    h / 2 - 60
+                );
+                const startRad = (config.startAngle - 90) * Math.PI / 180;
+                const maxAngle = progress * Math.PI * 2;
+
+                // 计算每个扇形的缩放比
+                const scales = dataPoints.map((slice, i) => {
+                    if (!config.stairScale) return 1;
+                    if (config.stairManual) return (slice.scale || 100) / 100;
+                    const n = dataPoints.length;
+                    const base = 1 - config.stairRange / 100;
+                    const step = n > 1 ? (config.stairRange / 100) * 2 / (n - 1) : 0;
+                    if (config.stairSort === 'none') {
+                        return base + i * step;
+                    }
+                    // 按数值排序得到排名
+                    const sorted = [...dataPoints.entries()].sort((a, b) =>
+                        config.stairSort === 'asc' ? a[1].value - b[1].value : b[1].value - a[1].value
+                    );
+                    const rank = sorted.findIndex(e => e[0] === i);
+                    // desc: rank 0 = 最大值 → 最大缩放; asc: rank 0 = 最小值 → 最小缩放
+                    return base + (config.stairSort === 'desc' ? (n - 1 - rank) : rank) * step;
+                });
+
+                let currentAngle = startRad;
+
+                // 第一遍：绘制所有扇形（无角度间隙）
+                for (let i = 0; i < dataPoints.length; i++) {
+                    const slice = dataPoints[i];
+                    const sliceAngle = (slice.value / total) * Math.PI * 2;
+                    const drawnAngle = currentAngle - startRad;
+                    const effectiveAngle = Math.min(sliceAngle, Math.max(0, maxAngle - drawnAngle));
+
+                    if (effectiveAngle > 0.001) {
+                        const drawStart = currentAngle;
+                        const drawEnd = currentAngle + effectiveAngle;
+                        const sliceR = radius * scales[i];
+                        const innerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+
+                        ctx.beginPath();
+                        if (config.pieType === 'donut') {
+                            ctx.arc(cx, cy, sliceR, drawStart, drawEnd);
+                            ctx.arc(cx, cy, innerR, drawEnd, drawStart, true);
+                            ctx.closePath();
+                        } else {
+                            ctx.moveTo(cx, cy);
+                            ctx.arc(cx, cy, sliceR, drawStart, drawEnd);
+                            ctx.closePath();
+                        }
+
+                        ctx.save();
+                        if (config.sliceOpacity < 100) ctx.globalAlpha = config.sliceOpacity / 100;
+                        if (config.sliceGlow > 0) {
+                            ctx.shadowColor = slice.color;
+                            ctx.shadowBlur = config.sliceGlow;
+                        }
+                        const grad = ctx.createRadialGradient(cx, cy, innerR, cx, cy, sliceR);
+                        grad.addColorStop(0, slice.color);
+                        grad.addColorStop(1, lightenColor(slice.color, 35));
+                        ctx.fillStyle = grad;
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                    currentAngle += sliceAngle;
+                }
+
+                // 第二遍：环形图中心圆
+                if (config.pieType === 'donut') {
+                    const innerR = radius * (1 - config.donutWidth / 100);
+                    ctx.save();
+                    if (isTransparent) {
+                        // 透明模式：用 destination-out 挖空中心
+                        ctx.globalCompositeOperation = 'destination-out';
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+                        ctx.fillStyle = config.cardBg;
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                // 第三遍：环形图平行分隔线
+                if (config.pieType === 'donut' && config.sliceGap > 0) {
+                    let sepAngle = startRad;
+                    ctx.save();
+                    if (isTransparent) {
+                        ctx.globalCompositeOperation = 'destination-out';
+                        ctx.lineWidth = config.sliceGap;
+                        ctx.lineCap = 'butt';
+                    } else {
+                        ctx.strokeStyle = config.cardBg;
+                        ctx.lineWidth = config.sliceGap;
+                        ctx.lineCap = 'butt';
+                    }
+                    const baseInnerR = radius * (1 - config.donutWidth / 100);
+                    for (let i = 0; i < dataPoints.length; i++) {
+                        const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
+                        const boundaryAngle = sepAngle + sliceAngle;
+                        if (boundaryAngle - startRad <= maxAngle + 0.01) {
+                            const nextI = (i + 1) % dataPoints.length;
+                            const sR = radius * Math.max(scales[i], scales[nextI]);
+                            ctx.beginPath();
+                            ctx.moveTo(
+                                cx + Math.cos(boundaryAngle) * baseInnerR,
+                                cy + Math.sin(boundaryAngle) * baseInnerR
+                            );
+                            ctx.lineTo(
+                                cx + Math.cos(boundaryAngle) * sR,
+                                cy + Math.sin(boundaryAngle) * sR
+                            );
+                            ctx.stroke();
+                        }
+                        sepAngle += sliceAngle;
+                    }
+                    ctx.restore();
+                }
+
+                // === 环形图中心文字 ===
+                if (config.pieType === 'donut' && config.centerText && rawProgress > 0.5) {
+                    const innerR = radius * (1 - config.donutWidth / 100);
+                    const cAlpha = clamp((rawProgress - 0.5) / 0.3, 0, 1);
+                    ctx.save();
+                    ctx.globalAlpha = cAlpha;
+                    ctx.font = `600 ${config.centerFontSize}px ${config.titleFont}`;
+                    ctx.fillStyle = config.centerColor;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    const maxW = innerR * 1.5;
+                    const words = config.centerText;
+                    if (ctx.measureText(words).width > maxW) {
+                        const mid = Math.ceil(words.length / 2);
+                        ctx.fillText(words.substring(0, mid), cx, cy - config.centerFontSize * 0.4);
+                        ctx.fillText(words.substring(mid), cx, cy + config.centerFontSize * 0.6);
+                    } else {
+                        ctx.fillText(words, cx, cy);
+                    }
+                    ctx.restore();
+                }
+
+                // === 标签 ===
+                if (config.showLabels && rawProgress > 0.75) {
+                    const labelAlpha = clamp((rawProgress - 0.75) / 0.25, 0, 1);
+                    ctx.save();
+                    ctx.globalAlpha = labelAlpha;
+
+                    let angle = startRad;
+                    for (let i = 0; i < dataPoints.length; i++) {
+                        const slice = dataPoints[i];
+                        const sliceAngle = (slice.value / total) * Math.PI * 2;
+                        const midAngle = angle + sliceAngle / 2;
+                        const pct = ((slice.value / total) * 100).toFixed(1) + '%';
+                        const sliceR = radius * scales[i];
+
+                        if (config.labelMode === 'inside') {
+                            const innerEdge = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+                            const midR = (innerEdge + sliceR) / 2;
+                            const lx = cx + Math.cos(midAngle) * midR;
+                            const ly = cy + Math.sin(midAngle) * midR;
+
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+
+                            if (config.showPercentage) {
+                                ctx.font = `700 ${config.labelFontSize}px ${config.titleFont}`;
+                                ctx.fillStyle = '#ffffff';
+                                ctx.fillText(pct, lx, ly - config.labelFontSize * 0.4);
+                            }
+                            ctx.font = `400 ${config.labelFontSize - 2}px ${config.titleFont}`;
+                            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                            ctx.fillText(slice.label, lx, ly + config.labelFontSize * 0.5);
+                        } else {
+                            // 外部标签（原有逻辑）
+                            const edgeX = cx + Math.cos(midAngle) * sliceR;
+                            const edgeY = cy + Math.sin(midAngle) * sliceR;
+                            const labelR = sliceR + config.labelDistance;
+                            const labelX = cx + Math.cos(midAngle) * labelR;
+                            const labelY = cy + Math.sin(midAngle) * labelR;
+                            const isRight = Math.cos(midAngle) > 0;
+                            const elbowLen = 25;
+
+                            if (config.showLeaderLines) {
+                                const elbowX = labelX + (isRight ? elbowLen : -elbowLen);
+                                ctx.beginPath();
+                                ctx.moveTo(edgeX, edgeY);
+                                ctx.lineTo(labelX, labelY);
+                                ctx.lineTo(elbowX, labelY);
+                                ctx.strokeStyle = config.leaderLineColor;
+                                ctx.lineWidth = config.leaderLineWidth;
+                                ctx.stroke();
+
+                                ctx.beginPath();
+                                ctx.arc(edgeX, edgeY, 3.5, 0, Math.PI * 2);
+                                ctx.fillStyle = slice.color;
+                                ctx.fill();
+
+                                ctx.beginPath();
+                                ctx.arc(elbowX, labelY, 2, 0, Math.PI * 2);
+                                ctx.fillStyle = config.leaderLineColor;
+                                ctx.fill();
+                            }
+
+                            const textX = labelX + (isRight ? elbowLen + 6 : -(elbowLen + 6));
+
+                            if (config.showPercentage) {
+                                ctx.font = `700 ${config.labelFontSize + 1}px ${config.titleFont}`;
+                                ctx.textAlign = isRight ? 'left' : 'right';
+                                ctx.textBaseline = 'bottom';
+                                ctx.fillStyle = slice.color;
+                                ctx.fillText(pct, textX, labelY - 1);
+                            }
+
+                            ctx.font = `400 ${config.labelFontSize - 1}px ${config.titleFont}`;
+                            ctx.textAlign = isRight ? 'left' : 'right';
+                            ctx.textBaseline = 'top';
+                            ctx.fillStyle = config.labelColor;
+                            ctx.fillText(slice.label, textX, labelY + 1);
+                        }
+
+                        angle += sliceAngle;
+                    }
+                    ctx.restore();
+                }
+            }
+
+            // === 副标题 ===
+            {
+                const subTitleAlpha = isHold ? 1 : clamp((rawProgress - 0.3) * 2, 0, 1);
+                ctx.save();
+                ctx.font = `${config.subTitleWeight} ${config.subTitleSize}px ${config.titleFont}`;
+                ctx.fillStyle = config.subTitleColor;
+                ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.globalAlpha = subTitleAlpha;
+                if (config.subTitleGlow) { ctx.shadowColor = config.subTitleColor; ctx.shadowBlur = 25; }
+                ctx.fillText(config.subTitle, 720 + config.subTitleX, 540 + config.subTitleY);
+                ctx.restore();
+            }
+
+            ctx.restore(); // clip
+        }
+
+        // ====== 主渲染函数 ======
+        function drawFrame(timeMs) {
+            // Canvas padding for border/glow overflow
+            const halfPad = config.cardBgTransparent ? 0
+                : (config.cardBorderWidth || 0) * 2 + (config.cardGlowWidth || 0);
+            const c2dPad = halfPad > 0 ? halfPad * 2 + 10 : 0;
+            const c2dPhysPad = c2dPad * scale;
+            const needW = fullW + c2dPhysPad * 2;
+            const needH = fullH + c2dPhysPad * 2;
+            if (offscreen.width !== needW || offscreen.height !== needH) {
+                offscreen.width = needW;
+                offscreen.height = needH;
+            }
+            ctx.setTransform(scale, 0, 0, scale, c2dPhysPad, c2dPhysPad);
+            ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+            ctx.clearRect(0, 0, offscreen.width, offscreen.height);
+            ctx.restore();
+            bgCtx.save(); bgCtx.setTransform(1,0,0,1,0,0);
+            bgCtx.clearRect(0, 0, bgOffscreen.width, bgOffscreen.height);
+            bgCtx.restore();
+
+            // 背景
+            if (bg.mode === 'transparent') {
+                if (recorder.isRecording && recorder.format !== 'png_seq') {
+                    bgCtx.fillStyle = '#000000';
+                    bgCtx.fillRect(0, 0, baseWidth, baseHeight);
+                }
+            } else {
+                bg.draw(bgCtx, timeMs, recorder.isRecording, recorder.format);
+            }
+
+            const w = baseWidth, h = baseHeight;
+            const isHold = !isFinite(timeMs);
+
+            // 入场动画进度
+            let entranceProgress = 1, entranceRaw = 1;
+            if (config.entranceEnabled && !isHold) {
+                const entranceDur = config.entranceDuration * 1000;
+                entranceRaw = entranceDur > 0 ? Math.min(timeMs / entranceDur, 1) : 1;
+                entranceProgress = getEasing(config.entranceEasing)(entranceRaw);
+            }
+
+            // 饼图动画进度
+            const animDur = config.animDuration * 1000;
+            let pieRaw, pieProgress;
+            if (isHold) {
+                pieRaw = 1; pieProgress = 1;
+            } else {
+                pieRaw = animDur > 0 ? Math.min(timeMs / animDur, 1) : 1;
+                pieProgress = getEasing(config.animEasing)(pieRaw);
+            }
+
+            drawContent(w, h, pieProgress, pieRaw, isHold);
+
+            // Card border and glow (Canvas 2D, matching card-3d approach)
+            // Split into two calls: glow first (offset outside border), then border on top
+            if (!config.cardBgTransparent && (config.cardBorderWidth > 0 || config.cardGlowWidth > 0)) {
+                const bw = config.cardBorderWidth || 0;
+                const gw = config.cardGlowWidth || 0;
+                const baseCard = {x: 0, y: 0, w, h};
+
+                // Glow: offset card rect to border's outer edge so glow starts outside border
+                if (gw > 0) {
+                    const offset = bw * 2;
+                    const glowCard = bw > 0
+                        ? {x: -offset, y: -offset, w: w + offset * 2, h: h + offset * 2}
+                        : baseCard;
+                    drawSolidGlow(ctx, glowCard, {
+                        borderWidth: 0,
+                        borderColor: '#000',
+                        glowWidth: gw,
+                        glowColor: config.cardGlowColor,
+                        glowIntensity: config.cardGlowIntensity / 100,
+                        cornerRadius: config.cardRadius + offset,
+                        glowDir: 'outer',
+                    });
+                }
+
+                // Border: drawn on top at card edge
+                if (bw > 0) {
+                    drawSolidGlow(ctx, baseCard, {
+                        borderWidth: bw,
+                        borderColor: config.cardBorderColor,
+                        glowWidth: 0,
+                        glowColor: '#000',
+                        glowIntensity: 0,
+                        cornerRadius: config.cardRadius,
+                        glowDir: 'outer',
+                    });
+                }
+            }
+
+            // 入场动画插值
+            const entranceX = lerp(config.entranceStartX, config.entranceEndX, entranceProgress);
+            const entranceY = lerp(config.entranceStartY, config.entranceEndY, entranceProgress);
+            const entranceAlpha = lerp(config.entranceStartOpacity / 100, config.entranceEndOpacity / 100, entranceProgress);
+            const entranceScale = lerp(config.entranceStartScale / 100, config.entranceEndScale / 100, entranceProgress);
+
+            // WebGL 合成
+            const baseCardScale = config.cardScale * entranceScale;
+            glComp.render({
+                bgCanvas: bgOffscreen,
+                cardCanvas: offscreen,
+                rx: _currentRx,
+                ry: _currentRy,
+                perspective: 900,
+                elevation: config.elevation,
+                cardScale: baseCardScale,
+                scaleX: c2dPad > 0 ? baseCardScale * offscreen.width / fullW : undefined,
+                scaleY: c2dPad > 0 ? baseCardScale * offscreen.height / fullH : undefined,
+                cardRadius: c2dPad > 0 ? 0 : config.cardRadius,
+                offsetX: entranceX,
+                offsetY: entranceY,
+                cardAlpha: entranceAlpha,
+                cardBounds: c2dPad > 0
+                    ? { x: c2dPad, y: c2dPad, w: baseWidth, h: baseHeight }
+                    : undefined,
+                effectPadding: 0,
+                skipSDF: c2dPad > 0,
+            });
+        }
+
+        // ====== 预览循环 ======
+        renderTable();
+
+        let _animStartTime = performance.now();
+        let _loopId = null;
+        const origResetAnimStart = resetAnimStart;
+
+        function myResetAnimStart() {
+            _animStartTime = performance.now();
+            origResetAnimStart();
+            startLoop();
+        }
+
+        function startLoop() {
+            if (_loopId !== null) return;
+            _loopId = requestAnimationFrame(mainLoop);
+        }
+
+        function mainLoop(now) {
+            _loopId = null;
+
+            if (recorder.isRecording) {
+                _loopId = requestAnimationFrame(mainLoop);
+                return;
+            }
+
+            updateFloatRotation(now);
+
+            let time = now - _animStartTime;
+            const entranceDur = config.entranceEnabled ? config.entranceDuration * 1000 : 0;
+            const totalDur = Math.max(entranceDur, config.animDuration * 1000);
+            const animDone = totalDur > 0 && time > totalDur;
+
+            if (animDone) time = Infinity;
+            drawFrame(time);
+
+            if (!animDone || config.floatEnabled) {
+                _loopId = requestAnimationFrame(mainLoop);
+            }
+        }
+
+        startLoop();
+    </script>
+</body>
+</html>

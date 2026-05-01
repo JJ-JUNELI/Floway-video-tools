@@ -379,10 +379,20 @@
                         <span style="font-size:12px; color:var(--text-sub, #888);">卡片底色</span>
                         <input type="color" id="CardBg" value="#faf8f3"></div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>边框粗细</span><span id="CardBorderVal">0</span></div>
-                            <input type="range" id="CardBorder" min="0" max="5" step="0.5" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>边框颜色</span></div>
-                            <input type="color" id="CardBorderColor" value="#333355"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
+                            <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
+                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>描边颜色</span></div>
+                            <input type="color" id="CardBorderColor" value="#ffffff"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
+                            <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
+                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>辉光颜色</span></div>
+                            <input type="color" id="CardGlowColor" value="#3b82f6"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
+                            <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
                     </div>
                 </div>
                 <div class="sub-section ss-purple">
@@ -484,6 +494,7 @@
 
     <script type="module">
         import { initEffect } from '../shared/controls.js';
+        import { drawSolidGlow } from '../shared/border-effects.js';
         import { getTheme, toggleTheme } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=sdf-pad';
 
@@ -585,6 +596,11 @@
             rotateX: 1.5, rotateY: -1,
             elevation: 0.5,
             cardRadius: 16,
+            cardBorderWidth: 0,
+            cardBorderColor: '#ffffff',
+            cardGlowWidth: 0,
+            cardGlowColor: '#3b82f6',
+            cardGlowIntensity: 70,
             cardScale: 0.8,
             cardPad: 32,
             floatEnabled: true,
@@ -624,8 +640,6 @@
             tension: 0,
             glowBlur: 0,
             cardBg: '#faf8f3',
-            cardBorder: 0,
-            cardBorderColor: '#333355',
             showArea: true,
             valueSize: 11,
             valueColor: '#ffffff',
@@ -644,7 +658,8 @@
                 valueColor: '#555555',
                 gridColor: '#c3bcaf',
                 cardBg: '#faf8f3',
-                cardBorder: 0,
+                cardBorderWidth: 0,
+                cardGlowWidth: 0,
                 glowBlur: 0,
                 subTitleGlow: false,
                 areaFollowLine: false,
@@ -657,7 +672,11 @@
                 valueColor: '#ffffff',
                 gridColor: '#333333',
                 cardBg: '#1a1a2e',
-                cardBorder: 1,
+                cardBorderWidth: 2,
+                cardBorderColor: '#00f2ff',
+                cardGlowWidth: 20,
+                cardGlowColor: '#00f2ff',
+                cardGlowIntensity: 50,
                 glowBlur: 30,
                 subTitleGlow: true,
                 areaFollowLine: true,
@@ -681,7 +700,11 @@
             updateUI('ValueColor', config.valueColor);
             updateUI('GridColor', config.gridColor);
             updateUI('CardBg', config.cardBg);
-            updateUI('CardBorder', config.cardBorder, 'CardBorderVal');
+            updateUI('CardBorderWidth', config.cardBorderWidth, 'CardBorderWidthVal');
+            updateUI('CardBorderColor', config.cardBorderColor);
+            updateUI('CardGlowWidth', config.cardGlowWidth, 'CardGlowWidthVal');
+            updateUI('CardGlowColor', config.cardGlowColor);
+            updateUI('CardGlowIntensity', config.cardGlowIntensity, 'CardGlowIntensityVal');
             updateUI('GlowBlur', config.glowBlur, 'GlowBlurVal');
             updateUI('SubTitleGlow', config.subTitleGlow, null, true);
             updateUI('AreaFollowLine', config.areaFollowLine, null, true);
@@ -734,7 +757,11 @@
             ['NoiseGrain',      'noiseGrain',     'int',   'NoiseGrainVal'],
             ['Vignette',        'vignette',       'int',   'VignetteVal'],
             ['LineJitter',      'lineJitter',     'int',   'LineJitterVal'],
-            ['CardBorder',      'cardBorder',     'float', 'CardBorderVal'],
+            ['CardBorderWidth', 'cardBorderWidth', 'int',   'CardBorderWidthVal'],
+            ['CardBorderColor', 'cardBorderColor'],
+            ['CardGlowWidth',   'cardGlowWidth',   'int',   'CardGlowWidthVal'],
+            ['CardGlowColor',   'cardGlowColor'],
+            ['CardGlowIntensity','cardGlowIntensity','int', 'CardGlowIntensityVal', '%'],
             ['Tension',         'tension',        'float', 'TensionVal'],
             ['GlowBlur',        'glowBlur',       'float', 'GlowBlurVal'],
             ['ShowArea',         'showArea',       'checked'],
@@ -1542,15 +1569,6 @@
                 ctx.restore();
             }
 
-            // === 边框 ===
-            if (config.cardBorder > 0) {
-                ctx.beginPath();
-                roundRect(ctx, 0.5, 0.5, w - 1, h - 1, config.cardRadius);
-                ctx.strokeStyle = config.cardBorderColor;
-                ctx.lineWidth = config.cardBorder;
-                ctx.stroke();
-            }
-
             // === 副标题（最顶层）===
             {
                 const subTitleAlpha = isHold ? 1 : clamp((rawProgress - 0.3) * 2, 0, 1);
@@ -1568,7 +1586,17 @@
 
         // ====== 主渲染函数 ======
         function drawFrame(timeMs) {
-            // 清空离屏 canvas
+            // Canvas padding for border/glow overflow
+            const halfPad = (config.cardBorderWidth || 0) * 2 + (config.cardGlowWidth || 0);
+            const c2dPad = halfPad > 0 ? halfPad * 2 + 10 : 0;
+            const c2dPhysPad = c2dPad * scale;
+            const needW = fullW + c2dPhysPad * 2;
+            const needH = fullH + c2dPhysPad * 2;
+            if (offscreen.width !== needW || offscreen.height !== needH) {
+                offscreen.width = needW;
+                offscreen.height = needH;
+            }
+            ctx.setTransform(scale, 0, 0, scale, c2dPhysPad, c2dPhysPad);
             ctx.save(); ctx.setTransform(1,0,0,1,0,0);
             ctx.clearRect(0, 0, offscreen.width, offscreen.height);
             ctx.restore();
@@ -1613,6 +1641,41 @@
             // 绘制内容
             drawContent(w, h, lineProgress, lineRaw, isHold);
 
+            // 描边 + 辉光（drawContent 之后，clip 已恢复）
+            const bw = config.cardBorderWidth || 0;
+            const gw = config.cardGlowWidth || 0;
+            if (bw > 0 || gw > 0) {
+                const baseCard = {x: 0, y: 0, w, h};
+
+                if (gw > 0) {
+                    const offset = bw * 2;
+                    const glowCard = bw > 0
+                        ? {x: -offset, y: -offset, w: w + offset * 2, h: h + offset * 2}
+                        : baseCard;
+                    drawSolidGlow(ctx, glowCard, {
+                        borderWidth: 0,
+                        borderColor: '#000',
+                        glowWidth: gw,
+                        glowColor: config.cardGlowColor,
+                        glowIntensity: config.cardGlowIntensity / 100,
+                        cornerRadius: config.cardRadius + offset,
+                        glowDir: 'outer',
+                    });
+                }
+
+                if (bw > 0) {
+                    drawSolidGlow(ctx, baseCard, {
+                        borderWidth: bw,
+                        borderColor: config.cardBorderColor,
+                        glowWidth: 0,
+                        glowColor: '#000',
+                        glowIntensity: 0,
+                        cornerRadius: config.cardRadius,
+                        glowDir: 'outer',
+                    });
+                }
+            }
+
             // 入场动画插值
             const entranceX = lerp(config.entranceStartX, config.entranceEndX, entranceProgress);
             const entranceY = lerp(config.entranceStartY, config.entranceEndY, entranceProgress);
@@ -1620,6 +1683,7 @@
             const entranceScale = lerp(config.entranceStartScale / 100, config.entranceEndScale / 100, entranceProgress);
 
             // WebGL 合成
+            const baseCardScale = config.cardScale * entranceScale;
             glComp.render({
                 bgCanvas: bgOffscreen,
                 cardCanvas: offscreen,
@@ -1627,11 +1691,18 @@
                 ry: _currentRy,
                 perspective: 900,
                 elevation: config.elevation,
-                cardScale: config.cardScale * entranceScale,
-                cardRadius: config.cardRadius,
+                cardScale: baseCardScale,
+                scaleX: c2dPad > 0 ? baseCardScale * offscreen.width / fullW : undefined,
+                scaleY: c2dPad > 0 ? baseCardScale * offscreen.height / fullH : undefined,
+                cardRadius: c2dPad > 0 ? 0 : config.cardRadius,
                 offsetX: entranceX,
                 offsetY: entranceY,
                 cardAlpha: entranceAlpha,
+                cardBounds: c2dPad > 0
+                    ? { x: c2dPad, y: c2dPad, w: baseWidth, h: baseHeight }
+                    : undefined,
+                effectPadding: 0,
+                skipSDF: c2dPad > 0,
             });
         }
 

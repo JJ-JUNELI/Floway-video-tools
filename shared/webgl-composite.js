@@ -314,7 +314,7 @@ export class WebGLComposite {
         const cardScale = opts.cardScale || 0.8;
         const perspective = opts.perspective || 900;
         const elevation = opts.elevation || 0.5;
-        const cardRadius = opts.cardRadius || 16;
+        const cardRadius = opts.cardRadius ?? 16;
 
         const cb = opts.cardBounds || { x: 0, y: 0, w: bw, h: bh };
         const normBounds = { x: cb.x / bw, y: cb.y / bh, w: cb.w / bw, h: cb.h / bh };
