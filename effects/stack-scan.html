@@ -290,12 +290,13 @@
     <script type="module">
         import { Recorder } from '../shared/recorder.js';
         import { Background } from '../shared/background.js';
-        import { injectPanels } from '../shared/controls.js';
+        import { injectPanels, initSidebarResize } from '../shared/controls.js';
         import { SvgRenderer } from '../shared/svg-renderer.js';
         import { getEasing, bindUI, setupFontSelector, fontSelectHTML } from '../shared/utils.js';
         import { getTheme, toggleTheme } from '../shared/themes.js';
 
         injectPanels({ defaultBgMode: 'transparent', defaultPatternColor: '#222222' });
+        initSidebarResize();
 
         const svg = document.getElementById('mainSvg');
         const contentGroup = document.getElementById('contentGroup');

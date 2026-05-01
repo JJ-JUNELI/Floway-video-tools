@@ -50,7 +50,7 @@
         .btn-add:hover { filter: brightness(1.1); }
 
         /* WebGL 合成 canvas */
-        #glCanvas { width: 100%; max-width: 1440px; aspect-ratio: 4 / 3; }
+        #glCanvas { width: 100%; max-width: 1440px; aspect-ratio: 4 / 3; box-shadow: none; border-radius: 0; }
 
         /* 模式切换显示控制 */
         body.mode-cyber .paper-only { display: none !important; }
@@ -380,7 +380,7 @@
                         <input type="color" id="CardBg" value="#faf8f3"></div>
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>边框粗细</span><span id="CardBorderVal">0</span></div>
-                            <input type="range" id="CardBorder" min="0" max="20" step="1" value="0"></div>
+                            <input type="range" id="CardBorder" min="0" max="5" step="0.5" value="0"></div>
                         <div style="flex:1" class="stack"><div class="label-line"><span>边框颜色</span></div>
                             <input type="color" id="CardBorderColor" value="#333355"></div>
                     </div>
@@ -496,14 +496,11 @@
         glCanvas.width = fullW; glCanvas.height = fullH;
         const glComp = new WebGLComposite(glCanvas, baseWidth, baseHeight);
 
-        // 离屏 2D — 卡片内容（含边框外扩空间）
-        const maxBorderLog = 20;
-        const maxBorderPhys = maxBorderLog * scale;
+        // 离屏 2D — 卡片内容
         const offscreen = document.createElement('canvas');
-        offscreen.width = fullW + maxBorderPhys * 2;
-        offscreen.height = fullH + maxBorderPhys * 2;
+        offscreen.width = fullW; offscreen.height = fullH;
         const ctx = offscreen.getContext('2d', { alpha: true });
-        ctx.setTransform(scale, 0, 0, scale, maxBorderPhys, maxBorderPhys);
+        ctx.scale(scale, scale);
 
         // 离屏 2D — 背景
         const bgOffscreen = document.createElement('canvas');
@@ -1545,6 +1542,15 @@
                 ctx.restore();
             }
 
+            // === 边框 ===
+            if (config.cardBorder > 0) {
+                ctx.beginPath();
+                roundRect(ctx, 0.5, 0.5, w - 1, h - 1, config.cardRadius);
+                ctx.strokeStyle = config.cardBorderColor;
+                ctx.lineWidth = config.cardBorder;
+                ctx.stroke();
+            }
+
             // === 副标题（最顶层）===
             {
                 const subTitleAlpha = isHold ? 1 : clamp((rawProgress - 0.3) * 2, 0, 1);
@@ -1558,16 +1564,6 @@
             }
 
             ctx.restore(); // clip
-
-            // === 边框（外描边，必须在 clip restore 之后）===
-            if (config.cardBorder > 0) {
-                const bw = config.cardBorder;
-                ctx.beginPath();
-                roundRect(ctx, -bw / 2, -bw / 2, w + bw, h + bw, config.cardRadius + bw / 2);
-                ctx.strokeStyle = config.cardBorderColor;
-                ctx.lineWidth = bw;
-                ctx.stroke();
-            }
         }
 
         // ====== 主渲染函数 ======
@@ -1632,15 +1628,10 @@
                 perspective: 900,
                 elevation: config.elevation,
                 cardScale: config.cardScale * entranceScale,
-                scaleX: config.cardScale * entranceScale * offscreen.width / fullW,
-                scaleY: config.cardScale * entranceScale * offscreen.height / fullH,
-                cardRadius: config.cardBorder > 0 ? 0 : config.cardRadius,
+                cardRadius: config.cardRadius,
                 offsetX: entranceX,
                 offsetY: entranceY,
                 cardAlpha: entranceAlpha,
-                cardBounds: { x: maxBorderLog, y: maxBorderLog, w: baseWidth, h: baseHeight },
-                effectPadding: 0,
-                skipSDF: true,
             });
         }
 
