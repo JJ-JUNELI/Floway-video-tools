@@ -246,7 +246,7 @@
                     <div class="row" style="justify-content:space-between; align-items:center;">
                         <span style="font-size:12px; color:var(--text-sub, #888);">卡片底色</span>
                         <input type="color" id="CardBg" value="#1a1a2e"></div>
-                    <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>底色透明度</span><span id="CardBgAlphaVal">100</span></div><input type="range" id="CardBgAlpha" min="0" max="100" value="80"></div></div>
+                    <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>底色透明度</span><span id="CardBgAlphaVal">80</span></div><input type="range" id="CardBgAlpha" min="0" max="100" value="80"></div></div>
                 </div>
             </div>
 
@@ -414,15 +414,15 @@
                         <div class="sub-section-label">位置</div>
                         <div class="row">
                             <div style="flex:1" class="stack"><div class="label-line"><span>起始 X</span><span id="EntranceStartXVal">0</span></div>
-                                <input type="range" id="EntranceStartX" min="-1000" max="1000" step="10" value="0"></div>
+                                <input type="range" id="EntranceStartX" min="-3000" max="3000" step="10" value="0"></div>
                             <div style="flex:1" class="stack"><div class="label-line"><span>起始 Y</span><span id="EntranceStartYVal">300</span></div>
-                                <input type="range" id="EntranceStartY" min="-1000" max="1000" step="10" value="300"></div>
+                                <input type="range" id="EntranceStartY" min="-3000" max="3000" step="10" value="300"></div>
                         </div>
                         <div class="row">
                             <div style="flex:1" class="stack"><div class="label-line"><span>结束 X</span><span id="EntranceEndXVal">0</span></div>
-                                <input type="range" id="EntranceEndX" min="-1000" max="1000" step="10" value="0"></div>
+                                <input type="range" id="EntranceEndX" min="-3000" max="3000" step="10" value="0"></div>
                             <div style="flex:1" class="stack"><div class="label-line"><span>结束 Y</span><span id="EntranceEndYVal">0</span></div>
-                                <input type="range" id="EntranceEndY" min="-1000" max="1000" step="10" value="0"></div>
+                                <input type="range" id="EntranceEndY" min="-3000" max="3000" step="10" value="0"></div>
                         </div>
                     </div>
                     <div class="sub-section ss-green">
@@ -435,9 +435,9 @@
                         </div>
                         <div class="row">
                             <div style="flex:1" class="stack"><div class="label-line"><span>起始缩放</span><span id="EntranceStartScaleVal">100%</span></div>
-                                <input type="range" id="EntranceStartScale" min="0" max="200" step="5" value="100"></div>
+                                <input type="range" id="EntranceStartScale" min="0" max="500" step="5" value="100"></div>
                             <div style="flex:1" class="stack"><div class="label-line"><span>结束缩放</span><span id="EntranceEndScaleVal">100%</span></div>
-                                <input type="range" id="EntranceEndScale" min="0" max="200" step="5" value="100"></div>
+                                <input type="range" id="EntranceEndScale" min="0" max="500" step="5" value="100"></div>
                         </div>
                     </div>
                 </div>
@@ -457,7 +457,7 @@
         import { initEffect } from '../shared/controls.js';
         import { getTheme, toggleTheme } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=sdf-pad2';
-        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingBlobs, drawRotatingStroke, rrect, rrectBottom } from '../shared/border-effects.js?v=2';
+        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingBlobs, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=2';
 
         // ====== Canvas 初始化 ======
         const baseWidth = 1440, baseHeight = 1080, scale = 2;
@@ -538,6 +538,7 @@
         let currentMedia = null;
         let currentMediaType = null;
         let currentMediaName = '';
+        let currentBlobURL = null;
         let originalImage = null;   // 裁切前的原始 Image
         let croppedCanvas = null;   // 裁切后的 canvas（用作 currentMedia）
         let cropActive = false;     // 裁切模式是否激活
@@ -557,7 +558,9 @@
 
         function loadFile(file) {
             if (!file) return;
+            if (currentBlobURL) { URL.revokeObjectURL(currentBlobURL); currentBlobURL = null; }
             const url = URL.createObjectURL(file);
+            currentBlobURL = url;
 
             // 清理旧的
             if (currentMedia) {
@@ -593,7 +596,6 @@
                     vid.play();
                     updateMediaUI(file.name, vid.videoWidth, vid.videoHeight);
                     startLoop();
-                    startLoop();
                 };
                 vid.src = url;
             }
@@ -615,6 +617,7 @@
                 if (currentMediaType === 'video') { currentMedia.pause(); currentMedia.src = ''; }
                 currentMedia = null;
             }
+            if (currentBlobURL) { URL.revokeObjectURL(currentBlobURL); currentBlobURL = null; }
             currentMediaType = null;
             currentMediaName = '';
             originalImage = null;
@@ -632,7 +635,6 @@
             txt.innerHTML =
                 `<div style="font-size:24px; margin-bottom:4px;">📤</div>拖拽图片/视频到这里<br>或点击下方按钮上传`;
             syncRatioLock();
-            startLoop();
             document.getElementById('MediaUpload').value = '';
             startLoop();
         }
@@ -795,6 +797,7 @@
         const dropZone = document.getElementById('DropZone');
         dropZone.addEventListener('click', () => {
             if (cropActive) return;
+            if (currentMedia) return;
             document.getElementById('MediaUpload').click();
         });
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
@@ -869,9 +872,6 @@
             ['RotatingBlobSpeed', 'rotatingBlobSpeed', 'int', 'RotatingBlobSpeedVal'],
         ], {
             onChange: (_, key) => {
-                if (key === 'floatEnabled') {
-                    _floatStartTime = performance.now();
-                }
                 if (key === 'entranceEnabled') {
                     document.getElementById('EntranceOpts').style.display = config.entranceEnabled ? '' : 'none';
                     document.getElementById('EntranceDetailOpts').style.display = config.entranceEnabled ? '' : 'none';
@@ -899,21 +899,21 @@
             const panelId = borderPanelMap[config.borderStyle];
             if (panelId) document.getElementById(panelId).style.display = '';
             syncRatioLock();
-            resetAnimStart();
+            myResetAnimStart();
         });
 
         // ====== 漂浮动画 ======
         let _currentRx = config.rotateX * Math.PI / 180;
         let _currentRy = config.rotateY * Math.PI / 180;
-        let _floatStartTime = performance.now();
 
-        function updateFloatRotation(now) {
+        function updateFloatRotation(timeMs) {
             if (config.floatEnabled) {
-                const elapsed = (now - _floatStartTime) / 1000;
+                const isHold = !isFinite(timeMs);
+                const t = (isHold ? performance.now() : timeMs) * 0.001;
                 const dur = config.floatDuration;
                 const phaseRad = (config.floatPhase / 100) * Math.PI * 2;
-                _currentRx = (Math.sin(elapsed / dur * Math.PI * 2) * config.floatRotateX + config.rotateX) * Math.PI / 180;
-                _currentRy = (Math.sin(elapsed / dur * Math.PI * 2 + phaseRad) * config.floatRotateY + config.rotateY) * Math.PI / 180;
+                _currentRx = (Math.sin(t / dur * Math.PI * 2) * config.floatRotateX + config.rotateX) * Math.PI / 180;
+                _currentRy = (Math.sin(t / dur * Math.PI * 2 + phaseRad) * config.floatRotateY + config.rotateY) * Math.PI / 180;
             } else {
                 _currentRx = config.rotateX * Math.PI / 180;
                 _currentRy = config.rotateY * Math.PI / 180;
@@ -962,20 +962,6 @@
         // ====== 工具函数 ======
         function lerp(a, b, t) { return a + (b - a) * t; }
 
-        function roundRect(ctx, x, y, w, h, r) {
-            r = Math.min(r, w / 2, h / 2);
-            ctx.moveTo(x + r, y);
-            ctx.lineTo(x + w - r, y);
-            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-            ctx.lineTo(x + w, y + h - r);
-            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-            ctx.lineTo(x + r, y + h);
-            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-            ctx.lineTo(x, y + r);
-            ctx.quadraticCurveTo(x, y, x + r, y);
-            ctx.closePath();
-        }
-
         // ====== 卡片内容绘制 ======
         function drawMediaFit(ctx, media, w, h) {
             const mw = media.videoWidth || media.naturalWidth || media.width;
@@ -991,9 +977,6 @@
                 w: media.videoWidth || media.naturalWidth || media.width || 0,
                 h: media.videoHeight || media.naturalHeight || media.height || 0,
             };
-        }
-
-        function drawPlaceholder(ctx, w, h) {
         }
 
         // 卡片在画布中的区域
@@ -1066,6 +1049,9 @@
             const style = config.borderStyle;
             const isCanvas2D = style !== 'none';
 
+            // 漂浮旋转（统一用 timeMs，录制和预览同一时间基准）
+            updateFloatRotation(timeMs);
+
             // 入场动画进度
             let entranceProgress = 1;
             if (config.entranceEnabled && !isHold) {
@@ -1115,7 +1101,6 @@
             const entranceY = lerp(config.entranceStartY, config.entranceEndY, entranceProgress);
             const entranceAlpha = lerp(config.entranceStartOpacity / 100, config.entranceEndOpacity / 100, entranceProgress);
             const entranceScale = lerp(config.entranceStartScale / 100, config.entranceEndScale / 100, entranceProgress);
-            const imgBounds = getCardBounds(w, h);
 
             let effectPadding = 0;
 
@@ -1232,7 +1217,7 @@
                 cardAlpha: entranceAlpha,
                 cardBounds: isCanvas2D
                     ? { x: c2dPad, y: c2dPad, w: baseWidth, h: baseHeight }
-                    : imgBounds,
+                    : baseBounds,
                 effectPadding: 0,
                 skipSDF: isCanvas2D,
             });
@@ -1262,14 +1247,12 @@
                 return;
             }
 
-            updateFloatRotation(now);
-
             let time = now - _animStartTime;
             const entranceDur = config.entranceEnabled ? config.entranceDuration * 1000 : 0;
             const animDone = entranceDur > 0 && time > entranceDur;
 
-            // 旋转光边需要持续动画，动画结束后继续用真实时间
-            const isContinuousAnim = config.borderStyle === 'rotating-light';
+            // 旋转光边和漂浮需要持续动画，动画结束后继续用真实时间
+            const isContinuousAnim = config.borderStyle === 'rotating-light' || config.floatEnabled;
             if (animDone && !isContinuousAnim) time = Infinity;
             drawFrame(time);
 
@@ -1281,7 +1264,6 @@
             }
         }
 
-        startLoop();
         startLoop();
 
         // ====== 播放按钮 ======
