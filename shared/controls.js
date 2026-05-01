@@ -7,6 +7,7 @@ import { Recorder } from './recorder.js';
 import { Background } from './background.js';
 import { lerp, hexToRgba, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, getEasing, loadFont, setupFontSelector, initFontSelector, FONT_LIST, fontSelectHTML, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped, bindUI, applyVignetteMask, calcGradCoords } from './utils.js';
 import { getTheme } from './themes.js';
+import { enhanceAllSelects } from './custom-select.js';
 
 // ========== 面板 HTML 注入 ==========
 
@@ -89,7 +90,10 @@ export function initEffect(opts) {
     // 1. 注入面板 HTML
     injectPanels(opts);
 
-    // 1.5 侧边栏拖拽调节
+    // 1.5 自定义下拉框增强
+    enhanceAllSelects();
+
+    // 1.6 侧边栏拖拽调节
     initSidebarResize();
 
     // 2. Canvas 初始化

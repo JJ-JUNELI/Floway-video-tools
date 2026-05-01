@@ -1,11 +1,13 @@
 /**
  * Floway Tools — 共享工具函数
  * 从 tool-text-v4 / tool-stack-scan / tool-logo-v4 提取
- * 
+ *
  * 所有函数都通过 initEffect() 返回，新效果只需一行 import:
  *   import { initEffect } from '../shared/controls.js';
  *   const { ctx, ..., easeOut, loadFont, ... } = initEffect({...});
  */
+
+import { enhanceSelect } from './custom-select.js';
 
 // ========== 1. 数学工具 ==========
 
@@ -182,6 +184,7 @@ export function setupFontSelector({ selectId, configKey, fileInputId, weightInpu
             fileInput.value = '';
             fileInput.click();
             e.target.selectedIndex = 2;
+            select._fsRefresh?.();
         } else {
             config[configKey] = e.target.value;
             updateWeightState();
@@ -201,10 +204,14 @@ export function setupFontSelector({ selectId, configKey, fileInputId, weightInpu
             select.value = val;
             config[configKey] = val;
             updateWeightState();
+            select._fsRefresh?.();
         } catch (err) {
             alert('字体加载失败');
         }
     });
+
+    // 自动增强为自定义下拉
+    enhanceSelect(select);
 }
 
 // ========== 5.5 一行字体选择器 ==========
