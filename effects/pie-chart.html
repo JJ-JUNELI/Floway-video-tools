@@ -199,6 +199,15 @@
                     <div id="DonutOpts" style="margin-top:6px;">
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>环宽比例</span><span id="DonutWidthVal">35%</span></div>
                             <input type="range" id="DonutWidth" min="20" max="80" step="5" value="35"></div></div>
+                        <div class="row">
+                            <div class="stack" style="width:70px;flex:none"><div class="label-line"><span>中心圆</span></div>
+                                <select id="DonutCenterMode">
+                                    <option value="color">填色</option>
+                                    <option value="transparent">透明</option>
+                                </select></div>
+                            <div id="DonutCenterColorWrap" class="stack" style="width:40px;flex:none"><div class="label-line"><span>颜色</span></div>
+                                <input type="color" id="DonutCenterColor" value="#ffffff"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="sub-section ss-green">
@@ -218,6 +227,13 @@
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>间隔宽度</span><span id="SliceGapVal">3px</span></div>
                             <input type="range" id="SliceGap" min="0" max="20" step="1" value="3"></div>
+                        <div class="stack" style="width:70px;flex:none"><div class="label-line"><span>间隔模式</span></div>
+                            <select id="SliceGapMode">
+                                <option value="transparent">透明</option>
+                                <option value="fill">填充</option>
+                            </select></div>
+                        <div id="SliceGapColorWrap" class="stack" style="width:40px;flex:none;display:none"><div class="label-line"><span>颜色</span></div>
+                            <input type="color" id="SliceGapColor" value="#ffffff"></div>
                     </div>
                     <div class="sub-title" style="margin-top:8px"><span>阶梯缩放</span><input type="checkbox" id="StairScale"></div>
                     <div id="StairOpts" style="display:none">
@@ -257,16 +273,18 @@
                                 <option value="inside">扇形内部</option>
                             </select></div>
                         <div id="OutsideLabelOpts">
-                            <div class="sub-title"><span>显示引线</span><input type="checkbox" id="ShowLeaderLines" checked></div>
                             <div class="row">
-                                <div style="flex:1" class="stack"><div class="label-line"><span>引线距离</span><span id="LabelDistanceVal">60</span></div>
+                                <div style="flex:1" class="stack"><div class="label-line"><span>标签距离</span><span id="LabelDistanceVal">60</span></div>
                                     <input type="range" id="LabelDistance" min="5" max="150" step="5" value="60"></div>
-                                <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>引线颜色</span></div>
-                                    <input type="color" id="LeaderLineColor" value="#999999"></div>
                             </div>
-                            <div class="row">
-                                <div style="flex:1" class="stack"><div class="label-line"><span>引线粗细</span><span id="LeaderLineWidthVal">1</span></div>
-                                    <input type="range" id="LeaderLineWidth" min="0.5" max="4" step="0.5" value="1"></div>
+                            <div class="sub-title"><span>显示引线</span><input type="checkbox" id="ShowLeaderLines" checked></div>
+                            <div id="LeaderLineOpts">
+                                <div class="row">
+                                    <div style="flex:1" class="stack"><div class="label-line"><span>引线粗细</span><span id="LeaderLineWidthVal">1</span></div>
+                                        <input type="range" id="LeaderLineWidth" min="0.5" max="4" step="0.5" value="1"></div>
+                                    <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>引线颜色</span></div>
+                                        <input type="color" id="LeaderLineColor" value="#999999"></div>
+                                </div>
                             </div>
                         </div>
                         <div class="sub-title"><span>显示百分比</span><input type="checkbox" id="ShowPercentage" checked></div>
@@ -508,8 +526,13 @@
             // 饼图样式
             pieType: 'donut',
             donutWidth: 35,
+            donutCenterColor: '#ffffff',
+            donutCenterTransparent: false,
+            donutCenterMode: 'color',
             startAngle: 0,
             sliceGap: 3,
+            sliceGapMode: 'transparent',
+            sliceGapColor: '#ffffff',
             pieRadius: 250,
             pieCenterX: 0,
             pieCenterY: 0,
@@ -609,6 +632,11 @@
             ['DonutWidth',      'donutWidth',     'int',   'DonutWidthVal', '%'],
             ['StartAngle',      'startAngle',     'int',   'StartAngleVal', '°'],
             ['SliceGap',        'sliceGap',       'int',   'SliceGapVal', 'px'],
+            ['SliceGapMode',    'sliceGapMode'],
+            ['SliceGapColor',   'sliceGapColor'],
+            ['DonutCenterColor',    'donutCenterColor'],
+            ['DonutCenterTransparent', 'donutCenterTransparent', 'checked'],
+            ['DonutCenterMode', 'donutCenterMode'],
             ['PieRadius',       'pieRadius',      'int',   'PieRadiusVal'],
             ['PieCenterX',      'pieCenterX',     'int',   'PieCenterXVal'],
             ['PieCenterY',      'pieCenterY',     'int',   'PieCenterYVal'],
@@ -678,6 +706,18 @@
                 if (key === 'labelMode' || key === 'showLabels') {
                     document.getElementById('OutsideLabelOpts').style.display =
                         config.showLabels && config.labelMode === 'outside' ? '' : 'none';
+                }
+                if (key === 'showLeaderLines') {
+                    document.getElementById('LeaderLineOpts').style.display =
+                        config.showLeaderLines ? '' : 'none';
+                }
+                if (key === 'sliceGapMode') {
+                    document.getElementById('SliceGapColorWrap').style.display =
+                        config.sliceGapMode === 'fill' ? '' : 'none';
+                }
+                if (key === 'donutCenterMode') {
+                    document.getElementById('DonutCenterColorWrap').style.display =
+                        config.donutCenterMode === 'color' ? '' : 'none';
                 }
                 if (key === 'stairScale' || key === 'stairManual') {
                     document.getElementById('StairOpts').style.display =
@@ -982,7 +1022,42 @@
 
                 let currentAngle = startRad;
 
-                // 第一遍：绘制所有扇形（无角度间隙）
+                // 第一遍：分隔线（先画，扇形会覆盖在上面）
+                if (config.sliceGap > 0) {
+                    let sepAngle = startRad;
+                    ctx.save();
+                    ctx.strokeStyle = config.sliceGapMode === 'transparent'
+                        ? config.cardBg : config.sliceGapColor;
+                    ctx.lineWidth = config.sliceGap;
+                    ctx.lineCap = 'butt';
+                    const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+                    for (let i = 0; i < dataPoints.length; i++) {
+                        const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
+                        const boundaryAngle = sepAngle + sliceAngle;
+                        const isLast = i === dataPoints.length - 1;
+                        const snapAngle = isLast ? startRad + maxAngle : boundaryAngle;
+                        if (snapAngle - startRad <= maxAngle + 0.01) {
+                            const nextI = (i + 1) % dataPoints.length;
+                            const sR = radius * Math.max(scales[i], scales[nextI]);
+                            ctx.beginPath();
+                            ctx.moveTo(
+                                cx + Math.cos(snapAngle) * baseInnerR,
+                                cy + Math.sin(snapAngle) * baseInnerR
+                            );
+                            ctx.lineTo(
+                                cx + Math.cos(snapAngle) * sR,
+                                cy + Math.sin(snapAngle) * sR
+                            );
+                            ctx.stroke();
+                        }
+                        sepAngle += sliceAngle;
+                    }
+                    ctx.restore();
+                }
+
+                // 第二遍：绘制所有扇形（角度缩进让分隔线在底层露出）
+                const gapHalf = config.sliceGap > 0 ? (config.sliceGap / radius) / 2 : 0;
+                currentAngle = startRad;
                 for (let i = 0; i < dataPoints.length; i++) {
                     const slice = dataPoints[i];
                     const sliceAngle = (slice.value / total) * Math.PI * 2;
@@ -990,8 +1065,8 @@
                     const effectiveAngle = Math.min(sliceAngle, Math.max(0, maxAngle - drawnAngle));
 
                     if (effectiveAngle > 0.001) {
-                        const drawStart = currentAngle;
-                        const drawEnd = currentAngle + effectiveAngle;
+                        const drawStart = currentAngle + gapHalf;
+                        const drawEnd = currentAngle + effectiveAngle - gapHalf;
                         const sliceR = radius * scales[i];
                         const innerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
 
@@ -1022,58 +1097,15 @@
                     currentAngle += sliceAngle;
                 }
 
-                // 第二遍：环形图中心圆
+                // 第三遍：环形图中心圆（覆盖内圆边缘）
                 if (config.pieType === 'donut') {
                     const innerR = radius * (1 - config.donutWidth / 100);
                     ctx.save();
-                    if (isTransparent) {
-                        // 透明模式：用 destination-out 挖空中心
-                        ctx.globalCompositeOperation = 'destination-out';
-                        ctx.beginPath();
-                        ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
-                        ctx.fill();
-                    } else {
-                        ctx.beginPath();
-                        ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
-                        ctx.fillStyle = config.cardBg;
-                        ctx.fill();
-                    }
-                    ctx.restore();
-                }
-
-                // 第三遍：环形图平行分隔线
-                if (config.pieType === 'donut' && config.sliceGap > 0) {
-                    let sepAngle = startRad;
-                    ctx.save();
-                    if (isTransparent) {
-                        ctx.globalCompositeOperation = 'destination-out';
-                        ctx.lineWidth = config.sliceGap;
-                        ctx.lineCap = 'butt';
-                    } else {
-                        ctx.strokeStyle = config.cardBg;
-                        ctx.lineWidth = config.sliceGap;
-                        ctx.lineCap = 'butt';
-                    }
-                    const baseInnerR = radius * (1 - config.donutWidth / 100);
-                    for (let i = 0; i < dataPoints.length; i++) {
-                        const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
-                        const boundaryAngle = sepAngle + sliceAngle;
-                        if (boundaryAngle - startRad <= maxAngle + 0.01) {
-                            const nextI = (i + 1) % dataPoints.length;
-                            const sR = radius * Math.max(scales[i], scales[nextI]);
-                            ctx.beginPath();
-                            ctx.moveTo(
-                                cx + Math.cos(boundaryAngle) * baseInnerR,
-                                cy + Math.sin(boundaryAngle) * baseInnerR
-                            );
-                            ctx.lineTo(
-                                cx + Math.cos(boundaryAngle) * sR,
-                                cy + Math.sin(boundaryAngle) * sR
-                            );
-                            ctx.stroke();
-                        }
-                        sepAngle += sliceAngle;
-                    }
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, innerR + 1, 0, Math.PI * 2);
+                    ctx.fillStyle = config.donutCenterMode === 'transparent'
+                        ? config.cardBg : config.donutCenterColor;
+                    ctx.fill();
                     ctx.restore();
                 }
 
@@ -1161,17 +1193,17 @@
                                 ctx.lineWidth = config.leaderLineWidth;
                                 ctx.stroke();
 
+                                const dotR1 = config.leaderLineWidth * 2;
                                 ctx.beginPath();
-                                ctx.arc(edgeX, edgeY, 3.5, 0, Math.PI * 2);
+                                ctx.arc(edgeX, edgeY, dotR1, 0, Math.PI * 2);
                                 ctx.fillStyle = slice.color;
                                 ctx.fill();
 
-                                if (hasElbow) {
-                                    ctx.beginPath();
-                                    ctx.arc(elbowX, labelY, 2, 0, Math.PI * 2);
-                                    ctx.fillStyle = config.leaderLineColor;
-                                    ctx.fill();
-                                }
+                                const dotR2 = config.leaderLineWidth * 1.5;
+                                ctx.beginPath();
+                                ctx.arc(hasElbow ? elbowX : labelX, labelY, dotR2, 0, Math.PI * 2);
+                                ctx.fillStyle = config.leaderLineColor;
+                                ctx.fill();
                             }
 
                             let textX, textY, tAlign;
@@ -1202,14 +1234,14 @@
                                 ctx.textAlign = tAlign;
                                 ctx.textBaseline = 'bottom';
                                 ctx.fillStyle = slice.color;
-                                ctx.fillText(pct, textX, textY - 1);
+                                ctx.fillText(pct, textX, textY - 1 - config.labelLineGap / 2);
                             }
 
                             ctx.font = `400 ${config.labelFontSize - 1}px ${config.titleFont}`;
                             ctx.textAlign = tAlign;
                             ctx.textBaseline = 'top';
                             ctx.fillStyle = config.labelColor;
-                            ctx.fillText(slice.label, textX, textY + 1);
+                            ctx.fillText(slice.label, textX, textY + 1 + config.labelLineGap / 2);
                         }
 
                         angle += sliceAngle;
