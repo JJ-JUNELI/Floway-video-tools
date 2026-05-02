@@ -186,6 +186,11 @@
                 <div class="group-title"><span>📊 柱状图样式</span></div>
                 <div class="sub-section ss-orange">
                     <div class="sub-section-label">柱子样式</div>
+                    <div class="row stack"><div class="label-line"><span>方向</span></div>
+                        <select id="BarDirection">
+                            <option value="vertical">纵向（默认）</option>
+                            <option value="horizontal">横向</option>
+                        </select></div>
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>柱宽比例</span><span id="BarWidthVal">60%</span></div>
                             <input type="range" id="BarWidth" min="10" max="100" step="5" value="60"></div>
@@ -531,6 +536,7 @@
             valueBgColor: '#555555',
             pointSize: 4,
             // 柱状图
+            barDirection: 'vertical',
             barWidth: 0.6,
             barColor: '',
             barOpacity: 0.85,
@@ -708,6 +714,7 @@
             ['GridOpacity',     'gridOpacity',    '%',     'GridOpacityVal', '%'],
             // 数据点 & 标签
             ['ShowPoints',      'showPoints',     'checked'],
+            ['BarDirection',    'barDirection'],
             ['BarWidth',        'barWidth',       '%',     'BarWidthVal',    '%'],
             ['BarRadius',       'barRadius',      'int',   'BarRadiusVal'],
             ['BarOpacity',      'barOpacity',     '%',     'BarOpacityVal',  '%'],
@@ -1059,18 +1066,33 @@
         function drawContent(w, h, progress, rawProgress, isHold) {
             const isPaper = currentMode === 'paper';
             const t = getTheme();
-            const cc = getColorCache(); // 颜色缓存，避免每帧重复解析
+            const cc = getColorCache();
+            const isHoriz = config.barDirection === 'horizontal';
 
             // 布局计算
             const _pad = config.cardPad;
-            const padL = _pad + 98 + config.chartOffX - config.chartExtraW / 2;
-            const padT = _pad + 50 + config.chartOffY - config.chartExtraH / 2;
-            const cw = (w - (_pad + 98) * 2) + config.chartExtraW;
-            const ch = (h - (_pad + 50) - (_pad + 55)) + config.chartExtraH;
             const { yMin, yMax } = getYRange();
-            // 图表内容整体右移半个柱宽，避开Y轴标签区（Y轴标签位置不变）
-            const barHalfW = (cw / Math.max(dataPoints.length, 1)) * config.barWidth / 2;
-            const chartX = padL + barHalfW; // 图表内容实际起始x（整体右移半个柱宽）
+
+            let padL, padT, padR, padB, cw, ch, chartX, chartY;
+            if (isHoriz) {
+                // 横向：左侧留更多空间给类别标签，底部留给数值轴
+                padL = _pad + 98 + config.chartOffX - config.chartExtraW / 2;
+                padT = _pad + 50 + config.chartOffY - config.chartExtraH / 2;
+                padR = _pad + 40;
+                padB = _pad + 55;
+                cw = (w - padL - padR) + config.chartExtraW;
+                ch = (h - padT - padB) + config.chartExtraH;
+                chartX = padL;
+                chartY = padT;
+            } else {
+                padL = _pad + 98 + config.chartOffX - config.chartExtraW / 2;
+                padT = _pad + 50 + config.chartOffY - config.chartExtraH / 2;
+                const barHalfW = (cw / Math.max(dataPoints.length, 1)) * config.barWidth / 2;
+                cw = (w - (_pad + 98) * 2) + config.chartExtraW;
+                ch = (h - (_pad + 50) - (_pad + 55)) + config.chartExtraH;
+                chartX = padL + ((cw / Math.max(dataPoints.length, 1)) * config.barWidth / 2);
+                chartY = padT;
+            }
 
             // 裁剪圆角
             ctx.save();
@@ -1089,58 +1111,90 @@
 
             // === 网格 ===
             if (config.showGrid && config.gridOpacity > 0) {
-                const gv = config.gridOpacity;
                 ctx.save();
                 ctx.strokeStyle = cc.gridRgba;
                 ctx.lineWidth = 0.5;
                 if (config.dashedGrid) ctx.setLineDash([3, 6]);
-                // 竖线（每个数据点）
-                for (let i = 0; i < dataPoints.length; i++) {
-                    const x = chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw;
-                    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ch); ctx.stroke();
-                }
-                // 横线（Y轴刻度，从图表区开始到结束）
-                for (let i = 0; i <= config.gridY; i++) {
-                    const ratio = i / config.gridY;
-                    const y = padT + ch - ratio * ch;
-                    ctx.beginPath(); ctx.moveTo(chartX, y); ctx.lineTo(chartX + cw, y); ctx.stroke();
+                if (isHoriz) {
+                    // 横向：横线（每个数据点位置），竖线（数值刻度）
+                    const barCount = dataPoints.length;
+                    const slotH = ch / Math.max(barCount, 1);
+                    for (let i = 0; i < barCount; i++) {
+                        const y = chartY + (i + 0.5) * slotH;
+                        ctx.beginPath(); ctx.moveTo(chartX, y); ctx.lineTo(chartX + cw, y); ctx.stroke();
+                    }
+                    for (let i = 0; i <= config.gridY; i++) {
+                        const ratio = i / config.gridY;
+                        const x = chartX + ratio * cw;
+                        ctx.beginPath(); ctx.moveTo(x, chartY); ctx.lineTo(x, chartY + ch); ctx.stroke();
+                    }
+                } else {
+                    // 纵向：竖线（每个数据点），横线（Y轴刻度）
+                    for (let i = 0; i < dataPoints.length; i++) {
+                        const x = chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw;
+                        ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ch); ctx.stroke();
+                    }
+                    for (let i = 0; i <= config.gridY; i++) {
+                        const ratio = i / config.gridY;
+                        const y = padT + ch - ratio * ch;
+                        ctx.beginPath(); ctx.moveTo(chartX, y); ctx.lineTo(chartX + cw, y); ctx.stroke();
+                    }
                 }
                 ctx.restore();
             }
 
-            // === X轴基线（无Y轴竖线，仅覆盖图表区域）===
+            // === 基线 ===
             if (dataPoints.length > 0) {
                 ctx.save();
                 const axisAlpha = isHold ? 1 : clamp(rawProgress * 1.5, 0, 0.35);
                 ctx.strokeStyle = cc.gridAxisRgba;
                 ctx.lineWidth = 1;
-                // X轴基线：左边不动（padL），右边延伸到图表区末尾
-                ctx.beginPath();
-                ctx.moveTo(padL, padT + ch);
-                ctx.lineTo(chartX + cw, padT + ch);
-                ctx.stroke();
+                if (isHoriz) {
+                    // 左侧竖线（数值轴起点）
+                    ctx.beginPath();
+                    ctx.moveTo(chartX, chartY);
+                    ctx.lineTo(chartX, chartY + ch);
+                    ctx.stroke();
+                } else {
+                    // 底部横线（X轴基线）
+                    ctx.beginPath();
+                    ctx.moveTo(padL, padT + ch);
+                    ctx.lineTo(chartX + cw, padT + ch);
+                    ctx.stroke();
+                }
                 ctx.restore();
             }
 
-            // === Y 轴标签 ===
+            // === 轴标签 ===
             ctx.save();
             ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
-            ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = config.axisLabelColor;
             const yStep = (yMax - yMin) / config.gridY;
             const yDec = yStep >= 1 ? 0 : (yStep >= 0.1 ? 1 : 2);
-            for (let i = 0; i <= config.gridY; i++) {
-                const ratio = i / config.gridY;
-                ctx.fillText((yMin + ratio * (yMax - yMin)).toFixed(yDec), padL - 14, padT + ch - ratio * ch);
+            if (isHoriz) {
+                // 左侧：类别标签，底部：数值标签
+                ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+                const slotH = ch / Math.max(dataPoints.length, 1);
+                dataPoints.forEach((d, i) => {
+                    ctx.fillText(d.label, chartX - 14, chartY + (i + 0.5) * slotH);
+                });
+                ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+                for (let i = 0; i <= config.gridY; i++) {
+                    const ratio = i / config.gridY;
+                    ctx.fillText((yMin + ratio * (yMax - yMin)).toFixed(yDec), chartX + ratio * cw, chartY + ch + 12);
+                }
+            } else {
+                // 左侧：数值标签，底部：类别标签
+                ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+                for (let i = 0; i <= config.gridY; i++) {
+                    const ratio = i / config.gridY;
+                    ctx.fillText((yMin + ratio * (yMax - yMin)).toFixed(yDec), padL - 14, padT + ch - ratio * ch);
+                }
+                ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+                dataPoints.forEach((d, i) => {
+                    ctx.fillText(d.label, chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw, padT + ch + 22);
+                });
             }
-            ctx.restore();
-
-            // === X 轴标签 ===
-            ctx.save();
-            ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
-            ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-            dataPoints.forEach((d, i) => {
-                ctx.fillText(d.label, chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw, padT + ch + 22);
-            });
             ctx.restore();
 
             // === 标题 ===
@@ -1167,69 +1221,124 @@
             }
 
             // === 数据点位置 ===
-            const points = dataPoints.map((d, i) => ({
-                x: chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw,
-                y: padT + ch - ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch
-            }));
+            const points = isHoriz
+                ? dataPoints.map((d, i) => {
+                    const slotH = ch / Math.max(dataPoints.length, 1);
+                    return {
+                        x: chartX + ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * cw,
+                        y: chartY + (i + 0.5) * slotH
+                    };
+                })
+                : dataPoints.map((d, i) => ({
+                    x: chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw,
+                    y: padT + ch - ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch
+                }));
 
             // === 柱状图 ===
             {
                 const barCount = dataPoints.length;
-                const slotW = cw / Math.max(barCount, 1);
-                const bw = slotW * config.barWidth;
-                const bColor = config.barColor || config.gridColor;
-                const sColor = config.barStrokeColor || bColor;
-                const barProgress = isHold ? 1 : clamp(progress, 0, 1);
-                const baseY = padT + ch;
                 const fillBase = cc.barFill;
                 const useGrad = config.barGradient;
                 const gradEndRgba = useGrad ? cc.barGradEnd : null;
+                const sColor = config.barStrokeColor || (config.barColor || config.gridColor);
                 const sw = config.barStrokeWidth;
+                const barProgress = isHold ? 1 : clamp(progress, 0, 1);
 
                 ctx.save();
-                dataPoints.forEach((d, i) => {
-                    const barCx = chartX + (i / Math.max(barCount - 1, 1)) * cw;
-                    const bx = barCx - bw / 2;
-                    const valH = ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch * barProgress;
-                    const bh = valH;
-                    const by = baseY - valH;
+                if (isHoriz) {
+                    // 横向柱状图
+                    const slotH = ch / Math.max(barCount, 1);
+                    const bh = slotH * config.barWidth;
+                    dataPoints.forEach((d, i) => {
+                        const barCy = chartY + (i + 0.5) * slotH;
+                        const by = barCy - bh / 2;
+                        const valW = ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * cw * barProgress;
+                        const bWidth = valW;
+                        const bx = chartX;
 
-                    if (bh < 1) return;
+                        if (bWidth < 1) return;
 
-                    const r = Math.min(config.barRadius, bw / 2, bh / 2);
+                        const r = Math.min(config.barRadius, bh / 2, bWidth / 2);
 
-                    if (useGrad && bh > r * 2) {
-                        ctx.fillStyle = createLinearGradient(ctx, bx, by, bx, by + bh,
-                            [{ pos: 0, color: fillBase }, { pos: 1, color: gradEndRgba }]);
-                    } else {
-                        ctx.fillStyle = fillBase;
-                    }
+                        if (useGrad && bWidth > r * 2) {
+                            ctx.fillStyle = createLinearGradient(ctx, bx, by, bx + bWidth, by,
+                                [{ pos: 0, color: fillBase }, { pos: 1, color: gradEndRgba }]);
+                        } else {
+                            ctx.fillStyle = fillBase;
+                        }
 
-                    ctx.beginPath();
-                    ctx.moveTo(bx + r, by);
-                    ctx.lineTo(bx + bw - r, by);
-                    ctx.arcTo(bx + bw, by, bx + bw, by + r, r);
-                    ctx.lineTo(bx + bw, by + bh);
-                    ctx.lineTo(bx, by + bh);
-                    ctx.lineTo(bx, by + r);
-                    ctx.arcTo(bx, by, bx + r, by, r);
-                    ctx.closePath();
-                    ctx.fill();
+                        // 右侧圆角路径
+                        ctx.beginPath();
+                        ctx.moveTo(bx, by);
+                        ctx.lineTo(bx + bWidth - r, by);
+                        ctx.arcTo(bx + bWidth, by, bx + bWidth, by + r, r);
+                        ctx.lineTo(bx + bWidth, by + bh - r);
+                        ctx.arcTo(bx + bWidth, by + bh, bx + bWidth - r, by + bh, r);
+                        ctx.lineTo(bx, by + bh);
+                        ctx.closePath();
+                        ctx.fill();
 
-                    if (sw > 0) {
-                        ctx.strokeStyle = sColor;
-                        ctx.lineWidth = sw;
+                        if (sw > 0) {
+                            ctx.strokeStyle = sColor;
+                            ctx.lineWidth = sw;
+                            ctx.beginPath();
+                            ctx.moveTo(bx, by);
+                            ctx.lineTo(bx + bWidth - r, by);
+                            ctx.arcTo(bx + bWidth, by, bx + bWidth, by + r, r);
+                            ctx.lineTo(bx + bWidth, by + bh - r);
+                            ctx.arcTo(bx + bWidth, by + bh, bx + bWidth - r, by + bh, r);
+                            ctx.stroke();
+                        }
+                    });
+                } else {
+                    // 纵向柱状图（默认）
+                    const slotW = cw / Math.max(barCount, 1);
+                    const bw = slotW * config.barWidth;
+                    const baseY = padT + ch;
+                    dataPoints.forEach((d, i) => {
+                        const barCx = chartX + (i / Math.max(barCount - 1, 1)) * cw;
+                        const bx = barCx - bw / 2;
+                        const valH = ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch * barProgress;
+                        const bh = valH;
+                        const by = baseY - valH;
+
+                        if (bh < 1) return;
+
+                        const r = Math.min(config.barRadius, bw / 2, bh / 2);
+
+                        if (useGrad && bh > r * 2) {
+                            ctx.fillStyle = createLinearGradient(ctx, bx, by, bx, by + bh,
+                                [{ pos: 0, color: fillBase }, { pos: 1, color: gradEndRgba }]);
+                        } else {
+                            ctx.fillStyle = fillBase;
+                        }
+
                         ctx.beginPath();
                         ctx.moveTo(bx + r, by);
                         ctx.lineTo(bx + bw - r, by);
                         ctx.arcTo(bx + bw, by, bx + bw, by + r, r);
                         ctx.lineTo(bx + bw, by + bh);
-                        ctx.moveTo(bx, by + bh);
+                        ctx.lineTo(bx, by + bh);
                         ctx.lineTo(bx, by + r);
                         ctx.arcTo(bx, by, bx + r, by, r);
-                        ctx.stroke();
-                    }
-                });
+                        ctx.closePath();
+                        ctx.fill();
+
+                        if (sw > 0) {
+                            ctx.strokeStyle = sColor;
+                            ctx.lineWidth = sw;
+                            ctx.beginPath();
+                            ctx.moveTo(bx + r, by);
+                            ctx.lineTo(bx + bw - r, by);
+                            ctx.arcTo(bx + bw, by, bx + bw, by + r, r);
+                            ctx.lineTo(bx + bw, by + bh);
+                            ctx.moveTo(bx, by + bh);
+                            ctx.lineTo(bx, by + r);
+                            ctx.arcTo(bx, by, bx + r, by, r);
+                            ctx.stroke();
+                        }
+                    });
+                }
                 ctx.restore();
             }
 
