@@ -775,9 +775,6 @@
                     document.getElementById('YAxisCustomPanel').style.display =
                         config.yAxisMode === 'custom' ? 'block' : 'none';
                 }
-                if (key === 'floatEnabled') {
-                    _floatStartTime = performance.now();
-                }
                 if (key === 'entranceEnabled') {
                     const show = config.entranceEnabled;
                     document.getElementById('EntranceOpts').style.display = show ? '' : 'none';
@@ -792,15 +789,15 @@
         // ====== 漂浮动画（合并到主循环）======
         let _currentRx = config.rotateX * Math.PI / 180;
         let _currentRy = config.rotateY * Math.PI / 180;
-        let _floatStartTime = performance.now();
 
-        function updateFloatRotation(now) {
+        function updateFloatRotation(timeMs) {
             if (config.floatEnabled) {
-                const elapsed = (now - _floatStartTime) / 1000;
+                const isHold = !isFinite(timeMs);
+                const t = (isHold ? performance.now() : timeMs) * 0.001;
                 const dur = config.floatDuration;
                 const phaseRad = (config.floatPhase / 100) * Math.PI * 2;
-                _currentRx = (Math.sin(elapsed / dur * Math.PI * 2) * config.floatRotateX + config.rotateX) * Math.PI / 180;
-                _currentRy = (Math.sin(elapsed / dur * Math.PI * 2 + phaseRad) * config.floatRotateY + config.rotateY) * Math.PI / 180;
+                _currentRx = (Math.sin(t / dur * Math.PI * 2) * config.floatRotateX + config.rotateX) * Math.PI / 180;
+                _currentRy = (Math.sin(t / dur * Math.PI * 2 + phaseRad) * config.floatRotateY + config.rotateY) * Math.PI / 180;
             } else {
                 _currentRx = config.rotateX * Math.PI / 180;
                 _currentRy = config.rotateY * Math.PI / 180;
@@ -1456,6 +1453,9 @@
             bgCtx.clearRect(0, 0, bgOffscreen.width, bgOffscreen.height);
             bgCtx.restore();
 
+            // 浮动旋转（用 timeMs 驱动，录制时也能正确运动）
+            updateFloatRotation(timeMs);
+
             // 背景绘制
             if (bg.mode === 'transparent') {
                 if (recorder.isRecording && recorder.format !== 'png_seq') {
@@ -1581,8 +1581,6 @@
                 _loopId = requestAnimationFrame(mainLoop);
                 return;
             }
-
-            updateFloatRotation(now);
 
             let time = now - _animStartTime;
             const entranceDur = config.entranceEnabled ? config.entranceDuration * 1000 : 0;
