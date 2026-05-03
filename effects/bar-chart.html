@@ -1587,7 +1587,6 @@
             const totalDur = Math.max(entranceDur, config.animDuration * 1000);
             const animDone = totalDur > 0 && time > totalDur;
 
-            if (animDone) time = Infinity;
             drawFrame(time);
 
             if (!animDone || config.floatEnabled) {
