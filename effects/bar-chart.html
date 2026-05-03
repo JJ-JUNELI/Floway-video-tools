@@ -214,6 +214,10 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>描边颜色</span></div>
                             <input type="color" id="BarStrokeColor" value="#555555"></div>
                     </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>手绘抖动</span><span id="BarJitterVal">0</span></div>
+                            <input type="range" id="BarJitter" min="0" max="100" step="1" value="0"></div>
+                    </div>
                 </div>
                 <!-- 动画设置 -->
                 <div class="sub-section ss-purple">
@@ -233,17 +237,10 @@
                 </div>
             </div>
 
-            <!-- 数据点 & 标签 -->
+            <!-- 数据标签 -->
             <div class="control-group">
-                <div class="group-title"><span>🔵 数据点 & 标签</span></div>
+                <div class="group-title"><span>🔵 数值标签</span></div>
                 <div class="sub-section ss-green">
-                    <div class="sub-title"><span>显示数据点</span><input type="checkbox" id="ShowPoints" checked></div>
-                    <div id="PointSizeOpts" style="margin-top:6px;">
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>数据点大小</span><span id="PointSizeVal">4</span></div>
-                                <input type="range" id="PointSize" min="1" max="20" step="0.5" value="4"></div>
-                        </div>
-                    </div>
                     <div class="sub-title"><span>显示数值标签</span><input type="checkbox" id="ShowValues"></div>
                     <div id="ValueLabelOpts" style="display:none; margin-top:6px;">
                         <div class="row">
@@ -253,7 +250,7 @@
                                 <input type="color" id="ValueColor" value="#ffffff"></div>
                         </div>
                         <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>Y轴偏移</span><span id="ValueYOffsetVal">-20</span></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>标签位置偏移</span><span id="ValueYOffsetVal">-20</span></div>
                                 <input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-20"></div>
                             <div style="flex:1" class="stack"><div class="label-line"><span>背景颜色</span></div>
                                 <input type="color" id="ValueBgColor" value="#555555"></div>
@@ -528,13 +525,11 @@
             subTitleX: 630,
             subTitleY: 0,
             showBrackets: true,
-            // 数据点 & 标签
-            showPoints: true,
+            // 数值标签
             showValues: false,
             valueYOffset: -20,
             valueBgEnabled: true,
             valueBgColor: '#555555',
-            pointSize: 4,
             // 柱状图
             barDirection: 'vertical',
             barWidth: 0.6,
@@ -545,6 +540,7 @@
             barGradientEnd: '',
             barStrokeWidth: 0,
             barStrokeColor: '',
+            barJitter: 0,
             // 网格与坐标
             gridY: 4,
             yAxisMode: 'zero',
@@ -609,11 +605,12 @@
                 gridColor: '#c3bcaf',
                 cardBg: '#faf8f3',
                 cardBorderWidth: 1,
-                cardBorderColor: '#d4cfc4',
+                cardBorderColor: '#c8c3b8',
                 cardGlowWidth: 0,
                 subTitleGlow: false,
-                barColor: '#6b8e7b',
-                barStrokeWidth: 0,
+                barColor: '#888888',
+                barStrokeWidth: 1,
+                barJitter: 25,
             },
             cyber: {
                 mainTitleColor: '#ffffff',
@@ -659,6 +656,7 @@
             updateUI('BarColor', config.barColor);
             updateUI('BarStrokeWidth', config.barStrokeWidth, 'BarStrokeWidthVal');
             updateUI('BarStrokeColor', config.barStrokeColor);
+            updateUI('BarJitter', config.barJitter, 'BarJitterVal');
 
             _paperTexCache = null;
             _staticBgCache = null;
@@ -712,8 +710,7 @@
             ['CardGlowIntensity','cardGlowIntensity','int', 'CardGlowIntensityVal', '%'],
             ['ShowGrid',        'showGrid',       'checked'],
             ['GridOpacity',     'gridOpacity',    '%',     'GridOpacityVal', '%'],
-            // 数据点 & 标签
-            ['ShowPoints',      'showPoints',     'checked'],
+            // 柱状图
             ['BarDirection',    'barDirection'],
             ['BarWidth',        'barWidth',       '%',     'BarWidthVal',    '%'],
             ['BarRadius',       'barRadius',      'int',   'BarRadiusVal'],
@@ -723,7 +720,7 @@
             ['BarGradientEnd',  'barGradientEnd'],
             ['BarStrokeWidth',  'barStrokeWidth', 'float', 'BarStrokeWidthVal'],
             ['BarStrokeColor',  'barStrokeColor'],
-            ['PointSize',       'pointSize',      'float', 'PointSizeVal'],
+            ['BarJitter',       'barJitter',      'int',   'BarJitterVal'],
             ['ShowValues',      'showValues',     'checked'],
             ['ValueSize',       'valueSize',      'int',   'ValueSizeVal'],
             ['ValueColor',      'valueColor'],
@@ -893,12 +890,6 @@
         if (config.showValues) valueOptsEl.style.display = '';
 
         // 条件显示：数据点大小
-        const pointSizeOptsEl = document.getElementById('PointSizeOpts');
-        document.getElementById('ShowPoints').addEventListener('change', () => {
-            pointSizeOptsEl.style.display = config.showPoints ? '' : 'none';
-        });
-        if (config.showPoints) pointSizeOptsEl.style.display = '';
-
         // 条件显示：渐变终止色
         const barGradEndRow = document.getElementById('BarGradientEndRow');
         document.getElementById('BarGradient').addEventListener('change', () => {
@@ -1243,10 +1234,31 @@
                 const sColor = config.barStrokeColor || (config.barColor || config.gridColor);
                 const sw = config.barStrokeWidth;
                 const barProgress = isHold ? 1 : clamp(progress, 0, 1);
+                const jitter = isPaper ? config.barJitter / 100 : 0;
+
+                // 手绘抖动：稀疏控制点 + 余弦插值（与折线图一致）
+                let _jitSeed = 12345;
+                function jitRnd() { _jitSeed = (_jitSeed * 1664525 + 1013904223) & 0xffffffff; return ((_jitSeed >>> 0) % 10000) / 10000; }
+                function jitLine(x1, y1, x2, y2, n) {
+                    const dx = x2 - x1, dy = y2 - y1;
+                    const len = Math.sqrt(dx*dx+dy*dy) || 1;
+                    const px = -dy / len, py = dx / len;
+                    const amp = jitter * 10;
+                    const jN = 6;
+                    const jC = [];
+                    for (let k = 0; k <= jN; k++) jC.push((jitRnd() - 0.5) * amp);
+                    for (let j = 1; j <= n; j++) {
+                        const t = j / n;
+                        const jF = t * jN;
+                        const jI = Math.min(Math.floor(jF), jN - 1);
+                        const jT = (1 - Math.cos((jF - jI) * Math.PI)) / 2;
+                        const noise = (jC[jI] + (jC[jI + 1] - jC[jI]) * jT) * Math.sin(t * Math.PI);
+                        ctx.lineTo(x1 + dx * t + px * noise, y1 + dy * t + py * noise);
+                    }
+                }
 
                 ctx.save();
                 if (isHoriz) {
-                    // 横向柱状图
                     const slotH = ch / Math.max(barCount, 1);
                     const bh = slotH * config.barWidth;
                     dataPoints.forEach((d, i) => {
@@ -1255,9 +1267,7 @@
                         const valW = ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * cw * barProgress;
                         const bWidth = valW;
                         const bx = chartX;
-
                         if (bWidth < 1) return;
-
                         const r = Math.min(config.barRadius, bh / 2, bWidth / 2);
 
                         if (useGrad && bWidth > r * 2) {
@@ -1266,8 +1276,6 @@
                         } else {
                             ctx.fillStyle = fillBase;
                         }
-
-                        // 右侧圆角路径
                         ctx.beginPath();
                         ctx.moveTo(bx, by);
                         ctx.lineTo(bx + bWidth - r, by);
@@ -1278,7 +1286,18 @@
                         ctx.closePath();
                         ctx.fill();
 
-                        if (sw > 0) {
+                        if (sw > 0 && jitter > 0) {
+                            ctx.strokeStyle = sColor;
+                            ctx.lineWidth = sw;
+                            ctx.beginPath();
+                            ctx.moveTo(bx, by);
+                            jitLine(bx, by, bx + bWidth - r, by, 14);
+                            ctx.arcTo(bx + bWidth, by, bx + bWidth, by + r, r);
+                            jitLine(bx + bWidth, by + r, bx + bWidth, by + bh - r, 14);
+                            ctx.arcTo(bx + bWidth, by + bh, bx + bWidth - r, by + bh, r);
+                            jitLine(bx + bWidth - r, by + bh, bx, by + bh, 14);
+                            ctx.stroke();
+                        } else if (sw > 0) {
                             ctx.strokeStyle = sColor;
                             ctx.lineWidth = sw;
                             ctx.beginPath();
@@ -1287,11 +1306,11 @@
                             ctx.arcTo(bx + bWidth, by, bx + bWidth, by + r, r);
                             ctx.lineTo(bx + bWidth, by + bh - r);
                             ctx.arcTo(bx + bWidth, by + bh, bx + bWidth - r, by + bh, r);
+                            ctx.lineTo(bx, by + bh);
                             ctx.stroke();
                         }
                     });
                 } else {
-                    // 纵向柱状图（默认）
                     const slotW = cw / Math.max(barCount, 1);
                     const bw = slotW * config.barWidth;
                     const baseY = padT + ch;
@@ -1301,9 +1320,7 @@
                         const valH = ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch * barProgress;
                         const bh = valH;
                         const by = baseY - valH;
-
                         if (bh < 1) return;
-
                         const r = Math.min(config.barRadius, bw / 2, bh / 2);
 
                         if (useGrad && bh > r * 2) {
@@ -1312,7 +1329,6 @@
                         } else {
                             ctx.fillStyle = fillBase;
                         }
-
                         ctx.beginPath();
                         ctx.moveTo(bx + r, by);
                         ctx.lineTo(bx + bw - r, by);
@@ -1324,17 +1340,27 @@
                         ctx.closePath();
                         ctx.fill();
 
-                        if (sw > 0) {
+                        if (sw > 0 && jitter > 0) {
                             ctx.strokeStyle = sColor;
                             ctx.lineWidth = sw;
                             ctx.beginPath();
-                            ctx.moveTo(bx + r, by);
-                            ctx.lineTo(bx + bw - r, by);
+                            ctx.moveTo(bx, by + bh);
+                            jitLine(bx, by + bh, bx, by + r, 16);
+                            ctx.arcTo(bx, by, bx + r, by, r);
+                            jitLine(bx + r, by, bx + bw - r, by, 16);
                             ctx.arcTo(bx + bw, by, bx + bw, by + r, r);
-                            ctx.lineTo(bx + bw, by + bh);
+                            jitLine(bx + bw, by + r, bx + bw, by + bh, 22);
+                            ctx.stroke();
+                        } else if (sw > 0) {
+                            ctx.strokeStyle = sColor;
+                            ctx.lineWidth = sw;
+                            ctx.beginPath();
                             ctx.moveTo(bx, by + bh);
                             ctx.lineTo(bx, by + r);
                             ctx.arcTo(bx, by, bx + r, by, r);
+                            ctx.lineTo(bx + bw - r, by);
+                            ctx.arcTo(bx + bw, by, bx + bw, by + r, r);
+                            ctx.lineTo(bx + bw, by + bh);
                             ctx.stroke();
                         }
                     });
@@ -1342,81 +1368,56 @@
                 ctx.restore();
             }
 
-            // === 数据点 ===
-            if (config.showPoints) {
-                const dotDelay = rawProgress > 0.75 ? clamp((rawProgress - 0.75) / 0.20, 0, 1) : 0;
-                const ps = config.pointSize * dotDelay;
-                if (ps >= 0.5) {
-                    const dotColor = config.barColor || config.gridColor;
-                    ctx.save();
-                    if (isPaper) {
-                        let _dotSeed = 11111;
-                        function dotRandom() { _dotSeed = (_dotSeed * 1664525 + 1013904223) & 0xffffffff; return ((_dotSeed >>> 0) % 10000) / 10000; }
-                        function handDrawnDot(cx, cy, r) {
-                            const segs = 12;
-                            ctx.beginPath();
-                            for (let k = 0; k <= segs; k++) {
-                                const a = (k / segs) * Math.PI * 2;
-                                const rr = r * (0.85 + dotRandom() * 0.3);
-                                k === 0 ? ctx.moveTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr)
-                                        : ctx.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
-                            }
-                            ctx.closePath();
-                        }
-                        points.forEach(p => {
-                            handDrawnDot(p.x, p.y, ps);
-                            ctx.fillStyle = hexToRgba(dotColor, dotDelay);
-                            ctx.fill();
-                        });
-                    } else {
-                        points.forEach(p => {
-                            ctx.beginPath(); ctx.arc(p.x, p.y, ps * 1.8, 0, Math.PI * 2);
-                            ctx.fillStyle = hexToRgba(dotColor, 0.1 * dotDelay); ctx.fill();
-                            ctx.beginPath(); ctx.arc(p.x, p.y, ps, 0, Math.PI * 2);
-                            ctx.fillStyle = hexToRgba(dotColor, 0.65 * dotDelay); ctx.fill();
-                            ctx.beginPath(); ctx.arc(p.x, p.y, ps * 0.5, 0, Math.PI * 2);
-                            ctx.fillStyle = `rgba(255,255,255,${dotDelay})`; ctx.fill();
-                        });
-                    }
-                    ctx.restore();
-                }
-            }
-
             // === 数值标签 ===
             if (config.showValues && rawProgress > 0.94) {
                 const labelAlpha = clamp((rawProgress - 0.94) / 0.06, 0, 1);
-                const lm = getLabelMeasures(); // 缓存的文字宽度
+                const lm = getLabelMeasures();
                 const vBgOn = config.valueBgEnabled;
-                const yOffset = config.valueYOffset;
+                const offset = config.valueYOffset;
                 const th = lm.th;
 
                 ctx.save();
-                // 先批量画背景（避免每标签切换 fillStyle）
-                if (vBgOn) {
-                    ctx.fillStyle = cc.valueBgFill;
-                    points.forEach((p, i) => {
-                        const tw = lm.widths[i];
-                        const bx = p.x - tw / 2 - 5;
-                        const by = p.y + yOffset - th;
-                        ctx.fillRect(bx, by, tw + 10, th);
-                    });
-                    ctx.strokeStyle = cc.valueBgStroke; ctx.lineWidth = 0.5;
-                    points.forEach((p, i) => {
-                        const tw = lm.widths[i];
-                        const bx = p.x - tw / 2 - 5;
-                        const by = p.y + yOffset - th;
-                        ctx.strokeRect(bx, by, tw + 10, th);
-                    });
-                }
-                // 批量画文字
                 ctx.font = `bold ${config.valueSize}px ${config.titleFont}`;
                 ctx.fillStyle = config.valueColor;
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.globalAlpha = labelAlpha;
-                points.forEach((p, i) => {
-                    const txt = String(dataPoints[i].value);
-                    ctx.fillText(txt, p.x, p.y + yOffset - th / 2);
-                });
+
+                if (isHoriz) {
+                    // 横向：标签在柱子右边缘，偏移变为 x 方向
+                    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+                    points.forEach((p, i) => {
+                        const txt = String(dataPoints[i].value);
+                        const tw = lm.widths[i];
+                        const lx = p.x + offset;
+                        const ly = p.y;
+                        if (vBgOn) {
+                            ctx.fillStyle = cc.valueBgFill;
+                            ctx.fillRect(lx - 2, ly - th / 2 - 2, tw + 8, th + 2);
+                            ctx.strokeStyle = cc.valueBgStroke; ctx.lineWidth = 0.5;
+                            ctx.strokeRect(lx - 2, ly - th / 2 - 2, tw + 8, th + 2);
+                        }
+                        ctx.fillStyle = config.valueColor;
+                        ctx.fillText(txt, lx + 2, ly);
+                    });
+                } else {
+                    // 纵向：标签在数据点上方，偏移为 y 方向
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    if (vBgOn) {
+                        ctx.fillStyle = cc.valueBgFill;
+                        points.forEach((p, i) => {
+                            const tw = lm.widths[i];
+                            ctx.fillRect(p.x - tw / 2 - 5, p.y + offset - th, tw + 10, th);
+                        });
+                        ctx.strokeStyle = cc.valueBgStroke; ctx.lineWidth = 0.5;
+                        points.forEach((p, i) => {
+                            const tw = lm.widths[i];
+                            ctx.strokeRect(p.x - tw / 2 - 5, p.y + offset - th, tw + 10, th);
+                        });
+                    }
+                    ctx.fillStyle = config.valueColor;
+                    points.forEach((p, i) => {
+                        ctx.fillText(String(dataPoints[i].value), p.x, p.y + offset - th / 2);
+                    });
+                }
                 ctx.restore();
             }
 
