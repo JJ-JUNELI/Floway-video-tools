@@ -62,31 +62,48 @@
            ============================================ */
         .nav {
             position: fixed;
-            top: 0; left: 0; right: 0;
+            top: 16px; left: 24px; right: 24px;
             z-index: 1000;
-            height: 52px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 40px;
-            background: rgba(14,17,23,0.88);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 0.5px solid var(--border);
+            pointer-events: none;
         }
-        [data-theme="light"] .nav { background: rgba(248,250,252,0.88); }
+        .nav > * { pointer-events: auto; }
         .nav-left { display: flex; align-items: center; gap: 32px; }
         .nav-logo {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 14px 6px 6px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+        }
+        .nav-logo-icon-box {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            background: #1a1a1a;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        [data-theme="light"] .nav-logo-icon-box {
+            background: #fff;
+        }
+        .nav-logo-icon-box .logo-dark {
+            height: 18px; width: auto; object-fit: contain;
+            display: none;
+        }
+        .nav-logo-icon-box .logo-light {
+            height: 18px; width: auto; object-fit: contain;
+            display: inline-block;
+        }
+        [data-theme="light"] .nav-logo-icon-box .logo-dark { display: inline-block; }
+        [data-theme="light"] .nav-logo-icon-box .logo-light { display: none; }
+        .nav-logo-text {
             font-weight: 700;
             font-size: 16px;
             letter-spacing: -0.3px;
-            display: flex; align-items: center; gap: 8px;
-            color: var(--accent);
-        }
-        .nav-logo-icon {
-            width: 22px; height: 22px;
-            background: linear-gradient(135deg, #ff6b35, #f72585);
-            border-radius: 6px;
+            color: var(--text-primary);
         }
         .nav-links {
             display: flex;
@@ -107,26 +124,38 @@
         }
         .btn-theme {
             width: 36px; height: 36px;
-            border-radius: 10px;
+            border-radius: 50%;
             border: 1px solid var(--border);
             background: transparent;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             cursor: pointer;
-            font-size: 15px;
             display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s;
+            transition: border-color 0.3s ease, color 0.3s ease;
+            padding: 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+        }
+        .btn-theme svg {
+            width: 20px; height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.3s ease;
         }
         .btn-theme:hover {
-            background: var(--accent-dim);
+            border-color: var(--accent);
             color: var(--accent);
-            border-color: var(--border-strong);
+        }
+        .btn-theme:active svg {
+            transform: rotate(-20deg) scale(0.92);
         }
 
         /* ============================================
            HERO SECTION
            ============================================ */
         .hero {
-            padding: 120px 40px 60px;
+            padding: 80px 40px 60px;
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -703,12 +732,17 @@
     <nav class="nav">
         <div class="nav-left">
             <div class="nav-logo">
-                <div class="nav-logo-icon"></div>
-                Floway Tools
+                <div class="nav-logo-icon-box">
+                    <img src="assets/logo-white.png" class="logo-light" alt="Floway">
+                    <img src="assets/logo-black.png" class="logo-dark" alt="Floway">
+                </div>
+                <span class="nav-logo-text">Floway Tools</span>
             </div>
         </div>
         <div class="nav-right">
-            <button id="themeToggle" class="btn-theme" title="切换主题">☀</button>
+            <button id="themeToggle" class="btn-theme" title="切换主题">
+                <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
         </div>
     </nav>
 
@@ -974,11 +1008,13 @@
 
         // ====== Theme Toggle ======
         const btn = document.getElementById('themeToggle');
+        const moonSVG = '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+        const sunSVG = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
         btn.addEventListener('click', () => {
             toggleTheme();
-            btn.textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+            btn.innerHTML = getTheme().id === 'dark' ? sunSVG : moonSVG;
         });
-        btn.textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+        btn.innerHTML = getTheme().id === 'dark' ? sunSVG : moonSVG;
 
         // ====== Staggered Card Entrance ======
         const featuredCards = document.querySelectorAll('.featured-card');

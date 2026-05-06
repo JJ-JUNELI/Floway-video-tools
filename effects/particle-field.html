@@ -159,30 +159,18 @@
         });
         document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
 
-        // === UI BINDINGS ===
-        document.getElementById('CountInput').addEventListener('input', e => {
-            config.count = parseInt(e.target.value);
-            document.getElementById('CountVal').innerText = config.count;
-            initParticles();
-        });
-        document.getElementById('SizeInput').addEventListener('input', e => {
-            config.size = parseFloat(e.target.value);
-            document.getElementById('SizeVal').innerText = config.size;
-        });
-        document.getElementById('SpeedInput').addEventListener('input', e => {
-            config.speed = parseFloat(e.target.value);
-            document.getElementById('SpeedVal').innerText = config.speed;
-        });
-        document.getElementById('LinkDistInput').addEventListener('input', e => {
-            config.linkDist = parseInt(e.target.value);
-            document.getElementById('LinkDistVal').innerText = config.linkDist;
-        });
-        document.getElementById('ColorInput').addEventListener('input', e => {
-            config.color = e.target.value;
-        });
-        document.getElementById('LinkOpInput').addEventListener('input', e => {
-            config.linkOpacity = parseFloat(e.target.value);
-            document.getElementById('LinkOpVal').innerText = config.linkOpacity;
+        // === UI 绑定（bindUI 批量） ===
+        bindUI(config, [
+            ['CountInput',    'count',       'int',   'CountVal'],
+            ['SizeInput',     'size',        'float', 'SizeVal'],
+            ['SpeedInput',    'speed',       'float', 'SpeedVal'],
+            ['LinkDistInput', 'linkDist',    'int',   'LinkDistVal'],
+            ['ColorInput',    'color'],
+            ['LinkOpInput',   'linkOpacity', 'float', 'LinkOpVal'],
+        ], {
+            onChange: (_, key) => {
+                if (key === 'count') initParticles();
+            }
         });
     </script>
 </body>

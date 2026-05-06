@@ -4,7 +4,7 @@
 
 1. 复制下方「Prompt」部分
 2. 把 `[在这里描述你要的效果]` 替换成你的需求描述
-3. 连同本文件一起发给 AI
+3. 连同 `GUIDE.md` 一起发给 AI
 4. AI 会返回一个完整的 `effects/xxx.html` 文件
 5. 把文件保存到 `effects/` 目录
 6. 在 `index.html` 里加一个卡片链接
@@ -24,16 +24,16 @@
 
 请先阅读以下两个文件，严格按照其中的模板和规则生成代码：
 
-1. `SKILL.md` — 模板和开发规范（必须严格遵循）
-2. `effects/particle-field.html` — 参考实例（结构与此文件一致）
+1. `GUIDE.md` — 模板和开发规范（必须严格遵循）
+2. `effects/text-animator.html` — 标准 Canvas 效果参考实例
 
 ## 输出要求
 
 - 只输出一个完整的 HTML 文件内容，文件名为 `effects/[效果名].html`
 - 不要修改任何 shared/ 下的文件
 - 不要解释代码，直接输出文件内容
-- 代码中用 `█ YOUR` 注释标注你自定义的部分
 - 所有参数都要有对应的滑块/颜色选择器，并绑定到 config 对象
+- 使用 bindUI() 批量绑定控件，不要手写 addEventListener
 - 效果必须能在浏览器中直接预览、调参、导出（MP4/WebM/PNG）
 ```
 
@@ -45,5 +45,5 @@
 
 | 文件 | 作用 |
 |---|---|
-| `SKILL.md` | 模板、API 文档、约束规则 |
-| `effects/particle-field.html` | 实际可运行的参考例子 |
+| `GUIDE.md` | 模板、API 文档、约束规则 |
+| `effects/text-animator.html` | 标准 Canvas 效果参考（含字体选择器、bindUI、动画循环） |

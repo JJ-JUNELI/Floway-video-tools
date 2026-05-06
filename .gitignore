@@ -1,6 +1,3 @@
 .screenshot/
 .sisyphus/
-demo.html
-demo-crop.html
-screenshot.js
-effects/test-border.html
+dev/

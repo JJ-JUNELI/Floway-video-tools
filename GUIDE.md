@@ -304,6 +304,79 @@ function updateSVG(timeOverride = null) {
 
 ---
 
+### 模板 C：Canvas + WebGL 合成（3D 卡片/复杂图表用）
+
+当效果需要 WebGL 渲染（如 3D 光照卡片、SDF 文字）时，使用此模式。核心思路：**创建 dummy canvas 给 `initEffect()`，然后手动将 `recorder.canvas` 重定向到 WebGL canvas**。
+
+```html
+<!-- 画布区域：WebGL canvas 做最终合成输出 -->
+<div class="preview-area">
+    <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
+    <canvas id="glCanvas" class="effect-canvas"></canvas>
+</div>
+```
+
+```javascript
+import { initEffect } from '../shared/controls.js';
+import { WebGLComposite } from '../shared/webgl-composite.js';
+
+const baseWidth = 1440, baseHeight = 1080, scale = 2;
+const fullW = baseWidth * scale, fullH = baseHeight * scale;
+
+// ① WebGL canvas（最终输出）
+const glCanvas = document.getElementById('glCanvas');
+glCanvas.width = fullW; glCanvas.height = fullH;
+const glComp = new WebGLComposite(glCanvas, baseWidth, baseHeight);
+
+// ② 离屏 2D canvas（绘制卡片内容）
+const offscreen = document.createElement('canvas');
+offscreen.width = fullW; offscreen.height = fullH;
+const ctx = offscreen.getContext('2d', { alpha: true });
+ctx.scale(scale, scale);
+
+// ③ 离屏 2D canvas（绘制背景）
+const bgOffscreen = document.createElement('canvas');
+bgOffscreen.width = fullW; bgOffscreen.height = fullH;
+const bgCtx = bgOffscreen.getContext('2d', { alpha: true });
+bgCtx.scale(scale, scale);
+
+// ④ dummy canvas 给 initEffect（录制后重定向）
+const dummyCanvas = document.createElement('canvas');
+dummyCanvas.id = 'initDummy'; dummyCanvas.style.display = 'none';
+document.body.appendChild(dummyCanvas);
+
+const { bg, recorder, resetAnimStart, bindUI, ... } = initEffect({
+    canvasId: 'initDummy',
+    fileName: 'MyEffect',
+    baseWidth, baseHeight, scale,
+    defaultBgMode: 'transparent',
+    onFrame: drawFrame,
+});
+
+// ★ 关键：重定向 recorder 到 WebGL canvas ★
+recorder.canvas = glCanvas;
+
+function drawFrame(timeMs) {
+    // 1. 清屏 + 画背景到 bgOffscreen
+    bgCtx.clearRect(0, 0, baseWidth, baseHeight);
+    bg.draw(bgCtx, timeMs, recorder.isRecording, recorder.format);
+
+    // 2. 画业务内容到 offscreen
+    ctx.clearRect(0, 0, baseWidth, baseHeight);
+    // ... 你的渲染逻辑 ...
+
+    // 3. WebGL 合成（bg 底层 + 内容上层）
+    glComp.compose(bgOffscreen, offscreen, { /* 3D 变换参数 */ });
+}
+```
+
+**WebGL 合成模式要点：**
+- `initEffect()` 仍然是统一入口，保证 Background/Recorder/UI 面板的一致性
+- 录制时 Recorder 从 `glCanvas` 读取帧，**不是** dummy canvas
+- 离屏 canvas 必须手动 `ctx.scale(scale, scale)`，因为不由 `initEffect` 管理
+- 背景绘制需手动调用 `bg.draw()` 而非 `drawBg()`（`drawBg` 绑定到 dummy canvas 的 ctx）
+- 已在 `chart-fx`、`pie-chart`、`bar-chart`、`paper-chart` 中验证使用
+
 ## 参数面板 UI 组件
 
 所有样式由 `shared/base.css` 提供，直接用对应的 class：
