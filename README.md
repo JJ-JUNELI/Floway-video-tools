@@ -27,7 +27,7 @@
 python3 -m http.server 8080
 ```
 
-打开 `http://localhost:3000` 浏览效果。
+打开 `http://localhost:8000` 浏览效果。
 
 ## 技术栈
 

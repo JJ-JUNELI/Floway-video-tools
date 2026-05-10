@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Floway Media Tools</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <script src="shared/themes.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -855,7 +854,7 @@
         <!-- Filter Bar -->
         <div class="filter-bar" id="FilterTabs">
             <div class="filter-pills">
-                <button class="filter-pill active" data-filter="all">全部<span class="filter-pill-count" id="ToolCount">7</span></button>
+                <button class="filter-pill active" data-filter="all">全部<span class="filter-pill-count" id="ToolCount">8</span></button>
                 <button class="filter-pill" data-filter="text">文字类</button>
                 <button class="filter-pill" data-filter="visual">视觉类</button>
                 <button class="filter-pill" data-filter="chart">图表类</button>
@@ -1092,6 +1091,14 @@
         heroSearch.addEventListener('input', (e) => {
             const activeTab = document.querySelector('.filter-pill.active');
             filterCards(e.target.value, activeTab?.dataset.filter || 'all');
+        });
+
+        // ====== ⌘K / Ctrl+K shortcut ======
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                heroSearch.focus();
+            }
         });
 
         // Category Pills
