@@ -1180,13 +1180,20 @@ body.logo canvas {
     background: transparent !important;
     background-image: none !important;
     overflow: hidden !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 .preview-mode .sidebar,
-.preview-mode .sidebar-resize-handle {
+.preview-mode .sidebar-resize-handle,
+.preview-mode #RecIndicator {
     display: none !important;
 }
 .preview-mode canvas {
     width: 100% !important;
     height: 100% !important;
+    max-width: none !important;
     border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    object-fit: contain;
 }
