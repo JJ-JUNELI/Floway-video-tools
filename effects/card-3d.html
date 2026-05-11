@@ -382,68 +382,8 @@
                 </div>
             </div>
 
-            <!-- 入场动画 -->
-            <div class="control-group">
-                <div class="group-title"><span>🎬 入场动画</span><button class="btn btn-primary" style="width:auto; padding:4px 10px;" id="BtnPlay">▶ 播放</button></div>
-                <div class="sub-section ss-teal">
-                    <div class="sub-section-label">预设 & 曲线</div>
-                    <div class="sub-title"><span>启用入场动画</span><input type="checkbox" id="EntranceEnabled" checked></div>
-                    <div id="EntranceOpts">
-                        <div class="row stack" style="margin-top:4px"><div class="label-line"><span>预设动画</span></div>
-                            <select id="EntrancePreset">
-                                <option value="none">无</option>
-                                <option value="slideUp" selected>从下浮现</option>
-                                <option value="fadeIn">纯淡入</option>
-                                <option value="slideLeft">从右滑入</option>
-                                <option value="slideRight">从左滑入</option>
-                                <option value="zoomIn">缩放进入</option>
-                            </select></div>
-                        <div class="row" style="margin-top:6px">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>入场时长</span><span id="EntranceDurationVal">0.8s</span></div>
-                                <input type="range" id="EntranceDuration" min="0.1" max="3" step="0.1" value="0.8"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>入场曲线</span></div>
-                                <select id="EntranceEasing">
-                                    <option value="linear">线性</option>
-                                    <option value="easeIn">先慢后快</option>
-                                    <option value="easeOut" selected>先快后慢</option>
-                                    <option value="easeInOut">丝滑缓动</option>
-                                </select></div>
-                        </div>
-                    </div>
-                </div>
-                <div id="EntranceDetailOpts">
-                    <div class="sub-section ss-blue">
-                        <div class="sub-section-label">位置</div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>起始 X</span><span id="EntranceStartXVal">0</span></div>
-                                <input type="range" id="EntranceStartX" min="-3000" max="3000" step="10" value="0"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>起始 Y</span><span id="EntranceStartYVal">300</span></div>
-                                <input type="range" id="EntranceStartY" min="-3000" max="3000" step="10" value="300"></div>
-                        </div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>结束 X</span><span id="EntranceEndXVal">0</span></div>
-                                <input type="range" id="EntranceEndX" min="-3000" max="3000" step="10" value="0"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>结束 Y</span><span id="EntranceEndYVal">0</span></div>
-                                <input type="range" id="EntranceEndY" min="-3000" max="3000" step="10" value="0"></div>
-                        </div>
-                    </div>
-                    <div class="sub-section ss-green">
-                        <div class="sub-section-label">透明度 & 缩放</div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>起始透明度</span><span id="EntranceStartOpacityVal">0%</span></div>
-                                <input type="range" id="EntranceStartOpacity" min="0" max="100" step="5" value="0"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>结束透明度</span><span id="EntranceEndOpacityVal">100%</span></div>
-                                <input type="range" id="EntranceEndOpacity" min="0" max="100" step="5" value="100"></div>
-                        </div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>起始缩放</span><span id="EntranceStartScaleVal">100%</span></div>
-                                <input type="range" id="EntranceStartScale" min="0" max="500" step="5" value="100"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>结束缩放</span><span id="EntranceEndScaleVal">100%</span></div>
-                                <input type="range" id="EntranceEndScale" min="0" max="500" step="5" value="100"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- 入场动画（共享面板，含播放按钮 + 扩大范围） -->
+            <div data-shared-panel="entryAnimation"></div>
 
             <div id="shared-controls-placeholder"></div>
         </div>
@@ -491,6 +431,13 @@
             baseWidth, baseHeight, scale,
             defaultBgMode: 'transparent',
             onFrame: drawFrame,
+            sharedPanels: {
+                entryAnimation: {
+                    xyRange: [-3000, 3000],
+                    scaleRange: [0, 500],
+                    headerButton: { id: 'BtnPlay', label: '▶ 播放' },
+                },
+            },
         });
         recorder.canvas = glCanvas;
 
