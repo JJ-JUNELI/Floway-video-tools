@@ -1172,3 +1172,20 @@ body.logo canvas {
         border-top-color: var(--accent);
     }
 }
+
+/* ========================================
+   Preview Mode — iframe 嵌入预览
+   ======================================== */
+body.preview-mode {
+    background: transparent !important;
+    background-image: none !important;
+}
+body.preview-mode .sidebar,
+body.preview-mode .sidebar-resize-handle {
+    display: none !important;
+}
+body.preview-mode canvas {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+}

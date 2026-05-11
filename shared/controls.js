@@ -87,14 +87,18 @@ export function injectPanels(opts = {}) {
  * @returns {{ ctx, canvas, bg, recorder, baseWidth, baseHeight, scale, clearFrame, drawBg, startPreviewLoop, resetAnimStart }}
  */
 export function initEffect(opts) {
-    // 1. 注入面板 HTML
-    injectPanels(opts);
+    // 0. 预览模式检测
+    const isPreview = new URLSearchParams(window.location.search).has('preview');
+    if (isPreview) document.body.classList.add('preview-mode');
+
+    // 1. 注入面板 HTML（预览模式跳过）
+    if (!isPreview) injectPanels(opts);
 
     // 1.5 自定义下拉框增强
-    enhanceAllSelects();
+    if (!isPreview) enhanceAllSelects();
 
     // 1.6 侧边栏拖拽调节
-    initSidebarResize();
+    if (!isPreview) initSidebarResize();
 
     // 2. Canvas 初始化
     const baseWidth = opts.baseWidth || 1440;
@@ -119,18 +123,20 @@ export function initEffect(opts) {
         scaleFactor: scale,
     });
 
-    // 4. Recorder
-    const recorder = new Recorder({
-        canvas,
-        onFrame: opts.onFrame,
-        fileName: opts.fileName || 'Effect',
-        width: baseWidth * scale,
-        height: baseHeight * scale,
-        useRealtimeWebm: opts.useRealtimeWebm || false,
-        useRafForFrames: opts.useRafForFrames || false,
-        useManualWebmFrames: opts.useManualWebmFrames || false,
-        encodeQueueMax: opts.encodeQueueMax || 2,
-    });
+    // 4. Recorder（预览模式用空桩）
+    const recorder = isPreview
+        ? { isRecording: false, format: 'png_seq' }
+        : new Recorder({
+            canvas,
+            onFrame: opts.onFrame,
+            fileName: opts.fileName || 'Effect',
+            width: baseWidth * scale,
+            height: baseHeight * scale,
+            useRealtimeWebm: opts.useRealtimeWebm || false,
+            useRafForFrames: opts.useRafForFrames || false,
+            useManualWebmFrames: opts.useManualWebmFrames || false,
+            encodeQueueMax: opts.encodeQueueMax || 2,
+        });
 
     // 5. 动画时间
     let animStartTime = performance.now();

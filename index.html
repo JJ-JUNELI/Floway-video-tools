@@ -328,7 +328,7 @@
             background: linear-gradient(137deg, rgba(17,18,20,0.80) 0%, rgba(12,13,15,0.94) 100%);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            padding: 36px 28px 28px;
+            padding: 0;
             text-align: center;
             transition: all 0.25s ease;
             cursor: pointer;
@@ -339,7 +339,21 @@
             -webkit-backdrop-filter: blur(10px);
             position: relative;
             text-decoration: none;
+            overflow: hidden;
             opacity: 0; transform: translateY(12px);
+        }
+        .featured-card .preview-frame {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            border: none;
+            pointer-events: none;
+            display: block;
+            background: #0a0a0f;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+        .featured-card-body {
+            padding: 20px 24px 24px;
+            width: 100%;
         }
         .featured-card.visible {
             opacity: 1; transform: translateY(0);
@@ -368,14 +382,6 @@
         }
         .featured-card:hover::before { opacity: 1; }
 
-        .featured-card-icon {
-            width: 96px; height: 96px;
-            border-radius: 24px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 42px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
         .featured-card-title {
             font-size: 17px;
             font-weight: 700;
@@ -389,25 +395,6 @@
             margin-bottom: 20px;
             flex: 1;
         }
-        .featured-author {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .author-avatar {
-            width: 24px; height: 24px;
-            border-radius: 50%;
-            background: var(--border);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 10px;
-            color: var(--text-muted);
-        }
-        .author-name {
-            font-size: 12.5px;
-            color: var(--text-secondary);
-        }
-
         .btn-install {
             display: inline-flex;
             align-items: center;
@@ -427,7 +414,6 @@
             border-color: var(--border-strong);
             color: var(--accent);
         }
-        .install-icon { font-size: 14px; }
 
         .card-tags {
             display: flex;
@@ -805,47 +791,38 @@
 
             <div class="featured-grid">
                 <a href="effects/chart-fx.html" class="featured-card" data-category="chart" data-name="图表 折线图 纸张 赛博 WebGL 3D 漂浮 数据可视化">
-                    <div class="featured-card-icon" style="background:linear-gradient(135deg,#1a1a2e,#16213e)">📈</div>
-                    <div class="featured-card-title">图表效果</div>
-                    <p class="featured-card-desc">双风格动态折线图生成器。纸张模式：噪声纹理+手绘线条。赛博模式：暗色卡片+发光曲线。WebGL 3D 漂浮合成。</p>
-                    <div class="featured-author">
-                        <div class="author-avatar">F</div>
-                        <span class="author-name">Floway Team</span>
-                    </div>
-                    <button class="btn-install"><span class="install-icon">↓</span> 打开工具</button>
-                    <div class="card-tags">
-                        <span class="tag-pill">v3.0</span>
-                        <span class="tag-pill">热门</span>
+                    <iframe class="preview-frame" src="effects/chart-fx.html?preview" loading="lazy" tabindex="-1"></iframe>
+                    <div class="featured-card-body">
+                        <div class="featured-card-title">图表效果</div>
+                        <p class="featured-card-desc">双风格动态折线图生成器。纸张模式：噪声纹理+手绘线条。赛博模式：暗色卡片+发光曲线。</p>
+                        <div class="card-tags">
+                            <span class="tag-pill">v3.0</span>
+                            <span class="tag-pill">热门</span>
+                        </div>
                     </div>
                 </a>
 
                 <a href="effects/text-animator.html" class="featured-card" data-category="text" data-name="文字动效 文字 标题 动画 VP9 录制 超采样 阴影 渐变 PNG MP4">
-                    <div class="featured-card-icon" style="background:linear-gradient(135deg,#0f0c29,#302b63,#24243e)">✨</div>
-                    <div class="featured-card-title">文字动效</div>
-                    <p class="featured-card-desc">科技感标题动画引擎。支持 VP9 录制、2x 超采样、工业风阴影、渐变颜色、PNG 序列及 MP4 导出。</p>
-                    <div class="featured-author">
-                        <div class="author-avatar">F</div>
-                        <span class="author-name">Floway Team</span>
-                    </div>
-                    <button class="btn-install"><span class="install-icon">↓</span> 打开工具</button>
-                    <div class="card-tags">
-                        <span class="tag-pill">v60.6</span>
-                        <span class="tag-pill">热门</span>
+                    <iframe class="preview-frame" src="effects/text-animator.html?preview" loading="lazy" tabindex="-1"></iframe>
+                    <div class="featured-card-body">
+                        <div class="featured-card-title">文字动效</div>
+                        <p class="featured-card-desc">科技感标题动画引擎。支持 VP9 录制、2x 超采样、渐变颜色、PNG 序列及 MP4 导出。</p>
+                        <div class="card-tags">
+                            <span class="tag-pill">v60.6</span>
+                            <span class="tag-pill">热门</span>
+                        </div>
                     </div>
                 </a>
 
                 <a href="effects/stack-scan.html" class="featured-card" data-category="text" data-name="堆叠扫描 赛博朋克 文字 扫描 MP4 PNG">
-                    <div class="featured-card-icon" style="background:linear-gradient(135deg,#0d0d0d,#1a1a2e)">📠</div>
-                    <div class="featured-card-title">堆叠扫描</div>
-                    <p class="featured-card-desc">赛博朋克风格堆叠扫描文字。支持 25Mbps MP4/PNG 序列导出、多字体斜体、透明度延迟及防掉帧渲染。</p>
-                    <div class="featured-author">
-                        <div class="author-avatar">F</div>
-                        <span class="author-name">Floway Team</span>
-                    </div>
-                    <button class="btn-install"><span class="install-icon">↓</span> 打开工具</button>
-                    <div class="card-tags">
-                        <span class="tag-pill">v19.4</span>
-                        <span class="tag-pill">热门</span>
+                    <iframe class="preview-frame" src="effects/stack-scan.html?preview" loading="lazy" tabindex="-1"></iframe>
+                    <div class="featured-card-body">
+                        <div class="featured-card-title">堆叠扫描</div>
+                        <p class="featured-card-desc">赛博朋克风格堆叠扫描文字。支持 MP4/PNG 序列导出、多字体及防掉帧渲染。</p>
+                        <div class="card-tags">
+                            <span class="tag-pill">v19.4</span>
+                            <span class="tag-pill">热门</span>
+                        </div>
                     </div>
                 </a>
             </div>
