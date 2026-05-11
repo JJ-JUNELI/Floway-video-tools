@@ -229,14 +229,20 @@ export function initEffect(opts) {
         injectPanels(opts);
     }
 
-    // 1.5 自定义下拉框增强
+    // 1.5 快速预设面板
+    if (!isPreview && opts.presets) injectPresetPanel(opts.presets);
+
+    // 1.6 自定义下拉框增强
     if (!isPreview) enhanceAllSelects();
 
-    // 1.6 侧边栏拖拽调节
+    // 1.7 侧边栏拖拽调节
     if (!isPreview) initSidebarResize();
 
-    // 1.7 可折叠分组
+    // 1.8 可折叠分组
     if (!isPreview) initCollapsibleGroups();
+
+    // 1.9 简洁/完整模式切换
+    if (!isPreview) initSimpleMode();
 
     // 2. Canvas 初始化（预览模式降低分辨率）
     const baseWidth = opts.baseWidth || 1440;
@@ -511,5 +517,70 @@ export function initSidebarResize() {
 
         document.addEventListener('mousemove', onMove);
         document.addEventListener('mouseup', onUp);
+    });
+}
+
+// ========== 简洁 / 完整模式切换 ==========
+
+const SIMPLE_MODE_KEY = 'floway-simple-mode';
+
+export function initSimpleMode() {
+    const container = document.querySelector('.controls-container');
+    const headerRight = document.querySelector('.sidebar-header > div:last-child');
+    if (!container || !headerRight) return;
+
+    const isSimple = localStorage.getItem(SIMPLE_MODE_KEY) !== 'false';
+    if (isSimple) container.classList.add('simple-mode');
+
+    const btn = document.createElement('button');
+    btn.className = 'btn-mode-toggle' + (isSimple ? ' is-simple' : '');
+    btn.title = isSimple ? '切换到完整模式' : '切换到简洁模式';
+    btn.textContent = isSimple ? '简洁' : '完整';
+
+    btn.addEventListener('click', () => {
+        const nowSimple = container.classList.toggle('simple-mode');
+        btn.textContent = nowSimple ? '简洁' : '完整';
+        btn.title = nowSimple ? '切换到完整模式' : '切换到简洁模式';
+        btn.classList.toggle('is-simple', nowSimple);
+        localStorage.setItem(SIMPLE_MODE_KEY, String(nowSimple));
+    });
+
+    headerRight.prepend(btn);
+}
+
+// ========== 快速预设面板 ==========
+
+/**
+ * 在 .controls-container 顶部注入预设按钮面板。
+ * @param {Array<{label:string, id:string, apply:Function}>} presets
+ */
+export function injectPresetPanel(presets) {
+    if (!presets || !presets.length) return;
+    const container = document.querySelector('.controls-container');
+    if (!container) return;
+
+    const btns = presets.map(p =>
+        `<button class="btn-preset" data-preset="${p.id}">${p.label}</button>`
+    ).join('');
+
+    const html = `
+        <div class="control-group preset-panel" data-basic>
+            <div class="group-title"><span>🎨 快速预设</span></div>
+            <div class="group-content">
+                <div class="preset-buttons">${btns}</div>
+            </div>
+        </div>`;
+
+    container.insertAdjacentHTML('afterbegin', html);
+
+    const panel = container.querySelector('.preset-panel');
+    panel.querySelectorAll('.btn-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const preset = presets.find(p => p.id === btn.dataset.preset);
+            if (!preset) return;
+            preset.apply();
+            panel.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
     });
 }

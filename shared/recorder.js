@@ -62,6 +62,12 @@ export class Recorder {
     }
 
     _loadLibs() {
+        if (typeof VideoEncoder === 'undefined') {
+            const mp4Opt = this.exportSelect.querySelector('option[value="mp4"]');
+            if (mp4Opt) { mp4Opt.disabled = true; mp4Opt.text += ' (需要 Chrome/Edge)'; }
+            if (this.exportSelect.value === 'mp4') this.exportSelect.value = 'webm';
+        }
+
         setTimeout(() => {
             if (window.Mp4Muxer && window.Mp4Muxer.Muxer) {
                 window.Mp4MuxerLib = { Muxer: window.Mp4Muxer.Muxer, ArrayBufferTarget: window.Mp4Muxer.ArrayBufferTarget };

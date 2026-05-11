@@ -875,6 +875,58 @@ body.logo canvas {
 .control-group.collapsed .collapse-arrow { transform: rotate(-90deg); }
 
 /* ========================================
+   Simple Mode — 隐藏非基础参数组
+   ======================================== */
+
+.simple-mode .control-group:not([data-basic]) { display: none; }
+
+/* 模式切换按钮 */
+.btn-mode-toggle {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text-sub);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+.btn-mode-toggle:hover { color: var(--accent); border-color: var(--accent); }
+.btn-mode-toggle.is-simple { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+/* ========================================
+   Preset Panel
+   ======================================== */
+
+.preset-panel .group-content { padding-top: 4px; }
+.preset-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.btn-preset {
+    flex: 1 1 auto;
+    min-width: 60px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text-sub);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+.btn-preset:hover { border-color: var(--accent); color: var(--accent); }
+.btn-preset.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* ========================================
    Keyframes
    ======================================== */
 
@@ -895,18 +947,21 @@ body.logo canvas {
     .sidebar {
         width: 100%;
         min-width: 0;
-        height: 50%;
+        height: auto;
+        max-height: 60vh;
         margin: 10px 10px 0 10px;
         border-radius: 12px;
         order: 2;
+        overflow-y: auto;
     }
     .preview-area {
         width: 100%;
-        height: 42%;
+        height: 36vh;
         padding: 8px;
         margin: 0;
         border-radius: 0;
         order: 1;
+        flex-shrink: 0;
     }
     canvas, #mainSvg {
         max-width: 100%;
@@ -914,8 +969,10 @@ body.logo canvas {
         width: auto;
         height: auto;
     }
-    .sidebar-header { padding: 14px 16px; }
-    .controls-container { padding: 12px; }
+    .sidebar-header { padding: 12px 14px; }
+    .controls-container { padding: 10px; }
+    .group-title { min-height: 36px; }
+    .btn-record, .btn-play { min-height: 40px; }
 }
 
 /* ========================================
