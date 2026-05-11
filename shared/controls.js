@@ -9,6 +9,138 @@ import { lerp, hexToRgba, getLightness, clamp, easeLinear, easeInCubic, easeOutC
 import { getTheme } from './themes.js';
 import { enhanceAllSelects } from './custom-select.js';
 
+// ========== 共享面板构建器 ==========
+
+/**
+ * 共享面板注册表：name -> (cfg) => html
+ * 每个 builder 接收单个效果的覆盖配置，返回完整 `<div class="control-group">...</div>` HTML。
+ *
+ * 用法（effect HTML）：
+ *   <div data-shared-panel="entryAnimation"></div>
+ *
+ * 用法（initEffect opts）：
+ *   sharedPanels: {
+ *     entryAnimation: { xyRange: [-3000,3000], scaleRange: [0,500], headerButton: {id:'BtnPlay', label:'▶ 播放'}, extras: ['lineDelay'] }
+ *   }
+ */
+const SHARED_PANELS = {
+    entryAnimation: buildEntryAnimationPanel,
+};
+
+function buildEntryAnimationPanel(cfg = {}) {
+    const collapsible = cfg.collapsible !== false;
+    const defaultCollapsed = cfg.defaultCollapsed !== false;
+    const [xMin, xMax] = cfg.xyRange || [-1000, 1000];
+    const [sMin, sMax] = cfg.scaleRange || [0, 200];
+    const startY = cfg.startY != null ? cfg.startY : 300;
+    const headerBtn = cfg.headerButton
+        ? `<button class="btn btn-primary" style="width:auto; padding:4px 10px;" id="${cfg.headerButton.id}">${cfg.headerButton.label}</button>`
+        : '';
+    const extras = (cfg.extras || []).map(name => EXTRA_BLOCKS[name] || '').join('');
+
+    const classes = ['control-group'];
+    if (collapsible) classes.push('collapsible');
+    const attrs = defaultCollapsed && collapsible ? ' data-default-collapsed' : '';
+
+    return `
+        <div class="${classes.join(' ')}"${attrs}>
+            <div class="group-title"><span>🎬 入场动画</span>${headerBtn}</div>
+            <div class="sub-section ss-teal">
+                <div class="sub-section-label">预设 & 曲线</div>
+                <div class="sub-title"><span>启用入场动画</span><input type="checkbox" id="EntranceEnabled" checked></div>
+                <div id="EntranceOpts">
+                    <div class="row stack" style="margin-top:4px"><div class="label-line"><span>预设动画</span></div>
+                        <select id="EntrancePreset">
+                            <option value="none">无</option>
+                            <option value="slideUp" selected>从下浮现</option>
+                            <option value="fadeIn">纯淡入</option>
+                            <option value="slideLeft">从右滑入</option>
+                            <option value="slideRight">从左滑入</option>
+                            <option value="zoomIn">缩放进入</option>
+                        </select></div>
+                    <div class="row" style="margin-top:6px">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>入场时长</span><span id="EntranceDurationVal">0.8s</span></div>
+                            <input type="range" id="EntranceDuration" min="0.1" max="3" step="0.1" value="0.8"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>入场曲线</span></div>
+                            <select id="EntranceEasing">
+                                <option value="linear">线性</option>
+                                <option value="easeIn">先慢后快</option>
+                                <option value="easeOut" selected>先快后慢</option>
+                                <option value="easeInOut">丝滑缓动</option>
+                            </select></div>
+                    </div>
+                </div>
+            </div>
+            <div id="EntranceDetailOpts">
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">位置</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>起始 X</span><span id="EntranceStartXVal">0</span></div>
+                            <input type="range" id="EntranceStartX" min="${xMin}" max="${xMax}" step="10" value="0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>起始 Y</span><span id="EntranceStartYVal">${startY}</span></div>
+                            <input type="range" id="EntranceStartY" min="${xMin}" max="${xMax}" step="10" value="${startY}"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>结束 X</span><span id="EntranceEndXVal">0</span></div>
+                            <input type="range" id="EntranceEndX" min="${xMin}" max="${xMax}" step="10" value="0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>结束 Y</span><span id="EntranceEndYVal">0</span></div>
+                            <input type="range" id="EntranceEndY" min="${xMin}" max="${xMax}" step="10" value="0"></div>
+                    </div>
+                </div>
+                <div class="sub-section ss-green">
+                    <div class="sub-section-label">透明度 & 缩放</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>起始透明度</span><span id="EntranceStartOpacityVal">0%</span></div>
+                            <input type="range" id="EntranceStartOpacity" min="0" max="100" step="5" value="0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>结束透明度</span><span id="EntranceEndOpacityVal">100%</span></div>
+                            <input type="range" id="EntranceEndOpacity" min="0" max="100" step="5" value="100"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>起始缩放</span><span id="EntranceStartScaleVal">100%</span></div>
+                            <input type="range" id="EntranceStartScale" min="${sMin}" max="${sMax}" step="5" value="100"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>结束缩放</span><span id="EntranceEndScaleVal">100%</span></div>
+                            <input type="range" id="EntranceEndScale" min="${sMin}" max="${sMax}" step="5" value="100"></div>
+                    </div>
+                </div>
+                ${extras}
+            </div>
+        </div>
+    `;
+}
+
+// 可选的附加子区块（按效果叠加，例如 chart-fx 的「画线延迟」）
+const EXTRA_BLOCKS = {
+    lineDelay: `
+        <div class="sub-section ss-amber">
+            <div class="sub-section-label">时间控制</div>
+            <div class="row stack"><div class="label-line"><span>画线延迟</span><span id="LineDelayVal">0.3s</span></div>
+                <input type="range" id="LineDelay" min="0" max="3" step="0.1" value="0.3"></div>
+        </div>
+    `,
+};
+
+/**
+ * 扫描 `[data-shared-panel]` 占位符，按 opts.sharedPanels[name] 配置注入面板 HTML。
+ * 同一面板在同一效果中只允许出现一次（重复 ID 会冲突）。
+ */
+export function injectSharedPanels(opts = {}) {
+    const placeholders = document.querySelectorAll('[data-shared-panel]');
+    const cfgMap = opts.sharedPanels || {};
+    placeholders.forEach(ph => {
+        const name = ph.getAttribute('data-shared-panel');
+        const builder = SHARED_PANELS[name];
+        if (!builder) {
+            console.warn(`[Floway] 未知共享面板: ${name}`);
+            return;
+        }
+        const html = builder(cfgMap[name] || {});
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        // 将 builder 返回的根节点替换占位符
+        ph.replaceWith(...wrapper.childNodes);
+    });
+}
+
 // ========== 面板 HTML 注入 ==========
 
 export function injectPanels(opts = {}) {
@@ -91,14 +223,20 @@ export function initEffect(opts) {
     const isPreview = new URLSearchParams(window.location.search).has('preview');
     if (isPreview) document.body.classList.add('preview-mode');
 
-    // 1. 注入面板 HTML（预览模式跳过）
-    if (!isPreview) injectPanels(opts);
+    // 1. 注入共享面板 + 背景/导出面板（预览模式跳过）
+    if (!isPreview) {
+        injectSharedPanels(opts);
+        injectPanels(opts);
+    }
 
     // 1.5 自定义下拉框增强
     if (!isPreview) enhanceAllSelects();
 
     // 1.6 侧边栏拖拽调节
     if (!isPreview) initSidebarResize();
+
+    // 1.7 可折叠分组
+    if (!isPreview) initCollapsibleGroups();
 
     // 2. Canvas 初始化（预览模式降低分辨率）
     const baseWidth = opts.baseWidth || 1440;
@@ -241,6 +379,82 @@ export function initEffect(opts) {
         bindUI,
         applyVignetteMask, calcGradCoords,
     };
+}
+
+// ========== 可折叠分组 ==========
+
+/**
+ * 扫描所有 `.control-group.collapsible`：
+ *  - 把 `.group-title` 之后的兄弟节点包进 `.group-content`（若尚未包裹）
+ *  - 给 `.group-title` 末尾追加 `<span class="collapse-arrow">▼</span>`（若没有）
+ *  - `data-default-collapsed` 决定初始是否折叠
+ *  - 点击标题切换 `.collapsed`
+ *  - localStorage 持久化每个分组的折叠状态（按 title 文本作为 key）
+ */
+const COLLAPSE_STATE_KEY = 'floway-collapsed-groups';
+
+function readCollapseState() {
+    try { return JSON.parse(localStorage.getItem(COLLAPSE_STATE_KEY) || '{}'); }
+    catch { return {}; }
+}
+
+function writeCollapseState(state) {
+    try { localStorage.setItem(COLLAPSE_STATE_KEY, JSON.stringify(state)); } catch {}
+}
+
+export function initCollapsibleGroups(root = document) {
+    const groups = root.querySelectorAll('.control-group.collapsible');
+    if (!groups.length) return;
+
+    const state = readCollapseState();
+
+    groups.forEach(group => {
+        const title = group.querySelector(':scope > .group-title');
+        if (!title) return;
+
+        // 1) 把标题后的兄弟节点包进 .group-content
+        let content = group.querySelector(':scope > .group-content');
+        if (!content) {
+            content = document.createElement('div');
+            content.className = 'group-content';
+            const after = [];
+            let node = title.nextSibling;
+            while (node) {
+                after.push(node);
+                node = node.nextSibling;
+            }
+            after.forEach(n => content.appendChild(n));
+            group.appendChild(content);
+        }
+
+        // 2) 提取分组标识（用首个 span 文本，避免包含按钮/箭头）
+        const labelSpan = title.querySelector('span');
+        const key = (labelSpan ? labelSpan.textContent : title.textContent || '').trim();
+
+        // 3) 追加折叠箭头
+        if (!title.querySelector('.collapse-arrow')) {
+            const arrow = document.createElement('span');
+            arrow.className = 'collapse-arrow';
+            arrow.textContent = '▼';
+            title.appendChild(arrow);
+        }
+
+        const persisted = state[key];
+        const defaultCollapsed = group.hasAttribute('data-default-collapsed');
+        if (persisted === true || (persisted === undefined && defaultCollapsed)) {
+            group.classList.add('collapsed');
+        }
+
+        // 5) 点击切换
+        title.addEventListener('click', (e) => {
+            // 避免点击标题内的按钮（如 ▶ 播放）触发折叠
+            if (e.target.closest('button, input, select')) return;
+            const collapsed = group.classList.toggle('collapsed');
+            const s = readCollapseState();
+            s[key] = collapsed;
+            writeCollapseState(s);
+        });
+    });
 }
 
 // ========== 侧边栏可拖拽调节宽度 ==========
