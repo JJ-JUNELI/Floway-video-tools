@@ -100,10 +100,10 @@ export function initEffect(opts) {
     // 1.6 侧边栏拖拽调节
     if (!isPreview) initSidebarResize();
 
-    // 2. Canvas 初始化
+    // 2. Canvas 初始化（预览模式降低分辨率）
     const baseWidth = opts.baseWidth || 1440;
     const baseHeight = opts.baseHeight || 1080;
-    const scale = opts.scale || 2;
+    const scale = isPreview ? 1 : (opts.scale || 2);
     const canvas = document.getElementById(opts.canvasId || 'mainCanvas');
     canvas.width = baseWidth * scale;
     canvas.height = baseHeight * scale;
