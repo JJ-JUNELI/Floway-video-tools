@@ -52,6 +52,26 @@ index.html 精选区使用 iframe 嵌入效果的实时动画预览。通过 URL
 - [ ] `drawMediaContain` 函数名叫反了（实际是 cover 行为），目前只内部使用
 - [ ] `drawTextWrapped` 按字符拆分，英文会断词，但项目定位中文场景
 
+## 面板结构问题
+
+### 参数组织（高优先）
+- [ ] **参数组太多且不可折叠**：chart-fx、bar-chart 各 11 组，用户要一直滚。base.css 有 `.collapsible` 折叠 CSS 但所有效果都没用。建议不常调的组（入场动画、卡片漂浮、网格与坐标）默认折叠
+- [ ] **大量重复面板未抽共享**：入场动画面板在 4 个效果里完全一样（14 个控件×4），标题设置在 3 个图表效果里几乎一样，卡片漂浮同理。应像"场景背景"和"导出"一样提取到 controls.js 的 injectPanels()
+
+### ID 命名与标题规范（中优先）
+- [ ] **ID 命名规则不统一**：slider 有的用 `XxxInput` 后缀（SizeInput、SpeedInput），有的不加（TitleSize、AnimDuration）。建议统一为 `Xxx` 做控件 ID、`XxxVal` 做显示值
+- [ ] **分组标题中英混用**：有的纯中文（"粒子参数"），有的中英混合（"核心素材 (Logo)"）。建议统一用中文
+- [ ] **分组顺序无统一逻辑**：建议统一为 模式/内容 → 样式 → 排版位置 → 动画 → 共享面板（背景+导出）
+
+### 面板设计规范（中优先）
+- [ ] **透明度值域不统一**：chart 系列用 0-100，stack-scan/text-animator 用 0-1，pie-chart SliceOpacity 用 10-100。建议统一 0-100
+- [ ] **row/stack 布局混用**：同类控件在不同效果里方向不一致。建议 slider 统一 stack（标签上滑条下），select/color/checkbox 用 row（横排更紧凑）
+- [ ] **slider 数值没有单位**：用户不知道数字代表 px、%、° 还是 s。建议字号加 px，角度加 °，透明度加 %，时长加 s
+- [ ] **checkbox 无语义区分**：所有 checkbox 渲染为 toggle switch，chart-fx 有 14 个全长一样。建议功能开关用 toggle，模式选择改 select 或 segmented control
+
+### 数据组件化（低优先）
+- [ ] **数据表格结构不统一**：chart-fx、bar-chart、pie-chart 各自实现数据表格，交互方式不同。建议抽成共享组件
+
 ## 本地开发
 ```bash
 ./start.sh          # 启动 HTTP 服务器（端口 8000）
