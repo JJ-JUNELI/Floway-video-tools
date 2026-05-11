@@ -1179,6 +1179,7 @@ body.logo canvas {
 .preview-mode {
     background: transparent !important;
     background-image: none !important;
+    overflow: hidden !important;
 }
 .preview-mode .sidebar,
 .preview-mode .sidebar-resize-handle {
