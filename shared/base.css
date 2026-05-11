@@ -1185,10 +1185,12 @@ body.logo canvas {
 }
 .preview-mode .sidebar,
 .preview-mode .sidebar-resize-handle,
-.preview-mode #RecIndicator {
+.preview-mode #RecIndicator,
+.preview-mode #DebugLog {
     display: none !important;
 }
-.preview-mode canvas {
+.preview-mode canvas,
+.preview-mode #mainSvg {
     width: 100% !important;
     height: 100% !important;
     max-width: none !important;
@@ -1196,4 +1198,7 @@ body.logo canvas {
     border: none !important;
     box-shadow: none !important;
     object-fit: contain;
+}
+.preview-mode .preview-area {
+    overflow: hidden !important;
 }
