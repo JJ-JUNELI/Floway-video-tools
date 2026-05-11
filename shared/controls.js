@@ -403,7 +403,7 @@ function writeCollapseState(state) {
 }
 
 export function initCollapsibleGroups(root = document) {
-    const groups = root.querySelectorAll('.control-group.collapsible');
+    const groups = root.querySelectorAll('.control-group');
     if (!groups.length) return;
 
     const state = readCollapseState();
