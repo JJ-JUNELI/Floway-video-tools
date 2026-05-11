@@ -36,9 +36,14 @@
    Body + Layout
    ======================================== */
 
+html {
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
 body {
     margin: 0;
-    height: 100vh;
+    height: 100dvh;
     display: flex;
     background-color: var(--bg-dark);
     font-family: "Noto Sans SC", -apple-system, sans-serif;
@@ -944,13 +949,13 @@ body.logo canvas {
    Mobile Responsive
    ======================================== */
 
-@media (max-width: 900px) {
-    body { flex-direction: column; overflow: auto; height: auto; min-height: 100vh; }
+@media (max-width: 1100px) {
+    body { flex-direction: column; overflow: auto; height: auto; min-height: 100dvh; }
     .sidebar {
         width: 100%;
         min-width: 0;
         height: auto;
-        max-height: 60vh;
+        max-height: 55vh;
         margin: 10px 10px 0 10px;
         border-radius: 12px;
         order: 2;
@@ -958,7 +963,7 @@ body.logo canvas {
     }
     .preview-area {
         width: 100%;
-        height: 36vh;
+        height: auto;
         padding: 8px;
         margin: 0;
         border-radius: 0;
@@ -966,9 +971,8 @@ body.logo canvas {
         flex-shrink: 0;
     }
     canvas, #mainSvg {
-        max-width: 100%;
-        max-height: 100%;
-        width: auto;
+        width: 100%;
+        max-height: 45vh;
         height: auto;
     }
     .sidebar-header { padding: 12px 14px; }
