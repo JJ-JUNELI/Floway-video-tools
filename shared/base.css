@@ -975,6 +975,16 @@ body.logo canvas {
     .btn-record, .btn-play { min-height: 40px; }
 }
 
+@media (max-width: 600px) {
+    .sidebar { max-height: 65vh; }
+    .sidebar-header { padding: 10px 12px; }
+    .sidebar-header .app-title { font-size: 13px; }
+    .controls-container { padding: 8px; }
+    .group-title { font-size: 13px; min-height: 40px; }
+    .btn-record, .btn-play, .btn-preset { min-height: 44px; font-size: 13px; }
+    .row label, .label-line span { font-size: 12px; }
+}
+
 /* ========================================
    ========================================
    LIGHT THEME
