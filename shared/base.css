@@ -1199,6 +1199,11 @@ body.logo canvas {
     box-shadow: none !important;
     object-fit: contain;
 }
+.preview-mode #mainSvg {
+    position: absolute !important;
+    inset: 0 !important;
+}
 .preview-mode .preview-area {
     overflow: hidden !important;
+    position: relative !important;
 }
