@@ -982,12 +982,11 @@ body.logo canvas {
         flex-shrink: 0;
         overflow: hidden;
     }
-    canvas, #mainSvg {
-        width: min(100%, calc(38vh * 4 / 3));
-        height: auto;
+    canvas, .effect-canvas, #mainSvg {
+        height: 38vh;
+        width: auto;
         aspect-ratio: 4 / 3;
         max-width: 100%;
-        max-height: 38vh;
     }
     .sidebar-header {
         padding: 12px 14px;
@@ -1025,7 +1024,7 @@ body.logo canvas {
         margin: 0;
         order: 2;
     }
-    canvas, #mainSvg { width: min(100%, calc(100dvh * 4 / 3)); height: auto; aspect-ratio: 4 / 3; max-width: 100%; max-height: 100%; }
+    canvas, .effect-canvas, #mainSvg { height: 100%; width: auto; aspect-ratio: 4 / 3; max-width: 100%; }
     .sidebar-header { padding: 10px 12px; flex-shrink: 0; }
     .group-title { min-height: 32px; font-size: 11px; }
     .data-table { font-size: 10px; }
