@@ -251,7 +251,6 @@ export function initEffect(opts) {
     const canvas = document.getElementById(opts.canvasId || 'mainCanvas');
     canvas.width = baseWidth * scale;
     canvas.height = baseHeight * scale;
-    canvas.style.width = '100%';
     canvas.style.maxWidth = '100%';
     const ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
     ctx.scale(scale, scale);
