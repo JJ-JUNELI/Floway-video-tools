@@ -476,15 +476,25 @@ export function initSidebarResize() {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
 
-    // 竖屏手机不应用保存宽度，让 CSS 媒体查询控制全宽
-    const isPortrait = window.matchMedia('(max-width: 1100px) and (orientation: portrait)').matches;
+    const mobileQuery = window.matchMedia('(max-width: 1100px)');
 
-    // 恢复上次宽度
-    const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
-    const initialW = (saved) ? parseInt(saved, 10) : SIDEBAR_DEFAULT;
-    if (!isPortrait && initialW >= SIDEBAR_MIN && initialW <= SIDEBAR_MAX) {
-        sidebar.style.width = initialW + 'px';
+    function applySavedWidth() {
+        if (mobileQuery.matches) {
+            // 移动布局：清除 inline，让 CSS 媒体查询控制宽度
+            sidebar.style.width = '';
+        } else {
+            const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+            const initialW = (saved) ? parseInt(saved, 10) : SIDEBAR_DEFAULT;
+            if (initialW >= SIDEBAR_MIN && initialW <= SIDEBAR_MAX) {
+                sidebar.style.width = initialW + 'px';
+            } else {
+                sidebar.style.width = '';
+            }
+        }
     }
+
+    applySavedWidth();
+    mobileQuery.addEventListener('change', applySavedWidth);
 
     // 创建拖拽手柄
     let handle = sidebar.querySelector('.sidebar-resize-handle');
