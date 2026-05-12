@@ -184,14 +184,14 @@
                 <div class="group-title">
                     <span>⚡ 动画控制</span>
                 </div>
-                <button id="BtnPlay" class="btn-play">▶ 播放</button>
-                <div class="row">
-                    <select id="AnimType">
+                <div class="row" style="align-items:center; gap:8px;">
+                    <select id="AnimType" style="flex:1;">
                         <option value="slideUp">从下浮现 (Slide Up)</option>
                         <option value="fade" selected>纯淡入 (Fade In)</option>
                         <option value="zoom">中心缩放 (Zoom In)</option>
                         <option value="none">无 (仅变化字距)</option>
                     </select>
+                    <button id="BtnPlay" class="btn-play" style="flex-shrink:0;">▶ 播放</button>
                 </div>
                 
                 <div class="anim-panel end">
