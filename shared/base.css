@@ -193,15 +193,14 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     text-transform: uppercase;
     margin-bottom: 14px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    /* 无底部 border，用间距分隔 */
+    gap: 6px;
     padding-bottom: 0;
     letter-spacing: 0.8px;
     padding-left: 10px;
-    /* 左侧彩色竖条 */
     border-left: 3px solid var(--accent);
 }
+.group-title > span:first-child { flex: 1; }
 
 .sub-title {
     font-size: 11px;
