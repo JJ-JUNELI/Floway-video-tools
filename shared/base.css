@@ -983,11 +983,11 @@ body.logo canvas {
         overflow: hidden;
     }
     canvas, .effect-canvas, #mainSvg {
-        max-height: calc(40vh - 16px);
-        width: calc((40vh - 16px) * 4 / 3);
-        max-width: 100%;
-        height: auto;
-        aspect-ratio: 4 / 3;
+        max-height: calc(40vh - 16px) !important;
+        width: calc((40vh - 16px) * 4 / 3) !important;
+        max-width: 100% !important;
+        height: auto !important;
+        aspect-ratio: 4 / 3 !important;
     }
     .sidebar-header {
         padding: 12px 14px;
@@ -1025,7 +1025,7 @@ body.logo canvas {
         margin: 0;
         order: 2;
     }
-    canvas, .effect-canvas, #mainSvg { height: 100%; width: auto; aspect-ratio: 4 / 3; max-width: 100%; }
+    canvas, .effect-canvas, #mainSvg { height: 100% !important; width: auto !important; aspect-ratio: 4 / 3 !important; max-width: 100% !important; }
     .sidebar-header { padding: 10px 12px; flex-shrink: 0; }
     .group-title { min-height: 32px; font-size: 11px; }
     .data-table { font-size: 10px; }
