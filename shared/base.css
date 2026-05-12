@@ -997,6 +997,7 @@ body.logo canvas {
     .btn-record, .btn-play { min-height: 40px; }
     .data-table { font-size: 10px; }
     .data-table th, .data-table td { padding: 3px 2px; }
+    .sidebar-resize-handle { display: none; }
 }
 
 /* 横屏：恢复左右布局，侧边栏 280px */

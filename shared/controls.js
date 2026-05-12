@@ -475,6 +475,7 @@ export function initSidebarResize() {
     if (!sidebar) return;
 
     const mobileQuery = window.matchMedia('(max-width: 1100px)');
+    const portraitQuery = window.matchMedia('(max-width: 1100px) and (orientation: portrait)');
 
     function applySavedWidth() {
         if (mobileQuery.matches) {
@@ -505,6 +506,7 @@ export function initSidebarResize() {
     let startX = 0, startWidth = 0;
 
     handle.addEventListener('mousedown', (e) => {
+        if (portraitQuery.matches) return;
         e.preventDefault();
         e.stopPropagation();
         startX = e.clientX;
