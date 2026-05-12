@@ -251,6 +251,8 @@ export function initEffect(opts) {
     const canvas = document.getElementById(opts.canvasId || 'mainCanvas');
     canvas.width = baseWidth * scale;
     canvas.height = baseHeight * scale;
+    canvas.style.width = '100%';
+    canvas.style.maxWidth = '100%';
     const ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
     ctx.scale(scale, scale);
 
@@ -466,9 +468,9 @@ export function initCollapsibleGroups(root = document) {
 // ========== 侧边栏可拖拽调节宽度 ==========
 
 const SIDEBAR_WIDTH_KEY = 'floway-sidebar-width';
-const SIDEBAR_DEFAULT = 440;
-const SIDEBAR_MIN = 280;
-const SIDEBAR_MAX = 700;
+const SIDEBAR_DEFAULT = 360;
+const SIDEBAR_MIN = 180;
+const SIDEBAR_MAX = 900;
 
 export function initSidebarResize() {
     const sidebar = document.querySelector('.sidebar');
