@@ -244,6 +244,9 @@ export function initEffect(opts) {
     // 1.9 简洁/完整模式切换
     if (!isPreview) initAdvancedSections();
 
+    // 1.10 顶部播放按钮（若效果有 #BtnPlay）
+    if (!isPreview) initHeaderPlayButton();
+
     // 2. Canvas 初始化（预览模式降低分辨率）
     const baseWidth = opts.baseWidth || 1440;
     const baseHeight = opts.baseHeight || 1080;
@@ -548,6 +551,22 @@ export function initAdvancedSections() {
         });
         section.before(btn);
     });
+}
+
+// ========== 顶部播放按钮（替换 sidebar-header 中的徽章） ==========
+
+export function initHeaderPlayButton() {
+    const realBtn = document.getElementById('BtnPlay');
+    if (!realBtn) return;
+    const badge = document.querySelector('.sidebar-header .version-badge');
+    if (!badge) return;
+
+    const headerBtn = document.createElement('button');
+    headerBtn.className = 'btn-play';
+    headerBtn.textContent = '▶ 播放';
+    headerBtn.title = '播放动画';
+    headerBtn.addEventListener('click', () => realBtn.click());
+    badge.replaceWith(headerBtn);
 }
 
 // ========== 快速预设面板 ==========
