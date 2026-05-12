@@ -34,7 +34,7 @@ function buildEntryAnimationPanel(cfg = {}) {
     const [sMin, sMax] = cfg.scaleRange || [0, 200];
     const startY = cfg.startY != null ? cfg.startY : 300;
     const headerBtn = cfg.headerButton
-        ? `<button class="btn btn-primary" style="width:auto; padding:4px 10px;" id="${cfg.headerButton.id}">${cfg.headerButton.label}</button>`
+        ? `<button class="btn-play" id="${cfg.headerButton.id}">${cfg.headerButton.label}</button>`
         : '';
     const extras = (cfg.extras || []).map(name => EXTRA_BLOCKS[name] || '').join('');
 
