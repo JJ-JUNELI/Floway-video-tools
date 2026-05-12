@@ -242,7 +242,7 @@ export function initEffect(opts) {
     if (!isPreview) initCollapsibleGroups();
 
     // 1.9 简洁/完整模式切换
-    if (!isPreview) initSimpleMode();
+    if (!isPreview) initAdvancedSections();
 
     // 2. Canvas 初始化（预览模式降低分辨率）
     const baseWidth = opts.baseWidth || 1440;
@@ -537,30 +537,17 @@ export function initSidebarResize() {
 
 // ========== 简洁 / 完整模式切换 ==========
 
-const SIMPLE_MODE_KEY = 'floway-simple-mode';
-
-export function initSimpleMode() {
-    const container = document.querySelector('.controls-container');
-    const headerRight = document.querySelector('.sidebar-header > div:last-child');
-    if (!container || !headerRight) return;
-
-    const isSimple = localStorage.getItem(SIMPLE_MODE_KEY) !== 'false';
-    if (isSimple) container.classList.add('simple-mode');
-
-    const btn = document.createElement('button');
-    btn.className = 'btn-mode-toggle' + (isSimple ? ' is-simple' : '');
-    btn.title = isSimple ? '切换到完整模式' : '切换到简洁模式';
-    btn.textContent = isSimple ? '简洁' : '完整';
-
-    btn.addEventListener('click', () => {
-        const nowSimple = container.classList.toggle('simple-mode');
-        btn.textContent = nowSimple ? '简洁' : '完整';
-        btn.title = nowSimple ? '切换到完整模式' : '切换到简洁模式';
-        btn.classList.toggle('is-simple', nowSimple);
-        localStorage.setItem(SIMPLE_MODE_KEY, String(nowSimple));
+export function initAdvancedSections() {
+    document.querySelectorAll('.advanced-params').forEach(section => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-advanced-toggle';
+        btn.innerHTML = '<span class="adv-arrow">▶</span> 高级参数';
+        btn.addEventListener('click', () => {
+            const open = section.classList.toggle('open');
+            btn.classList.toggle('open', open);
+        });
+        section.before(btn);
     });
-
-    headerRight.prepend(btn);
 }
 
 // ========== 快速预设面板 ==========

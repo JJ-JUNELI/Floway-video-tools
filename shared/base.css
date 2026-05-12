@@ -882,25 +882,39 @@ body.logo canvas {
 .control-group.collapsed .collapse-arrow { transform: rotate(-90deg); }
 
 /* ========================================
-   Simple Mode — 隐藏非基础参数组
+   Advanced Params — 每个板块内的高级参数折叠
    ======================================== */
 
-.simple-mode .control-group:not([data-basic]) { display: none; }
-
-/* 模式切换按钮 */
-.btn-mode-toggle {
-    font-size: 11px;
-    padding: 3px 8px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--card-bg);
-    color: var(--text-sub);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.2s;
+.advanced-params {
+    display: none;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+    padding-top: 8px;
 }
-.btn-mode-toggle:hover { color: var(--accent); border-color: var(--accent); }
-.btn-mode-toggle.is-simple { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+.advanced-params.open { display: block; }
+
+.btn-advanced-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 2px;
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    font-size: 11px;
+    cursor: pointer;
+    text-align: left;
+    transition: color 0.15s;
+    margin-top: 4px;
+}
+.btn-advanced-toggle:hover { color: var(--accent); }
+.btn-advanced-toggle .adv-arrow {
+    font-size: 9px;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+.btn-advanced-toggle.open .adv-arrow { transform: rotate(90deg); }
 
 /* ========================================
    Preset Panel
