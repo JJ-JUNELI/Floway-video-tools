@@ -476,10 +476,13 @@ export function initSidebarResize() {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
 
+    // 竖屏手机不应用保存宽度，让 CSS 媒体查询控制全宽
+    const isPortrait = window.matchMedia('(max-width: 1100px) and (orientation: portrait)').matches;
+
     // 恢复上次宽度
     const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
     const initialW = (saved) ? parseInt(saved, 10) : SIDEBAR_DEFAULT;
-    if (initialW >= SIDEBAR_MIN && initialW <= SIDEBAR_MAX) {
+    if (!isPortrait && initialW >= SIDEBAR_MIN && initialW <= SIDEBAR_MAX) {
         sidebar.style.width = initialW + 'px';
     }
 
