@@ -950,7 +950,7 @@ body.logo canvas {
    ======================================== */
 
 @media (max-width: 1100px) {
-    body { flex-direction: column; overflow: auto; height: auto; min-height: 100dvh; }
+    body { flex-direction: column; overflow-y: auto; overflow-x: hidden; height: auto; min-height: 100dvh; }
     .sidebar {
         width: calc(100% - 20px);
         min-width: 0;
