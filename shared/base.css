@@ -973,7 +973,7 @@ body.logo canvas {
     }
     .preview-area {
         width: 100%;
-        height: auto;
+        height: 40vh;
         max-height: 40vh;
         padding: 8px;
         margin: 0;
@@ -983,7 +983,7 @@ body.logo canvas {
         overflow: hidden;
     }
     canvas, .effect-canvas, #mainSvg {
-        height: 38vh;
+        height: 100%;
         width: auto;
         aspect-ratio: 4 / 3;
         max-width: 100%;
