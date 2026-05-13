@@ -247,8 +247,8 @@ export function initEffect(opts) {
     // 1.10 顶部播放按钮（若效果有 #BtnPlay）
     if (!isPreview) initHeaderPlayButton();
 
-    // 1.11 颜色选择器的 hex 值自动显示
-    if (!isPreview) initColorValueDisplays();
+    // 1.11 颜色选择器旁注入 hex 输入框
+    if (!isPreview) initColorInputs();
 
     // 2. Canvas 初始化（预览模式降低分辨率）
     const baseWidth = opts.baseWidth || 1440;
@@ -556,16 +556,51 @@ export function initAdvancedSections() {
     });
 }
 
-// ========== 颜色选择器 hex 值显示 ==========
+// ========== 颜色选择器 + hex 可编辑输入框 ==========
 
-export function initColorValueDisplays() {
-    document.querySelectorAll('input[type="color"]').forEach(input => {
-        if (!input.id) return;
-        const display = document.getElementById(input.id + 'Val');
-        if (!display) return;
-        const sync = () => { display.textContent = input.value.toUpperCase(); };
-        sync();
-        input.addEventListener('input', sync);
+export function initColorInputs() {
+    document.querySelectorAll('input[type="color"]').forEach(colorInput => {
+        if (colorInput.parentElement?.classList.contains('color-input-group')) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'color-input-group';
+
+        const hexInput = document.createElement('input');
+        hexInput.type = 'text';
+        hexInput.className = 'hex-input';
+        hexInput.value = colorInput.value.toUpperCase();
+        hexInput.maxLength = 7;
+        hexInput.spellcheck = false;
+
+        colorInput.parentNode.insertBefore(wrapper, colorInput);
+        wrapper.appendChild(colorInput);
+        wrapper.appendChild(hexInput);
+
+        // 色块 → 输入框
+        colorInput.addEventListener('input', () => {
+            hexInput.value = colorInput.value.toUpperCase();
+        });
+
+        // 输入框 → 色块
+        hexInput.addEventListener('input', () => {
+            let v = hexInput.value.trim();
+            if (v && !v.startsWith('#')) v = '#' + v;
+            if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+                colorInput.value = v;
+                colorInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        });
+
+        // 失焦时规范化
+        hexInput.addEventListener('blur', () => {
+            let v = hexInput.value.trim();
+            if (v && !v.startsWith('#')) v = '#' + v;
+            if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+                hexInput.value = v.toUpperCase();
+            } else {
+                hexInput.value = colorInput.value.toUpperCase();
+            }
+        });
     });
 }
 

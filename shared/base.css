@@ -534,6 +534,29 @@ input[type="color"]::-webkit-color-swatch {
     border-radius: var(--radius-sm);
 }
 
+/* 颜色选择器 + hex 输入框组合 */
+.color-input-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.color-input-group .hex-input {
+    width: 80px;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-family: 'SF Mono', Consolas, monospace;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--card-bg);
+    color: var(--text-main);
+    text-transform: uppercase;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.color-input-group .hex-input:focus {
+    border-color: var(--accent);
+}
+
 /* ========================================
    Checkbox — 精致 toggle
    ======================================== */
