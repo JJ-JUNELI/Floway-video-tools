@@ -618,6 +618,7 @@ export function initHeaderPlayButton() {
     headerBtn.title = '播放动画';
     headerBtn.addEventListener('click', () => realBtn.click());
     badge.replaceWith(headerBtn);
+    realBtn.style.display = 'none';
 }
 
 // ========== 快速预设面板 ==========
