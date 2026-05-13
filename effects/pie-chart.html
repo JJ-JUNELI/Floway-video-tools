@@ -120,7 +120,7 @@
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>字号</span><span id="CenterFontSizeVal">18</span></div>
                             <input type="range" id="CenterFontSize" min="10" max="36" step="1" value="18"></div>
-                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>颜色</span></div>
+                        <div class="stack" style="flex:1"><div class="label-line"><span>颜色</span></div>
                             <input type="color" id="CenterColor" value="#333333"></div>
                     </div>
                 </div>
@@ -138,12 +138,14 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>副标题字重</span><span id="SubTitleWeightVal">400</span></div>
                             <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
                     </div>
-                    <div class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">主标题颜色</span>
-                        <input type="color" id="TitleColor" value="#333333"></div>
-                    <div class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">副标题颜色</span>
-                        <input type="color" id="SubTitleColor" value="#999999"></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>主标题颜色</span></div>
+                        <input type="color" id="TitleColor" value="#333333">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>副标题颜色</span></div>
+                        <input type="color" id="SubTitleColor" value="#999999">
+                    </div>
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>主标题 X</span><span id="MainTitleXVal">0</span></div>
                             <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
@@ -167,9 +169,10 @@
                 <div class="sub-section ss-amber">
                     <div class="sub-section-label">背景模式</div>
                     <div class="sub-title"><span>透明背景</span><input type="checkbox" id="CardBgTransparent"></div>
-                    <div id="CardBgColorRow" class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">卡片底色</span>
-                        <input type="color" id="CardBg" value="#f0f5fa"></div>
+                    <div id="CardBgColorRow" class="row stack">
+                        <div class="label-line"><span>卡片底色</span></div>
+                        <input type="color" id="CardBg" value="#f0f5fa">
+                    </div>
                 </div>
                 <div class="sub-section ss-blue" id="TextureSection">
                     <div class="sub-section-label">纸张纹理</div>
@@ -201,7 +204,7 @@
                                     <option value="color">填色</option>
                                     <option value="transparent">透明</option>
                                 </select></div>
-                            <div id="DonutCenterColorWrap" class="stack" style="width:40px;flex:none"><div class="label-line"><span>颜色</span></div>
+                            <div id="DonutCenterColorWrap" class="stack" style="flex:1"><div class="label-line"><span>颜色</span></div>
                                 <input type="color" id="DonutCenterColor" value="#ffffff"></div>
                         </div>
                     </div>
@@ -228,7 +231,7 @@
                                 <option value="transparent">透明</option>
                                 <option value="fill">填充</option>
                             </select></div>
-                        <div id="SliceGapColorWrap" class="stack" style="width:40px;flex:none;display:none"><div class="label-line"><span>颜色</span></div>
+                        <div id="SliceGapColorWrap" class="stack" style="flex:1;display:none"><div class="label-line"><span>颜色</span></div>
                             <input type="color" id="SliceGapColor" value="#ffffff"></div>
                     </div>
                     <div class="sub-title" style="margin-top:8px"><span>阶梯缩放</span><input type="checkbox" id="StairScale"></div>
@@ -278,7 +281,7 @@
                                 <div class="row">
                                     <div style="flex:1" class="stack"><div class="label-line"><span>引线粗细</span><span id="LeaderLineWidthVal">1</span></div>
                                         <input type="range" id="LeaderLineWidth" min="0.5" max="4" step="0.5" value="1"></div>
-                                    <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>引线颜色</span></div>
+                                    <div class="stack" style="flex:1"><div class="label-line"><span>引线颜色</span></div>
                                         <input type="color" id="LeaderLineColor" value="#999999"></div>
                                 </div>
                             </div>
@@ -290,9 +293,10 @@
                             <div style="flex:1" class="stack"><div class="label-line"><span>行间距</span><span id="LabelLineGapVal">0</span></div>
                                 <input type="range" id="LabelLineGap" min="-10" max="20" step="1" value="0"></div>
                         </div>
-                        <div class="row" style="justify-content:space-between; align-items:center;">
-                            <span style="font-size:12px; color:var(--text-sub, #888);">标签颜色</span>
-                            <input type="color" id="LabelColor" value="#555555"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>标签颜色</span></div>
+                            <input type="color" id="LabelColor" value="#555555">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -342,13 +346,13 @@
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
                             <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
-                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>描边颜色</span></div>
+                        <div class="stack" style="flex:1"><div class="label-line"><span>描边颜色</span></div>
                             <input type="color" id="CardBorderColor" value="#ffffff"></div>
                     </div>
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
                             <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
-                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>辉光颜色</span></div>
+                        <div class="stack" style="flex:1"><div class="label-line"><span>辉光颜色</span></div>
                             <input type="color" id="CardGlowColor" value="#3b82f6"></div>
                     </div>
                     <div class="row">

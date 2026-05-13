@@ -245,8 +245,8 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>悬浮高度</span><span id="ElevationVal">50</span></div>
                             <input type="range" id="Elevation" min="0" max="100" step="1" value="50"></div>
                     </div>
-                    <div class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub);">卡片底色</span>
+                    <div class="row stack">
+                        <div class="label-line"><span>卡片底色</span></div>
                         <input type="color" id="CardBg" value="#1a1a2e"></div>
                     <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>底色透明度</span><span id="CardBgAlphaVal">80</span></div><input type="range" id="CardBgAlpha" min="0" max="100" value="80"></div></div>
                 </div>
@@ -270,7 +270,9 @@
                     <div class="sub-section ss-amber">
                         <div class="sub-section-label">描边</div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="SolidBorderWidthVal">8</span></div><input type="range" id="SolidBorderWidth" min="0" max="25" value="8"></div></div>
-                        <div class="row"><span style="font-size:12px;color:var(--text-sub)">描边颜色</span><input type="color" id="SolidBorderColor" value="#ffffff"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>描边颜色</span></div>
+                            <input type="color" id="SolidBorderColor" value="#ffffff"></div>
                     </div>
                     <div class="sub-section ss-blue">
                         <div class="sub-section-label">辉光</div>
@@ -282,7 +284,9 @@
                             </select>
                         </div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="SolidGlowWidthVal">30</span></div><input type="range" id="SolidGlowWidth" min="0" max="80" value="30"></div></div>
-                        <div class="row"><span style="font-size:12px;color:var(--text-sub)">辉光颜色</span><input type="color" id="SolidGlowColor" value="#3b82f6"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>辉光颜色</span></div>
+                            <input type="color" id="SolidGlowColor" value="#3b82f6"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="SolidGlowIntensityVal">70%</span></div><input type="range" id="SolidGlowIntensity" min="0" max="100" value="70"></div></div>
                     </div>
                 </div>
@@ -301,14 +305,20 @@
                     <div class="sub-section ss-amber">
                         <div class="sub-section-label">描边 + 辉光</div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="ChromeBorderWidthVal">2</span></div><input type="range" id="ChromeBorderWidth" min="0" max="20" value="2"></div></div>
-                        <div class="row"><span style="font-size:12px;color:var(--text-sub)">描边颜色</span><input type="color" id="ChromeBorderColor" value="#ffffff"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>描边颜色</span></div>
+                            <input type="color" id="ChromeBorderColor" value="#ffffff"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="ChromeGlowWidthVal">15</span></div><input type="range" id="ChromeGlowWidth" min="0" max="60" value="15"></div></div>
-                        <div class="row"><span style="font-size:12px;color:var(--text-sub)">辉光颜色</span><input type="color" id="ChromeGlowColor" value="#3b82f6"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>辉光颜色</span></div>
+                            <input type="color" id="ChromeGlowColor" value="#3b82f6"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="ChromeGlowIntensityVal">50%</span></div><input type="range" id="ChromeGlowIntensity" min="0" max="100" value="50"></div></div>
                     </div>
                     <div class="sub-section ss-blue">
                         <div class="sub-section-label">浏览器 UI</div>
-                        <div class="row"><span style="font-size:12px;color:var(--text-sub)">标题栏色</span><input type="color" id="ChromeBarColor" value="#1e1e2e"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>标题栏色</span></div>
+                            <input type="color" id="ChromeBarColor" value="#1e1e2e"></div>
                         <div class="row"><input type="text" id="ChromeUrlText" value="floway.tools" style="flex:1;background:var(--panel-bg);border:1px solid var(--border);border-radius:4px;color:var(--text-main);padding:3px 8px;font-size:11px"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>分割线透明</span><span id="ChromeSepAlphaVal">30%</span></div><input type="range" id="ChromeSepAlpha" min="0" max="100" value="30"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>URL栏透明</span><span id="ChromeUrlAlphaVal">30%</span></div><input type="range" id="ChromeUrlAlpha" min="0" max="100" value="30"></div></div>
@@ -317,7 +327,9 @@
                     <div class="sub-section ss-green">
                         <div class="sub-section-label">内边框</div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>内边框宽</span><span id="ChromeInnerWidthVal">4</span></div><input type="range" id="ChromeInnerWidth" min="0" max="20" value="4"></div></div>
-                        <div class="row"><span style="font-size:12px;color:var(--text-sub)">内边框色</span><input type="color" id="ChromeInnerColor" value="#333344"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>内边框色</span></div>
+                            <input type="color" id="ChromeInnerColor" value="#333344"></div>
                     </div>
                 </div>
 
@@ -330,16 +342,26 @@
                             <input type="checkbox" id="RotatingBgMode" checked>
                         </div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>旋转速度</span><span id="RotatingSpeedVal">30</span></div><input type="range" id="RotatingSpeed" min="0" max="100" value="30"></div></div>
-                        <div class="row"><span style="font-size:12px;color:var(--text-sub)">亮边颜色</span><input type="color" id="RotatingLightColor" value="#60a5fa"></div>
-                        <div class="row"><span style="font-size:12px;color:var(--text-sub)">暗边颜色</span><input type="color" id="RotatingDimColor" value="#1e1e3a"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>亮边颜色</span></div>
+                            <input type="color" id="RotatingLightColor" value="#60a5fa"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>暗边颜色</span></div>
+                            <input type="color" id="RotatingDimColor" value="#1e1e3a"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="RotatingBorderWidthVal">3</span></div><input type="range" id="RotatingBorderWidth" min="0" max="20" value="3"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>亮段数量</span><span id="RotatingSegmentsVal">1</span></div><input type="range" id="RotatingSegments" min="1" max="8" value="1"></div></div>
                     </div>
                     <div class="sub-section ss-blue">
                         <div class="sub-section-label">光斑</div>
-                        <div class="row"><span style="font-size:12px;color:var(--text-sub)">光斑1色</span><input type="color" id="RotatingBlob1" value="#3b82f6"></div>
-                        <div class="row"><span style="font-size:12px;color:var(--text-sub)">光斑2色</span><input type="color" id="RotatingBlob2" value="#8b5cf6"></div>
-                        <div class="row"><span style="font-size:12px;color:var(--text-sub)">光斑3色</span><input type="color" id="RotatingBlob3" value="#ec4899"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>光斑1色</span></div>
+                            <input type="color" id="RotatingBlob1" value="#3b82f6"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>光斑2色</span></div>
+                            <input type="color" id="RotatingBlob2" value="#8b5cf6"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>光斑3色</span></div>
+                            <input type="color" id="RotatingBlob3" value="#ec4899"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>光斑大小</span><span id="RotatingBlobSizeVal">300</span></div><input type="range" id="RotatingBlobSize" min="50" max="1200" value="300"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>光斑速度</span><span id="RotatingBlobSpeedVal">30</span></div><input type="range" id="RotatingBlobSpeed" min="0" max="100" value="30"></div></div>
                     </div>
