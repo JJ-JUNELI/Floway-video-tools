@@ -138,12 +138,16 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>副标题字重</span><span id="SubTitleWeightVal">400</span></div>
                             <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
                     </div>
-                    <div class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">主标题颜色</span>
-                        <input type="color" id="TitleColor" value="#333333"></div>
-                    <div class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">副标题颜色</span>
-                        <input type="color" id="SubTitleColor" value="#999999"></div>
+                    <div class="row">
+                        <div style="flex:1" class="stack">
+                            <div class="label-line"><span>主标题颜色</span><span id="TitleColorVal">#333333</span></div>
+                            <input type="color" id="TitleColor" value="#333333">
+                        </div>
+                        <div style="flex:1" class="stack">
+                            <div class="label-line"><span>副标题颜色</span><span id="SubTitleColorVal">#999999</span></div>
+                            <input type="color" id="SubTitleColor" value="#999999">
+                        </div>
+                    </div>
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>主标题 X</span><span id="MainTitleXVal">0</span></div>
                             <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>

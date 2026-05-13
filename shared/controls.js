@@ -247,6 +247,9 @@ export function initEffect(opts) {
     // 1.10 顶部播放按钮（若效果有 #BtnPlay）
     if (!isPreview) initHeaderPlayButton();
 
+    // 1.11 颜色选择器的 hex 值自动显示
+    if (!isPreview) initColorValueDisplays();
+
     // 2. Canvas 初始化（预览模式降低分辨率）
     const baseWidth = opts.baseWidth || 1440;
     const baseHeight = opts.baseHeight || 1080;
@@ -550,6 +553,19 @@ export function initAdvancedSections() {
             btn.classList.toggle('open', open);
         });
         section.before(btn);
+    });
+}
+
+// ========== 颜色选择器 hex 值显示 ==========
+
+export function initColorValueDisplays() {
+    document.querySelectorAll('input[type="color"]').forEach(input => {
+        if (!input.id) return;
+        const display = document.getElementById(input.id + 'Val');
+        if (!display) return;
+        const sync = () => { display.textContent = input.value.toUpperCase(); };
+        sync();
+        input.addEventListener('input', sync);
     });
 }
 
