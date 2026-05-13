@@ -117,10 +117,14 @@
                 <div class="group-title"><span>📝 标题设置</span></div>
                 <div class="sub-section ss-blue">
                     <div class="sub-section-label">内容</div>
-                    <div class="row stack"><div class="label-line"><span>主标题</span></div>
-                        <input type="text" id="MainTitle" value="汽车零售销量新能源月度渗透率走势"></div>
-                    <div class="row stack"><div class="label-line"><span>副标题 (右侧文字)</span></div>
-                        <input type="text" id="SubTitle" value="新能源乘用车渗透率超 50%"></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>主标题</span><label style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--text-sub);"><input type="checkbox" id="ShowMainTitle" checked>启用</label></div>
+                        <input type="text" id="MainTitle" value="汽车零售销量新能源月度渗透率走势">
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>副标题 (右侧文字)</span><label style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--text-sub);"><input type="checkbox" id="ShowSubTitle" checked>启用</label></div>
+                        <input type="text" id="SubTitle" value="新能源乘用车渗透率超 50%">
+                    </div>
                     <div class="row stack"><div class="label-line"><span>标题字体</span></div>
                         <div id="TitleFontMount" style="width:100%"></div></div>
                 </div>
@@ -143,7 +147,6 @@
                             <div class="sub-title"><span>显示主标题括号</span><input type="checkbox" id="ShowBrackets" checked></div>
                         </div>
                         <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
-                            <div class="sub-title"><span>启用副标题</span><input type="checkbox" id="ShowSubTitle" checked></div>
                             <div class="stack"><div class="label-line"><span>副标题字号</span><span id="SubTitleSizeVal">36</span></div>
                                 <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
                             <div class="stack"><div class="label-line"><span>副标题字重</span><span id="SubTitleWeightVal">400</span></div>
@@ -584,6 +587,7 @@
             showGrid: true,
             gridColor: '#c3bcaf',
             subTitleGlow: false,
+            showMainTitle: true,
             showSubTitle: true,
         };
 
@@ -693,6 +697,7 @@
             // 主题风格
             ['ShowBrackets',    'showBrackets',   'checked'],
             ['SubTitleGlow',    'subTitleGlow',   'checked'],
+            ['ShowMainTitle',   'showMainTitle',  'checked'],
             ['ShowSubTitle',    'showSubTitle',   'checked'],
             ['NoiseGrain',      'noiseGrain',     'int',   'NoiseGrainVal'],
             ['Vignette',        'vignette',       'int',   'VignetteVal'],
@@ -1197,14 +1202,16 @@
             // === 标题 ===
             const titleAlpha = isHold ? 1 : clamp(rawProgress * 2.5, 0, 1);
             const subTitleAlpha = isHold ? 1 : clamp((rawProgress - 0.3) * 2, 0, 1);
-            ctx.save();
-            ctx.font = `${config.mainTitleWeight} ${config.mainTitleSize}px ${config.titleFont}`;
-            ctx.fillStyle = config.mainTitleColor;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.globalAlpha = titleAlpha;
-            let titleText = config.mainTitle;
-            if (config.showBrackets) titleText = `\u300C ${config.mainTitle} \u300D`;
-            ctx.fillText(titleText, 720 + config.mainTitleX, 540 + config.mainTitleY);
-            ctx.restore();
+            if (config.showMainTitle) {
+                ctx.save();
+                ctx.font = `${config.mainTitleWeight} ${config.mainTitleSize}px ${config.titleFont}`;
+                ctx.fillStyle = config.mainTitleColor;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.globalAlpha = titleAlpha;
+                let titleText = config.mainTitle;
+                if (config.showBrackets) titleText = `\u300C ${config.mainTitle} \u300D`;
+                ctx.fillText(titleText, 720 + config.mainTitleX, 540 + config.mainTitleY);
+                ctx.restore();
+            }
 
             // 副标题已移至最顶层绘制
 
