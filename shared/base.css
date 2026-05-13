@@ -541,7 +541,8 @@ input[type="color"]::-webkit-color-swatch {
     gap: 6px;
 }
 .color-input-group .hex-input {
-    width: 80px;
+    width: 70px;
+    min-width: 0;
     padding: 6px 8px;
     font-size: 11px;
     font-family: 'SF Mono', Consolas, monospace;

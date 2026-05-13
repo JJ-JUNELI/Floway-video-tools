@@ -207,9 +207,10 @@
                     </div>
                     <div class="sub-title"><span>渐变填充</span><input type="checkbox" id="ShowArea" checked></div>
                     <div class="sub-title"><span>跟随线条颜色</span><input type="checkbox" id="AreaFollowLine"></div>
-                    <div class="row" id="AreaColorRow" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">自定义填充色</span>
-                        <input type="color" id="AreaColor" value="#b4a58c"></div>
+                    <div class="row stack" id="AreaColorRow">
+                        <div class="label-line"><span>自定义填充色</span></div>
+                        <input type="color" id="AreaColor" value="#b4a58c">
+                    </div>
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>填充透明度</span><span id="FillOpacityVal">20%</span></div>
                             <input type="range" id="FillOpacity" min="0" max="100" step="5" value="20"></div>
@@ -235,8 +236,8 @@
                             <input type="color" id="BarColor" value="#888888"></div>
                     </div>
                     <div class="sub-title"><span>渐变填充</span><input type="checkbox" id="BarGradient"></div>
-                    <div class="row" id="BarGradientEndRow" style="display:none; justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">渐变终止色</span>
+                    <div class="row stack" id="BarGradientEndRow" style="display:none;">
+                        <div class="label-line"><span>渐变终止色</span></div>
                         <input type="color" id="BarGradientEnd" value="#cccccc">
                     </div>
                     <div class="row">
@@ -319,9 +320,10 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>横纵轴字体字号</span><span id="AxisLabelSizeVal">11</span></div>
                             <input type="range" id="AxisLabelSize" min="6" max="40" step="1" value="11"></div>
                     </div>
-                    <div class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">标签颜色</span>
-                        <input type="color" id="AxisLabelColor" value="#999999"></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>标签颜色</span></div>
+                        <input type="color" id="AxisLabelColor" value="#999999">
+                    </div>
                 </div>
                 <div class="sub-section ss-purple">
                     <div class="sub-section-label">图表区域</div>
@@ -375,19 +377,20 @@
                     </div>
                     <div class="row stack"><div class="label-line"><span>内边距</span><span id="CardPadVal">32</span></div>
                         <input type="range" id="CardPad" min="10" max="100" step="2" value="32"></div>
-                    <div class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">卡片底色</span>
-                        <input type="color" id="CardBg" value="#faf8f3"></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>卡片底色</span></div>
+                        <input type="color" id="CardBg" value="#faf8f3">
+                    </div>
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
                             <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
-                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>描边颜色</span></div>
+                        <div class="stack" style="flex:1"><div class="label-line"><span>描边颜色</span></div>
                             <input type="color" id="CardBorderColor" value="#ffffff"></div>
                     </div>
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
                             <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
-                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>辉光颜色</span></div>
+                        <div class="stack" style="flex:1"><div class="label-line"><span>辉光颜色</span></div>
                             <input type="color" id="CardGlowColor" value="#3b82f6"></div>
                     </div>
                     <div class="row">
