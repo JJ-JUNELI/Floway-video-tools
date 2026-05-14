@@ -1127,11 +1127,11 @@
 
                             if (config.showPercentage) {
                                 ctx.font = `700 ${config.labelFontSize}px ${config.titleFont}`;
-                                ctx.fillStyle = '#ffffff';
+                                ctx.fillStyle = config.labelColor;
                                 ctx.fillText(pct, lx, ly - config.labelFontSize * 0.4 - config.labelLineGap / 2);
                             }
                             ctx.font = `400 ${config.labelFontSize - 2}px ${config.titleFont}`;
-                            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                            ctx.fillStyle = config.labelColor;
                             ctx.fillText(slice.label, lx, ly + config.labelFontSize * 0.5 + config.labelLineGap / 2);
                         } else {
                             // 外部标签
