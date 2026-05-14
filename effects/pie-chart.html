@@ -1023,12 +1023,29 @@
                         ctx.strokeStyle = config.sliceGapColor;
                     }
                     const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+
+                    // 起跑线：startAngle 位置的分割线（也是最后一片的右边界），动画一开始就存在，
+                    // 用来兜住末尾扇形扫到第一片时的反走样溢出
+                    {
+                        const startSR = radius * Math.max(scales[0], scales[dataPoints.length - 1]);
+                        ctx.beginPath();
+                        ctx.moveTo(
+                            cx + Math.cos(startRad) * baseInnerR,
+                            cy + Math.sin(startRad) * baseInnerR
+                        );
+                        ctx.lineTo(
+                            cx + Math.cos(startRad) * startSR,
+                            cy + Math.sin(startRad) * startSR
+                        );
+                        ctx.stroke();
+                    }
+
                     for (let i = 0; i < dataPoints.length; i++) {
                         const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
                         const boundaryAngle = sepAngle + sliceAngle;
                         const isLast = i === dataPoints.length - 1;
                         const snapAngle = isLast ? startRad + maxAngle : boundaryAngle;
-                        if (snapAngle - startRad <= maxAngle + 0.01) {
+                        if (!isLast && snapAngle - startRad <= maxAngle + 0.01) {
                             const nextI = (i + 1) % dataPoints.length;
                             const sR = radius * Math.max(scales[i], scales[nextI]);
                             ctx.beginPath();
