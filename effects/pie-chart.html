@@ -464,6 +464,7 @@
             // 饼图样式
             pieType: 'donut',
             donutWidth: 35,
+            donutCenterPct: 65,
             donutCenterColor: '#ffffff',
             donutCenterTransparent: false,
             donutCenterMode: true,
@@ -569,7 +570,7 @@
             ['Vignette',        'vignette',       'int',   'VignetteVal'],
             // 饼图样式
             ['PieType',         'pieType'],
-            ['DonutWidth',      'donutWidth',     'int',   'DonutWidthVal', '%'],
+            ['DonutWidth',      'donutCenterPct', 'int',   'DonutWidthVal', '%'],
             ['StartAngle',      'startAngle',     'int',   'StartAngleVal', '°'],
             ['SliceGap',        'sliceGap',       'int',   'SliceGapVal', 'px'],
             ['SliceGapMode',    'sliceGapMode',   'checked'],
@@ -651,9 +652,8 @@
                     document.getElementById('LeaderLineOpts').style.display =
                         config.showLeaderLines ? '' : 'none';
                 }
-                if (key === 'donutWidth') {
-                    // 滑杆显示中心圆半径 %, 内部 donutWidth = 100 - 中心圆半径
-                    config.donutWidth = 100 - config.donutWidth;
+                if (key === 'donutCenterPct') {
+                    config.donutWidth = 100 - config.donutCenterPct;
                 }
                 if (key === 'sliceGapMode') {
                     document.getElementById('SliceGapColorWrap').style.display =
