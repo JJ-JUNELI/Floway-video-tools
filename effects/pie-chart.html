@@ -1118,7 +1118,14 @@
 
                         if (config.labelMode === 'inside') {
                             const innerEdge = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
-                            const midR = innerEdge + (sliceR - innerEdge) * 0.65;
+                            const halfA = sliceAngle / 2;
+                            const centroidFactor = halfA > 0.001 ? Math.sin(halfA) / halfA : 1;
+                            const rawCentroid = config.pieType === 'donut'
+                                ? (4 * centroidFactor / 6) * (Math.pow(sliceR, 3) - Math.pow(innerEdge, 3)) / (Math.pow(sliceR, 2) - Math.pow(innerEdge, 2))
+                                : (2 * sliceR * centroidFactor) / 3;
+                            const minR = innerEdge + (sliceR - innerEdge) * 0.5;
+                            const maxR = innerEdge + (sliceR - innerEdge) * 0.78;
+                            const midR = Math.max(minR, Math.min(maxR, rawCentroid));
                             const lx = cx + Math.cos(midAngle) * midR;
                             const ly = cy + Math.sin(midAngle) * midR;
 
