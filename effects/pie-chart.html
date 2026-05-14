@@ -1012,56 +1012,64 @@
 
                 // 第二遍：分隔线压在扇形上面，等宽矩形条
                 if (config.sliceGapEnabled && config.sliceGap > 0) {
-                    let sepAngle = startRad;
+                    const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+
+                    // 2a. 透明蒙版：所有最终分割线位置（包括 startAngle 起跑线）每帧都凿穿，
+                    // 提前划好"格子"，色块只能长在格子里，圆心结构从 t=0 就锚定
                     ctx.save();
                     ctx.lineWidth = config.sliceGap;
                     ctx.lineCap = 'butt';
-                    if (!config.sliceGapMode) {
-                        ctx.globalCompositeOperation = 'destination-out';
-                        ctx.strokeStyle = 'rgba(0,0,0,1)';
-                    } else {
-                        ctx.strokeStyle = config.sliceGapColor;
-                    }
-                    const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
-
-                    // 起跑线：startAngle 位置的分割线（也是最后一片的右边界），动画一开始就存在，
-                    // 用来兜住末尾扇形扫到第一片时的反走样溢出
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.strokeStyle = 'rgba(0,0,0,1)';
                     {
+                        let sepAngle = startRad;
+                        // startAngle 起跑线
                         const startSR = radius * Math.max(scales[0], scales[dataPoints.length - 1]);
                         ctx.beginPath();
-                        ctx.moveTo(
-                            cx + Math.cos(startRad) * baseInnerR,
-                            cy + Math.sin(startRad) * baseInnerR
-                        );
-                        ctx.lineTo(
-                            cx + Math.cos(startRad) * startSR,
-                            cy + Math.sin(startRad) * startSR
-                        );
+                        ctx.moveTo(cx + Math.cos(startRad) * baseInnerR, cy + Math.sin(startRad) * baseInnerR);
+                        ctx.lineTo(cx + Math.cos(startRad) * startSR, cy + Math.sin(startRad) * startSR);
                         ctx.stroke();
-                    }
-
-                    for (let i = 0; i < dataPoints.length; i++) {
-                        const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
-                        const boundaryAngle = sepAngle + sliceAngle;
-                        const isLast = i === dataPoints.length - 1;
-                        const snapAngle = isLast ? startRad + maxAngle : boundaryAngle;
-                        if (!isLast && snapAngle - startRad <= maxAngle + 0.01) {
-                            const nextI = (i + 1) % dataPoints.length;
+                        // 内部所有分割线（不管 progress）
+                        for (let i = 0; i < dataPoints.length - 1; i++) {
+                            const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
+                            sepAngle += sliceAngle;
+                            const nextI = i + 1;
                             const sR = radius * Math.max(scales[i], scales[nextI]);
                             ctx.beginPath();
-                            ctx.moveTo(
-                                cx + Math.cos(snapAngle) * baseInnerR,
-                                cy + Math.sin(snapAngle) * baseInnerR
-                            );
-                            ctx.lineTo(
-                                cx + Math.cos(snapAngle) * sR,
-                                cy + Math.sin(snapAngle) * sR
-                            );
+                            ctx.moveTo(cx + Math.cos(sepAngle) * baseInnerR, cy + Math.sin(sepAngle) * baseInnerR);
+                            ctx.lineTo(cx + Math.cos(sepAngle) * sR, cy + Math.sin(sepAngle) * sR);
                             ctx.stroke();
                         }
-                        sepAngle += sliceAngle;
                     }
                     ctx.restore();
+
+                    // 2b. 填充模式：在透明蒙版之上叠彩色线条，随生长进度逐条出现
+                    if (config.sliceGapMode) {
+                        ctx.save();
+                        ctx.lineWidth = config.sliceGap;
+                        ctx.lineCap = 'butt';
+                        ctx.strokeStyle = config.sliceGapColor;
+                        let sepAngle = startRad;
+                        // startAngle 起跑线（彩色，一直存在）
+                        const startSR = radius * Math.max(scales[0], scales[dataPoints.length - 1]);
+                        ctx.beginPath();
+                        ctx.moveTo(cx + Math.cos(startRad) * baseInnerR, cy + Math.sin(startRad) * baseInnerR);
+                        ctx.lineTo(cx + Math.cos(startRad) * startSR, cy + Math.sin(startRad) * startSR);
+                        ctx.stroke();
+                        for (let i = 0; i < dataPoints.length - 1; i++) {
+                            const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
+                            sepAngle += sliceAngle;
+                            if (sepAngle - startRad <= maxAngle + 0.01) {
+                                const nextI = i + 1;
+                                const sR = radius * Math.max(scales[i], scales[nextI]);
+                                ctx.beginPath();
+                                ctx.moveTo(cx + Math.cos(sepAngle) * baseInnerR, cy + Math.sin(sepAngle) * baseInnerR);
+                                ctx.lineTo(cx + Math.cos(sepAngle) * sR, cy + Math.sin(sepAngle) * sR);
+                                ctx.stroke();
+                            }
+                        }
+                        ctx.restore();
+                    }
                 }
 
                 // 第三遍：环形图中心圆（覆盖内圆边缘）
