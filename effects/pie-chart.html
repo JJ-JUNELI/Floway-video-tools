@@ -172,7 +172,7 @@
                 <div class="group-title"><span>🖌️ 卡片背景</span></div>
                 <div class="sub-section ss-amber">
                     <div class="sub-section-label">背景模式</div>
-                    <div class="sub-title"><span>透明背景</span><input type="checkbox" id="CardBgTransparent"></div>
+                    <div class="sub-title"><span>启用背景</span><input type="checkbox" id="CardBgTransparent" checked></div>
                     <div id="CardBgColorRow" class="row stack">
                         <div class="label-line"><span>卡片底色</span></div>
                         <input type="color" id="CardBg" value="#f0f5fa">
@@ -680,6 +680,7 @@
                     document.getElementById('EntranceDetailOpts').style.display = show ? '' : 'none';
                 }
                 if (key === 'cardBgTransparent') {
+                    config.cardBgTransparent = !config.cardBgTransparent; // 启用背景=checked → transparent=false
                     const transparent = config.cardBgTransparent;
                     document.getElementById('CardBgColorRow').style.display = transparent ? 'none' : '';
                     document.getElementById('TextureSection').style.display = transparent ? 'none' : '';
