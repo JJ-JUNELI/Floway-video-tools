@@ -967,42 +967,7 @@
 
                 let currentAngle = startRad;
 
-                // 第一遍：分隔线（先画，扇形会覆盖在上面）
-                if (config.sliceGap > 0) {
-                    let sepAngle = startRad;
-                    ctx.save();
-                    ctx.strokeStyle = config.sliceGapMode === 'transparent'
-                        ? config.cardBg : config.sliceGapColor;
-                    ctx.lineWidth = config.sliceGap;
-                    ctx.lineCap = 'butt';
-                    const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
-                    for (let i = 0; i < dataPoints.length; i++) {
-                        const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
-                        const boundaryAngle = sepAngle + sliceAngle;
-                        const isLast = i === dataPoints.length - 1;
-                        const snapAngle = isLast ? startRad + maxAngle : boundaryAngle;
-                        if (snapAngle - startRad <= maxAngle + 0.01) {
-                            const nextI = (i + 1) % dataPoints.length;
-                            const sR = radius * Math.max(scales[i], scales[nextI]);
-                            ctx.beginPath();
-                            ctx.moveTo(
-                                cx + Math.cos(snapAngle) * baseInnerR,
-                                cy + Math.sin(snapAngle) * baseInnerR
-                            );
-                            ctx.lineTo(
-                                cx + Math.cos(snapAngle) * sR,
-                                cy + Math.sin(snapAngle) * sR
-                            );
-                            ctx.stroke();
-                        }
-                        sepAngle += sliceAngle;
-                    }
-                    ctx.restore();
-                }
-
-                // 第二遍：绘制所有扇形（角度缩进让分隔线在底层露出）
-                const gapHalf = config.sliceGap > 0 ? (config.sliceGap / radius) / 2 : 0;
-                currentAngle = startRad;
+                // 第一遍：绘制所有扇形（不缩进，完整角度）
                 for (let i = 0; i < dataPoints.length; i++) {
                     const slice = dataPoints[i];
                     const sliceAngle = (slice.value / total) * Math.PI * 2;
@@ -1010,9 +975,8 @@
                     const effectiveAngle = Math.min(sliceAngle, Math.max(0, maxAngle - drawnAngle));
 
                     if (effectiveAngle > 0.001) {
-                        const drawStart = currentAngle + gapHalf;
-                        const drawEnd = currentAngle + effectiveAngle - gapHalf;
-                        if (drawEnd <= drawStart) { currentAngle += sliceAngle; continue; }
+                        const drawStart = currentAngle;
+                        const drawEnd = currentAngle + effectiveAngle;
                         const sliceR = radius * scales[i];
                         const innerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
 
@@ -1041,6 +1005,43 @@
                         ctx.restore();
                     }
                     currentAngle += sliceAngle;
+                }
+
+                // 第二遍：分隔线压在扇形上面，等宽矩形条
+                if (config.sliceGap > 0) {
+                    let sepAngle = startRad;
+                    ctx.save();
+                    ctx.lineWidth = config.sliceGap;
+                    ctx.lineCap = 'butt';
+                    if (config.sliceGapMode === 'transparent') {
+                        ctx.globalCompositeOperation = 'destination-out';
+                        ctx.strokeStyle = 'rgba(0,0,0,1)';
+                    } else {
+                        ctx.strokeStyle = config.sliceGapColor;
+                    }
+                    const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+                    for (let i = 0; i < dataPoints.length; i++) {
+                        const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
+                        const boundaryAngle = sepAngle + sliceAngle;
+                        const isLast = i === dataPoints.length - 1;
+                        const snapAngle = isLast ? startRad + maxAngle : boundaryAngle;
+                        if (snapAngle - startRad <= maxAngle + 0.01) {
+                            const nextI = (i + 1) % dataPoints.length;
+                            const sR = radius * Math.max(scales[i], scales[nextI]);
+                            ctx.beginPath();
+                            ctx.moveTo(
+                                cx + Math.cos(snapAngle) * baseInnerR,
+                                cy + Math.sin(snapAngle) * baseInnerR
+                            );
+                            ctx.lineTo(
+                                cx + Math.cos(snapAngle) * sR,
+                                cy + Math.sin(snapAngle) * sR
+                            );
+                            ctx.stroke();
+                        }
+                        sepAngle += sliceAngle;
+                    }
+                    ctx.restore();
                 }
 
                 // 第三遍：环形图中心圆（覆盖内圆边缘）
