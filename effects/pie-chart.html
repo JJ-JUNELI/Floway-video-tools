@@ -976,33 +976,39 @@
 
                 let currentAngle = startRad;
 
-                // 准备隔离层：色块和透明蒙版只画在 sliceCtx，避免凿穿卡片背景和辉光halo
+                // 准备隔离层
                 sliceCtx.save();
                 sliceCtx.setTransform(1, 0, 0, 1, 0, 0);
                 sliceCtx.clearRect(0, 0, sliceLayer.width, sliceLayer.height);
                 sliceCtx.restore();
 
-                // 第一遍：绘制所有扇形（不缩进，完整角度）到 sliceCtx
-                for (let i = 0; i < dataPoints.length; i++) {
-                    const slice = dataPoints[i];
-                    const sliceAngle = (slice.value / total) * Math.PI * 2;
-                    const drawnAngle = currentAngle - startRad;
-                    const effectiveAngle = Math.min(sliceAngle, Math.max(0, maxAngle - drawnAngle));
+                if (maxAngle > 0.001) {
+                    // 旋转遮板：从 startRad 顺时针打开到 startRad + maxAngle
+                    // 底层先把"完整饼图"画好（所有扇形 + 分割线），clip 控制可见区域
+                    sliceCtx.save();
+                    const bigR = radius * 3;
+                    sliceCtx.beginPath();
+                    sliceCtx.moveTo(cx, cy);
+                    sliceCtx.arc(cx, cy, bigR, startRad, startRad + maxAngle);
+                    sliceCtx.closePath();
+                    sliceCtx.clip();
 
-                    if (effectiveAngle > 0.001) {
-                        const drawStart = currentAngle;
-                        const drawEnd = currentAngle + effectiveAngle;
+                    // 第一遍：所有扇形完整角度
+                    let drawAngle = startRad;
+                    for (let i = 0; i < dataPoints.length; i++) {
+                        const slice = dataPoints[i];
+                        const sliceAngle = (slice.value / total) * Math.PI * 2;
                         const sliceR = radius * scales[i];
                         const innerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
 
                         sliceCtx.beginPath();
                         if (config.pieType === 'donut') {
-                            sliceCtx.arc(cx, cy, sliceR, drawStart, drawEnd);
-                            sliceCtx.arc(cx, cy, innerR, drawEnd, drawStart, true);
+                            sliceCtx.arc(cx, cy, sliceR, drawAngle, drawAngle + sliceAngle);
+                            sliceCtx.arc(cx, cy, innerR, drawAngle + sliceAngle, drawAngle, true);
                             sliceCtx.closePath();
                         } else {
                             sliceCtx.moveTo(cx, cy);
-                            sliceCtx.arc(cx, cy, sliceR, drawStart, drawEnd);
+                            sliceCtx.arc(cx, cy, sliceR, drawAngle, drawAngle + sliceAngle);
                             sliceCtx.closePath();
                         }
 
@@ -1018,77 +1024,59 @@
                         sliceCtx.fillStyle = grad;
                         sliceCtx.fill();
                         sliceCtx.restore();
+
+                        drawAngle += sliceAngle;
                     }
-                    currentAngle += sliceAngle;
-                }
 
-                // 第二遍：分隔线压在扇形上面，等宽矩形条
-                if (config.sliceGapEnabled && config.sliceGap > 0) {
-                    const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
-
-                    // 2a. 透明蒙版：所有最终分割线位置在 sliceCtx 上凿穿色块（不影响卡片背景）
-                    sliceCtx.save();
-                    sliceCtx.lineWidth = config.sliceGap;
-                    sliceCtx.lineCap = 'butt';
-                    sliceCtx.globalCompositeOperation = 'destination-out';
-                    sliceCtx.strokeStyle = 'rgba(0,0,0,1)';
-                    {
-                        let sepAngle = startRad;
-                        const startSR = radius * Math.max(scales[0], scales[dataPoints.length - 1]);
-                        sliceCtx.beginPath();
-                        sliceCtx.moveTo(cx + Math.cos(startRad) * baseInnerR, cy + Math.sin(startRad) * baseInnerR);
-                        sliceCtx.lineTo(cx + Math.cos(startRad) * startSR, cy + Math.sin(startRad) * startSR);
-                        sliceCtx.stroke();
-                        for (let i = 0; i < dataPoints.length - 1; i++) {
-                            const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
-                            sepAngle += sliceAngle;
-                            const nextI = i + 1;
-                            const sR = radius * Math.max(scales[i], scales[nextI]);
+                    // 第二遍：所有分割线（完整位置，不依赖 progress）
+                    if (config.sliceGapEnabled && config.sliceGap > 0) {
+                        const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+                        const drawAllSeparators = (strokeFn) => {
+                            let sepAngle = startRad;
+                            const startSR = radius * Math.max(scales[0], scales[dataPoints.length - 1]);
                             sliceCtx.beginPath();
-                            sliceCtx.moveTo(cx + Math.cos(sepAngle) * baseInnerR, cy + Math.sin(sepAngle) * baseInnerR);
-                            sliceCtx.lineTo(cx + Math.cos(sepAngle) * sR, cy + Math.sin(sepAngle) * sR);
+                            sliceCtx.moveTo(cx + Math.cos(startRad) * baseInnerR, cy + Math.sin(startRad) * baseInnerR);
+                            sliceCtx.lineTo(cx + Math.cos(startRad) * startSR, cy + Math.sin(startRad) * startSR);
                             sliceCtx.stroke();
+                            for (let i = 0; i < dataPoints.length - 1; i++) {
+                                const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
+                                sepAngle += sliceAngle;
+                                const sR = radius * Math.max(scales[i], scales[i + 1]);
+                                sliceCtx.beginPath();
+                                sliceCtx.moveTo(cx + Math.cos(sepAngle) * baseInnerR, cy + Math.sin(sepAngle) * baseInnerR);
+                                sliceCtx.lineTo(cx + Math.cos(sepAngle) * sR, cy + Math.sin(sepAngle) * sR);
+                                sliceCtx.stroke();
+                            }
+                        };
+
+                        // 透明蒙版凿穿色块
+                        sliceCtx.save();
+                        sliceCtx.lineWidth = config.sliceGap;
+                        sliceCtx.lineCap = 'butt';
+                        sliceCtx.globalCompositeOperation = 'destination-out';
+                        sliceCtx.strokeStyle = 'rgba(0,0,0,1)';
+                        drawAllSeparators();
+                        sliceCtx.restore();
+
+                        // 填充模式：彩色分割线叠在上面
+                        if (config.sliceGapMode) {
+                            sliceCtx.save();
+                            sliceCtx.lineWidth = config.sliceGap;
+                            sliceCtx.lineCap = 'butt';
+                            sliceCtx.strokeStyle = config.sliceGapColor;
+                            drawAllSeparators();
+                            sliceCtx.restore();
                         }
                     }
-                    sliceCtx.restore();
+
+                    sliceCtx.restore(); // clip
                 }
 
-                // 把色块层（已应用透明蒙版）合成到主 ctx 之上，在卡片背景之上
+                // 把色块层合成到主 ctx（卡片背景之上）
                 ctx.save();
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
                 ctx.drawImage(sliceLayer, 0, 0);
                 ctx.restore();
-
-                if (config.sliceGapEnabled && config.sliceGap > 0 && config.sliceGapMode) {
-                    const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
-                    // 2b. 填充模式：在透明蒙版之上叠彩色线条，随生长进度逐条出现
-                    {
-                        ctx.save();
-                        ctx.lineWidth = config.sliceGap;
-                        ctx.lineCap = 'butt';
-                        ctx.strokeStyle = config.sliceGapColor;
-                        let sepAngle = startRad;
-                        // startAngle 起跑线（彩色，一直存在）
-                        const startSR = radius * Math.max(scales[0], scales[dataPoints.length - 1]);
-                        ctx.beginPath();
-                        ctx.moveTo(cx + Math.cos(startRad) * baseInnerR, cy + Math.sin(startRad) * baseInnerR);
-                        ctx.lineTo(cx + Math.cos(startRad) * startSR, cy + Math.sin(startRad) * startSR);
-                        ctx.stroke();
-                        for (let i = 0; i < dataPoints.length - 1; i++) {
-                            const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
-                            sepAngle += sliceAngle;
-                            if (sepAngle - startRad <= maxAngle + 0.01) {
-                                const nextI = i + 1;
-                                const sR = radius * Math.max(scales[i], scales[nextI]);
-                                ctx.beginPath();
-                                ctx.moveTo(cx + Math.cos(sepAngle) * baseInnerR, cy + Math.sin(sepAngle) * baseInnerR);
-                                ctx.lineTo(cx + Math.cos(sepAngle) * sR, cy + Math.sin(sepAngle) * sR);
-                                ctx.stroke();
-                            }
-                        }
-                        ctx.restore();
-                    }
-                }
 
                 // 第三遍：环形图中心圆（覆盖内圆边缘）
                 if (config.pieType === 'donut') {
