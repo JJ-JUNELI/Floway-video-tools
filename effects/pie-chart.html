@@ -200,16 +200,12 @@
                             <option value="donut" selected>环形图 (Donut)</option>
                         </select></div>
                     <div id="DonutOpts" style="margin-top:6px;">
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>环宽比例</span><span id="DonutWidthVal">35%</span></div>
-                            <input type="range" id="DonutWidth" min="20" max="80" step="5" value="35"></div></div>
-                        <div class="row">
-                            <div class="stack" style="width:70px;flex:none"><div class="label-line"><span>中心圆</span></div>
-                                <select id="DonutCenterMode">
-                                    <option value="color">填色</option>
-                                    <option value="transparent">透明</option>
-                                </select></div>
-                            <div id="DonutCenterColorWrap" class="stack" style="flex:1"><div class="label-line"><span>颜色</span></div>
-                                <input type="color" id="DonutCenterColor" value="#ffffff"></div>
+                        <div class="row stack"><div class="label-line"><span>中心圆半径</span><span id="DonutWidthVal">65%</span></div>
+                            <input type="range" id="DonutWidth" min="20" max="80" step="5" value="65"></div>
+                        <div class="sub-title"><span>中心圆填充</span><input type="checkbox" id="DonutCenterMode" checked></div>
+                        <div id="DonutCenterColorWrap" class="row stack">
+                            <div class="label-line"><span>中心圆颜色</span></div>
+                            <input type="color" id="DonutCenterColor" value="#ffffff">
                         </div>
                     </div>
                 </div>
@@ -227,16 +223,12 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>圆心 Y</span><span id="PieCenterYVal">0</span></div>
                             <input type="range" id="PieCenterY" min="-300" max="300" step="5" value="0"></div>
                     </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>间隔宽度</span><span id="SliceGapVal">3px</span></div>
-                            <input type="range" id="SliceGap" min="0" max="20" step="1" value="3"></div>
-                        <div class="stack" style="width:70px;flex:none"><div class="label-line"><span>间隔模式</span></div>
-                            <select id="SliceGapMode">
-                                <option value="transparent">透明</option>
-                                <option value="fill">填充</option>
-                            </select></div>
-                        <div id="SliceGapColorWrap" class="stack" style="flex:1;display:none"><div class="label-line"><span>颜色</span></div>
-                            <input type="color" id="SliceGapColor" value="#ffffff"></div>
+                    <div class="row stack"><div class="label-line"><span>分割线粗细</span><span id="SliceGapVal">3px</span></div>
+                        <input type="range" id="SliceGap" min="0" max="20" step="1" value="3"></div>
+                    <div class="sub-title"><span>分割线填充</span><input type="checkbox" id="SliceGapMode"></div>
+                    <div id="SliceGapColorWrap" class="row stack" style="display:none">
+                        <div class="label-line"><span>分割线颜色</span></div>
+                        <input type="color" id="SliceGapColor" value="#ffffff">
                     </div>
                     <div class="sub-title" style="margin-top:8px"><span>阶梯缩放</span><input type="checkbox" id="StairScale"></div>
                     <div id="StairOpts" style="display:none">
@@ -474,10 +466,10 @@
             donutWidth: 35,
             donutCenterColor: '#ffffff',
             donutCenterTransparent: false,
-            donutCenterMode: 'color',
+            donutCenterMode: true,
             startAngle: 0,
             sliceGap: 3,
-            sliceGapMode: 'transparent',
+            sliceGapMode: false,
             sliceGapColor: '#ffffff',
             pieRadius: 250,
             pieCenterX: 0,
@@ -580,11 +572,11 @@
             ['DonutWidth',      'donutWidth',     'int',   'DonutWidthVal', '%'],
             ['StartAngle',      'startAngle',     'int',   'StartAngleVal', '°'],
             ['SliceGap',        'sliceGap',       'int',   'SliceGapVal', 'px'],
-            ['SliceGapMode',    'sliceGapMode'],
+            ['SliceGapMode',    'sliceGapMode',   'checked'],
             ['SliceGapColor',   'sliceGapColor'],
             ['DonutCenterColor',    'donutCenterColor'],
             ['DonutCenterTransparent', 'donutCenterTransparent', 'checked'],
-            ['DonutCenterMode', 'donutCenterMode'],
+            ['DonutCenterMode', 'donutCenterMode', 'checked'],
             ['PieRadius',       'pieRadius',      'int',   'PieRadiusVal'],
             ['PieCenterX',      'pieCenterX',     'int',   'PieCenterXVal'],
             ['PieCenterY',      'pieCenterY',     'int',   'PieCenterYVal'],
@@ -659,13 +651,17 @@
                     document.getElementById('LeaderLineOpts').style.display =
                         config.showLeaderLines ? '' : 'none';
                 }
+                if (key === 'donutWidth') {
+                    // 滑杆显示中心圆半径 %, 内部 donutWidth = 100 - 中心圆半径
+                    config.donutWidth = 100 - config.donutWidth;
+                }
                 if (key === 'sliceGapMode') {
                     document.getElementById('SliceGapColorWrap').style.display =
-                        config.sliceGapMode === 'fill' ? '' : 'none';
+                        config.sliceGapMode ? '' : 'none';
                 }
                 if (key === 'donutCenterMode') {
                     document.getElementById('DonutCenterColorWrap').style.display =
-                        config.donutCenterMode === 'color' ? '' : 'none';
+                        config.donutCenterMode ? '' : 'none';
                 }
                 if (key === 'stairScale' || key === 'stairManual') {
                     document.getElementById('StairOpts').style.display =
@@ -1014,7 +1010,7 @@
                     ctx.save();
                     ctx.lineWidth = config.sliceGap;
                     ctx.lineCap = 'butt';
-                    if (config.sliceGapMode === 'transparent') {
+                    if (!config.sliceGapMode) {
                         ctx.globalCompositeOperation = 'destination-out';
                         ctx.strokeStyle = 'rgba(0,0,0,1)';
                     } else {
@@ -1051,8 +1047,8 @@
                     ctx.save();
                     ctx.beginPath();
                     ctx.arc(cx, cy, innerR + 1, 0, Math.PI * 2);
-                    ctx.fillStyle = config.donutCenterMode === 'transparent'
-                        ? config.cardBg : config.donutCenterColor;
+                    ctx.fillStyle = config.donutCenterMode
+                        ? config.donutCenterColor : config.cardBg;
                     ctx.fill();
                     ctx.restore();
                 }
