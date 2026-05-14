@@ -197,6 +197,20 @@
                             <input type="color" id="DonutCenterColor" value="#ffffff">
                         </div>
                     </div>
+                    <div class="sub-title" style="margin-top:8px"><span>阶梯缩放</span><input type="checkbox" id="StairScale"></div>
+                    <div id="StairOpts" style="display:none">
+                        <div id="StairAutoOpts">
+                            <div class="row stack"><div class="label-line"><span>排序方式</span></div>
+                                <select id="StairSort" style="flex:1">
+                                    <option value="desc">数值降序</option>
+                                    <option value="asc">数值升序</option>
+                                    <option value="none">原始顺序</option>
+                                </select></div>
+                            <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>缩放范围</span><span id="StairRangeVal">30%</span></div>
+                                <input type="range" id="StairRange" min="0" max="80" step="5" value="30"></div></div>
+                        </div>
+                        <div class="sub-title"><span>手动模式</span><input type="checkbox" id="StairManual"></div>
+                    </div>
                 </div>
                 <div class="sub-section ss-teal" id="CenterTextSection">
                     <div class="sub-section-label">中心文字 (环形图)</div>
@@ -222,20 +236,6 @@
                             <input type="range" id="PieCenterX" min="-300" max="300" step="5" value="0"></div>
                         <div style="flex:1" class="stack"><div class="label-line"><span>位置 Y</span><span id="PieCenterYVal">0</span></div>
                             <input type="range" id="PieCenterY" min="-300" max="300" step="5" value="0"></div>
-                    </div>
-                    <div class="sub-title" style="margin-top:8px"><span>阶梯缩放</span><input type="checkbox" id="StairScale"></div>
-                    <div id="StairOpts" style="display:none">
-                        <div id="StairAutoOpts">
-                            <div class="row stack"><div class="label-line"><span>排序方式</span></div>
-                                <select id="StairSort" style="flex:1">
-                                    <option value="desc">数值降序</option>
-                                    <option value="asc">数值升序</option>
-                                    <option value="none">原始顺序</option>
-                                </select></div>
-                            <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>缩放范围</span><span id="StairRangeVal">30%</span></div>
-                                <input type="range" id="StairRange" min="0" max="80" step="5" value="30"></div></div>
-                        </div>
-                        <div class="sub-title"><span>手动模式</span><input type="checkbox" id="StairManual"></div>
                     </div>
                 </div>
                 <div class="sub-section ss-rose">
