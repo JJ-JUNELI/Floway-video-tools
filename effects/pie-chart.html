@@ -1045,9 +1045,13 @@
                     ctx.save();
                     ctx.beginPath();
                     ctx.arc(cx, cy, innerR + 1, 0, Math.PI * 2);
-                    ctx.fillStyle = config.donutCenterMode
-                        ? config.donutCenterColor : config.cardBg;
-                    ctx.fill();
+                    if (config.donutCenterMode) {
+                        ctx.fillStyle = config.donutCenterColor;
+                        ctx.fill();
+                    } else {
+                        ctx.globalCompositeOperation = 'destination-out';
+                        ctx.fill();
+                    }
                     ctx.restore();
                 }
 
