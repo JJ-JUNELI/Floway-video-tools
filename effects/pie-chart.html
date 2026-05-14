@@ -965,8 +965,7 @@
                         config.stairSort === 'asc' ? a[1].value - b[1].value : b[1].value - a[1].value
                     );
                     const rank = sorted.findIndex(e => e[0] === i);
-                    // desc: rank 0 = 最大值 → 最大缩放; asc: rank 0 = 最小值 → 最小缩放
-                    return base + (config.stairSort === 'desc' ? (n - 1 - rank) : rank) * step;
+                    return base + (n - 1 - rank) * step;
                 });
 
                 let currentAngle = startRad;
