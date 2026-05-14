@@ -246,12 +246,15 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>辉光</span><span id="SliceGlowVal">0</span></div>
                             <input type="range" id="SliceGlow" min="0" max="100" step="2" value="0"></div>
                     </div>
-                    <div class="row stack"><div class="label-line"><span>分割线粗细</span><span id="SliceGapVal">3px</span></div>
-                        <input type="range" id="SliceGap" min="0" max="20" step="1" value="3"></div>
-                    <div class="sub-title"><span>分割线填充</span><input type="checkbox" id="SliceGapMode"></div>
-                    <div id="SliceGapColorWrap" class="row stack" style="display:none">
-                        <div class="label-line"><span>分割线颜色</span></div>
-                        <input type="color" id="SliceGapColor" value="#ffffff">
+                    <div class="sub-title" style="margin-top:8px"><span>显示分割线</span><input type="checkbox" id="SliceGapEnabled" checked></div>
+                    <div id="SliceGapOpts">
+                        <div class="row stack"><div class="label-line"><span>分割线粗细</span><span id="SliceGapVal">3px</span></div>
+                            <input type="range" id="SliceGap" min="0" max="20" step="1" value="3"></div>
+                        <div class="sub-title"><span>分割线填充</span><input type="checkbox" id="SliceGapMode"></div>
+                        <div id="SliceGapColorWrap" class="row stack" style="display:none">
+                            <div class="label-line"><span>分割线颜色</span></div>
+                            <input type="color" id="SliceGapColor" value="#ffffff">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -469,6 +472,7 @@
             donutCenterTransparent: false,
             donutCenterMode: true,
             startAngle: 0,
+            sliceGapEnabled: true,
             sliceGap: 3,
             sliceGapMode: false,
             sliceGapColor: '#ffffff',
@@ -572,6 +576,7 @@
             ['PieType',         'pieType'],
             ['DonutWidth',      'donutCenterPct', 'int',   'DonutWidthVal', '%'],
             ['StartAngle',      'startAngle',     'int',   'StartAngleVal', '°'],
+            ['SliceGapEnabled', 'sliceGapEnabled', 'checked'],
             ['SliceGap',        'sliceGap',       'int',   'SliceGapVal', 'px'],
             ['SliceGapMode',    'sliceGapMode',   'checked'],
             ['SliceGapColor',   'sliceGapColor'],
@@ -654,6 +659,10 @@
                 }
                 if (key === 'donutCenterPct') {
                     config.donutWidth = 100 - config.donutCenterPct;
+                }
+                if (key === 'sliceGapEnabled') {
+                    document.getElementById('SliceGapOpts').style.display =
+                        config.sliceGapEnabled ? '' : 'none';
                 }
                 if (key === 'sliceGapMode') {
                     document.getElementById('SliceGapColorWrap').style.display =
@@ -1003,7 +1012,7 @@
                 }
 
                 // 第二遍：分隔线压在扇形上面，等宽矩形条
-                if (config.sliceGap > 0) {
+                if (config.sliceGapEnabled && config.sliceGap > 0) {
                     let sepAngle = startRad;
                     ctx.save();
                     ctx.lineWidth = config.sliceGap;
