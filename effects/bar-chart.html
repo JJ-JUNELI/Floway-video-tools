@@ -117,49 +117,53 @@
                 <div class="group-title"><span>📝 标题设置</span></div>
                 <div class="sub-section ss-blue">
                     <div class="sub-section-label">内容</div>
-                    <div class="row stack"><div class="label-line"><span>主标题</span></div>
-                        <input type="text" id="MainTitle" value="汽车零售销量新能源月度渗透率走势"></div>
-                    <div class="row stack"><div class="label-line"><span>副标题 (右侧文字)</span></div>
-                        <input type="text" id="SubTitle" value="新能源乘用车渗透率超 50%"></div>
+                    <div class="sub-title"><span>启用主标题</span><input type="checkbox" id="ShowMainTitle" checked></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>主标题</span></div>
+                        <input type="text" id="MainTitle" value="汽车零售销量新能源月度渗透率走势">
+                    </div>
+                    <div class="sub-title"><span>启用副标题</span><input type="checkbox" id="ShowSubTitle" checked></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>副标题 (右侧文字)</span></div>
+                        <input type="text" id="SubTitle" value="新能源乘用车渗透率超 50%">
+                    </div>
                     <div class="row stack"><div class="label-line"><span>标题字体</span></div>
                         <div id="TitleFontMount" style="width:100%"></div></div>
                 </div>
                 <div class="sub-section ss-green">
                     <div class="sub-section-label">样式</div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题字号</span><span id="TitleSizeVal">26</span></div>
-                            <input type="range" id="TitleSize" min="12" max="72" step="2" value="26"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题字号</span><span id="SubTitleSizeVal">36</span></div>
-                            <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
+                        <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
+                            <div class="stack"><div class="label-line"><span>主标题字号</span><span id="TitleSizeVal">26</span></div>
+                                <input type="range" id="TitleSize" min="12" max="72" step="2" value="26"></div>
+                            <div class="stack"><div class="label-line"><span>主标题字重</span><span id="MainTitleWeightVal">700</span></div>
+                                <input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"></div>
+                            <div class="stack">
+                                <div class="label-line"><span>主标题颜色</span></div>
+                                <input type="color" id="TitleColor" value="#333333">
+                            </div>
+                            <div class="stack"><div class="label-line"><span>主标题 X</span><span id="MainTitleXVal">0</span></div>
+                                <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
+                            <div class="stack"><div class="label-line"><span>主标题 Y</span><span id="MainTitleYVal">-490</span></div>
+                                <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
+                            <div class="sub-title"><span>显示主标题括号</span><input type="checkbox" id="ShowBrackets" checked></div>
+                        </div>
+                        <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
+                            <div class="stack"><div class="label-line"><span>副标题字号</span><span id="SubTitleSizeVal">36</span></div>
+                                <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
+                            <div class="stack"><div class="label-line"><span>副标题字重</span><span id="SubTitleWeightVal">400</span></div>
+                                <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
+                            <div class="stack">
+                                <div class="label-line"><span>副标题颜色</span></div>
+                                <input type="color" id="SubTitleColor" value="#999999">
+                            </div>
+                            <div class="stack"><div class="label-line"><span>副标题 X</span><span id="SubTitleXVal">630</span></div>
+                                <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
+                            <div class="stack"><div class="label-line"><span>副标题 Y</span><span id="SubTitleYVal">0</span></div>
+                                <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
+                            <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
+                        </div>
                     </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题字重</span><span id="MainTitleWeightVal">700</span></div>
-                            <input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题字重</span><span id="SubTitleWeightVal">400</span></div>
-                            <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
-                    </div>
-                    <div class="row stack">
-                        <div class="label-line"><span>主标题颜色</span></div>
-                        <input type="color" id="TitleColor" value="#333333">
-                    </div>
-                    <div class="row stack">
-                        <div class="label-line"><span>副标题颜色</span></div>
-                        <input type="color" id="SubTitleColor" value="#999999">
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题 X</span><span id="MainTitleXVal">0</span></div>
-                            <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题 Y</span><span id="MainTitleYVal">-490</span></div>
-                            <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题 X</span><span id="SubTitleXVal">630</span></div>
-                            <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题 Y</span><span id="SubTitleYVal">0</span></div>
-                            <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
-                    </div>
-                    <div class="sub-title"><span>显示括号</span><input type="checkbox" id="ShowBrackets" checked></div>
-                    <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
                 </div>
             </div>
 
@@ -533,6 +537,8 @@
             showGrid: true,
             gridColor: '#c3bcaf',
             subTitleGlow: false,
+            showMainTitle: true,
+            showSubTitle: true,
         };
 
         // ====== 模式预设（切换主题时同步的参数） ======
@@ -641,6 +647,8 @@
             // 主题风格
             ['ShowBrackets',    'showBrackets',   'checked'],
             ['SubTitleGlow',    'subTitleGlow',   'checked'],
+            ['ShowMainTitle',   'showMainTitle',  'checked'],
+            ['ShowSubTitle',    'showSubTitle',   'checked'],
             ['NoiseGrain',      'noiseGrain',     'int',   'NoiseGrainVal'],
             ['Vignette',        'vignette',       'int',   'VignetteVal'],
             ['CardBorderWidth', 'cardBorderWidth', 'int',   'CardBorderWidthVal'],
@@ -1128,14 +1136,16 @@
             // === 标题 ===
             const titleAlpha = isHold ? 1 : clamp(rawProgress * 2.5, 0, 1);
             const subTitleAlpha = isHold ? 1 : clamp((rawProgress - 0.3) * 2, 0, 1);
-            ctx.save();
-            ctx.font = `${config.mainTitleWeight} ${config.mainTitleSize}px ${config.titleFont}`;
-            ctx.fillStyle = config.mainTitleColor;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.globalAlpha = titleAlpha;
-            let titleText = config.mainTitle;
-            if (config.showBrackets) titleText = `\u300C ${config.mainTitle} \u300D`;
-            ctx.fillText(titleText, 720 + config.mainTitleX, 540 + config.mainTitleY);
-            ctx.restore();
+            if (config.showMainTitle) {
+                ctx.save();
+                ctx.font = `${config.mainTitleWeight} ${config.mainTitleSize}px ${config.titleFont}`;
+                ctx.fillStyle = config.mainTitleColor;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.globalAlpha = titleAlpha;
+                let titleText = config.mainTitle;
+                if (config.showBrackets) titleText = `\u300C ${config.mainTitle} \u300D`;
+                ctx.fillText(titleText, 720 + config.mainTitleX, 540 + config.mainTitleY);
+                ctx.restore();
+            }
 
             // 副标题已移至最顶层绘制
 
@@ -1359,7 +1369,7 @@
             }
 
             // === 副标题（最顶层）===
-            {
+            if (config.showSubTitle) {
                 const subTitleAlpha = isHold ? 1 : clamp((rawProgress - 0.3) * 2, 0, 1);
                 ctx.save();
                 ctx.font = `${config.subTitleWeight} ${config.subTitleSize}px ${config.titleFont}`;
