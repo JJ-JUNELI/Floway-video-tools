@@ -983,13 +983,31 @@
                 sliceCtx.restore();
 
                 if (maxAngle > 0.001) {
-                    // 旋转遮板：从 startRad 顺时针打开到 startRad + maxAngle
-                    // 底层先把"完整饼图"画好（所有扇形 + 分割线），clip 控制可见区域
+                    // 预先计算扫描头参数（clip 构建需要用到）
+                    const hasGap = config.sliceGapEnabled && config.sliceGap > 0;
+                    const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+                    const outerMaxR = radius * Math.max(...scales);
+                    const halfGapAngle = hasGap ? (config.sliceGap / 2) / outerMaxR : 0;
+                    const scanAngle = startRad + maxAngle - halfGapAngle;
+                    const scanTrailingAngle = startRad + maxAngle - halfGapAngle * 2;
+                    const scanHeadVisible = hasGap && maxAngle > halfGapAngle * 2;
+
+                    // 旋转遮板 clip：右边界沿扫描头右侧笛卡尔边缘（消除扇形切割）
                     sliceCtx.save();
                     const bigR = radius * 3;
                     sliceCtx.beginPath();
                     sliceCtx.moveTo(cx, cy);
-                    sliceCtx.arc(cx, cy, bigR, startRad, startRad + maxAngle);
+                    if (scanHeadVisible) {
+                        // 弧线从 startRad 画到扫描头中心角，再沿扫描头右边缘直线下来
+                        // 右边缘方向：与 scanAngle 径向方向垂直（顺时针）
+                        const edgeDx = Math.sin(scanAngle) * (config.sliceGap / 2);
+                        const edgeDy = -Math.cos(scanAngle) * (config.sliceGap / 2);
+                        sliceCtx.arc(cx, cy, bigR, startRad, scanAngle);
+                        sliceCtx.lineTo(cx + Math.cos(scanAngle) * bigR + edgeDx, cy + Math.sin(scanAngle) * bigR + edgeDy);
+                        sliceCtx.lineTo(cx + Math.cos(scanAngle) * baseInnerR + edgeDx, cy + Math.sin(scanAngle) * baseInnerR + edgeDy);
+                    } else {
+                        sliceCtx.arc(cx, cy, bigR, startRad, startRad + maxAngle);
+                    }
                     sliceCtx.closePath();
                     sliceCtx.clip();
 
@@ -1029,24 +1047,12 @@
                     }
 
                     // 第二遍：扫描头 + 已扫过的静态分割线
-                    if (config.sliceGapEnabled && config.sliceGap > 0) {
-                        const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
-                        // 扫描头：宽度 = sliceGap 的径向条带，位置在 leading edge 内侧
-                        // 用最外层半径计算 halfGap 对应的弧度，让扫描头整体在 clip 内
-                        const outerMaxR = radius * Math.max(...scales);
-                        const halfGapAngle = (config.sliceGap / 2) / outerMaxR;
-                        // 扫描头中心角度（保证 right edge ≤ leading edge）
-                        const scanAngle = startRad + maxAngle - halfGapAngle;
-                        // trailing edge 角度：超过它的边界才算"已被扫过"
-                        const scanTrailingAngle = startRad + maxAngle - halfGapAngle * 2;
-
-                        // 收集扫描头 + 已经被完全扫过的静态分割线
+                    if (hasGap) {
+                        // 收集扫描头 + 已被完全扫过的静态分割线
                         const drawList = [];
-                        // 扫描头：仅当 maxAngle 足以让扫描头进入 clip 时画
-                        if (maxAngle > halfGapAngle * 2) {
+                        if (scanHeadVisible) {
                             drawList.push({ angle: scanAngle, sR: outerMaxR });
                         }
-                        // 静态分割线（不含 startRad，那条作为起跑线单独处理）
                         let sepAngle = startRad;
                         for (let i = 0; i < dataPoints.length - 1; i++) {
                             sepAngle += (dataPoints[i].value / total) * Math.PI * 2;
@@ -1072,6 +1078,12 @@
                             sliceCtx.globalCompositeOperation = 'destination-out';
                             sliceCtx.strokeStyle = 'rgba(0,0,0,1)';
                             strokeList(drawList);
+                            // 实心饼：圆心处加圆形终点，消除尖锐聚合
+                            if (config.pieType !== 'donut') {
+                                sliceCtx.beginPath();
+                                sliceCtx.arc(cx, cy, config.sliceGap / 2, 0, Math.PI * 2);
+                                sliceCtx.fill();
+                            }
                             sliceCtx.restore();
 
                             // 填充模式：彩色分割线叠在上面
@@ -1081,6 +1093,12 @@
                                 sliceCtx.lineCap = 'butt';
                                 sliceCtx.strokeStyle = config.sliceGapColor;
                                 strokeList(drawList);
+                                if (config.pieType !== 'donut') {
+                                    sliceCtx.fillStyle = config.sliceGapColor;
+                                    sliceCtx.beginPath();
+                                    sliceCtx.arc(cx, cy, config.sliceGap / 2, 0, Math.PI * 2);
+                                    sliceCtx.fill();
+                                }
                                 sliceCtx.restore();
                             }
                         }
