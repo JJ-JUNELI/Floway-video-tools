@@ -990,7 +990,7 @@
                     const halfGapAngle = hasGap ? (config.sliceGap / 2) / outerMaxR : 0;
                     const scanAngle = startRad + maxAngle - halfGapAngle;
                     const scanTrailingAngle = startRad + maxAngle - halfGapAngle * 2;
-                    const scanHeadVisible = hasGap && maxAngle > halfGapAngle * 2;
+                    const scanHeadVisible = hasGap && maxAngle > halfGapAngle;
 
                     // 旋转遮板 clip：右边界沿扫描头右侧笛卡尔边缘（消除扇形切割）
                     sliceCtx.save();
@@ -1071,46 +1071,42 @@
                         };
 
                         if (drawList.length > 0) {
-                            // 透明蒙版凿穿色块：多凿 1px 消除抗锯齿白边
-                            sliceCtx.save();
-                            sliceCtx.lineWidth = config.sliceGap + 2;
-                            sliceCtx.lineCap = 'butt';
-                            sliceCtx.globalCompositeOperation = 'destination-out';
-                            sliceCtx.strokeStyle = 'rgba(0,0,0,1)';
-                            strokeList(drawList);
-                            sliceCtx.restore();
-
-                            // 填充模式：彩色分割线叠在上面（原宽度）
                             if (config.sliceGapMode) {
+                                // 彩色模式：直接画在色块上，无需凿穿（避免 destination-out 白边）
                                 sliceCtx.save();
                                 sliceCtx.lineWidth = config.sliceGap;
                                 sliceCtx.lineCap = 'butt';
                                 sliceCtx.strokeStyle = config.sliceGapColor;
                                 strokeList(drawList);
                                 sliceCtx.restore();
+                            } else {
+                                // 透明缝隙模式：destination-out 凿穿
+                                sliceCtx.save();
+                                sliceCtx.lineWidth = config.sliceGap;
+                                sliceCtx.lineCap = 'butt';
+                                sliceCtx.globalCompositeOperation = 'destination-out';
+                                sliceCtx.strokeStyle = 'rgba(0,0,0,1)';
+                                strokeList(drawList);
+                                sliceCtx.restore();
+                            }
+
+                            // 实心饼共享圆心（clip 外、drawList 非空时才画）
+                            if (config.pieType !== 'donut') {
+                                sliceCtx.save();
+                                if (config.sliceGapMode) {
+                                    sliceCtx.fillStyle = config.sliceGapColor;
+                                } else {
+                                    sliceCtx.globalCompositeOperation = 'destination-out';
+                                }
+                                sliceCtx.beginPath();
+                                sliceCtx.arc(cx, cy, config.sliceGap / 2, 0, Math.PI * 2);
+                                sliceCtx.fill();
+                                sliceCtx.restore();
                             }
                         }
                     }
 
                     sliceCtx.restore(); // clip
-
-                    // 实心饼共享圆心（clip 外画，确保始终是完整圆，掩盖内半径对齐误差）
-                    if (hasGap && config.pieType !== 'donut') {
-                        sliceCtx.save();
-                        sliceCtx.globalCompositeOperation = 'destination-out';
-                        sliceCtx.beginPath();
-                        sliceCtx.arc(cx, cy, config.sliceGap / 2 + 1, 0, Math.PI * 2);
-                        sliceCtx.fill();
-                        sliceCtx.restore();
-                        if (config.sliceGapMode) {
-                            sliceCtx.save();
-                            sliceCtx.fillStyle = config.sliceGapColor;
-                            sliceCtx.beginPath();
-                            sliceCtx.arc(cx, cy, config.sliceGap / 2, 0, Math.PI * 2);
-                            sliceCtx.fill();
-                            sliceCtx.restore();
-                        }
-                    }
                 }
 
                 // 把色块层合成到主 ctx（卡片背景之上）
