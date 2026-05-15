@@ -1028,44 +1028,61 @@
                         drawAngle += sliceAngle;
                     }
 
-                    // 第二遍：所有分割线（完整位置，不依赖 progress）
+                    // 第二遍：扫描头 + 已扫过的静态分割线
                     if (config.sliceGapEnabled && config.sliceGap > 0) {
                         const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
-                        const drawAllSeparators = (strokeFn) => {
-                            let sepAngle = startRad;
-                            const startSR = radius * Math.max(scales[0], scales[dataPoints.length - 1]);
-                            sliceCtx.beginPath();
-                            sliceCtx.moveTo(cx + Math.cos(startRad) * baseInnerR, cy + Math.sin(startRad) * baseInnerR);
-                            sliceCtx.lineTo(cx + Math.cos(startRad) * startSR, cy + Math.sin(startRad) * startSR);
-                            sliceCtx.stroke();
-                            for (let i = 0; i < dataPoints.length - 1; i++) {
-                                const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
-                                sepAngle += sliceAngle;
-                                const sR = radius * Math.max(scales[i], scales[i + 1]);
+                        // 扫描头：宽度 = sliceGap 的径向条带，位置在 leading edge 内侧
+                        // 用最外层半径计算 halfGap 对应的弧度，让扫描头整体在 clip 内
+                        const outerMaxR = radius * Math.max(...scales);
+                        const halfGapAngle = (config.sliceGap / 2) / outerMaxR;
+                        // 扫描头中心角度（保证 right edge ≤ leading edge）
+                        const scanAngle = startRad + maxAngle - halfGapAngle;
+                        // trailing edge 角度：超过它的边界才算"已被扫过"
+                        const scanTrailingAngle = startRad + maxAngle - halfGapAngle * 2;
+
+                        // 收集扫描头 + 已经被完全扫过的静态分割线
+                        const drawList = [];
+                        // 扫描头：仅当 maxAngle 足以让扫描头进入 clip 时画
+                        if (maxAngle > halfGapAngle * 2) {
+                            drawList.push({ angle: scanAngle, sR: outerMaxR });
+                        }
+                        // 静态分割线（不含 startRad，那条作为起跑线单独处理）
+                        let sepAngle = startRad;
+                        for (let i = 0; i < dataPoints.length - 1; i++) {
+                            sepAngle += (dataPoints[i].value / total) * Math.PI * 2;
+                            if (sepAngle <= scanTrailingAngle) {
+                                drawList.push({ angle: sepAngle, sR: radius * Math.max(scales[i], scales[i + 1]) });
+                            }
+                        }
+
+                        const strokeList = (list) => {
+                            for (const s of list) {
                                 sliceCtx.beginPath();
-                                sliceCtx.moveTo(cx + Math.cos(sepAngle) * baseInnerR, cy + Math.sin(sepAngle) * baseInnerR);
-                                sliceCtx.lineTo(cx + Math.cos(sepAngle) * sR, cy + Math.sin(sepAngle) * sR);
+                                sliceCtx.moveTo(cx + Math.cos(s.angle) * baseInnerR, cy + Math.sin(s.angle) * baseInnerR);
+                                sliceCtx.lineTo(cx + Math.cos(s.angle) * s.sR, cy + Math.sin(s.angle) * s.sR);
                                 sliceCtx.stroke();
                             }
                         };
 
-                        // 透明蒙版凿穿色块
-                        sliceCtx.save();
-                        sliceCtx.lineWidth = config.sliceGap;
-                        sliceCtx.lineCap = 'butt';
-                        sliceCtx.globalCompositeOperation = 'destination-out';
-                        sliceCtx.strokeStyle = 'rgba(0,0,0,1)';
-                        drawAllSeparators();
-                        sliceCtx.restore();
-
-                        // 填充模式：彩色分割线叠在上面
-                        if (config.sliceGapMode) {
+                        if (drawList.length > 0) {
+                            // 透明蒙版凿穿色块
                             sliceCtx.save();
                             sliceCtx.lineWidth = config.sliceGap;
                             sliceCtx.lineCap = 'butt';
-                            sliceCtx.strokeStyle = config.sliceGapColor;
-                            drawAllSeparators();
+                            sliceCtx.globalCompositeOperation = 'destination-out';
+                            sliceCtx.strokeStyle = 'rgba(0,0,0,1)';
+                            strokeList(drawList);
                             sliceCtx.restore();
+
+                            // 填充模式：彩色分割线叠在上面
+                            if (config.sliceGapMode) {
+                                sliceCtx.save();
+                                sliceCtx.lineWidth = config.sliceGap;
+                                sliceCtx.lineCap = 'butt';
+                                sliceCtx.strokeStyle = config.sliceGapColor;
+                                strokeList(drawList);
+                                sliceCtx.restore();
+                            }
                         }
                     }
 
@@ -1077,6 +1094,21 @@
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
                 ctx.drawImage(sliceLayer, 0, 0);
                 ctx.restore();
+
+                // startRad 起跑线（idea 1）：仅 sliceGapMode=true 时画在主 ctx 上，t=0 即可见
+                if (config.sliceGapEnabled && config.sliceGap > 0 && config.sliceGapMode) {
+                    const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+                    const startSR = radius * Math.max(scales[0], scales[dataPoints.length - 1]);
+                    ctx.save();
+                    ctx.lineWidth = config.sliceGap;
+                    ctx.lineCap = 'butt';
+                    ctx.strokeStyle = config.sliceGapColor;
+                    ctx.beginPath();
+                    ctx.moveTo(cx + Math.cos(startRad) * baseInnerR, cy + Math.sin(startRad) * baseInnerR);
+                    ctx.lineTo(cx + Math.cos(startRad) * startSR, cy + Math.sin(startRad) * startSR);
+                    ctx.stroke();
+                    ctx.restore();
+                }
 
                 // 第三遍：环形图中心圆（覆盖内圆边缘）
                 if (config.pieType === 'donut') {
