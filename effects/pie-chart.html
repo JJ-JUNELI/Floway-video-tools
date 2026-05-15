@@ -1061,29 +1061,12 @@
                             }
                         }
 
-                        // 实心饼：内端从 sliceGap/2 处开始，保留圆头空间；圆环：从 baseInnerR 开始
-                        const innerStart = config.pieType === 'donut' ? baseInnerR : config.sliceGap / 2;
-
                         const strokeList = (list) => {
                             for (const s of list) {
                                 sliceCtx.beginPath();
-                                sliceCtx.moveTo(cx + Math.cos(s.angle) * innerStart, cy + Math.sin(s.angle) * innerStart);
+                                sliceCtx.moveTo(cx + Math.cos(s.angle) * baseInnerR, cy + Math.sin(s.angle) * baseInnerR);
                                 sliceCtx.lineTo(cx + Math.cos(s.angle) * s.sR, cy + Math.sin(s.angle) * s.sR);
                                 sliceCtx.stroke();
-                            }
-                        };
-
-                        // 实心饼每条分割线在内端中点画圆（胶囊形圆头，tip 顶到 cx,cy）
-                        const circleList = (list) => {
-                            if (config.pieType === 'donut') return;
-                            for (const s of list) {
-                                sliceCtx.beginPath();
-                                sliceCtx.arc(
-                                    cx + Math.cos(s.angle) * innerStart,
-                                    cy + Math.sin(s.angle) * innerStart,
-                                    config.sliceGap / 2, 0, Math.PI * 2
-                                );
-                                sliceCtx.fill();
                             }
                         };
 
@@ -1095,7 +1078,6 @@
                             sliceCtx.globalCompositeOperation = 'destination-out';
                             sliceCtx.strokeStyle = 'rgba(0,0,0,1)';
                             strokeList(drawList);
-                            circleList(drawList);
                             sliceCtx.restore();
 
                             // 填充模式：彩色分割线叠在上面
@@ -1105,14 +1087,30 @@
                                 sliceCtx.lineCap = 'butt';
                                 sliceCtx.strokeStyle = config.sliceGapColor;
                                 strokeList(drawList);
-                                sliceCtx.fillStyle = config.sliceGapColor;
-                                circleList(drawList);
                                 sliceCtx.restore();
                             }
                         }
                     }
 
                     sliceCtx.restore(); // clip
+
+                    // 实心饼共享圆心（clip 外画，确保始终是完整圆，掩盖内半径对齐误差）
+                    if (hasGap && config.pieType !== 'donut') {
+                        sliceCtx.save();
+                        sliceCtx.globalCompositeOperation = 'destination-out';
+                        sliceCtx.beginPath();
+                        sliceCtx.arc(cx, cy, config.sliceGap / 2, 0, Math.PI * 2);
+                        sliceCtx.fill();
+                        sliceCtx.restore();
+                        if (config.sliceGapMode) {
+                            sliceCtx.save();
+                            sliceCtx.fillStyle = config.sliceGapColor;
+                            sliceCtx.beginPath();
+                            sliceCtx.arc(cx, cy, config.sliceGap / 2, 0, Math.PI * 2);
+                            sliceCtx.fill();
+                            sliceCtx.restore();
+                        }
+                    }
                 }
 
                 // 把色块层合成到主 ctx（卡片背景之上）
@@ -1124,24 +1122,15 @@
                 // startRad 起跑线：仅 sliceGapMode=true 时画在主 ctx 上，t=0 即可见
                 if (config.sliceGapEnabled && config.sliceGap > 0 && config.sliceGapMode) {
                     const bInner = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
-                    const iStart = config.pieType === 'donut' ? bInner : config.sliceGap / 2;
                     const startSR = radius * Math.max(scales[0], scales[dataPoints.length - 1]);
                     ctx.save();
                     ctx.lineWidth = config.sliceGap;
                     ctx.lineCap = 'butt';
                     ctx.strokeStyle = config.sliceGapColor;
                     ctx.beginPath();
-                    ctx.moveTo(cx + Math.cos(startRad) * iStart, cy + Math.sin(startRad) * iStart);
+                    ctx.moveTo(cx + Math.cos(startRad) * bInner, cy + Math.sin(startRad) * bInner);
                     ctx.lineTo(cx + Math.cos(startRad) * startSR, cy + Math.sin(startRad) * startSR);
                     ctx.stroke();
-                    // 实心饼起跑线也画圆头
-                    if (config.pieType !== 'donut') {
-                        ctx.beginPath();
-                        ctx.arc(cx + Math.cos(startRad) * iStart, cy + Math.sin(startRad) * iStart,
-                                config.sliceGap / 2, 0, Math.PI * 2);
-                        ctx.fillStyle = config.sliceGapColor;
-                        ctx.fill();
-                    }
                     ctx.restore();
                 }
 
