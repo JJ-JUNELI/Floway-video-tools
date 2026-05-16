@@ -1128,6 +1128,29 @@
                     }
                 }
 
+                // 起跑线：t=0 起始终静止在 startRad（彩色间隔模式）
+                if (config.sliceGapEnabled && config.sliceGap > 0 && config.sliceGapMode && total > 0) {
+                    const bInner = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+                    const startSR = radius * Math.max(...scales);
+                    sliceCtx.save();
+                    sliceCtx.lineWidth = config.sliceGap;
+                    sliceCtx.lineCap = 'butt';
+                    sliceCtx.strokeStyle = config.sliceGapColor;
+                    sliceCtx.beginPath();
+                    sliceCtx.moveTo(cx + Math.cos(startRad) * bInner, cy + Math.sin(startRad) * bInner);
+                    sliceCtx.lineTo(cx + Math.cos(startRad) * startSR, cy + Math.sin(startRad) * startSR);
+                    sliceCtx.stroke();
+                    sliceCtx.restore();
+                    if (config.pieType !== 'donut') {
+                        sliceCtx.save();
+                        sliceCtx.fillStyle = config.sliceGapColor;
+                        sliceCtx.beginPath();
+                        sliceCtx.arc(cx, cy, config.sliceGap / 2, 0, Math.PI * 2);
+                        sliceCtx.fill();
+                        sliceCtx.restore();
+                    }
+                }
+
                 // 把色块层合成到主 ctx（卡片背景之上）
                 ctx.save();
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
