@@ -1129,96 +1129,54 @@
                         sliceCtx.restore();
                     }
 
-                    // === 辉光层（B 三层合成）：完整多色 shadowBlur，按扫描进度羽化淡出 ===
+                    // 辉光层：每块只画已显现范围（到 scanAngle 截止），shadowBlur 自然
+                    // 延伸过 scanAngle → 多色软化前向光晕，无需 conic 羽化
                     if (config.sliceGlow > 0 && total > 0) {
-                        // 1) 完整扇形 + 每块自身颜色的 shadowBlur（不裁切，halo 不被截）
-                        let gA = startRad;
+                        let gAng = startRad;
                         for (let i = 0; i < dataPoints.length; i++) {
                             const sl = dataPoints[i];
                             const sa = (sl.value / total) * Math.PI * 2;
-                            const sR = radius * scales[i];
-                            const iR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
-                            glowCtx.save();
-                            glowCtx.shadowColor = sl.color;
-                            glowCtx.shadowBlur = config.sliceGlow;
-                            glowCtx.beginPath();
-                            if (config.pieType === 'donut') {
-                                glowCtx.arc(cx, cy, sR, gA, gA + sa);
-                                glowCtx.arc(cx, cy, iR, gA + sa, gA, true);
-                                glowCtx.closePath();
-                            } else {
-                                glowCtx.moveTo(cx, cy);
-                                glowCtx.arc(cx, cy, sR, gA, gA + sa);
-                                glowCtx.closePath();
+                            const revEnd = Math.min(gAng + sa, scanAngle);
+                            if (revEnd > gAng + 0.001) {
+                                const sR = radius * scales[i];
+                                glowCtx.save();
+                                glowCtx.shadowColor = sl.color;
+                                glowCtx.shadowBlur = config.sliceGlow;
+                                glowCtx.fillStyle = sl.color;
+                                glowCtx.beginPath();
+                                if (config.pieType === 'donut') {
+                                    glowCtx.arc(cx, cy, sR, gAng, revEnd);
+                                    glowCtx.arc(cx, cy, baseInnerR, revEnd, gAng, true);
+                                    glowCtx.closePath();
+                                } else {
+                                    glowCtx.moveTo(cx, cy);
+                                    glowCtx.arc(cx, cy, sR, gAng, revEnd);
+                                    glowCtx.closePath();
+                                }
+                                glowCtx.fill();
+                                glowCtx.restore();
                             }
-                            glowCtx.fillStyle = sl.color;
-                            glowCtx.fill();
-                            glowCtx.restore();
-                            gA += sa;
+                            gAng += sa;
                         }
-
-                        // 1b) 凿掉扇形实体，只留 halo（避免羽化区露出实色块）
-                        glowCtx.save();
-                        glowCtx.globalCompositeOperation = 'destination-out';
-                        let gB = startRad;
-                        for (let i = 0; i < dataPoints.length; i++) {
-                            const sl = dataPoints[i];
-                            const sa = (sl.value / total) * Math.PI * 2;
-                            const sR = radius * scales[i];
-                            const iR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
-                            glowCtx.beginPath();
-                            if (config.pieType === 'donut') {
-                                glowCtx.arc(cx, cy, sR, gB, gB + sa);
-                                glowCtx.arc(cx, cy, iR, gB + sa, gB, true);
-                                glowCtx.closePath();
-                            } else {
-                                glowCtx.moveTo(cx, cy);
-                                glowCtx.arc(cx, cy, sR, gB, gB + sa);
-                                glowCtx.closePath();
-                            }
-                            glowCtx.fillStyle = 'rgba(0,0,0,1)';
-                            glowCtx.fill();
-                            gB += sa;
-                        }
-                        glowCtx.restore();
-
-                        // 2) 羽化遮罩：扫描头处由实变透明，避免硬切
-                        const TWO_PI = Math.PI * 2;
-                        const revealFrac = Math.min(maxAngle / TWO_PI, 1);
-                        if (revealFrac < 0.999) {
-                            const featherAng = Math.min(Math.max(config.sliceGlow / outerMaxR * 1.5, 0.06), 0.6);
-                            const p1 = Math.max(revealFrac - featherAng / TWO_PI, 0);
-                            const cg = glowCtx.createConicGradient(startRad, cx, cy);
-                            cg.addColorStop(0, 'rgba(255,255,255,1)');
-                            if (p1 > 0) cg.addColorStop(p1, 'rgba(255,255,255,1)');
-                            cg.addColorStop(revealFrac, 'rgba(255,255,255,0)');
-                            cg.addColorStop(1, 'rgba(255,255,255,0)');
-                            glowCtx.save();
-                            glowCtx.globalCompositeOperation = 'destination-in';
-                            glowCtx.fillStyle = cg;
-                            glowCtx.fillRect(0, 0, baseWidth, baseHeight);
-                            glowCtx.restore();
-                        }
-
-                        // 3) 透明缝隙模式：把缝隙从辉光层凿穿，否则透过 sliceLayer 缝隙能看到辉光描边
+                        // 透明缝隙：从辉光层凿穿缝隙，防止填色透过 sliceLayer 透明缝渗出
                         if (hasGap && !config.sliceGapMode) {
                             glowCtx.save();
                             glowCtx.globalCompositeOperation = 'destination-out';
                             glowCtx.lineWidth = config.sliceGap;
                             glowCtx.lineCap = 'butt';
                             glowCtx.strokeStyle = 'rgba(0,0,0,1)';
-                            const carve = (ang, len) => {
+                            const gCarve = (ang, len) => {
                                 glowCtx.beginPath();
                                 glowCtx.moveTo(cx + Math.cos(ang) * baseInnerR, cy + Math.sin(ang) * baseInnerR);
                                 glowCtx.lineTo(cx + Math.cos(ang) * len, cy + Math.sin(ang) * len);
                                 glowCtx.stroke();
                             };
-                            carve(startRad, outerMaxR);
-                            carve(scanAngle, outerMaxR);
-                            let sepA = startRad;
+                            gCarve(startRad, outerMaxR);
+                            gCarve(scanAngle, outerMaxR);
+                            let gSepA = startRad;
                             for (let i = 0; i < dataPoints.length - 1; i++) {
-                                sepA += (dataPoints[i].value / total) * Math.PI * 2;
-                                if (sepA <= scanTrailingAngle) carve(sepA, radius * Math.max(scales[i], scales[i + 1]));
+                                gSepA += (dataPoints[i].value / total) * Math.PI * 2;
+                                if (gSepA <= scanTrailingAngle) gCarve(gSepA, radius * Math.max(scales[i], scales[i + 1]));
                             }
                             if (config.pieType !== 'donut') {
                                 glowCtx.beginPath();
