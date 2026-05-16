@@ -988,8 +988,8 @@
                     const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
                     const outerMaxR = radius * Math.max(...scales);
                     const halfGapAngle = hasGap ? (config.sliceGap / 2) / outerMaxR : 0;
-                    // 扫描头始终显示：maxAngle 不足 halfGapAngle 时钳制到 startRad
-                    const scanAngle = startRad + Math.max(maxAngle - halfGapAngle, 0);
+                    // 扫描头跟随 maxAngle，结束时与 startRad 起跑线精确重合
+                    const scanAngle = startRad + maxAngle;
                     const scanTrailingAngle = scanAngle - halfGapAngle;
                     const scanHeadVisible = hasGap; // 始终显示
 
