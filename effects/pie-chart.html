@@ -1033,10 +1033,6 @@
 
                         sliceCtx.save();
                         if (config.sliceOpacity < 100) sliceCtx.globalAlpha = config.sliceOpacity / 100;
-                        if (config.sliceGlow > 0) {
-                            sliceCtx.shadowColor = slice.color;
-                            sliceCtx.shadowBlur = config.sliceGlow;
-                        }
                         const grad = sliceCtx.createRadialGradient(cx, cy, innerR, cx, cy, sliceR);
                         grad.addColorStop(0, slice.color);
                         grad.addColorStop(1, lightenColor(slice.color, 35));
@@ -1161,8 +1157,18 @@
                 }
 
                 // 把色块层合成到主 ctx（卡片背景之上）
+                // 辉光在合成时作为整体轮廓的投影，避免被旋转 clip 截断、
+                // 也不会渗进透明缝隙形成彩色描边
                 ctx.save();
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
+                if (config.sliceGlow > 0 && total > 0) {
+                    let domColor = dataPoints[0].color, domVal = -1;
+                    for (const dp of dataPoints) {
+                        if (dp.value > domVal) { domVal = dp.value; domColor = dp.color; }
+                    }
+                    ctx.shadowColor = domColor;
+                    ctx.shadowBlur = config.sliceGlow;
+                }
                 ctx.drawImage(sliceLayer, 0, 0);
                 ctx.restore();
 
