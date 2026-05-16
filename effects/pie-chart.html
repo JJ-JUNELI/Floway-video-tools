@@ -424,6 +424,12 @@
         const sliceCtx = sliceLayer.getContext('2d', { alpha: true });
         sliceCtx.scale(scale, scale);
 
+        // 离屏 2D — 辉光层（多色 shadowBlur，按扫描进度羽化淡出，独立于硬边 clip）
+        const glowLayer = document.createElement('canvas');
+        glowLayer.width = fullW; glowLayer.height = fullH;
+        const glowCtx = glowLayer.getContext('2d', { alpha: true });
+        glowCtx.scale(scale, scale);
+
         // initEffect（dummy canvas 给 recorder 初始化，后续重定向到 glCanvas）
         const dummyCanvas = document.createElement('canvas');
         dummyCanvas.id = 'initDummy'; dummyCanvas.style.display = 'none';
@@ -982,6 +988,11 @@
                 sliceCtx.clearRect(0, 0, sliceLayer.width, sliceLayer.height);
                 sliceCtx.restore();
 
+                glowCtx.save();
+                glowCtx.setTransform(1, 0, 0, 1, 0, 0);
+                glowCtx.clearRect(0, 0, glowLayer.width, glowLayer.height);
+                glowCtx.restore();
+
                 if (maxAngle > 0.001) {
                     // 预先计算扫描头参数（clip 构建需要用到）
                     const hasGap = config.sliceGapEnabled && config.sliceGap > 0;
@@ -1033,10 +1044,6 @@
 
                         sliceCtx.save();
                         if (config.sliceOpacity < 100) sliceCtx.globalAlpha = config.sliceOpacity / 100;
-                        if (config.sliceGlow > 0) {
-                            sliceCtx.shadowColor = slice.color;
-                            sliceCtx.shadowBlur = config.sliceGlow;
-                        }
                         const grad = sliceCtx.createRadialGradient(cx, cy, innerR, cx, cy, sliceR);
                         grad.addColorStop(0, slice.color);
                         grad.addColorStop(1, lightenColor(slice.color, 35));
@@ -1121,6 +1128,106 @@
                         sliceCtx.fill();
                         sliceCtx.restore();
                     }
+
+                    // === 辉光层（B 三层合成）：完整多色 shadowBlur，按扫描进度羽化淡出 ===
+                    if (config.sliceGlow > 0 && total > 0) {
+                        // 1) 完整扇形 + 每块自身颜色的 shadowBlur（不裁切，halo 不被截）
+                        let gA = startRad;
+                        for (let i = 0; i < dataPoints.length; i++) {
+                            const sl = dataPoints[i];
+                            const sa = (sl.value / total) * Math.PI * 2;
+                            const sR = radius * scales[i];
+                            const iR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+                            glowCtx.save();
+                            glowCtx.shadowColor = sl.color;
+                            glowCtx.shadowBlur = config.sliceGlow;
+                            glowCtx.beginPath();
+                            if (config.pieType === 'donut') {
+                                glowCtx.arc(cx, cy, sR, gA, gA + sa);
+                                glowCtx.arc(cx, cy, iR, gA + sa, gA, true);
+                                glowCtx.closePath();
+                            } else {
+                                glowCtx.moveTo(cx, cy);
+                                glowCtx.arc(cx, cy, sR, gA, gA + sa);
+                                glowCtx.closePath();
+                            }
+                            glowCtx.fillStyle = sl.color;
+                            glowCtx.fill();
+                            glowCtx.restore();
+                            gA += sa;
+                        }
+
+                        // 1b) 凿掉扇形实体，只留 halo（避免羽化区露出实色块）
+                        glowCtx.save();
+                        glowCtx.globalCompositeOperation = 'destination-out';
+                        let gB = startRad;
+                        for (let i = 0; i < dataPoints.length; i++) {
+                            const sl = dataPoints[i];
+                            const sa = (sl.value / total) * Math.PI * 2;
+                            const sR = radius * scales[i];
+                            const iR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+                            glowCtx.beginPath();
+                            if (config.pieType === 'donut') {
+                                glowCtx.arc(cx, cy, sR, gB, gB + sa);
+                                glowCtx.arc(cx, cy, iR, gB + sa, gB, true);
+                                glowCtx.closePath();
+                            } else {
+                                glowCtx.moveTo(cx, cy);
+                                glowCtx.arc(cx, cy, sR, gB, gB + sa);
+                                glowCtx.closePath();
+                            }
+                            glowCtx.fillStyle = 'rgba(0,0,0,1)';
+                            glowCtx.fill();
+                            gB += sa;
+                        }
+                        glowCtx.restore();
+
+                        // 2) 羽化遮罩：扫描头处由实变透明，避免硬切
+                        const TWO_PI = Math.PI * 2;
+                        const revealFrac = Math.min(maxAngle / TWO_PI, 1);
+                        if (revealFrac < 0.999) {
+                            const featherAng = Math.min(Math.max(config.sliceGlow / outerMaxR * 1.5, 0.06), 0.6);
+                            const p1 = Math.max(revealFrac - featherAng / TWO_PI, 0);
+                            const cg = glowCtx.createConicGradient(startRad, cx, cy);
+                            cg.addColorStop(0, 'rgba(255,255,255,1)');
+                            if (p1 > 0) cg.addColorStop(p1, 'rgba(255,255,255,1)');
+                            cg.addColorStop(revealFrac, 'rgba(255,255,255,0)');
+                            cg.addColorStop(1, 'rgba(255,255,255,0)');
+                            glowCtx.save();
+                            glowCtx.globalCompositeOperation = 'destination-in';
+                            glowCtx.fillStyle = cg;
+                            glowCtx.fillRect(0, 0, baseWidth, baseHeight);
+                            glowCtx.restore();
+                        }
+
+                        // 3) 透明缝隙模式：把缝隙从辉光层凿穿，否则透过 sliceLayer 缝隙能看到辉光描边
+                        if (hasGap && !config.sliceGapMode) {
+                            glowCtx.save();
+                            glowCtx.globalCompositeOperation = 'destination-out';
+                            glowCtx.lineWidth = config.sliceGap;
+                            glowCtx.lineCap = 'butt';
+                            glowCtx.strokeStyle = 'rgba(0,0,0,1)';
+                            const carve = (ang, len) => {
+                                glowCtx.beginPath();
+                                glowCtx.moveTo(cx + Math.cos(ang) * baseInnerR, cy + Math.sin(ang) * baseInnerR);
+                                glowCtx.lineTo(cx + Math.cos(ang) * len, cy + Math.sin(ang) * len);
+                                glowCtx.stroke();
+                            };
+                            carve(startRad, outerMaxR);
+                            carve(scanAngle, outerMaxR);
+                            let sepA = startRad;
+                            for (let i = 0; i < dataPoints.length - 1; i++) {
+                                sepA += (dataPoints[i].value / total) * Math.PI * 2;
+                                if (sepA <= scanTrailingAngle) carve(sepA, radius * Math.max(scales[i], scales[i + 1]));
+                            }
+                            if (config.pieType !== 'donut') {
+                                glowCtx.beginPath();
+                                glowCtx.arc(cx, cy, config.sliceGap / 2, 0, Math.PI * 2);
+                                glowCtx.fill();
+                            }
+                            glowCtx.restore();
+                        }
+                    }
                 }
 
                 // 起跑线：t=0 起始终静止在 startRad（彩色/透明两种缝隙模式）
@@ -1155,9 +1262,10 @@
                     }
                 }
 
-                // 把色块层合成到主 ctx（卡片背景之上）
+                // 合成到主 ctx：辉光层在下（已羽化），实色块层在上（硬边扫描）
                 ctx.save();
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
+                if (config.sliceGlow > 0) ctx.drawImage(glowLayer, 0, 0);
                 ctx.drawImage(sliceLayer, 0, 0);
                 ctx.restore();
 
