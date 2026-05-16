@@ -1049,65 +1049,83 @@
 
                     // 第二遍：扫描头 + 已扫过的静态分割线
                     if (hasGap) {
-                        // 收集扫描头 + 已被完全扫过的静态分割线
-                        const drawList = [];
-                        if (scanHeadVisible) {
-                            drawList.push({ angle: scanAngle, sR: outerMaxR });
-                        }
+                        // 静态分割线（不含扫描头）
+                        const staticList = [];
                         let sepAngle = startRad;
                         for (let i = 0; i < dataPoints.length - 1; i++) {
                             sepAngle += (dataPoints[i].value / total) * Math.PI * 2;
                             if (sepAngle <= scanTrailingAngle) {
-                                drawList.push({ angle: sepAngle, sR: radius * Math.max(scales[i], scales[i + 1]) });
+                                staticList.push({ angle: sepAngle, sR: radius * Math.max(scales[i], scales[i + 1]) });
                             }
                         }
 
-                        const strokeList = (list) => {
-                            for (const s of list) {
-                                sliceCtx.beginPath();
-                                sliceCtx.moveTo(cx + Math.cos(s.angle) * baseInnerR, cy + Math.sin(s.angle) * baseInnerR);
-                                sliceCtx.lineTo(cx + Math.cos(s.angle) * s.sR, cy + Math.sin(s.angle) * s.sR);
-                                sliceCtx.stroke();
-                            }
+                        const strokeOne = (s) => {
+                            sliceCtx.beginPath();
+                            sliceCtx.moveTo(cx + Math.cos(s.angle) * baseInnerR, cy + Math.sin(s.angle) * baseInnerR);
+                            sliceCtx.lineTo(cx + Math.cos(s.angle) * s.sR, cy + Math.sin(s.angle) * s.sR);
+                            sliceCtx.stroke();
                         };
 
-                        if (drawList.length > 0) {
+                        // clip 内：静态分割线
+                        if (staticList.length > 0) {
                             if (config.sliceGapMode) {
-                                // 彩色模式：直接画在色块上，无需凿穿（避免 destination-out 白边）
                                 sliceCtx.save();
                                 sliceCtx.lineWidth = config.sliceGap;
                                 sliceCtx.lineCap = 'butt';
                                 sliceCtx.strokeStyle = config.sliceGapColor;
-                                strokeList(drawList);
+                                staticList.forEach(strokeOne);
                                 sliceCtx.restore();
                             } else {
-                                // 透明缝隙模式：destination-out 凿穿
                                 sliceCtx.save();
                                 sliceCtx.lineWidth = config.sliceGap;
                                 sliceCtx.lineCap = 'butt';
                                 sliceCtx.globalCompositeOperation = 'destination-out';
                                 sliceCtx.strokeStyle = 'rgba(0,0,0,1)';
-                                strokeList(drawList);
+                                staticList.forEach(strokeOne);
                                 sliceCtx.restore();
                             }
+                        }
 
-                            // 实心饼共享圆心（clip 外、drawList 非空时才画）
-                            if (config.pieType !== 'donut') {
-                                sliceCtx.save();
-                                if (config.sliceGapMode) {
-                                    sliceCtx.fillStyle = config.sliceGapColor;
-                                } else {
-                                    sliceCtx.globalCompositeOperation = 'destination-out';
-                                }
-                                sliceCtx.beginPath();
-                                sliceCtx.arc(cx, cy, config.sliceGap / 2, 0, Math.PI * 2);
-                                sliceCtx.fill();
-                                sliceCtx.restore();
-                            }
+                        // clip 内：透明缝隙模式的扫描头（在 clip 内凿穿）
+                        if (!config.sliceGapMode) {
+                            sliceCtx.save();
+                            sliceCtx.lineWidth = config.sliceGap;
+                            sliceCtx.lineCap = 'butt';
+                            sliceCtx.globalCompositeOperation = 'destination-out';
+                            sliceCtx.strokeStyle = 'rgba(0,0,0,1)';
+                            strokeOne({ angle: scanAngle, sR: outerMaxR });
+                            sliceCtx.restore();
                         }
                     }
 
                     sliceCtx.restore(); // clip
+
+                    // clip 外：彩色模式扫描头（不受 clip 裁切，第一帧即完整显示）
+                    if (hasGap && config.sliceGapMode) {
+                        sliceCtx.save();
+                        sliceCtx.lineWidth = config.sliceGap;
+                        sliceCtx.lineCap = 'butt';
+                        sliceCtx.strokeStyle = config.sliceGapColor;
+                        sliceCtx.beginPath();
+                        sliceCtx.moveTo(cx + Math.cos(scanAngle) * baseInnerR, cy + Math.sin(scanAngle) * baseInnerR);
+                        sliceCtx.lineTo(cx + Math.cos(scanAngle) * outerMaxR, cy + Math.sin(scanAngle) * outerMaxR);
+                        sliceCtx.stroke();
+                        sliceCtx.restore();
+                    }
+
+                    // 实心饼共享圆心（clip 外，始终完整圆）
+                    if (hasGap && config.pieType !== 'donut') {
+                        sliceCtx.save();
+                        if (config.sliceGapMode) {
+                            sliceCtx.fillStyle = config.sliceGapColor;
+                        } else {
+                            sliceCtx.globalCompositeOperation = 'destination-out';
+                        }
+                        sliceCtx.beginPath();
+                        sliceCtx.arc(cx, cy, config.sliceGap / 2, 0, Math.PI * 2);
+                        sliceCtx.fill();
+                        sliceCtx.restore();
+                    }
                 }
 
                 // 把色块层合成到主 ctx（卡片背景之上）
