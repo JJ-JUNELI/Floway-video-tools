@@ -988,24 +988,25 @@
                     const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
                     const outerMaxR = radius * Math.max(...scales);
                     const halfGapAngle = hasGap ? (config.sliceGap / 2) / outerMaxR : 0;
-                    const scanAngle = startRad + maxAngle - halfGapAngle;
-                    const scanTrailingAngle = startRad + maxAngle - halfGapAngle * 2;
-                    const scanHeadVisible = hasGap && maxAngle > halfGapAngle;
+                    // 扫描头始终显示：maxAngle 不足 halfGapAngle 时钳制到 startRad
+                    const scanAngle = startRad + Math.max(maxAngle - halfGapAngle, 0);
+                    const scanTrailingAngle = scanAngle - halfGapAngle;
+                    const scanHeadVisible = hasGap; // 始终显示
 
-                    // 旋转遮板 clip：右边界沿扫描头右侧笛卡尔边缘（消除扇形切割）
+                    // 旋转遮板 clip
                     sliceCtx.save();
                     const bigR = radius * 3;
                     sliceCtx.beginPath();
                     sliceCtx.moveTo(cx, cy);
-                    if (scanHeadVisible) {
-                        // 弧线从 startRad 画到扫描头中心角，再沿扫描头右边缘直线下来
-                        // 右边缘方向：径向顺时针旋转 90°（朝 leading edge）
+                    if (hasGap && maxAngle > halfGapAngle) {
+                        // polygon clip：右边界沿扫描头笛卡尔右边缘（消除扇形切割）
                         const edgeDx = -Math.sin(scanAngle) * (config.sliceGap / 2);
                         const edgeDy =  Math.cos(scanAngle) * (config.sliceGap / 2);
                         sliceCtx.arc(cx, cy, bigR, startRad, scanAngle);
                         sliceCtx.lineTo(cx + Math.cos(scanAngle) * bigR + edgeDx, cy + Math.sin(scanAngle) * bigR + edgeDy);
                         sliceCtx.lineTo(cx + Math.cos(scanAngle) * baseInnerR + edgeDx, cy + Math.sin(scanAngle) * baseInnerR + edgeDy);
                     } else {
+                        // 简单扇形 clip（maxAngle 很小时：扫描头在 startRad，右半在 clip 内）
                         sliceCtx.arc(cx, cy, bigR, startRad, startRad + maxAngle);
                     }
                     sliceCtx.closePath();
