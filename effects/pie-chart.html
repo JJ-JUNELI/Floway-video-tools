@@ -74,7 +74,9 @@
 
         /* 坐标可编辑数值框 */
         .num-edit {
-            width: 56px; text-align: right; padding: 1px 4px;
+            width: 60px; min-width: 60px; max-width: 60px;
+            flex-shrink: 0; flex-grow: 0;
+            text-align: right; padding: 1px 4px;
             background: var(--card-bg, #fafafa); border: 1px solid var(--border, #ddd);
             color: var(--accent); border-radius: 3px; outline: none;
             font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 11px;
