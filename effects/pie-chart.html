@@ -1097,8 +1097,8 @@
                         }
                     }
 
-                    // 辉光层：与实色块用同一内嵌缝隙几何，shadowBlur 自然延伸过
-                    // scanAngle → 多色软化前向光晕。缝=空白，无需 destination-out 凿穿
+                    // 辉光层：画 shadow 后用 destination-out 凿空楔形实体，只保留外缘晕光
+                    // 这样 glowLayer 不含实色填充，sliceOpacity 由 sliceLayer 独立控制
                     if (config.sliceGlow > 0 && total > 0) {
                         let gAng = startRad;
                         for (let i = 0; i < dataPoints.length; i++) {
@@ -1113,6 +1113,13 @@
                                     glowCtx.shadowColor = sl.color;
                                     glowCtx.shadowBlur = config.sliceGlow;
                                     glowCtx.fillStyle = sl.color;
+                                    glowCtx.fill();
+                                    glowCtx.restore();
+                                    // 凿空楔形实体，仅留边缘晕光
+                                    wedgePath(glowCtx, a0, a1, sR);
+                                    glowCtx.save();
+                                    glowCtx.globalCompositeOperation = 'destination-out';
+                                    glowCtx.fillStyle = 'rgba(0,0,0,1)';
                                     glowCtx.fill();
                                     glowCtx.restore();
                                 }
