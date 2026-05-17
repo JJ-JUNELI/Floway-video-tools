@@ -412,6 +412,7 @@
         // ====== Canvas 初始化 ======
         const baseWidth = 1440, baseHeight = 1080, scale = 2;
         const fullW = baseWidth * scale, fullH = baseHeight * scale;
+        let _c2dPhysPad = 0; // 当前帧 offscreen 的物理像素 padding，供 drawContent 合成 sliceLayer 时用
 
         // WebGL canvas
         const glCanvas = document.getElementById('glCanvas');
@@ -1158,8 +1159,9 @@
                 }
 
                 // 合成到主 ctx：辉光层在下（已羽化），实色块层在上（硬边扫描）
+                // 用物理坐标 drawImage，保证与主 ctx 的 c2dPhysPad offset 对齐
                 ctx.save();
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.setTransform(1, 0, 0, 1, _c2dPhysPad, _c2dPhysPad);
                 if (config.sliceGlow > 0) ctx.drawImage(glowLayer, 0, 0);
                 ctx.drawImage(sliceLayer, 0, 0);
                 ctx.restore();
@@ -1350,6 +1352,7 @@
                 : (config.cardBorderWidth || 0) * 2 + (config.cardGlowWidth || 0);
             const c2dPad = halfPad > 0 ? halfPad * 2 + 10 : 0;
             const c2dPhysPad = c2dPad * scale;
+            _c2dPhysPad = c2dPhysPad;
             const needW = fullW + c2dPhysPad * 2;
             const needH = fullH + c2dPhysPad * 2;
             if (offscreen.width !== needW || offscreen.height !== needH) {
