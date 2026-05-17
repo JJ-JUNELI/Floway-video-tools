@@ -181,11 +181,14 @@
                 </div>
                 <div class="sub-section ss-blue" id="TextureSection">
                     <div class="sub-section-label">纸张纹理</div>
-                    <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
-                        <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div></div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
-                            <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
+                    <div class="sub-title"><span>启用纹理</span><input type="checkbox" id="TextureEnabled" checked></div>
+                    <div id="TextureOpts">
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
+                            <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div></div>
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
+                                <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -255,8 +258,12 @@
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>透明度</span><span id="SliceOpacityVal">100%</span></div>
                             <input type="range" id="SliceOpacity" min="0" max="100" step="5" value="100"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>切片辉光</span><span id="SliceGlowVal">0</span></div>
-                            <input type="range" id="SliceGlow" min="0" max="100" step="2" value="0"></div>
+                        <div style="flex:1"></div>
+                    </div>
+                    <div class="sub-title"><span>切片辉光</span><input type="checkbox" id="SliceGlowEnabled"></div>
+                    <div id="SliceGlowOpts" style="display:none">
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="SliceGlowVal">0</span></div>
+                            <input type="range" id="SliceGlow" min="0" max="100" step="2" value="0"></div></div>
                     </div>
                     <div class="sub-title" style="margin-top:8px"><span>显示分割线</span><input type="checkbox" id="SliceGapEnabled" checked></div>
                     <div id="SliceGapOpts">
@@ -354,21 +361,27 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
                             <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
                     </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
-                            <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
-                        <div class="stack" style="flex:1"><div class="label-line"><span>描边颜色</span></div>
-                            <input type="color" id="CardBorderColor" value="#ffffff"></div>
+                    <div class="sub-title" style="margin-top:8px"><span>启用描边</span><input type="checkbox" id="CardBorderEnabled"></div>
+                    <div id="CardBorderOpts" style="display:none">
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
+                                <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
+                            <div class="stack" style="flex:1"><div class="label-line"><span>描边颜色</span></div>
+                                <input type="color" id="CardBorderColor" value="#ffffff"></div>
+                        </div>
                     </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>边框辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
-                            <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
-                        <div class="stack" style="flex:1"><div class="label-line"><span>边框辉光颜色</span></div>
-                            <input type="color" id="CardGlowColor" value="#3b82f6"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>边框辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
-                            <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
+                    <div class="sub-title"><span>启用边框辉光</span><input type="checkbox" id="CardGlowEnabled"></div>
+                    <div id="CardGlowOpts" style="display:none">
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>边框辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
+                                <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
+                            <div class="stack" style="flex:1"><div class="label-line"><span>边框辉光颜色</span></div>
+                                <input type="color" id="CardGlowColor" value="#3b82f6"></div>
+                        </div>
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>边框辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
+                                <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="sub-section ss-purple">
@@ -556,16 +569,20 @@
             entranceEndScale: 100,
 
             // 纸张纹理
+            textureEnabled: true,
             noiseGrain: 35, vignette: 15,
 
             // 卡片外观
             cardBg: '#f0f5fa',
             cardBgTransparent: false,
+            cardBorderEnabled: false,
             cardBorderWidth: 0,
             cardBorderColor: '#ffffff',
+            cardGlowEnabled: false,
             cardGlowWidth: 0,
             cardGlowColor: '#3b82f6',
             cardGlowIntensity: 70,
+            sliceGlowEnabled: false,
         };
 
         // ====== 字体选择器 ======
@@ -595,6 +612,7 @@
             ['ShowSubTitle',    'showSubTitle',   'checked'],
             ['CardBgTransparent','cardBgTransparent','checked'],
             ['CardBg',          'cardBg'],
+            ['TextureEnabled',  'textureEnabled', 'checked'],
             ['NoiseGrain',      'noiseGrain',     'int',   'NoiseGrainVal'],
             ['Vignette',        'vignette',       'int',   'VignetteVal'],
             // 饼图样式
@@ -612,6 +630,7 @@
             ['PieCenterX',      'pieCenterX',     'int',   'PieCenterXVal'],
             ['PieCenterY',      'pieCenterY',     'int',   'PieCenterYVal'],
             ['SliceOpacity',   'sliceOpacity',    'int',   'SliceOpacityVal', '%'],
+            ['SliceGlowEnabled', 'sliceGlowEnabled', 'checked'],
             ['SliceGlow',      'sliceGlow',       'int',   'SliceGlowVal'],
             ['StairScale',     'stairScale',      'checked'],
             ['StairSort',      'stairSort'],
@@ -637,8 +656,10 @@
             ['CardScale',       'cardScale',      '%',     'CardScaleVal', '%'],
             ['Elevation',       'elevation',      '%',     'ElevationVal'],
             ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal'],
+            ['CardBorderEnabled', 'cardBorderEnabled', 'checked'],
             ['CardBorderWidth',  'cardBorderWidth', 'int',   'CardBorderWidthVal'],
             ['CardBorderColor',  'cardBorderColor'],
+            ['CardGlowEnabled',  'cardGlowEnabled', 'checked'],
             ['CardGlowWidth',    'cardGlowWidth',   'int',   'CardGlowWidthVal'],
             ['CardGlowColor',    'cardGlowColor'],
             ['CardGlowIntensity','cardGlowIntensity','int',  'CardGlowIntensityVal','%'],
@@ -709,21 +730,34 @@
                     document.getElementById('EntranceOpts').style.display = show ? '' : 'none';
                     document.getElementById('EntranceDetailOpts').style.display = show ? '' : 'none';
                 }
+                if (key === 'textureEnabled') {
+                    document.getElementById('TextureOpts').style.display =
+                        config.textureEnabled ? '' : 'none';
+                }
+                if (key === 'sliceGlowEnabled') {
+                    document.getElementById('SliceGlowOpts').style.display =
+                        config.sliceGlowEnabled ? '' : 'none';
+                }
+                if (key === 'cardBorderEnabled') {
+                    document.getElementById('CardBorderOpts').style.display =
+                        config.cardBorderEnabled ? '' : 'none';
+                }
+                if (key === 'cardGlowEnabled') {
+                    document.getElementById('CardGlowOpts').style.display =
+                        config.cardGlowEnabled ? '' : 'none';
+                }
                 if (key === 'cardBgTransparent') {
                     config.cardBgTransparent = !config.cardBgTransparent; // 启用背景=checked → transparent=false
                     const transparent = config.cardBgTransparent;
                     document.getElementById('CardBgColorRow').style.display = transparent ? 'none' : '';
                     document.getElementById('TextureSection').style.display = transparent ? 'none' : '';
                     if (transparent) {
-                        config.cardBorderWidth = 0;
-                        document.getElementById('CardBorderWidth').value = 0;
-                        document.getElementById('CardBorderWidthVal').textContent = '0';
-                        config.cardGlowWidth = 0;
-                        document.getElementById('CardGlowWidth').value = 0;
-                        document.getElementById('CardGlowWidthVal').textContent = '0';
-                        config.cardGlowIntensity = 0;
-                        document.getElementById('CardGlowIntensity').value = 0;
-                        document.getElementById('CardGlowIntensityVal').textContent = '0%';
+                        config.cardBorderEnabled = false;
+                        document.getElementById('CardBorderEnabled').checked = false;
+                        document.getElementById('CardBorderOpts').style.display = 'none';
+                        config.cardGlowEnabled = false;
+                        document.getElementById('CardGlowEnabled').checked = false;
+                        document.getElementById('CardGlowOpts').style.display = 'none';
                     }
                 }
                 _paperTexCache = null;
@@ -956,7 +990,7 @@
             if (!isTransparent) {
                 ctx.fillStyle = config.cardBg;
                 ctx.fillRect(0, 0, w, h);
-                if (config.noiseGrain > 0 || config.vignette > 0) {
+                if (config.textureEnabled && (config.noiseGrain > 0 || config.vignette > 0)) {
                     const tex = generatePaperTexture(w, h);
                     if (tex) ctx.drawImage(tex, 0, 0, w, h);
                 }
@@ -1127,7 +1161,7 @@
 
                     // 辉光层：画 shadow 后用 destination-out 凿空楔形实体，只保留外缘晕光
                     // 这样 glowLayer 不含实色填充，sliceOpacity 由 sliceLayer 独立控制
-                    if (config.sliceGlow > 0 && total > 0) {
+                    if (config.sliceGlowEnabled && config.sliceGlow > 0 && total > 0) {
                         let gAng = startRad;
                         for (let i = 0; i < dataPoints.length; i++) {
                             const sl = dataPoints[i];
@@ -1162,7 +1196,7 @@
                 // 用物理坐标 drawImage，保证与主 ctx 的 c2dPhysPad offset 对齐
                 ctx.save();
                 ctx.setTransform(1, 0, 0, 1, _c2dPhysPad, _c2dPhysPad);
-                if (config.sliceGlow > 0) ctx.drawImage(glowLayer, 0, 0);
+                if (config.sliceGlowEnabled && config.sliceGlow > 0) ctx.drawImage(glowLayer, 0, 0);
                 ctx.drawImage(sliceLayer, 0, 0);
                 ctx.restore();
 
@@ -1348,8 +1382,10 @@
         // ====== 主渲染函数 ======
         function drawFrame(timeMs) {
             // Canvas padding for border/glow overflow
+            const effBorder = config.cardBorderEnabled ? (config.cardBorderWidth || 0) : 0;
+            const effGlow = config.cardGlowEnabled ? (config.cardGlowWidth || 0) : 0;
             const halfPad = config.cardBgTransparent ? 0
-                : (config.cardBorderWidth || 0) * 2 + (config.cardGlowWidth || 0);
+                : effBorder * 2 + effGlow;
             const c2dPad = halfPad > 0 ? halfPad * 2 + 10 : 0;
             const c2dPhysPad = c2dPad * scale;
             _c2dPhysPad = c2dPhysPad;
@@ -1405,9 +1441,9 @@
 
             // Card border and glow (Canvas 2D, matching card-3d approach)
             // Split into two calls: glow first (offset outside border), then border on top
-            if (!config.cardBgTransparent && (config.cardBorderWidth > 0 || config.cardGlowWidth > 0)) {
-                const bw = config.cardBorderWidth || 0;
-                const gw = config.cardGlowWidth || 0;
+            if (!config.cardBgTransparent && (effBorder > 0 || effGlow > 0)) {
+                const bw = effBorder;
+                const gw = effGlow;
                 const baseCard = {x: 0, y: 0, w, h};
 
                 // Glow: offset card rect to border's outer edge so glow starts outside border
