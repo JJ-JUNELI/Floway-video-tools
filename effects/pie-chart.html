@@ -71,6 +71,18 @@
         .ss-purple { border-left: 2px solid rgba(168,85,247,0.35); }
         .ss-rose   { border-left: 2px solid rgba(244,63,94,0.35); }
         .ss-teal   { border-left: 2px solid rgba(20,184,166,0.35); }
+
+        /* 坐标可编辑数值框 */
+        .num-edit {
+            width: 56px; text-align: right; padding: 1px 4px;
+            background: var(--card-bg, #fafafa); border: 1px solid var(--border, #ddd);
+            color: var(--accent); border-radius: 3px; outline: none;
+            font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 11px;
+            -moz-appearance: textfield;
+        }
+        .num-edit::-webkit-outer-spin-button,
+        .num-edit::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .num-edit:focus { border-color: var(--accent, #555); }
     </style>
 </head>
 <body>
@@ -131,9 +143,9 @@
                                 <div class="label-line"><span>主标题颜色</span></div>
                                 <input type="color" id="TitleColor" value="#333333">
                             </div>
-                            <div class="stack"><div class="label-line"><span>主标题 X</span><span id="MainTitleXVal">0</span></div>
+                            <div class="stack"><div class="label-line"><span>主标题 X</span><input type="number" class="num-edit" id="MainTitleXVal" min="-720" max="720" value="0"></div>
                                 <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
-                            <div class="stack"><div class="label-line"><span>主标题 Y</span><span id="MainTitleYVal">-490</span></div>
+                            <div class="stack"><div class="label-line"><span>主标题 Y</span><input type="number" class="num-edit" id="MainTitleYVal" min="-540" max="540" value="-490"></div>
                                 <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
                             <div class="sub-title"><span>显示主标题括号</span><input type="checkbox" id="ShowBrackets" checked></div>
                         </div>
@@ -146,9 +158,9 @@
                                 <div class="label-line"><span>副标题颜色</span></div>
                                 <input type="color" id="SubTitleColor" value="#999999">
                             </div>
-                            <div class="stack"><div class="label-line"><span>副标题 X</span><span id="SubTitleXVal">630</span></div>
+                            <div class="stack"><div class="label-line"><span>副标题 X</span><input type="number" class="num-edit" id="SubTitleXVal" min="-720" max="720" value="630"></div>
                                 <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
-                            <div class="stack"><div class="label-line"><span>副标题 Y</span><span id="SubTitleYVal">0</span></div>
+                            <div class="stack"><div class="label-line"><span>副标题 Y</span><input type="number" class="num-edit" id="SubTitleYVal" min="-540" max="540" value="0"></div>
                                 <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
                             <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
                         </div>
@@ -242,8 +254,8 @@
                     <div class="sub-section-label">效果</div>
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>透明度</span><span id="SliceOpacityVal">100%</span></div>
-                            <input type="range" id="SliceOpacity" min="10" max="100" step="5" value="100"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光</span><span id="SliceGlowVal">0</span></div>
+                            <input type="range" id="SliceOpacity" min="0" max="100" step="5" value="100"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>切片辉光</span><span id="SliceGlowVal">0</span></div>
                             <input type="range" id="SliceGlow" min="0" max="100" step="2" value="0"></div>
                     </div>
                     <div class="sub-title" style="margin-top:8px"><span>显示分割线</span><input type="checkbox" id="SliceGapEnabled" checked></div>
@@ -349,13 +361,13 @@
                             <input type="color" id="CardBorderColor" value="#ffffff"></div>
                     </div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>边框辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
                             <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
-                        <div class="stack" style="flex:1"><div class="label-line"><span>辉光颜色</span></div>
+                        <div class="stack" style="flex:1"><div class="label-line"><span>边框辉光颜色</span></div>
                             <input type="color" id="CardGlowColor" value="#3b82f6"></div>
                     </div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>边框辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
                             <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
                     </div>
                 </div>
@@ -716,6 +728,21 @@
                 _paperTexCache = null;
                 startLoop();
             }
+        });
+
+        // 坐标滑块 ↔ 数值输入框双向同步
+        ['MainTitleX', 'MainTitleY', 'SubTitleX', 'SubTitleY'].forEach(id => {
+            const s = document.getElementById(id);
+            const n = document.getElementById(id + 'Val');
+            if (!s || !n) return;
+            s.addEventListener('input', () => { n.value = s.value; });
+            n.addEventListener('input', () => {
+                let v = parseInt(n.value);
+                if (isNaN(v)) return;
+                v = Math.max(parseInt(s.min), Math.min(parseInt(s.max), v));
+                s.value = v;
+                s.dispatchEvent(new Event('input'));
+            });
         });
 
         // ====== 漂浮动画 ======
