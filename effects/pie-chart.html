@@ -115,91 +115,11 @@
                 <button class="btn-add" onclick="addRow()">+ 添加数据行</button>
             </div>
 
-            <!-- 标题设置 -->
+            <!-- 饼图 -->
             <div class="control-group">
-                <div class="group-title"><span>📝 标题设置</span></div>
+                <div class="group-title"><span>🥧 饼图</span></div>
                 <div class="sub-section ss-blue">
-                    <div class="sub-section-label">内容</div>
-                    <div class="sub-title"><span>启用主标题</span><input type="checkbox" id="ShowMainTitle" checked></div>
-                    <div class="row stack">
-                        <div class="label-line"><span>主标题</span></div>
-                        <input type="text" id="MainTitle" value="汽车市场份额分布">
-                    </div>
-                    <div class="sub-title"><span>启用副标题</span><input type="checkbox" id="ShowSubTitle" checked></div>
-                    <div class="row stack">
-                        <div class="label-line"><span>副标题 (右侧文字)</span></div>
-                        <input type="text" id="SubTitle" value="2024 年度销售数据">
-                    </div>
-                    <div class="row stack"><div class="label-line"><span>标题字体</span></div>
-                        <div id="TitleFontMount" style="width:100%"></div></div>
-                </div>
-                <div class="sub-section ss-green">
-                    <div class="sub-section-label">样式</div>
-                    <div class="row">
-                        <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
-                            <div class="stack"><div class="label-line"><span>主标题字号</span><span id="TitleSizeVal">26</span></div>
-                                <input type="range" id="TitleSize" min="12" max="72" step="2" value="26"></div>
-                            <div class="stack"><div class="label-line"><span>主标题字重</span><span id="MainTitleWeightVal">700</span></div>
-                                <input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"></div>
-                            <div class="stack">
-                                <div class="label-line"><span>主标题颜色</span></div>
-                                <input type="color" id="TitleColor" value="#333333">
-                            </div>
-                            <div class="stack"><div class="label-line"><span>主标题 X</span><input type="number" class="num-edit" id="MainTitleXVal" min="-720" max="720" value="0"></div>
-                                <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
-                            <div class="stack"><div class="label-line"><span>主标题 Y</span><input type="number" class="num-edit" id="MainTitleYVal" min="-540" max="540" value="-490"></div>
-                                <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
-                            <div class="sub-title"><span>显示主标题括号</span><input type="checkbox" id="ShowBrackets" checked></div>
-                        </div>
-                        <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
-                            <div class="stack"><div class="label-line"><span>副标题字号</span><span id="SubTitleSizeVal">36</span></div>
-                                <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
-                            <div class="stack"><div class="label-line"><span>副标题字重</span><span id="SubTitleWeightVal">400</span></div>
-                                <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
-                            <div class="stack">
-                                <div class="label-line"><span>副标题颜色</span></div>
-                                <input type="color" id="SubTitleColor" value="#999999">
-                            </div>
-                            <div class="stack"><div class="label-line"><span>副标题 X</span><input type="number" class="num-edit" id="SubTitleXVal" min="-720" max="720" value="630"></div>
-                                <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
-                            <div class="stack"><div class="label-line"><span>副标题 Y</span><input type="number" class="num-edit" id="SubTitleYVal" min="-540" max="540" value="0"></div>
-                                <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
-                            <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 卡片背景 -->
-            <div class="control-group">
-                <div class="group-title"><span>🖌️ 卡片背景</span></div>
-                <div class="sub-section ss-amber">
-                    <div class="sub-section-label">背景模式</div>
-                    <div class="sub-title"><span>启用背景</span><input type="checkbox" id="CardBgTransparent" checked></div>
-                    <div id="CardBgColorRow" class="row stack">
-                        <div class="label-line"><span>卡片底色</span></div>
-                        <input type="color" id="CardBg" value="#f0f5fa">
-                    </div>
-                </div>
-                <div class="sub-section ss-blue" id="TextureSection">
-                    <div class="sub-section-label">纸张纹理</div>
-                    <div class="sub-title"><span>启用纹理</span><input type="checkbox" id="TextureEnabled" checked></div>
-                    <div id="TextureOpts">
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
-                            <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div></div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
-                                <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 饼图样式 -->
-            <div class="control-group">
-                <div class="group-title"><span>🥧 饼图样式</span></div>
-                <div class="sub-section ss-blue">
-                    <div class="sub-section-label">类型</div>
+                    <div class="sub-section-label">基本</div>
                     <div class="row stack"><div class="label-line"><span>饼图类型</span></div>
                         <select id="PieType">
                             <option value="solid">实心饼图</option>
@@ -230,7 +150,7 @@
                     </div>
                 </div>
                 <div class="sub-section ss-teal" id="CenterTextSection">
-                    <div class="sub-section-label">中心文字 (环形图)</div>
+                    <div class="sub-section-label">中心文字</div>
                     <div class="row stack"><div class="label-line"><span>中心文字</span></div>
                         <input type="text" id="CenterText" value="公司业务收入占比"></div>
                     <div class="row">
@@ -325,6 +245,149 @@
                 </div>
             </div>
 
+            <!-- 标题设置 -->
+            <div class="control-group">
+                <div class="group-title"><span>📝 标题</span></div>
+                <div class="row stack" style="padding:6px 4px 0;"><div class="label-line"><span>标题字体</span></div>
+                    <div id="TitleFontMount" style="width:100%"></div></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">主标题</div>
+                    <div class="sub-title"><span>启用主标题</span><input type="checkbox" id="ShowMainTitle" checked></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>主标题文字</span></div>
+                        <input type="text" id="MainTitle" value="汽车市场份额分布">
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>字号</span><span id="TitleSizeVal">26</span></div>
+                            <input type="range" id="TitleSize" min="12" max="72" step="2" value="26"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>字重</span><span id="MainTitleWeightVal">700</span></div>
+                            <input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"></div>
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>颜色</span></div>
+                        <input type="color" id="TitleColor" value="#333333">
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X</span><input type="number" class="num-edit" id="MainTitleXVal" min="-720" max="720" value="0"></div>
+                            <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><input type="number" class="num-edit" id="MainTitleYVal" min="-540" max="540" value="-490"></div>
+                            <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
+                    </div>
+                    <div class="sub-title"><span>显示主标题括号</span><input type="checkbox" id="ShowBrackets" checked></div>
+                </div>
+                <div class="sub-section ss-purple">
+                    <div class="sub-section-label">副标题</div>
+                    <div class="sub-title"><span>启用副标题</span><input type="checkbox" id="ShowSubTitle" checked></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>副标题文字</span></div>
+                        <input type="text" id="SubTitle" value="2024 年度销售数据">
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>字号</span><span id="SubTitleSizeVal">36</span></div>
+                            <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>字重</span><span id="SubTitleWeightVal">400</span></div>
+                            <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>颜色</span></div>
+                        <input type="color" id="SubTitleColor" value="#999999">
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X</span><input type="number" class="num-edit" id="SubTitleXVal" min="-720" max="720" value="630"></div>
+                            <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><input type="number" class="num-edit" id="SubTitleYVal" min="-540" max="540" value="0"></div>
+                            <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
+                    </div>
+                    <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
+                </div>
+            </div>
+
+            <!-- 卡片外观 -->
+            <div class="control-group">
+                <div class="group-title"><span>🖼️ 卡片外观</span></div>
+                <div class="sub-section ss-amber">
+                    <div class="sub-section-label">背景</div>
+                    <div class="sub-title"><span>启用背景</span><input type="checkbox" id="CardBgTransparent" checked></div>
+                    <div id="CardBgColorRow" class="row stack">
+                        <div class="label-line"><span>卡片底色</span></div>
+                        <input type="color" id="CardBg" value="#f0f5fa">
+                    </div>
+                </div>
+                <div class="sub-section ss-teal" id="TextureSection">
+                    <div class="sub-section-label">纸张纹理</div>
+                    <div class="sub-title"><span>启用纹理</span><input type="checkbox" id="TextureEnabled" checked></div>
+                    <div id="TextureOpts">
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
+                            <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div></div>
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
+                                <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sub-section ss-green">
+                    <div class="sub-section-label">形态</div>
+                    <div class="row stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
+                        <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
+                    <div class="sub-title" style="margin-top:8px"><span>启用描边</span><input type="checkbox" id="CardBorderEnabled"></div>
+                    <div id="CardBorderOpts" style="display:none">
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
+                                <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
+                            <div class="stack" style="flex:1"><div class="label-line"><span>描边颜色</span></div>
+                                <input type="color" id="CardBorderColor" value="#ffffff"></div>
+                        </div>
+                    </div>
+                    <div class="sub-title"><span>启用边框辉光</span><input type="checkbox" id="CardGlowEnabled"></div>
+                    <div id="CardGlowOpts" style="display:none">
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
+                                <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
+                            <div class="stack" style="flex:1"><div class="label-line"><span>辉光颜色</span></div>
+                                <input type="color" id="CardGlowColor" value="#3b82f6"></div>
+                        </div>
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
+                                <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 漂浮 -->
+            <div class="control-group collapsible" data-default-collapsed>
+                <div class="group-title"><span>🃏 漂浮</span></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">透视</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
+                            <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
+                            <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
+                    </div>
+                    <div class="row stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
+                        <input type="range" id="CardScale" min="40" max="100" step="1" value="80"></div>
+                    <div class="row stack"><div class="label-line"><span>悬浮高度</span><span id="ElevationVal">50</span></div>
+                        <input type="range" id="Elevation" min="0" max="100" step="1" value="50"></div>
+                </div>
+                <div class="sub-section ss-purple">
+                    <div class="sub-section-label">微动画</div>
+                    <div class="sub-title"><span>启用微动画</span><input type="checkbox" id="FloatEnabled" checked></div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴摆幅</span><span id="FloatRotateXVal">2.0°</span></div>
+                            <input type="range" id="FloatRotateX" min="0" max="8" step="0.5" value="2.0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴摆幅</span><span id="FloatRotateYVal">1.5°</span></div>
+                            <input type="range" id="FloatRotateY" min="0" max="8" step="0.5" value="1.5"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>周期 (秒)</span><span id="FloatDurationVal">4s</span></div>
+                            <input type="range" id="FloatDuration" min="1" max="10" step="0.5" value="4"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>相位差</span><span id="FloatPhaseVal">25%</span></div>
+                            <input type="range" id="FloatPhase" min="0" max="100" step="5" value="25"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 动画设置 -->
             <div class="control-group">
                 <div class="group-title"><span>🎬 动画</span></div>
@@ -342,69 +405,6 @@
                             <option value="easeOut">先快后慢 (Ease Out)</option>
                             <option value="easeInOut" selected>丝滑缓动 (Smooth)</option>
                         </select></div>
-                </div>
-            </div>
-
-            <!-- 卡片漂浮 -->
-            <div class="control-group collapsible" data-default-collapsed>
-                <div class="group-title"><span>🃏 卡片漂浮</span></div>
-                <div class="sub-section ss-blue">
-                    <div class="sub-section-label">透视角度</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
-                            <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
-                            <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
-                    </div>
-                    <div class="row stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
-                        <input type="range" id="CardScale" min="40" max="100" step="1" value="80"></div>
-                </div>
-                <div class="sub-section ss-green">
-                    <div class="sub-section-label">尺寸 & 外观</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>悬浮高度</span><span id="ElevationVal">50</span></div>
-                            <input type="range" id="Elevation" min="0" max="100" step="1" value="50"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
-                            <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
-                    </div>
-                    <div class="sub-title" style="margin-top:8px"><span>启用描边</span><input type="checkbox" id="CardBorderEnabled"></div>
-                    <div id="CardBorderOpts" style="display:none">
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
-                                <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
-                            <div class="stack" style="flex:1"><div class="label-line"><span>描边颜色</span></div>
-                                <input type="color" id="CardBorderColor" value="#ffffff"></div>
-                        </div>
-                    </div>
-                    <div class="sub-title"><span>启用边框辉光</span><input type="checkbox" id="CardGlowEnabled"></div>
-                    <div id="CardGlowOpts" style="display:none">
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>边框辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
-                                <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
-                            <div class="stack" style="flex:1"><div class="label-line"><span>边框辉光颜色</span></div>
-                                <input type="color" id="CardGlowColor" value="#3b82f6"></div>
-                        </div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>边框辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
-                                <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="sub-section ss-purple">
-                    <div class="sub-section-label">漂浮动画</div>
-                    <div class="sub-title"><span>启用微动画</span><input type="checkbox" id="FloatEnabled" checked></div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴摆幅</span><span id="FloatRotateXVal">2.0°</span></div>
-                            <input type="range" id="FloatRotateX" min="0" max="8" step="0.5" value="2.0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴摆幅</span><span id="FloatRotateYVal">1.5°</span></div>
-                            <input type="range" id="FloatRotateY" min="0" max="8" step="0.5" value="1.5"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>周期 (秒)</span><span id="FloatDurationVal">4s</span></div>
-                            <input type="range" id="FloatDuration" min="1" max="10" step="0.5" value="4"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>相位差</span><span id="FloatPhaseVal">25%</span></div>
-                            <input type="range" id="FloatPhase" min="0" max="100" step="5" value="25"></div>
-                    </div>
                 </div>
             </div>
 
