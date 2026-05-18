@@ -151,36 +151,32 @@ export function injectPanels(opts = {}) {
     const defaultPatternColor = opts.defaultPatternColor || '#333333';
     const skipBg = opts.skipBgPanel === true;
 
-    const bgBodyHTML = skipBg ? '' : `
-        <div class="sf-bg-body" id="SfBgBody">
-            <div class="row">
-                <select id="BgMode">
-                    <option value="transparent" ${defaultBgMode === 'transparent' ? 'selected' : ''}>🏁 透明</option>
-                    <option value="#000000" ${defaultBgMode === '#000000' ? 'selected' : ''}>⬛ 纯黑</option>
-                    <option value="#00ff00">🟩 绿幕</option>
-                    <option value="#0000ff">🟦 蓝幕</option>
-                    <option value="grid">▦ 网格</option>
-                    <option value="dots">::: 点阵</option>
-                    <option value="paper">📄 纸张纹理</option>
-                    <option value="custom">📂 上传背景...</option>
-                </select>
-            </div>
-            <input type="file" id="BgUpload" accept="image/*,video/*" style="display:none">
-            <div class="row" id="PatternColorRow" style="display:none; justify-content:space-between; align-items:center;">
-                <div style="font-size:11px; color:var(--text-sub, #888);">纹理颜色</div>
-                <input type="color" id="PatternColor" value="${defaultPatternColor}">
-            </div>
-            <div class="row stack" id="PaperParamsRow" style="display:none;">
-                <div class="label-line"><span>暖色调 (Warmth)</span><span id="PaperWarmthVal">40</span></div>
-                <input type="range" id="PaperWarmth" min="0" max="100" step="1" value="40">
-            </div>
+    const bgLineHTML = skipBg ? '' : `
+        <div class="sf-line">
+            <span class="sf-label">背景</span>
+            <select id="BgMode">
+                <option value="transparent" ${defaultBgMode === 'transparent' ? 'selected' : ''}>🏁 透明</option>
+                <option value="#000000" ${defaultBgMode === '#000000' ? 'selected' : ''}>⬛ 纯黑</option>
+                <option value="#00ff00">🟩 绿幕</option>
+                <option value="#0000ff">🟦 蓝幕</option>
+                <option value="grid">▦ 网格</option>
+                <option value="dots">::: 点阵</option>
+                <option value="paper">📄 纸张纹理</option>
+                <option value="custom">📂 上传背景...</option>
+            </select>
+        </div>
+        <input type="file" id="BgUpload" accept="image/*,video/*" style="display:none">
+        <div class="row" id="PatternColorRow" style="display:none; justify-content:space-between; align-items:center;">
+            <div style="font-size:11px; color:var(--text-sub, #888);">纹理颜色</div>
+            <input type="color" id="PatternColor" value="${defaultPatternColor}">
+        </div>
+        <div class="row stack" id="PaperParamsRow" style="display:none;">
+            <div class="label-line"><span>暖色调 (Warmth)</span><span id="PaperWarmthVal">40</span></div>
+            <input type="range" id="PaperWarmth" min="0" max="100" step="1" value="40">
         </div>
     `;
 
-    const bgToggleHTML = skipBg ? '' :
-        `<button id="SfBgToggle" class="sf-bg-toggle" type="button"><span>▩ 背景</span><span class="sf-arrow">▾</span></button>`;
-
-    // 共享面板不再放进可滚动区，改为侧边栏底部常驻 footer（纵向：背景 / 格式 / 导出）
+    // 共享面板不再放进可滚动区，改为侧边栏底部常驻 footer（背景 / 格式 / 导出）
     placeholder.innerHTML = '';
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
@@ -189,26 +185,21 @@ export function injectPanels(opts = {}) {
     footer = document.createElement('div');
     footer.className = 'sidebar-footer';
     footer.innerHTML = `
-        ${bgToggleHTML}
-        ${bgBodyHTML}
-        <select id="ExportFormat">
-            <option value="png_seq">📸 PNG 序列</option>
-            <option value="mp4">🎥 MP4</option>
-            <option value="webm">🌐 WebM</option>
-        </select>
+        ${bgLineHTML}
+        <div class="sf-line">
+            <span class="sf-label">格式</span>
+            <select id="ExportFormat">
+                <option value="png_seq">📸 PNG 序列</option>
+                <option value="mp4">🎥 MP4</option>
+                <option value="webm">🌐 WebM</option>
+            </select>
+        </div>
         <button id="BtnRecord" class="btn btn-record" disabled>⌛ 连接组件...</button>
         <div id="LibStatus" style="font-size:10px; color:#666; text-align:center;">
             <span class='status-dot status-loading'></span>初始化...
         </div>
     `;
     sidebar.appendChild(footer);
-
-    const bgToggle = footer.querySelector('#SfBgToggle');
-    if (bgToggle) {
-        bgToggle.addEventListener('click', () => {
-            footer.classList.toggle('sf-bg-open');
-        });
-    }
 }
 
 // ========== 主初始化函数 ==========
