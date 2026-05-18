@@ -151,9 +151,8 @@ export function injectPanels(opts = {}) {
     const defaultPatternColor = opts.defaultPatternColor || '#333333';
     const skipBg = opts.skipBgPanel === true;
 
-    const bgPanelHTML = skipBg ? '' : `
-        <div class="control-group">
-            <div class="group-title"><span>▩ 场景背景</span></div>
+    const bgBodyHTML = skipBg ? '' : `
+        <div class="sf-bg-body" id="SfBgBody">
             <div class="row">
                 <select id="BgMode">
                     <option value="transparent" ${defaultBgMode === 'transparent' ? 'selected' : ''}>🏁 透明</option>
@@ -178,26 +177,40 @@ export function injectPanels(opts = {}) {
         </div>
     `;
 
-    placeholder.innerHTML = `
-        ${bgPanelHTML}
+    const bgToggleHTML = skipBg ? '' :
+        `<button id="SfBgToggle" class="sf-bg-toggle" type="button">▩ 背景<span class="sf-arrow">▾</span></button>`;
 
-        <div class="control-group" style="border-color:var(--danger)">
-            <div class="group-title">🎥 导出</div>
-            <div class="row">
-                <select id="ExportFormat">
-                    <option value="png_seq">📸 PNG 序列</option>
-                    <option value="mp4">🎥 MP4</option>
-                    <option value="webm">🌐 WebM</option>
-                </select>
-            </div>
-            <div class="row" style="margin-top:10px;">
-                <button id="BtnRecord" class="btn btn-record" disabled>⌛ 连接组件...</button>
-            </div>
-            <div id="LibStatus" style="font-size:10px; color:#666; margin-top:5px; text-align:center;">
-                <span class='status-dot status-loading'></span>初始化...
-            </div>
+    // 共享面板不再放进可滚动区，改为侧边栏底部常驻 footer
+    placeholder.innerHTML = '';
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+    let footer = sidebar.querySelector('.sidebar-footer');
+    if (footer) footer.remove();
+    footer = document.createElement('div');
+    footer.className = 'sidebar-footer';
+    footer.innerHTML = `
+        ${bgBodyHTML}
+        <div class="sf-row">
+            ${bgToggleHTML}
+            <select id="ExportFormat">
+                <option value="png_seq">📸 PNG 序列</option>
+                <option value="mp4">🎥 MP4</option>
+                <option value="webm">🌐 WebM</option>
+            </select>
+            <button id="BtnRecord" class="btn btn-record" disabled>⌛ 连接组件...</button>
+        </div>
+        <div id="LibStatus" style="font-size:10px; color:#666; margin-top:5px; text-align:center;">
+            <span class='status-dot status-loading'></span>初始化...
         </div>
     `;
+    sidebar.appendChild(footer);
+
+    const bgToggle = footer.querySelector('#SfBgToggle');
+    if (bgToggle) {
+        bgToggle.addEventListener('click', () => {
+            footer.classList.toggle('sf-bg-open');
+        });
+    }
 }
 
 // ========== 主初始化函数 ==========
