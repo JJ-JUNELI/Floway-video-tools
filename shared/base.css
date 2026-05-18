@@ -176,8 +176,8 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     flex-direction: column;
     gap: 10px;
     -webkit-overflow-scrolling: touch;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 40px, black calc(100% - 40px), transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0px, black 40px, black calc(100% - 40px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 60px, black calc(100% - 60px), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0px, black 60px, black calc(100% - 60px), transparent 100%);
 }
 .controls-container::-webkit-scrollbar { width: 6px; }
 .controls-container::-webkit-scrollbar-track { background: transparent; }
