@@ -807,8 +807,6 @@ canvas {
     background: transparent;
     width: 100%;
     max-width: 100%;
-    height: auto;
-    max-height: 100%;
     aspect-ratio: 4/3;
     display: block;
     border-radius: 4px;
@@ -819,8 +817,6 @@ canvas {
     background: transparent;
     width: 100%;
     max-width: 1440px;
-    height: auto;
-    max-height: 100%;
     aspect-ratio: 4/3;
     display: block;
     border-radius: 4px;
