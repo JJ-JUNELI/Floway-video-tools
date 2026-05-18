@@ -85,6 +85,9 @@
         .num-edit::-webkit-outer-spin-button,
         .num-edit::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .num-edit:focus { border-color: var(--accent, #555); }
+        .section-locked { opacity: .45; pointer-events: none; }
+        .section-locked .lock-hint { display: block; }
+        .lock-hint { display: none; font-size: 11px; color: var(--text-dim, #8a93a2); margin-top: 2px; margin-bottom: 6px; }
     </style>
 </head>
 <body>
@@ -143,10 +146,24 @@
                                     <option value="asc">数值升序</option>
                                     <option value="none">原始顺序</option>
                                 </select></div>
-                            <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>缩放范围</span><span id="StairRangeVal">30%</span></div>
-                                <input type="range" id="StairRange" min="0" max="80" step="5" value="30"></div></div>
+                            <div class="row stack"><div class="label-line"><span>缩放范围</span><span id="StairRangeVal">30%</span></div>
+                                <input type="range" id="StairRange" min="0" max="80" step="5" value="30"></div>
                         </div>
                         <div class="sub-title"><span>手动模式</span><input type="checkbox" id="StairManual"></div>
+                    </div>
+                    <div class="row stack" style="margin-top:8px"><div class="label-line"><span>分割线</span></div>
+                        <select id="SliceGapStyle">
+                            <option value="none">无间隔</option>
+                            <option value="transparent" selected>透明间隔</option>
+                            <option value="color">有色间隔</option>
+                        </select></div>
+                    <div id="SliceGapOpts">
+                        <div class="row stack"><div class="label-line"><span>分割线粗细</span><span id="SliceGapVal">3px</span></div>
+                            <input type="range" id="SliceGap" min="0" max="20" step="1" value="3"></div>
+                        <div id="SliceGapColorWrap" class="row stack" style="display:none">
+                            <div class="label-line"><span>分割线颜色</span></div>
+                            <input type="color" id="SliceGapColor" value="#ffffff">
+                        </div>
                     </div>
                 </div>
                 <div class="sub-section ss-teal" id="CenterTextSection">
@@ -177,29 +194,12 @@
                 </div>
                 <div class="sub-section ss-rose">
                     <div class="sub-section-label">效果</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>透明度</span><span id="SliceOpacityVal">100%</span></div>
-                            <input type="range" id="SliceOpacity" min="0" max="100" step="5" value="100"></div>
-                        <div style="flex:1"></div>
-                    </div>
+                    <div class="row stack"><div class="label-line"><span>透明度</span><span id="SliceOpacityVal">100%</span></div>
+                        <input type="range" id="SliceOpacity" min="0" max="100" step="5" value="100"></div>
                     <div class="sub-title"><span>切片辉光</span><input type="checkbox" id="SliceGlowEnabled"></div>
                     <div id="SliceGlowOpts" style="display:none">
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="SliceGlowVal">0</span></div>
-                            <input type="range" id="SliceGlow" min="0" max="100" step="2" value="0"></div></div>
-                    </div>
-                    <div class="row stack" style="margin-top:8px"><div class="label-line"><span>分割线</span></div>
-                        <select id="SliceGapStyle">
-                            <option value="none">无间隔</option>
-                            <option value="transparent" selected>透明间隔</option>
-                            <option value="color">有色间隔</option>
-                        </select></div>
-                    <div id="SliceGapOpts">
-                        <div class="row stack"><div class="label-line"><span>分割线粗细</span><span id="SliceGapVal">3px</span></div>
-                            <input type="range" id="SliceGap" min="0" max="20" step="1" value="3"></div>
-                        <div id="SliceGapColorWrap" class="row stack" style="display:none">
-                            <div class="label-line"><span>分割线颜色</span></div>
-                            <input type="color" id="SliceGapColor" value="#ffffff">
-                        </div>
+                        <div class="row stack"><div class="label-line"><span>辉光强度</span><span id="SliceGlowVal">0</span></div>
+                            <input type="range" id="SliceGlow" min="0" max="100" step="2" value="0"></div>
                     </div>
                 </div>
             </div>
@@ -216,10 +216,8 @@
                                 <option value="inside">扇形内部</option>
                             </select></div>
                         <div id="OutsideLabelOpts">
-                            <div class="row">
-                                <div style="flex:1" class="stack"><div class="label-line"><span>标签距离</span><span id="LabelDistanceVal">60</span></div>
-                                    <input type="range" id="LabelDistance" min="5" max="150" step="5" value="60"></div>
-                            </div>
+                            <div class="row stack"><div class="label-line"><span>标签距离</span><span id="LabelDistanceVal">60</span></div>
+                                <input type="range" id="LabelDistance" min="5" max="150" step="5" value="60"></div>
                             <div class="sub-title"><span>显示引线</span><input type="checkbox" id="ShowLeaderLines" checked></div>
                             <div id="LeaderLineOpts">
                                 <div class="row">
@@ -269,9 +267,9 @@
                         <input type="color" id="TitleColor" value="#333333">
                     </div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X</span><input type="number" class="num-edit" id="MainTitleXVal" min="-720" max="720" value="0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="MainTitleXVal">0</span></div>
                             <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><input type="number" class="num-edit" id="MainTitleYVal" min="-540" max="540" value="-490"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><span id="MainTitleYVal">-490</span></div>
                             <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
                     </div>
                     <div class="sub-title"><span>显示主标题括号</span><input type="checkbox" id="ShowBrackets" checked></div>
@@ -296,9 +294,9 @@
                         <input type="color" id="SubTitleColor" value="#999999">
                     </div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X</span><input type="number" class="num-edit" id="SubTitleXVal" min="-720" max="720" value="630"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="SubTitleXVal">630</span></div>
                             <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><input type="number" class="num-edit" id="SubTitleYVal" min="-540" max="540" value="0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><span id="SubTitleYVal">0</span></div>
                             <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
                     </div>
                     <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
@@ -319,14 +317,13 @@
                 </div>
                 <div class="sub-section ss-teal" id="TextureSection">
                     <div class="sub-section-label">纸张纹理</div>
+                    <div class="lock-hint">需先启用背景</div>
                     <div class="sub-title"><span>启用纹理</span><input type="checkbox" id="TextureEnabled" checked></div>
                     <div id="TextureOpts">
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
-                            <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div></div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
-                                <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
-                        </div>
+                        <div class="row stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
+                            <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div>
+                        <div class="row stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
+                            <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
                     </div>
                 </div>
                 <div class="sub-section ss-green">
@@ -350,10 +347,8 @@
                             <div class="stack" style="flex:1"><div class="label-line"><span>辉光颜色</span></div>
                                 <input type="color" id="CardGlowColor" value="#3b82f6"></div>
                         </div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
-                                <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
-                        </div>
+                        <div class="row stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
+                            <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
                     </div>
                 </div>
             </div>
@@ -769,7 +764,7 @@
                     config.cardBgTransparent = !config.cardBgTransparent; // 启用背景=checked → transparent=false
                     const transparent = config.cardBgTransparent;
                     document.getElementById('CardBgColorRow').style.display = transparent ? 'none' : '';
-                    document.getElementById('TextureSection').style.display = transparent ? 'none' : '';
+                    document.getElementById('TextureSection').classList.toggle('section-locked', transparent);
                     if (transparent) {
                         config.cardBorderEnabled = false;
                         document.getElementById('CardBorderEnabled').checked = false;
@@ -784,20 +779,6 @@
             }
         });
 
-        // 坐标滑块 ↔ 数值输入框双向同步
-        ['MainTitleX', 'MainTitleY', 'SubTitleX', 'SubTitleY'].forEach(id => {
-            const s = document.getElementById(id);
-            const n = document.getElementById(id + 'Val');
-            if (!s || !n) return;
-            s.addEventListener('input', () => { n.value = s.value; });
-            n.addEventListener('input', () => {
-                let v = parseInt(n.value);
-                if (isNaN(v)) return;
-                v = Math.max(parseInt(s.min), Math.min(parseInt(s.max), v));
-                s.value = v;
-                s.dispatchEvent(new Event('input'));
-            });
-        });
 
         // ====== 漂浮动画 ======
         let _currentRx = config.rotateX * Math.PI / 180;
