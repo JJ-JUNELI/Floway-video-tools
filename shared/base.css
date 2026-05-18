@@ -117,11 +117,11 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 .sidebar-header::after {
     content: '';
     position: absolute;
-    left: 16px;
-    right: 16px;
+    left: 24px;
+    right: 24px;
     bottom: 0;
-    height: 2px;
-    border-radius: 2px;
+    height: 1.5px;
+    border-radius: 9999px;
     background: var(--border);
 }
 .sidebar-header .btn-icon {
@@ -214,11 +214,11 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 .sidebar-footer::before {
     content: '';
     position: absolute;
-    left: 16px;
-    right: 16px;
+    left: 24px;
+    right: 24px;
     top: 0;
-    height: 2px;
-    border-radius: 2px;
+    height: 1.5px;
+    border-radius: 9999px;
     background: var(--border);
 }
 
