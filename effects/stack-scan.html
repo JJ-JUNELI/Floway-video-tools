@@ -293,6 +293,7 @@
         import { Recorder } from '../shared/recorder.js';
         import { Background } from '../shared/background.js';
         import { injectPanels, initSidebarResize, initHeaderPlayButton } from '../shared/controls.js';
+        import { enhanceAllSelects } from '../shared/custom-select.js';
         import { SvgRenderer } from '../shared/svg-renderer.js';
         import { getEasing, bindUI, setupFontSelector, fontSelectHTML } from '../shared/utils.js';
         import { getTheme, toggleTheme } from '../shared/themes.js';
@@ -300,6 +301,7 @@
         injectPanels({ defaultBgMode: 'transparent', defaultPatternColor: '#222222' });
         initSidebarResize();
         initHeaderPlayButton();
+        enhanceAllSelects();
 
         const svg = document.getElementById('mainSvg');
         const contentGroup = document.getElementById('contentGroup');
