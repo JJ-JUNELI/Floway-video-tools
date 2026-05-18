@@ -178,9 +178,9 @@ export function injectPanels(opts = {}) {
     `;
 
     const bgToggleHTML = skipBg ? '' :
-        `<button id="SfBgToggle" class="sf-bg-toggle" type="button">▩ 背景<span class="sf-arrow">▾</span></button>`;
+        `<button id="SfBgToggle" class="sf-bg-toggle" type="button"><span>▩ 背景</span><span class="sf-arrow">▾</span></button>`;
 
-    // 共享面板不再放进可滚动区，改为侧边栏底部常驻 footer
+    // 共享面板不再放进可滚动区，改为侧边栏底部常驻 footer（纵向：背景 / 格式 / 导出）
     placeholder.innerHTML = '';
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
@@ -189,17 +189,15 @@ export function injectPanels(opts = {}) {
     footer = document.createElement('div');
     footer.className = 'sidebar-footer';
     footer.innerHTML = `
+        ${bgToggleHTML}
         ${bgBodyHTML}
-        <div class="sf-row">
-            ${bgToggleHTML}
-            <select id="ExportFormat">
-                <option value="png_seq">📸 PNG 序列</option>
-                <option value="mp4">🎥 MP4</option>
-                <option value="webm">🌐 WebM</option>
-            </select>
-            <button id="BtnRecord" class="btn btn-record" disabled>⌛ 连接组件...</button>
-        </div>
-        <div id="LibStatus" style="font-size:10px; color:#666; margin-top:5px; text-align:center;">
+        <select id="ExportFormat">
+            <option value="png_seq">📸 PNG 序列</option>
+            <option value="mp4">🎥 MP4</option>
+            <option value="webm">🌐 WebM</option>
+        </select>
+        <button id="BtnRecord" class="btn btn-record" disabled>⌛ 连接组件...</button>
+        <div id="LibStatus" style="font-size:10px; color:#666; text-align:center;">
             <span class='status-dot status-loading'></span>初始化...
         </div>
     `;

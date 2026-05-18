@@ -190,7 +190,7 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 
 .sidebar-footer {
     flex-shrink: 0;
-    padding: 10px 16px 14px;
+    padding: 10px 16px 12px;
     border-top: 1px solid var(--border);
     background: var(--panel-bg);
     display: flex;
@@ -198,28 +198,23 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     gap: 8px;
 }
 
-.sidebar-footer .sf-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.sidebar-footer .sf-row > select#ExportFormat { display: none; }
-.sidebar-footer .sf-row > .floway-select { flex: 0 0 auto; min-width: 116px; }
-.sidebar-footer .sf-row > #BtnRecord { flex: 1; margin: 0; min-height: 38px; }
+/* 每行控件占满整行：背景 / 格式 / 导出 */
+.sidebar-footer > .floway-select,
+.sidebar-footer > select#ExportFormat { width: 100%; }
+.sidebar-footer > #BtnRecord { width: 100%; margin: 0; min-height: 40px; }
 
 .sidebar-footer .sf-bg-toggle {
-    flex: 0 0 auto;
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 7px 10px;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 12px;
     font-size: 12px;
     color: var(--text-sub, #888);
     background: rgba(255,255,255,0.04);
     border: 1px solid var(--border);
     border-radius: 6px;
     cursor: pointer;
-    white-space: nowrap;
 }
 .sidebar-footer .sf-bg-toggle:hover { color: var(--text-main); background: rgba(255,255,255,0.07); }
 .sidebar-footer .sf-arrow { font-size: 9px; transition: transform 0.18s; }
@@ -229,10 +224,11 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     display: none;
     flex-direction: column;
     gap: 8px;
-    padding-bottom: 4px;
+    padding: 8px 0;
     border-bottom: 1px solid var(--border);
 }
 .sidebar-footer.sf-bg-open .sf-bg-body { display: flex; }
+.sidebar-footer #LibStatus { margin: 0; }
 
 /* ========================================
    Control Groups — 柔和阴影分层
