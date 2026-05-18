@@ -110,11 +110,9 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* 玻璃质感 */
-    background: rgba(255,255,255,0.06);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
-    border: 1px solid rgba(255,255,255,0.12);
+    /* 与参数组同款卡片 */
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
     border-radius: var(--radius-md);
 }
 .sidebar-header .btn-icon {
@@ -200,11 +198,9 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     display: flex;
     flex-direction: column;
     gap: 8px;
-    /* 玻璃质感 */
-    background: rgba(255,255,255,0.06);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
-    border: 1px solid rgba(255,255,255,0.12);
+    /* 与参数组同款卡片 */
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
     border-radius: var(--radius-md);
 }
 
@@ -444,6 +440,17 @@ select option:checked {
     transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s 0s;
     border-color: var(--border);
 }
+.fs-dropdown::-webkit-scrollbar { width: 6px; }
+.fs-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 8px 0;
+}
+.fs-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15);
+    border-radius: 3px;
+}
+.fs-dropdown::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+.fs-dropdown { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
 
 /* 选项 */
 .fs-option {
@@ -1166,7 +1173,7 @@ body.logo canvas {
 }
 [data-theme="light"] .sidebar-header,
 [data-theme="light"] .sidebar-footer {
-    background: rgba(255,255,255,0.55);
+    background: rgba(0,0,0,0.02);
     border-color: rgba(0,0,0,0.08);
 }
 [data-theme="light"] .sidebar-header .btn-icon:hover {

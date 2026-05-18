@@ -7,7 +7,7 @@ import { Recorder } from './recorder.js';
 import { Background } from './background.js';
 import { lerp, hexToRgba, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, getEasing, loadFont, setupFontSelector, initFontSelector, FONT_LIST, fontSelectHTML, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped, bindUI, applyVignetteMask, calcGradCoords } from './utils.js';
 import { getTheme } from './themes.js';
-import { enhanceAllSelects } from './custom-select.js';
+import { enhanceAllSelects, enhanceSelect } from './custom-select.js';
 
 // ========== 共享面板构建器 ==========
 
@@ -200,6 +200,9 @@ export function injectPanels(opts = {}) {
         </div>
     `;
     sidebar.appendChild(footer);
+
+    // 统一 footer 下拉为自定义样式（enhanceSelect 幂等，已增强会自动跳过）
+    footer.querySelectorAll('select').forEach(el => enhanceSelect(el));
 }
 
 // ========== 主初始化函数 ==========
