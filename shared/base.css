@@ -176,6 +176,8 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     flex-direction: column;
     gap: 10px;
     -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 20px, black calc(100% - 20px), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0px, black 20px, black calc(100% - 20px), transparent 100%);
 }
 .controls-container::-webkit-scrollbar { width: 6px; }
 .controls-container::-webkit-scrollbar-track { background: transparent; }
@@ -185,27 +187,6 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 }
 .controls-container::-webkit-scrollbar-thumb:hover {
     background: rgba(255,255,255,0.15);
-}
-.controls-container::before,
-.controls-container::after {
-    content: '';
-    position: sticky;
-    left: 0;
-    width: 100%;
-    height: 18px;
-    flex-shrink: 0;
-    pointer-events: none;
-    z-index: 10;
-}
-.controls-container::before {
-    top: 0;
-    margin-bottom: -18px;
-    background: linear-gradient(to bottom, var(--panel-bg) 0%, transparent 100%);
-}
-.controls-container::after {
-    bottom: 0;
-    margin-top: -18px;
-    background: linear-gradient(to top, var(--panel-bg) 0%, transparent 100%);
 }
 
 /* ========================================
