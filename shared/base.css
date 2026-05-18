@@ -210,7 +210,9 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     color: var(--text-sub, #888);
     white-space: nowrap;
 }
-.sidebar-footer .sf-line > select { display: none; }
+/* 增强页：enhanceSelect 自己给原生 select 设 inline display:none；
+   未增强页（stack-scan）：原生 select 需正常显示并撑满 */
+.sidebar-footer .sf-line > select,
 .sidebar-footer .sf-line > .floway-select { flex: 1; min-width: 0; }
 .sidebar-footer > #BtnRecord { width: 100%; margin: 0; min-height: 40px; }
 .sidebar-footer #LibStatus { margin: 0; }
