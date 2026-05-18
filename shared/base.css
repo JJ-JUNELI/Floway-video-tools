@@ -177,27 +177,6 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     gap: 10px;
     -webkit-overflow-scrolling: touch;
 }
-.controls-container::before,
-.controls-container::after {
-    content: '';
-    position: sticky;
-    left: 0;
-    width: 100%;
-    height: 36px;
-    flex-shrink: 0;
-    pointer-events: none;
-    z-index: 10;
-}
-.controls-container::before {
-    top: 0;
-    margin-bottom: -36px;
-    background: linear-gradient(to bottom, var(--panel-bg) 0%, transparent 100%);
-}
-.controls-container::after {
-    bottom: 0;
-    margin-top: -36px;
-    background: linear-gradient(to top, var(--panel-bg) 0%, transparent 100%);
-}
 .controls-container::-webkit-scrollbar { width: 6px; }
 .controls-container::-webkit-scrollbar-track { background: transparent; }
 .controls-container::-webkit-scrollbar-thumb {
