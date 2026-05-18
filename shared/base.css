@@ -108,9 +108,12 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* 微妙的底部分割 */
+    /* 微妙的底部分割 + 浮于滚动内容之上的投影 */
     border-bottom: 1px solid var(--border);
     background: linear-gradient(180deg, rgba(129,140,248,0.03) 0%, transparent 100%);
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.35);
 }
 .sidebar-header .btn-icon {
     width: 32px;
@@ -196,6 +199,9 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     display: flex;
     flex-direction: column;
     gap: 8px;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 -6px 12px -6px rgba(0,0,0,0.35);
 }
 
 /* 左右结构：左标签 + 右选框（背景 / 格式），导出按钮整行 */
