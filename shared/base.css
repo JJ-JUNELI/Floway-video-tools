@@ -109,11 +109,20 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     align-items: center;
     justify-content: space-between;
     /* 微妙的底部分割 + 浮于滚动内容之上的投影 */
-    border-bottom: 1px solid var(--border);
     background: linear-gradient(180deg, rgba(129,140,248,0.03) 0%, transparent 100%);
     position: relative;
     z-index: 2;
     box-shadow: 0 5px 10px -7px rgba(0,0,0,0.18);
+}
+.sidebar-header::after {
+    content: '';
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--border);
 }
 .sidebar-header .btn-icon {
     width: 32px;
@@ -194,7 +203,6 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 .sidebar-footer {
     flex-shrink: 0;
     padding: 10px 16px 12px;
-    border-top: 1px solid var(--border);
     background: var(--panel-bg);
     display: flex;
     flex-direction: column;
@@ -202,6 +210,16 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     position: relative;
     z-index: 2;
     box-shadow: 0 -5px 10px -7px rgba(0,0,0,0.18);
+}
+.sidebar-footer::before {
+    content: '';
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    top: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--border);
 }
 
 /* 左右结构：左标签 + 右选框（背景 / 格式），导出按钮整行 */
