@@ -805,8 +805,10 @@ input:checked + .slider:before {
 
 canvas {
     background: transparent;
-    width: 100%;
+    width: auto;
+    height: auto;
     max-width: 100%;
+    max-height: 100%;
     aspect-ratio: 4/3;
     display: block;
     border-radius: 4px;
@@ -815,8 +817,10 @@ canvas {
 
 #mainSvg {
     background: transparent;
-    width: 100%;
-    max-width: 1440px;
+    width: auto;
+    height: auto;
+    max-width: min(1440px, 100%);
+    max-height: 100%;
     aspect-ratio: 4/3;
     display: block;
     border-radius: 4px;
@@ -949,8 +953,10 @@ body.logo canvas {
 .effect-canvas {
     border: 1px solid var(--border);
     background: var(--bg-dark);
-    width: 100%;
-    max-width: 1440px;
+    width: auto;
+    height: auto;
+    max-width: min(1440px, 100%);
+    max-height: 100%;
     aspect-ratio: 4/3;
     display: block;
     border-radius: 4px;
@@ -1086,10 +1092,10 @@ body.logo canvas {
         overflow: hidden;
     }
     canvas, .effect-canvas, #mainSvg {
-        max-height: calc(40vh - 16px) !important;
-        width: calc((40vh - 16px) * 4 / 3) !important;
-        max-width: 100% !important;
+        width: auto !important;
         height: auto !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
         aspect-ratio: 4 / 3 !important;
     }
     .sidebar-header {
@@ -1129,7 +1135,7 @@ body.logo canvas {
         margin: 0;
         order: 2;
     }
-    canvas, .effect-canvas, #mainSvg { height: 100% !important; width: auto !important; aspect-ratio: 4 / 3 !important; max-width: 100% !important; }
+    canvas, .effect-canvas, #mainSvg { width: auto !important; height: auto !important; max-width: 100% !important; max-height: 100% !important; aspect-ratio: 4 / 3 !important; }
     .sidebar-header { padding: 10px 12px; flex-shrink: 0; }
     .group-title { min-height: 32px; font-size: 11px; }
     .data-table { font-size: 10px; }
