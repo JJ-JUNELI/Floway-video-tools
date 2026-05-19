@@ -197,7 +197,10 @@ export function injectPanels(opts = {}) {
             </div>
         </div>
         ${bgExtrasHTML}
-        <button id="BtnRecord" class="btn btn-record" disabled>⌛ 连接组件...</button>
+        <div class="sf-actions">
+            <button id="FooterBtnPlay" class="btn btn-play" style="display:none">▶ 播放</button>
+            <button id="BtnRecord" class="btn btn-record" disabled>⌛ 连接...</button>
+        </div>
     `;
     sidebar.appendChild(footer);
 
@@ -600,15 +603,11 @@ export function initColorInputs() {
 export function initHeaderPlayButton() {
     const realBtn = document.getElementById('BtnPlay');
     if (!realBtn) return;
-    const badge = document.querySelector('.sidebar-header .version-badge');
-    if (!badge) return;
-
-    const headerBtn = document.createElement('button');
-    headerBtn.className = 'btn-play';
-    headerBtn.textContent = '▶ 播放';
-    headerBtn.title = '播放动画';
-    headerBtn.addEventListener('click', () => realBtn.click());
-    badge.replaceWith(headerBtn);
+    const footerBtn = document.getElementById('FooterBtnPlay');
+    if (footerBtn) {
+        footerBtn.style.display = '';
+        footerBtn.addEventListener('click', () => realBtn.click());
+    }
     realBtn.style.display = 'none';
 }
 
