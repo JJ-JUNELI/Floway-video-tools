@@ -69,13 +69,14 @@ body.is-recording .sidebar { opacity: 0.95; }
     width: clamp(240px, var(--sidebar-w, 360px), min(560px, 40vw));
     margin: clamp(0px, calc((100vw - 800px) / 30), 12px) 0 clamp(0px, calc((100vw - 800px) / 30), 12px) clamp(0px, calc((100vw - 800px) / 30), 12px);
     border-radius: clamp(0px, calc((100vw - 800px) / 20), 14px);
-    transition: border-radius 0.25s ease, margin 0.25s ease;
+    transition: width 0.2s ease, border-radius 0.25s ease, margin 0.25s ease;
     background: var(--panel-bg);
     display: flex;
     flex-direction: column;
     z-index: 100;
     flex-shrink: 0;
     overflow: hidden;
+    outline: none;
     position: relative;
     border: 1px solid var(--border);
     box-shadow:
