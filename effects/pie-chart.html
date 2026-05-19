@@ -127,8 +127,7 @@
             <a href="../index.html" class="btn-icon" title="返回首页" style="text-decoration:none; margin-right:8px; font-size:15px;">←</a>
             <div class="app-title"><svg class="app-icon" viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><span>饼图效果</span><span style="font-size:9px; color:var(--text-sub, #888)">v1.0</span></div>
             <div style="display:flex; align-items:center; gap:10px;">
-                <button id="themeToggle" class="btn-icon" title="切换主题">☀</button>
-                <div class="version-badge">NEW</div>
+                <button id="themeToggle" class="btn-theme" title="切换主题"></button>
             </div>
         </div>
 
@@ -459,7 +458,7 @@
     <script type="module">
         import { WebGLComposite } from '../shared/webgl-composite.js';
         import { initEffect } from '../shared/controls.js';
-        import { getTheme, toggleTheme } from '../shared/themes.js';
+        import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { drawSolidGlow } from '../shared/border-effects.js';
 
         // ====== Canvas 初始化 ======
@@ -994,13 +993,7 @@
         };
 
         document.getElementById('BtnPlay').addEventListener('click', () => myResetAnimStart());
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            toggleTheme();
-            document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
-            _paperTexCache = null;
-            startLoop();
-        });
-        document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+        initThemeToggle();
 
         // 条件显示
         if (config.pieType !== 'donut') {

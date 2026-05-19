@@ -81,8 +81,7 @@
             <a href="../index.html" class="btn-icon" title="返回首页" style="text-decoration:none; margin-right:8px; font-size:15px;">←</a>
             <div class="app-title"><svg class="app-icon" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span>折线图</span><span style="font-size:9px; color:var(--text-sub, #888)">v3.0</span></div>
             <div style="display:flex; align-items:center; gap:10px;">
-                <button id="themeToggle" class="btn-icon" title="切换主题">☀</button>
-                <div class="version-badge">MERGE</div>
+                <button id="themeToggle" class="btn-theme" title="切换主题"></button>
             </div>
         </div>
 
@@ -435,7 +434,7 @@
     <script type="module">
         import { initEffect } from '../shared/controls.js';
         import { drawSolidGlow } from '../shared/border-effects.js';
-        import { getTheme, toggleTheme } from '../shared/themes.js';
+        import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=sdf-pad';
 
         // ====== Canvas 初始化 ======
@@ -885,13 +884,7 @@
         window.resetData = () => { dataPoints = INITIAL_DATA.map(d => ({...d})); renderTable(); _pathPtsCache = null; startLoop(); };
 
         document.getElementById('BtnPlay').addEventListener('click', () => myResetAnimStart());
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            toggleTheme();
-            document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
-            _paperTexCache = null; _staticBgCache = null;
-            startLoop();
-        });
-        document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+        initThemeToggle();
 
         // 条件显示：数值标签选项
         const valueOptsEl = document.getElementById('ValueLabelOpts');

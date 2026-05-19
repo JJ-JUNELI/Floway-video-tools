@@ -22,8 +22,7 @@
             <a href="../index.html" class="btn-icon" title="返回首页" style="text-decoration:none; margin-right:8px; font-size:15px;">←</a>
             <div class="app-title"><svg class="app-icon" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg><span>文字突出扫描</span><span style="font-size:9px; color:var(--text-sub, #888)">v19.4</span></div>
             <div style="display:flex; align-items:center; gap:10px;">
-                <button id="themeToggle" class="btn-icon" title="切换主题 (暗色/亮色)">☀</button>
-                <div class="version-badge">STABLE FIX</div>
+                <button id="themeToggle" class="btn-theme" title="切换主题"></button>
             </div>
         </div>
 
@@ -296,7 +295,7 @@
         import { enhanceAllSelects } from '../shared/custom-select.js';
         import { SvgRenderer } from '../shared/svg-renderer.js';
         import { getEasing, bindUI, setupFontSelector, fontSelectHTML } from '../shared/utils.js';
-        import { getTheme, toggleTheme } from '../shared/themes.js';
+        import { getTheme, toggleTheme, moonSVG, sunSVG } from '../shared/themes.js';
 
         injectPanels({ defaultBgMode: 'transparent', defaultPatternColor: '#222222' });
         initSidebarResize();
@@ -644,7 +643,7 @@
         function applyTheme() {
             const t = getTheme();
             const isLight = t.id === 'light';
-            document.getElementById('themeToggle').textContent = isLight ? '🌙' : '☀';
+            
 
             // SVG 文本填充：亮色用深色文字，暗色用白色
             centerText.setAttribute('fill', t.textMain);
@@ -658,10 +657,13 @@
         document.getElementById('themeToggle').addEventListener('click', () => {
             toggleTheme();
             applyTheme();
+            const t = document.getElementById('themeToggle');
+            t.innerHTML = getTheme().id === 'dark' ? sunSVG : moonSVG;
         });
 
         // 初始化主题
         applyTheme();
+        document.getElementById('themeToggle').innerHTML = getTheme().id === 'dark' ? sunSVG : moonSVG;
     </script>
 </body>
 </html>

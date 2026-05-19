@@ -133,6 +133,35 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     color: var(--accent);
 }
 
+.sidebar-header .btn-theme {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-sub);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: border-color 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+.sidebar-header .btn-theme svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.sidebar-header .btn-theme:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 .app-title {
     font-family: 'Orbitron', sans-serif;
     font-weight: 700;
