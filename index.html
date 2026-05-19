@@ -208,14 +208,15 @@
             transition: background .2s ease, border-color .2s ease;
             animation: heroFloat var(--dur, 4s) ease-in-out infinite;
             animation-delay: var(--fd, 0s);
-            /* 防锯齿：强制 GPU 合成层 */
+            /* 防锯齿：overflow:hidden 让 border-radius 成为裁切遮罩 */
+            overflow: hidden;
             will-change: transform;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
         }
         .hero-icon svg {
-            /* 随容器等比缩放，与 ext-icon 比例一致 */
-            width: 50%; height: 50%;
+            /* width % 对宽等比缩放；height:auto 按 viewBox 比例，避免 flex 高度解析不稳定 */
+            width: 50%; height: auto;
             fill: none;
             stroke-linecap: round;
             stroke-linejoin: round;
