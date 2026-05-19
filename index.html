@@ -191,25 +191,34 @@
             z-index: 2;
         }
         .hero-icon {
+            --cat: #818cf8;
             width: 74px; height: 74px;
             border-radius: 18px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 28px;
-            background: rgba(13, 13, 17, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.09);
-            box-shadow:
-                0 6px 24px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            background: linear-gradient(155deg,
+                color-mix(in srgb, var(--cat) 24%, #171b22) 0%,
+                color-mix(in srgb, var(--cat) 11%, #14171d) 100%);
+            border: 1px solid color-mix(in srgb, var(--cat) 26%, transparent);
             position: relative;
             z-index: 2;
+            transition: background .2s ease, border-color .2s ease;
         }
+        .hero-icon svg {
+            width: 36px; height: 36px;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .hero-icon svg .g-main { stroke: color-mix(in srgb, var(--cat) 78%, #ffffff); stroke-width: 2; }
+        .hero-icon svg .g-dot  { fill: color-mix(in srgb, var(--cat) 78%, #ffffff); stroke: none; }
         [data-theme="light"] .hero-icon {
-            background: rgba(255,255,255,0.85);
-            border-color: rgba(0,0,0,0.08);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+            background: linear-gradient(155deg,
+                color-mix(in srgb, var(--cat) 13%, #ffffff) 0%,
+                color-mix(in srgb, var(--cat) 6%, #ffffff) 100%);
+            border: 1px solid color-mix(in srgb, var(--cat) 24%, transparent);
         }
+        [data-theme="light"] .hero-icon svg .g-main { stroke: color-mix(in srgb, var(--cat) 90%, #1e293b); }
+        [data-theme="light"] .hero-icon svg .g-dot  { fill: color-mix(in srgb, var(--cat) 90%, #1e293b); }
 
         /* Hero Title */
         .hero h1 {
@@ -733,14 +742,16 @@
             .hero h1 { font-size: 40px; }
             .hero-icons { gap: 12px; padding: 36px 16px 28px; }
             .hero-row { gap: 10px; }
-            .hero-icon { width: 52px; height: 52px; font-size: 23px; border-radius: 14px; }
+            .hero-icon { width: 52px; height: 52px; border-radius: 14px; }
+            .hero-icon svg { width: 26px; height: 26px; }
             .main { padding: 0 20px 60px; }
             .featured-grid { grid-template-columns: 1fr; }
             .filter-bar { flex-direction: column; align-items: stretch; }
             .filter-pills { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
         }
         @media (max-width: 480px) {
-            .hero-icon { width: 44px; height: 44px; font-size: 19px; }
+            .hero-icon { width: 44px; height: 44px; border-radius: 12px; }
+            .hero-icon svg { width: 22px; height: 22px; }
             .hero-row { gap: 8px; }
             .hero-icons { gap: 10px; }
             .ext-meta { flex-wrap: wrap; gap: 8px; }
@@ -779,34 +790,43 @@
     <header class="hero">
         <div class="hero-icons">
             <div class="hero-row">
-                <div class="hero-icon" style="width:68px;height:68px;transform:translateY(-2px) rotate(-1.5deg);opacity:0.78;">
-                    <svg width="34" height="34" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi1" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs><rect x="3" y="20" width="6" height="10" rx="1.5" fill="url(#gi1)" opacity=".5"/><rect x="12" y="13" width="6" height="17" rx="1.5" fill="url(#gi1)" opacity=".7"/><rect x="21" y="7" width="6" height="23" rx="1.5" fill="url(#gi1)"/><polyline points="5,19 14,11 24,5" stroke="#93c5fd" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="24" cy="5" r="2" fill="#bfdbfe"/></svg>
+                <!-- 柱状图 chart blue -->
+                <div class="hero-icon" style="--cat:#60a5fa;width:68px;height:68px;transform:translateY(-2px) rotate(-1.5deg);opacity:0.78;">
+                    <svg viewBox="0 0 24 24"><rect class="g-main" x="2" y="14" width="4" height="7" rx="1"/><rect class="g-main" x="9" y="9" width="4" height="12" rx="1"/><rect class="g-main" x="16" y="5" width="4" height="16" rx="1"/></svg>
                 </div>
-                <div class="hero-icon" style="width:76px;height:76px;transform:translateY(-6px) rotate(-0.5deg);opacity:0.90;">
-                    <svg width="38" height="38" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi2" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#fbbf24"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><path d="M18 4l2.5 6.5L27 12l-5 4.5 1.5 7L18 20l-5.5 3.5 1.5-7-5-4.5 6.5-1.5z" fill="url(#gi2)"/><path d="M8 22l1.5 4L6 28l3.5-.5L12 30l1-4" stroke="#fcd34d" stroke-width="1.5" stroke-linecap="round" fill="none" opacity=".7"/><path d="M26 16l2 5-4 2 3 .5L30 27l-1-3.5" stroke="#fcd34d" stroke-width="1.2" stroke-linecap="round" fill="none" opacity=".5"/></svg>
+                <!-- 星形/动效 amber -->
+                <div class="hero-icon" style="--cat:#fbbf24;width:76px;height:76px;transform:translateY(-6px) rotate(-0.5deg);opacity:0.90;">
+                    <svg viewBox="0 0 24 24"><path class="g-main" d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
                 </div>
-                <div class="hero-icon" style="width:82px;height:82px;transform:translateY(-12px) rotate(0deg);opacity:1;">
-                    <svg width="42" height="42" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi3" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs><rect x="6" y="8" width="24" height="18" rx="2" stroke="url(#gi3)" stroke-width="2" fill="none"/><line x1="6" y1="14" x2="30" y2="14" stroke="url(#gi3)" stroke-width="1.5" opacity=".5"/><rect x="10" y="17" width="16" height="2" rx="1" fill="url(#gi3)" opacity=".35"/><rect x="10" y="21" width="10" height="2" rx="1" fill="url(#gi3)" opacity=".25"/><line x1="15" y1="26" x2="21" y2="26" stroke="url(#gi3)" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="26" x2="18" y2="30" stroke="url(#gi3)" stroke-width="2"/></svg>
+                <!-- 显示器/屏幕 visual purple -->
+                <div class="hero-icon" style="--cat:#a78bfa;width:82px;height:82px;transform:translateY(-12px) rotate(0deg);opacity:1;">
+                    <svg viewBox="0 0 24 24"><rect class="g-main" x="2" y="3" width="20" height="14" rx="2"/><line class="g-main" x1="8" y1="21" x2="16" y2="21"/><line class="g-main" x1="12" y1="17" x2="12" y2="21"/></svg>
                 </div>
-                <div class="hero-icon" style="width:76px;height:76px;transform:translateY(-6px) rotate(0.5deg);opacity:0.90;">
-                    <svg width="38" height="38" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi4" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs><polygon points="18,3 33,12 33,24 18,33 3,24 3,12" stroke="url(#gi4)" stroke-width="1.8" fill="none"/><polygon points="18,9 27,14.5 27,21.5 18,27 9,21.5 9,14.5" fill="url(#gi4)" opacity=".25"/></svg>
+                <!-- 六边形/粒子 particle cyan -->
+                <div class="hero-icon" style="--cat:#22d3ee;width:76px;height:76px;transform:translateY(-6px) rotate(0.5deg);opacity:0.90;">
+                    <svg viewBox="0 0 24 24"><path class="g-main" d="M12 2l8.66 5v10L12 22 3.34 17V7z"/><circle class="g-dot" cx="12" cy="12" r="1.5"/></svg>
                 </div>
-                <div class="hero-icon" style="width:68px;height:68px;transform:translateY(2px) rotate(1.5deg);opacity:0.78;">
-                    <svg width="34" height="34" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi5" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#fb923c"/><stop offset="100%" stop-color="#ea580c"/></linearGradient></defs><path d="M7 24c3-4 6-8 12-12s10-5 14-4" stroke="url(#gi5)" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="7" cy="24" r="2.2" fill="url(#gi5)"/><circle cx="19" cy="12" r="1.8" fill="#fed7aa"/></svg>
+                <!-- 贝塞尔曲线 orange -->
+                <div class="hero-icon" style="--cat:#fb923c;width:68px;height:68px;transform:translateY(2px) rotate(1.5deg);opacity:0.78;">
+                    <svg viewBox="0 0 24 24"><path class="g-main" d="M3 20 C9 12 15 16 21 4"/><circle class="g-dot" cx="3" cy="20" r="1.5"/><circle class="g-dot" cx="21" cy="4" r="1.5"/></svg>
                 </div>
             </div>
             <div class="hero-row">
-                <div class="hero-icon" style="width:70px;height:70px;transform:translateY(4px) rotate(-1deg);opacity:0.72;">
-                    <svg width="35" height="35" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi6" x1="0" y1="36" x2="36" y2="0"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs><polyline points="4,28 12,18 20,22 32,8" stroke="url(#gi6)" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>
+                <!-- 折线图 pink -->
+                <div class="hero-icon" style="--cat:#f472b6;width:70px;height:70px;transform:translateY(4px) rotate(-1deg);opacity:0.72;">
+                    <svg viewBox="0 0 24 24"><polyline class="g-main" points="3,18 8,10 14,14 21,4"/><circle class="g-dot" cx="21" cy="4" r="1.5"/></svg>
                 </div>
-                <div class="hero-icon" style="width:74px;height:74px;transform:translateY(4px) rotate(-0.5deg);opacity:0.80;">
-                    <svg width="37" height="37" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi7" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#d4a574"/><stop offset="100%" stop-color="#b8956e"/></linearGradient></defs><rect x="5" y="4" width="26" height="28" rx="2" fill="#faf6f1" stroke="url(#gi7)" stroke-width="1.5"/><polyline points="10,26 15,22 20,24 26,18" stroke="url(#gi7)" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="26" cy="18" r="1.5" fill="url(#gi7)"/></svg>
+                <!-- 纸张折线图 indigo -->
+                <div class="hero-icon" style="--cat:#818cf8;width:74px;height:74px;transform:translateY(4px) rotate(-0.5deg);opacity:0.80;">
+                    <svg viewBox="0 0 24 24"><rect class="g-main" x="4" y="2" width="16" height="20" rx="2"/><polyline class="g-main" points="7,16 10,12 14,14 18,8"/></svg>
                 </div>
-                <div class="hero-icon" style="width:74px;height:74px;transform:translateY(4px) rotate(0.5deg);opacity:0.80;">
-                    <svg width="37" height="37" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi8a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient><linearGradient id="gi8b" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#0891b2"/></linearGradient></defs><path d="M4 10 L18 4 L32 10 L32 26 L18 32 L4 26 Z" fill="url(#gi8a)" opacity=".85"/><path d="M4 10 L18 16 L18 32 L4 26 Z" fill="url(#gi8b)" opacity=".6"/></svg>
+                <!-- 3D 立方体 cyan -->
+                <div class="hero-icon" style="--cat:#22d3ee;width:74px;height:74px;transform:translateY(4px) rotate(0.5deg);opacity:0.80;">
+                    <svg viewBox="0 0 24 24"><path class="g-main" d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline class="g-main" points="3.27 6.96 12 12.01 20.73 6.96"/><line class="g-main" x1="12" y1="22.08" x2="12" y2="12"/></svg>
                 </div>
-                <div class="hero-icon" style="width:70px;height:70px;transform:translateY(6px) rotate(1deg);opacity:0.72;">
-                    <svg width="35" height="35" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi9a" x1="0" y1="36" x2="0" y2="0"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#10b981"/></linearGradient><linearGradient id="gi9b" x1="0" y1="36" x2="0" y2="0"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient><linearGradient id="gi9c" x1="0" y1="36" x2="0" y2="0"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs><rect x="6" y="16" width="5" height="14" rx="1.5" fill="url(#gi9a)" opacity=".7"/><rect x="14" y="10" width="5" height="20" rx="1.5" fill="url(#gi9b)" opacity=".8"/><rect x="22" y="6" width="5" height="24" rx="1.5" fill="url(#gi9c)"/></svg>
+                <!-- 彩色柱状图 emerald -->
+                <div class="hero-icon" style="--cat:#34d399;width:70px;height:70px;transform:translateY(6px) rotate(1deg);opacity:0.72;">
+                    <svg viewBox="0 0 24 24"><rect class="g-main" x="3" y="13" width="4" height="8" rx="1"/><rect class="g-main" x="10" y="8" width="4" height="13" rx="1"/><rect class="g-main" x="17" y="4" width="4" height="17" rx="1"/></svg>
                 </div>
             </div>
         </div>
