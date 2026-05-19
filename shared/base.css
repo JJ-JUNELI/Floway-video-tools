@@ -801,14 +801,13 @@ input:checked + .slider:before {
     overflow: hidden;
     border: none;
     border-radius: 0;
+    container-type: size;
 }
 
 canvas {
     background: transparent;
-    width: auto;
+    width: min(100cqw, calc(100cqh * 4 / 3));
     height: auto;
-    max-width: 100%;
-    max-height: 100%;
     aspect-ratio: 4/3;
     display: block;
     border-radius: 4px;
@@ -817,10 +816,8 @@ canvas {
 
 #mainSvg {
     background: transparent;
-    width: auto;
+    width: min(100cqw, calc(100cqh * 4 / 3), 1440px);
     height: auto;
-    max-width: min(1440px, 100%);
-    max-height: 100%;
     aspect-ratio: 4/3;
     display: block;
     border-radius: 4px;
@@ -953,10 +950,8 @@ body.logo canvas {
 .effect-canvas {
     border: 1px solid var(--border);
     background: var(--bg-dark);
-    width: auto;
+    width: min(100cqw, calc(100cqh * 4 / 3), 1440px);
     height: auto;
-    max-width: min(1440px, 100%);
-    max-height: 100%;
     aspect-ratio: 4/3;
     display: block;
     border-radius: 4px;
@@ -1091,13 +1086,7 @@ body.logo canvas {
         flex-shrink: 0;
         overflow: hidden;
     }
-    canvas, .effect-canvas, #mainSvg {
-        width: auto !important;
-        height: auto !important;
-        max-width: 100% !important;
-        max-height: 100% !important;
-        aspect-ratio: 4 / 3 !important;
-    }
+    /* canvas sizing handled by container query on .preview-area */
     .sidebar-header {
         padding: 12px 14px;
         flex-shrink: 0;
