@@ -74,7 +74,7 @@ export class Recorder {
                 this._libsLoaded = true;
                 if (this.status) this.status.innerHTML = "<span class='status-dot status-ready'></span>组件就绪";
                 this.btn.disabled = false;
-                this.btn.innerHTML = "🔴 开始录制";
+                this.btn.innerHTML = "● 录制";
             } else {
                 console.warn('mp4-muxer.js not loaded');
                 this._libsLoaded = false;
@@ -85,7 +85,7 @@ export class Recorder {
                     mp4Opt.text += ' [加载失败]';
                 }
                 this.btn.disabled = false;
-                this.btn.innerHTML = "🔴 开始录制";
+                this.btn.innerHTML = "● 录制";
             }
         }, 300);
     }
@@ -307,7 +307,7 @@ export class Recorder {
     }
 
     _resetBtn() {
-        this.btn.innerHTML = "🔴 开始录制";
+        this.btn.innerHTML = "● 录制";
         this.btn.disabled = false;
         if (this.onStateChange) this.onStateChange(false);
     }
