@@ -567,23 +567,21 @@
         .ext-card[data-category="visual"]   .ext-icon { --cat: #a78bfa; }
         .ext-card[data-category="particle"] .ext-icon { --cat: #22d3ee; }
 
-        .ext-card:hover .ext-icon {
-            transform: translateY(-3px);
-            box-shadow:
-                inset 0 1px 0 rgba(255,255,255,0.09),
-                inset 0 -1px 0 rgba(0,0,0,0.5),
-                0 9px 24px rgba(0,0,0,0.45);
-        }
+        /* hover：图标不位移，只增强分类光晕（卡片本身已有抬升反馈） */
         .ext-card:hover .ext-icon::before { opacity: 1; }
-        .ext-card:hover .ext-icon svg { transform: scale(1.06); transition: transform .22s; }
 
         /* 亮色主题键帽 */
         [data-theme="light"] .ext-icon {
-            background: linear-gradient(160deg, #ffffff 0%, #eef1f6 70%, #e6eaf1 100%);
+            background: linear-gradient(160deg, #ffffff 0%, #f1f4f9 60%, #e4e8f0 100%);
+            border: 1px solid rgba(15,23,42,0.07);
             box-shadow:
-                inset 0 1px 0 rgba(255,255,255,0.9),
-                inset 0 -1px 0 rgba(0,0,0,0.06),
-                0 3px 10px rgba(30,41,59,0.10);
+                inset 0 1px 0 rgba(255,255,255,1),
+                inset 0 -2px 3px rgba(15,23,42,0.05),
+                0 4px 12px rgba(30,41,59,0.12);
+        }
+        [data-theme="light"] .ext-icon::before {
+            background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--cat) 30%, transparent) 0%, transparent 60%);
+            opacity: .6;
         }
         [data-theme="light"] .ext-icon svg .g-back { stroke: var(--cat); opacity: .20; }
         .ext-info { flex: 1; min-width: 0; }
