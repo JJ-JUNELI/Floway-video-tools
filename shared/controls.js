@@ -485,26 +485,12 @@ export function initSidebarResize() {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
 
-    const mobileQuery = window.matchMedia('(max-width: 1100px)');
     const portraitQuery = window.matchMedia('(max-width: 1100px) and (orientation: portrait)');
 
-    function applySavedWidth() {
-        if (mobileQuery.matches) {
-            // 移动布局：清除 inline，让 CSS 媒体查询控制宽度
-            sidebar.style.width = '';
-        } else {
-            const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
-            const initialW = (saved) ? parseInt(saved, 10) : SIDEBAR_DEFAULT;
-            if (initialW >= SIDEBAR_MIN && initialW <= SIDEBAR_MAX) {
-                sidebar.style.width = initialW + 'px';
-            } else {
-                sidebar.style.width = '';
-            }
-        }
-    }
-
-    applySavedWidth();
-    mobileQuery.addEventListener('change', applySavedWidth);
+    // 始终将偏好值写入 CSS 变量；CSS clamp() 负责响应式边界裁决
+    const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+    const initialW = saved ? parseInt(saved, 10) : SIDEBAR_DEFAULT;
+    sidebar.style.setProperty('--sidebar-w', initialW + 'px');
 
     // 创建拖拽手柄
     let handle = sidebar.querySelector('.sidebar-resize-handle');
@@ -514,31 +500,31 @@ export function initSidebarResize() {
         sidebar.appendChild(handle);
     }
 
-    let startX = 0, startWidth = 0;
+    let startX = 0, startWidth = 0, lastW = initialW;
 
     handle.addEventListener('mousedown', (e) => {
         if (portraitQuery.matches) return;
         e.preventDefault();
         e.stopPropagation();
         startX = e.clientX;
+        // 从实际显示宽度出发，避免和 clamp 上限打架
         startWidth = sidebar.getBoundingClientRect().width;
         document.body.classList.add('resizing');
 
         const onMove = (ev) => {
             ev.preventDefault();
             const delta = ev.clientX - startX;
-            let newW = Math.round(startWidth + delta);
-            newW = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, newW));
-            sidebar.style.width = newW + 'px';
+            lastW = Math.max(SIDEBAR_MIN, Math.round(startWidth + delta));
+            // 只写变量，CSS clamp 决定最终展示宽度
+            sidebar.style.setProperty('--sidebar-w', lastW + 'px');
         };
 
         const onUp = () => {
             document.body.classList.remove('resizing');
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onUp);
-            // 持久化
-            const finalW = Math.round(sidebar.getBoundingClientRect().width);
-            localStorage.setItem(SIDEBAR_WIDTH_KEY, String(finalW));
+            // 存原始拖拽意图，而非被 clamp 截断后的显示值
+            localStorage.setItem(SIDEBAR_WIDTH_KEY, String(lastW));
         };
 
         document.addEventListener('mousemove', onMove);
