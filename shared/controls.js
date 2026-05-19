@@ -151,8 +151,8 @@ export function injectPanels(opts = {}) {
     const defaultPatternColor = opts.defaultPatternColor || '#333333';
     const skipBg = opts.skipBgPanel === true;
 
-    const bgLineHTML = skipBg ? '' : `
-        <div class="sf-line">
+    const bgCellHTML = skipBg ? '' : `
+        <div class="sf-cell">
             <span class="sf-label">背景</span>
             <select id="BgMode">
                 <option value="transparent" ${defaultBgMode === 'transparent' ? 'selected' : ''}>🏁 透明</option>
@@ -164,7 +164,9 @@ export function injectPanels(opts = {}) {
                 <option value="paper">📄 纸张纹理</option>
                 <option value="custom">📂 上传背景...</option>
             </select>
-        </div>
+        </div>`;
+
+    const bgExtrasHTML = skipBg ? '' : `
         <input type="file" id="BgUpload" accept="image/*,video/*" style="display:none">
         <div class="row" id="PatternColorRow" style="display:none; justify-content:space-between; align-items:center;">
             <div style="font-size:11px; color:var(--text-sub, #888);">纹理颜色</div>
@@ -173,10 +175,8 @@ export function injectPanels(opts = {}) {
         <div class="row stack" id="PaperParamsRow" style="display:none;">
             <div class="label-line"><span>暖色调 (Warmth)</span><span id="PaperWarmthVal">40</span></div>
             <input type="range" id="PaperWarmth" min="0" max="100" step="1" value="40">
-        </div>
-    `;
+        </div>`;
 
-    // 共享面板不再放进可滚动区，改为侧边栏底部常驻 footer（背景 / 格式 / 导出）
     placeholder.innerHTML = '';
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
@@ -185,19 +185,19 @@ export function injectPanels(opts = {}) {
     footer = document.createElement('div');
     footer.className = 'sidebar-footer';
     footer.innerHTML = `
-        ${bgLineHTML}
-        <div class="sf-line">
-            <span class="sf-label">格式</span>
-            <select id="ExportFormat">
-                <option value="png_seq">📸 PNG 序列</option>
-                <option value="mp4">🎥 MP4</option>
-                <option value="webm">🌐 WebM</option>
-            </select>
+        <div class="sf-row">
+            ${bgCellHTML}
+            <div class="sf-cell">
+                <span class="sf-label">格式</span>
+                <select id="ExportFormat">
+                    <option value="png_seq">📸 PNG 序列</option>
+                    <option value="mp4">🎥 MP4</option>
+                    <option value="webm">🌐 WebM</option>
+                </select>
+            </div>
         </div>
+        ${bgExtrasHTML}
         <button id="BtnRecord" class="btn btn-record" disabled>⌛ 连接组件...</button>
-        <div id="LibStatus" style="font-size:10px; color:#666; text-align:center;">
-            <span class='status-dot status-loading'></span>初始化...
-        </div>
     `;
     sidebar.appendChild(footer);
 

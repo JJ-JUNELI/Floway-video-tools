@@ -206,24 +206,29 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     border-radius: var(--radius-md);
 }
 
-/* 左右结构：左标签 + 右选框（背景 / 格式），导出按钮整行 */
-.sidebar-footer .sf-line {
+/* 第一行：背景 + 格式并排 */
+.sidebar-footer .sf-row {
+    display: flex;
+    gap: 8px;
+}
+.sidebar-footer .sf-cell {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
 }
-.sidebar-footer .sf-line > .sf-label {
-    flex: 0 0 36px;
+.sidebar-footer .sf-cell > .sf-label {
+    flex: 0 0 auto;
     font-size: 12px;
     color: var(--text-sub, #888);
     white-space: nowrap;
 }
 /* 增强页：enhanceSelect 自己给原生 select 设 inline display:none；
    未增强页（stack-scan）：原生 select 需正常显示并撑满 */
-.sidebar-footer .sf-line > select,
-.sidebar-footer .sf-line > .floway-select { flex: 1; width: auto; min-width: 0; }
+.sidebar-footer .sf-cell > select,
+.sidebar-footer .sf-cell > .floway-select { flex: 1; width: auto; min-width: 0; }
 .sidebar-footer > #BtnRecord { width: 100%; margin: 0; min-height: 40px; }
-.sidebar-footer #LibStatus { margin: 0; }
 
 /* ========================================
    Control Groups — 柔和阴影分层
@@ -906,12 +911,6 @@ body.logo canvas {
    Status & Tips
    ======================================== */
 
-#LibStatus {
-    font-size: 10px;
-    color: var(--text-sub);
-    margin-top: 6px;
-    text-align: center;
-}
 .status-dot {
     display: inline-block;
     width: 6px;
