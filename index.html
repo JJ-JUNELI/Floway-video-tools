@@ -190,6 +190,10 @@
             position: relative;
             z-index: 2;
         }
+        @keyframes heroFloat {
+            0%, 100% { transform: translateY(var(--fy, 0px)) rotate(var(--fr, 0deg)); }
+            50%       { transform: translateY(calc(var(--fy, 0px) - 7px)) rotate(var(--fr, 0deg)); }
+        }
         .hero-icon {
             --cat: #818cf8;
             width: 74px; height: 74px;
@@ -202,6 +206,8 @@
             position: relative;
             z-index: 2;
             transition: background .2s ease, border-color .2s ease;
+            animation: heroFloat var(--dur, 4s) ease-in-out infinite;
+            animation-delay: var(--fd, 0s);
         }
         .hero-icon svg {
             width: 36px; height: 36px;
@@ -790,43 +796,39 @@
     <header class="hero">
         <div class="hero-icons">
             <div class="hero-row">
-                <!-- 柱状图 chart blue -->
-                <div class="hero-icon" style="--cat:#60a5fa;width:68px;height:68px;transform:translateY(-2px) rotate(-1.5deg);opacity:0.78;">
+                <!-- bar-chart 柱状图 -->
+                <div class="hero-icon" style="--cat:#60a5fa;--fy:-4px;--fr:-2deg;--dur:4.2s;--fd:0s;width:70px;height:70px;opacity:0.82;">
                     <svg viewBox="0 0 24 24"><rect class="g-main" x="2" y="14" width="4" height="7" rx="1"/><rect class="g-main" x="9" y="9" width="4" height="12" rx="1"/><rect class="g-main" x="16" y="5" width="4" height="16" rx="1"/></svg>
                 </div>
-                <!-- 星形/动效 amber -->
-                <div class="hero-icon" style="--cat:#fbbf24;width:76px;height:76px;transform:translateY(-6px) rotate(-0.5deg);opacity:0.90;">
-                    <svg viewBox="0 0 24 24"><path class="g-main" d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+                <!-- chart-fx 折线图 -->
+                <div class="hero-icon" style="--cat:#f472b6;--fy:-10px;--fr:-1deg;--dur:3.8s;--fd:-0.7s;width:78px;height:78px;opacity:0.92;">
+                    <svg viewBox="0 0 24 24"><polyline class="g-main" points="3,17 7,10 12,13 17,6 21,9"/><circle class="g-dot" cx="3" cy="17" r="1.5"/><circle class="g-dot" cx="21" cy="9" r="1.5"/></svg>
                 </div>
-                <!-- 显示器/屏幕 visual purple -->
-                <div class="hero-icon" style="--cat:#a78bfa;width:82px;height:82px;transform:translateY(-12px) rotate(0deg);opacity:1;">
-                    <svg viewBox="0 0 24 24"><rect class="g-main" x="2" y="3" width="20" height="14" rx="2"/><line class="g-main" x1="8" y1="21" x2="16" y2="21"/><line class="g-main" x1="12" y1="17" x2="12" y2="21"/></svg>
+                <!-- pie-chart 饼图 -->
+                <div class="hero-icon" style="--cat:#fb923c;--fy:-10px;--fr:1deg;--dur:4.0s;--fd:-1.4s;width:78px;height:78px;opacity:0.92;">
+                    <svg viewBox="0 0 24 24"><path class="g-main" d="M21.21 15.89A9 9 0 1 1 8 2.83"/><path class="g-main" d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
                 </div>
-                <!-- 六边形/粒子 particle cyan -->
-                <div class="hero-icon" style="--cat:#22d3ee;width:76px;height:76px;transform:translateY(-6px) rotate(0.5deg);opacity:0.90;">
-                    <svg viewBox="0 0 24 24"><path class="g-main" d="M12 2l8.66 5v10L12 22 3.34 17V7z"/><circle class="g-dot" cx="12" cy="12" r="1.5"/></svg>
-                </div>
-                <!-- 贝塞尔曲线 orange -->
-                <div class="hero-icon" style="--cat:#fb923c;width:68px;height:68px;transform:translateY(2px) rotate(1.5deg);opacity:0.78;">
-                    <svg viewBox="0 0 24 24"><path class="g-main" d="M3 20 C9 12 15 16 21 4"/><circle class="g-dot" cx="3" cy="20" r="1.5"/><circle class="g-dot" cx="21" cy="4" r="1.5"/></svg>
+                <!-- text-animator 文字动效 -->
+                <div class="hero-icon" style="--cat:#818cf8;--fy:-4px;--fr:2deg;--dur:4.4s;--fd:-2.1s;width:70px;height:70px;opacity:0.82;">
+                    <svg viewBox="0 0 24 24"><polyline class="g-main" points="4 7 4 4 20 4 20 7"/><line class="g-main" x1="9" y1="20" x2="15" y2="20"/><line class="g-main" x1="12" y1="4" x2="12" y2="20"/></svg>
                 </div>
             </div>
             <div class="hero-row">
-                <!-- 折线图 pink -->
-                <div class="hero-icon" style="--cat:#f472b6;width:70px;height:70px;transform:translateY(4px) rotate(-1deg);opacity:0.72;">
-                    <svg viewBox="0 0 24 24"><polyline class="g-main" points="3,18 8,10 14,14 21,4"/><circle class="g-dot" cx="21" cy="4" r="1.5"/></svg>
+                <!-- stack-scan 文字突出扫描 -->
+                <div class="hero-icon" style="--cat:#a78bfa;--fy:4px;--fr:-1.5deg;--dur:3.6s;--fd:-2.8s;width:68px;height:68px;opacity:0.74;">
+                    <svg viewBox="0 0 24 24"><path class="g-main" d="M3 7V5a2 2 0 0 1 2-2h2"/><path class="g-main" d="M17 3h2a2 2 0 0 1 2 2v2"/><path class="g-main" d="M21 17v2a2 2 0 0 1-2 2h-2"/><path class="g-main" d="M7 21H5a2 2 0 0 1-2-2v-2"/><line class="g-main" x1="7" y1="12" x2="17" y2="12"/></svg>
                 </div>
-                <!-- 纸张折线图 indigo -->
-                <div class="hero-icon" style="--cat:#818cf8;width:74px;height:74px;transform:translateY(4px) rotate(-0.5deg);opacity:0.80;">
-                    <svg viewBox="0 0 24 24"><rect class="g-main" x="4" y="2" width="16" height="20" rx="2"/><polyline class="g-main" points="7,16 10,12 14,14 18,8"/></svg>
+                <!-- particle-field 粒子场 -->
+                <div class="hero-icon" style="--cat:#fbbf24;--fy:6px;--fr:-0.5deg;--dur:4.2s;--fd:-0.3s;width:72px;height:72px;opacity:0.80;">
+                    <svg viewBox="0 0 24 24"><path class="g-main" d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/><circle class="g-dot" cx="5" cy="4" r="1.2"/><circle class="g-dot" cx="19" cy="19" r="1.2"/></svg>
                 </div>
-                <!-- 3D 立方体 cyan -->
-                <div class="hero-icon" style="--cat:#22d3ee;width:74px;height:74px;transform:translateY(4px) rotate(0.5deg);opacity:0.80;">
+                <!-- logo-matrix Logo矩阵 -->
+                <div class="hero-icon" style="--cat:#22d3ee;--fy:6px;--fr:0.5deg;--dur:3.8s;--fd:-1.0s;width:72px;height:72px;opacity:0.80;">
+                    <svg viewBox="0 0 24 24"><circle class="g-dot" cx="6" cy="6" r="1.5"/><circle class="g-dot" cx="12" cy="6" r="1.5"/><circle class="g-dot" cx="18" cy="6" r="1.5"/><circle class="g-dot" cx="6" cy="12" r="1.5"/><circle class="g-dot" cx="12" cy="12" r="2"/><circle class="g-dot" cx="18" cy="12" r="1.5"/><circle class="g-dot" cx="6" cy="18" r="1.5"/><circle class="g-dot" cx="12" cy="18" r="1.5"/><circle class="g-dot" cx="18" cy="18" r="1.5"/></svg>
+                </div>
+                <!-- card-3d 3D卡片漂浮 -->
+                <div class="hero-icon" style="--cat:#34d399;--fy:4px;--fr:1.5deg;--dur:4.0s;--fd:-1.7s;width:68px;height:68px;opacity:0.74;">
                     <svg viewBox="0 0 24 24"><path class="g-main" d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline class="g-main" points="3.27 6.96 12 12.01 20.73 6.96"/><line class="g-main" x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                </div>
-                <!-- 彩色柱状图 emerald -->
-                <div class="hero-icon" style="--cat:#34d399;width:70px;height:70px;transform:translateY(6px) rotate(1deg);opacity:0.72;">
-                    <svg viewBox="0 0 24 24"><rect class="g-main" x="3" y="13" width="4" height="8" rx="1"/><rect class="g-main" x="10" y="8" width="4" height="13" rx="1"/><rect class="g-main" x="17" y="4" width="4" height="17" rx="1"/></svg>
                 </div>
             </div>
         </div>
