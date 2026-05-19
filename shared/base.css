@@ -1371,12 +1371,6 @@ body.logo canvas {
 }
 
 /* Mobile */
-@media (max-width: 1100px) and (orientation: portrait) {
-    [data-theme="light"] .sidebar {
-        border-top-color: var(--accent);
-    }
-}
-
 /* ========================================
    Preview Mode — iframe 嵌入预览
    ======================================== */
