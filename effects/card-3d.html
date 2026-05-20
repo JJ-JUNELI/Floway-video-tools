@@ -439,13 +439,11 @@
         const bgCtx = bgOffscreen.getContext('2d', { alpha: true });
         bgCtx.scale(scale, scale);
 
-        const dummyCanvas = document.createElement('canvas');
-        dummyCanvas.id = 'initDummy'; dummyCanvas.style.display = 'none';
-        document.body.appendChild(dummyCanvas);
-
         const { bg, recorder, resetAnimStart,
                 clamp, hexToRgba, getEasing, bindUI } = initEffect({
-            canvasId: 'initDummy',
+            skipMainCanvas: true,
+            skipDrawContext: true,
+            recorderCanvas: glCanvas,
             fileName: 'Card3D',
             baseWidth, baseHeight, scale,
             defaultBgMode: 'transparent',
@@ -458,7 +456,6 @@
                 },
             },
         });
-        recorder.canvas = glCanvas;
 
         // ====== 配置 ======
         const config = {

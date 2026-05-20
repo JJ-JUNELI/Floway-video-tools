@@ -455,15 +455,12 @@
         const bgCtx = bgOffscreen.getContext('2d', { alpha: true });
         bgCtx.scale(scale, scale);
 
-        // initEffect（dummy canvas 给 recorder 初始化，后续重定向到 glCanvas）
-        const dummyCanvas = document.createElement('canvas');
-        dummyCanvas.id = 'initDummy'; dummyCanvas.style.display = 'none';
-        document.body.appendChild(dummyCanvas);
-
         const { bg, recorder, resetAnimStart,
                 clamp, hexToRgba, getEasing, bindUI,
                 createLinearGradient, fontSelectHTML, setupFontSelector } = initEffect({
-            canvasId: 'initDummy',
+            skipMainCanvas: true,
+            skipDrawContext: true,
+            recorderCanvas: glCanvas,
             fileName: 'ChartFX',
             baseWidth, baseHeight, scale,
             defaultBgMode: 'transparent',
@@ -472,7 +469,6 @@
                 entryAnimation: { extras: ['lineDelay'] },
             },
         });
-        recorder.canvas = glCanvas;
 
         // ====== 数据点 ======
         const INITIAL_DATA = [

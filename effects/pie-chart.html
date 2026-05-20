@@ -492,21 +492,17 @@
         const glowCtx = glowLayer.getContext('2d', { alpha: true });
         glowCtx.scale(scale, scale);
 
-        // initEffect（dummy canvas 给 recorder 初始化，后续重定向到 glCanvas）
-        const dummyCanvas = document.createElement('canvas');
-        dummyCanvas.id = 'initDummy'; dummyCanvas.style.display = 'none';
-        document.body.appendChild(dummyCanvas);
-
         const { bg, recorder, resetAnimStart,
                 clamp, hexToRgba, getEasing, bindUI,
                 fontSelectHTML, setupFontSelector } = initEffect({
-            canvasId: 'initDummy',
+            skipMainCanvas: true,
+            skipDrawContext: true,
+            recorderCanvas: glCanvas,
             fileName: 'PieChartFX',
             baseWidth, baseHeight, scale,
             defaultBgMode: 'transparent',
             onFrame: drawFrame,
         });
-        recorder.canvas = glCanvas;
 
         // ====== 数据点 ======
         const INITIAL_DATA = [
