@@ -32,7 +32,7 @@
             <div class="control-group">
                 <div class="group-title">📝 内容编辑</div>
                 <div class="row">
-                    <textarea id="TextInput" rows="2">Manus&#10;核心算力发布</textarea>
+                    <textarea id="Text" rows="2">Manus&#10;核心算力发布</textarea>
                 </div>
                 <div class="row">
                     <div id="FontSelectorMount" style="width:100%"></div>
@@ -124,19 +124,19 @@
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>整体大小 (Size)</span><span id="SizeVal">150</span></div>
-                    <input type="range" id="SizeInput" min="50" max="400" value="150">
+                    <input type="range" id="Size" min="50" max="400" value="150">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>字体粗细 (Weight)</span><span id="WeightVal">900</span></div>
-                    <input type="range" id="WeightInput" min="100" max="900" step="100" value="900">
+                    <input type="range" id="Weight" min="100" max="900" step="100" value="900">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>水平位置 X</span><span id="PosXVal">0</span></div>
-                    <input type="range" id="PosXInput" min="-700" max="700" value="0">
+                    <input type="range" id="PosX" min="-700" max="700" value="0">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>垂直位置 Y</span><span id="PosYVal">0</span></div>
-                    <input type="range" id="PosYInput" min="-500" max="500" value="0">
+                    <input type="range" id="PosY" min="-500" max="500" value="0">
                 </div>
             </div>
 
@@ -169,19 +169,19 @@
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>偏移 X</span><span id="ShadowXVal">-22</span></div>
-                    <input type="range" id="ShadowXInput" min="-50" max="50" value="-22">
+                    <input type="range" id="ShadowX" min="-50" max="50" value="-22">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>偏移 Y</span><span id="ShadowYVal">0</span></div>
-                    <input type="range" id="ShadowYInput" min="-50" max="50" value="0">
+                    <input type="range" id="ShadowY" min="-50" max="50" value="0">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>阴影虚化</span><span id="ShadowBlurVal">30</span></div>
-                    <input type="range" id="ShadowBlurInput" min="0" max="50" value="30">
+                    <input type="range" id="ShadowBlur" min="0" max="50" value="30">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>阴影浓度</span><span id="ShadowOpVal">0.8</span></div>
-                    <input type="range" id="ShadowOpInput" min="0" max="1" step="0.1" value="0.8">
+                    <input type="range" id="ShadowOp" min="0" max="1" step="0.1" value="0.8">
                 </div>
             </div>
 
@@ -203,15 +203,15 @@
                     <div class="anim-header"><span style="color:var(--accent)">目标状态 (结束)</span></div>
                     <div class="row stack">
                         <div class="label-line"><span>字间距 (Spacing)</span><span id="EndSpacingVal">-22</span></div>
-                        <input type="range" id="EndSpacingInput" min="-200" max="600" value="-22">
+                        <input type="range" id="EndSpacing" min="-200" max="600" value="-22">
                     </div>
                     <div class="row stack">
                         <div class="label-line"><span>行间距 (Line)</span><span id="EndLineVal">-5</span></div>
-                        <input type="range" id="EndLineInput" min="-100" max="500" value="-5">
+                        <input type="range" id="EndLine" min="-100" max="500" value="-5">
                     </div>
                     <div class="row stack">
                         <div class="label-line"><span>不透明度</span><span id="EndOpVal">100%</span></div>
-                        <input type="range" id="EndOpInput" min="0" max="100" value="100">
+                        <input type="range" id="EndOp" min="0" max="100" value="100">
                     </div>
                 </div>
 
@@ -219,15 +219,15 @@
                     <div class="anim-header"><span style="color:var(--danger)">初始状态 (开始)</span></div>
                     <div class="row stack">
                         <div class="label-line"><span>字间距</span><span id="StartSpacingVal">-80</span></div>
-                        <input type="range" id="StartSpacingInput" min="-200" max="600" value="-80">
+                        <input type="range" id="StartSpacing" min="-200" max="600" value="-80">
                     </div>
                     <div class="row stack">
                         <div class="label-line"><span>行间距</span><span id="StartLineVal">-5</span></div>
-                        <input type="range" id="StartLineInput" min="-100" max="500" value="-5">
+                        <input type="range" id="StartLine" min="-100" max="500" value="-5">
                     </div>
                     <div class="row stack">
                         <div class="label-line"><span>不透明度</span><span id="StartOpVal">0%</span></div>
-                        <input type="range" id="StartOpInput" min="0" max="100" value="0">
+                        <input type="range" id="StartOp" min="0" max="100" value="0">
                     </div>
                     <div class="row stack">
                         <div class="label-line"><span>动画总时长 (秒)</span><span id="DurVal">2s</span></div>
@@ -256,7 +256,7 @@
         </div>
     </div>
 
-    <div class="preview-area" id="PreviewArea">
+    <div class="preview-area" id="previewArea">
         <div id="RecIndicator"><div class="rec-dot"></div> 正在录制 (帧同步)</div>
         <canvas id="mainCanvas"></canvas>
     </div>
@@ -530,27 +530,27 @@
             ['GlowColor', 'glowColor'],
             ['GradColor1', 'gradColor1'],
             ['GradColor2', 'gradColor2'],
-            ['SizeInput', 'fontSize', v => parseInt(v) || 150, 'SizeVal'],
-            ['WeightInput', 'fontWeight', null, 'WeightVal'],
-            ['PosXInput', 'posX', 'int', 'PosXVal'],
-            ['PosYInput', 'posY', 'int', 'PosYVal'],
+            ['Size', 'fontSize', v => parseInt(v) || 150, 'SizeVal'],
+            ['Weight', 'fontWeight', null, 'WeightVal'],
+            ['PosX', 'posX', 'int', 'PosXVal'],
+            ['PosY', 'posY', 'int', 'PosYVal'],
             ['GlowBlur', 'glowBlur', 'int', 'GlowBlurVal'],
             ['GlowOpacity', 'glowOpacity', 'float', 'GlowOpacityVal'],
-            ['ShadowXInput', 'shadowX', 'int', 'ShadowXVal'],
-            ['ShadowYInput', 'shadowY', 'int', 'ShadowYVal'],
-            ['ShadowBlurInput', 'shadowBlur', 'int', 'ShadowBlurVal'],
-            ['ShadowOpInput', 'shadowOpacity', 'float', 'ShadowOpVal'],
+            ['ShadowX', 'shadowX', 'int', 'ShadowXVal'],
+            ['ShadowY', 'shadowY', 'int', 'ShadowYVal'],
+            ['ShadowBlur', 'shadowBlur', 'int', 'ShadowBlurVal'],
+            ['ShadowOp', 'shadowOpacity', 'float', 'ShadowOpVal'],
             ['GradOp1', 'gradOp1', '%', 'GradOp1Val', '%'],
             ['GradOp2', 'gradOp2', '%', 'GradOp2Val', '%'],
             ['GradAngle', 'gradAngle', 'int', 'GradAngleVal', '°'],
             ['GradOffset', 'gradOffset', 'int', 'GradOffsetVal', '%'],
             ['GradWidth', 'gradWidth', 'int', 'GradWidthVal', '%'],
-            ['EndSpacingInput', 'endSpacing', 'int', 'EndSpacingVal'],
-            ['EndLineInput', 'endLine', 'int', 'EndLineVal'],
-            ['EndOpInput', 'endOp', '%', 'EndOpVal', '%'],
-            ['StartSpacingInput', 'startSpacing', 'int', 'StartSpacingVal'],
-            ['StartLineInput', 'startLine', 'int', 'StartLineVal'],
-            ['StartOpInput', 'startOp', '%', 'StartOpVal', '%'],
+            ['EndSpacing', 'endSpacing', 'int', 'EndSpacingVal'],
+            ['EndLine', 'endLine', 'int', 'EndLineVal'],
+            ['EndOp', 'endOp', '%', 'EndOpVal', '%'],
+            ['StartSpacing', 'startSpacing', 'int', 'StartSpacingVal'],
+            ['StartLine', 'startLine', 'int', 'StartLineVal'],
+            ['StartOp', 'startOp', '%', 'StartOpVal', '%'],
             ['AnimDuration', 'duration', 'float', 'DurVal', 's'],
             ['OpacityDuration', 'opacityDuration', 'float', 'OpDurVal', 's'],
         ], {
@@ -562,7 +562,7 @@
         });
 
         // Special controls not covered by bindUI
-        document.getElementById('TextInput').addEventListener('input', e => { config.text = e.target.value; calculateLayout(); });
+        document.getElementById('Text').addEventListener('input', e => { config.text = e.target.value; calculateLayout(); });
         document.getElementById('BtnPlay').addEventListener('click', () => {
             state.isAnimating = true;
             resetAnimStart();
@@ -574,7 +574,7 @@
         // Font selector: inject HTML and init
         const fontSelectId = 'FontSelect';
         document.getElementById('FontSelectorMount').innerHTML = fontSelectHTML(fontSelectId, config.fontFamily);
-        setupFontSelector({ selectId: fontSelectId, configKey: 'fontFamily', fileInputId: fontSelectId + 'Upload', weightInputId: 'WeightInput', config });
+        setupFontSelector({ selectId: fontSelectId, configKey: 'fontFamily', fileInputId: fontSelectId + 'Upload', weightInputId: 'Weight', config });
 
         // Init
         calculateLayout();

@@ -37,7 +37,7 @@
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>缩放</span><span id="ScaleVal">0.8</span></div>
-                    <input type="range" id="ScaleInput" min="0.1" max="2.0" step="0.1" value="0.8">
+                    <input type="range" id="Scale" min="0.1" max="2.0" step="0.1" value="0.8">
                 </div>
             </div>
 
@@ -45,11 +45,11 @@
                 <div class="group-title"><span>📐 布局设置</span></div>
                 <div class="row stack">
                     <div class="label-line"><span>横排数量 (Cols)</span><span id="ColsVal">7</span></div>
-                    <input type="range" id="ColsInput" min="1" max="20" step="1" value="7">
+                    <input type="range" id="Cols" min="1" max="20" step="1" value="7">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>竖排数量 (Rows)</span><span id="RowsVal">5</span></div>
-                    <input type="range" id="RowsInput" min="1" max="20" step="1" value="5">
+                    <input type="range" id="Rows" min="1" max="20" step="1" value="5">
                 </div>
             </div>
 
@@ -57,11 +57,11 @@
                 <div class="group-title"><span>⚡ 动态</span></div>
                 <div class="row stack">
                     <div class="label-line"><span>横向速度</span><span id="SpeedVal">2.0</span></div>
-                    <input type="range" id="SpeedInput" min="0" max="10" step="0.1" value="2.0">
+                    <input type="range" id="Speed" min="0" max="10" step="0.1" value="2.0">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>自转速度</span><span id="RotSpeedVal">1.0</span></div>
-                    <input type="range" id="RotSpeedInput" min="-10" max="10" step="0.1" value="1.0">
+                    <input type="range" id="RotSpeed" min="-10" max="10" step="0.1" value="1.0">
                 </div>
             </div>
 
@@ -107,15 +107,15 @@
 
                     <div class="row stack">
                         <div class="label-line"><span>可视范围</span><span id="MaskSizeVal">0.85</span></div>
-                        <input type="range" id="MaskSizeInput" min="0.1" max="1.5" step="0.05" value="0.85">
+                        <input type="range" id="MaskSize" min="0.1" max="1.5" step="0.05" value="0.85">
                     </div>
                     <div class="row stack">
                         <div class="label-line"><span>椭圆扁度</span><span id="MaskRoundVal">0.75</span></div>
-                        <input type="range" id="MaskRoundInput" min="0.1" max="1.0" step="0.05" value="0.75">
+                        <input type="range" id="MaskRound" min="0.1" max="1.0" step="0.05" value="0.75">
                     </div>
                     <div class="row stack">
                         <div class="label-line"><span>羽化范围</span><span id="MaskFeatherVal">250</span></div>
-                        <input type="range" id="MaskFeatherInput" min="0" max="1000" step="10" value="250">
+                        <input type="range" id="MaskFeather" min="0" max="1000" step="10" value="250">
                     </div>
                 </div>
             </div>
@@ -124,7 +124,7 @@
         </div>
     </div>
 
-    <div class="preview-area">
+    <div class="preview-area" id="previewArea">
         <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
         <canvas id="mainCanvas"></canvas>
     </div>
@@ -168,14 +168,14 @@
         let maskBaseMedia = null; let maskBaseMediaType = null;
 
         bindUI(config, [
-            ['SpeedInput', 'speed', 'float', 'SpeedVal'],
-            ['RotSpeedInput', 'rotSpeed', 'float', 'RotSpeedVal'],
-            ['ScaleInput', 'logoScale', 'float', 'ScaleVal'],
-            ['MaskSizeInput', 'maskSize', 'float', 'MaskSizeVal'],
-            ['MaskRoundInput', 'maskRoundness', 'float', 'MaskRoundVal'],
-            ['MaskFeatherInput', 'maskFeather', 'int', 'MaskFeatherVal'],
-            ['ColsInput', 'cols', 'int', 'ColsVal'],
-            ['RowsInput', 'rows', 'int', 'RowsVal'],
+            ['Speed', 'speed', 'float', 'SpeedVal'],
+            ['RotSpeed', 'rotSpeed', 'float', 'RotSpeedVal'],
+            ['Scale', 'logoScale', 'float', 'ScaleVal'],
+            ['MaskSize', 'maskSize', 'float', 'MaskSizeVal'],
+            ['MaskRound', 'maskRoundness', 'float', 'MaskRoundVal'],
+            ['MaskFeather', 'maskFeather', 'int', 'MaskFeatherVal'],
+            ['Cols', 'cols', 'int', 'ColsVal'],
+            ['Rows', 'rows', 'int', 'RowsVal'],
             ['MaskAffectsBg', 'maskAffectsBg', 'checked'],
             ['MaskBaseType', 'maskBaseType'],
             ['MaskBaseColor', 'maskBaseColor'],
