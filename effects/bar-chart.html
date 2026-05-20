@@ -130,8 +130,8 @@
                     <div class="sub-section-label">样式</div>
                     <div class="row">
                         <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
-                            <div class="stack"><div class="label-line"><span>主标题字号</span><span id="TitleSizeVal">26</span></div>
-                                <input type="range" id="TitleSize" min="12" max="72" step="2" value="26"></div>
+                            <div class="stack"><div class="label-line"><span>主标题字号</span><span id="TitleSizeVal">36</span></div>
+                                <input type="range" id="TitleSize" min="12" max="72" step="2" value="36"></div>
                             <div class="stack"><div class="label-line"><span>主标题字重</span><span id="MainTitleWeightVal">700</span></div>
                                 <input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"></div>
                             <div class="stack">
@@ -140,23 +140,23 @@
                             </div>
                             <div class="stack"><div class="label-line"><span>主标题 X</span><span id="MainTitleXVal">0</span></div>
                                 <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
-                            <div class="stack"><div class="label-line"><span>主标题 Y</span><span id="MainTitleYVal">-490</span></div>
-                                <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
+                            <div class="stack"><div class="label-line"><span>主标题 Y</span><span id="MainTitleYVal">-496</span></div>
+                                <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-496"></div>
                             <div class="sub-title"><span>显示主标题括号</span><input type="checkbox" id="ShowBrackets" checked></div>
                         </div>
                         <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
-                            <div class="stack"><div class="label-line"><span>副标题字号</span><span id="SubTitleSizeVal">36</span></div>
-                                <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
-                            <div class="stack"><div class="label-line"><span>副标题字重</span><span id="SubTitleWeightVal">400</span></div>
-                                <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
+                            <div class="stack"><div class="label-line"><span>副标题字号</span><span id="SubTitleSizeVal">74</span></div>
+                                <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="74"></div>
+                            <div class="stack"><div class="label-line"><span>副标题字重</span><span id="SubTitleWeightVal">300</span></div>
+                                <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="300"></div>
                             <div class="stack">
                                 <div class="label-line"><span>副标题颜色</span></div>
                                 <input type="color" id="SubTitleColor" value="#999999">
                             </div>
-                            <div class="stack"><div class="label-line"><span>副标题 X</span><span id="SubTitleXVal">630</span></div>
-                                <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
-                            <div class="stack"><div class="label-line"><span>副标题 Y</span><span id="SubTitleYVal">0</span></div>
-                                <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
+                            <div class="stack"><div class="label-line"><span>副标题 X</span><span id="SubTitleXVal">570</span></div>
+                                <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="570"></div>
+                            <div class="stack"><div class="label-line"><span>副标题 Y</span><span id="SubTitleYVal">50</span></div>
+                                <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="50"></div>
                             <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
                         </div>
                     </div>
@@ -210,7 +210,7 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="BarStrokeWidthVal">0</span></div>
                             <input type="range" id="BarStrokeWidth" min="0" max="6" step="0.5" value="0"></div>
                         <div style="flex:1" class="stack"><div class="label-line"><span>描边颜色</span></div>
-                            <input type="color" id="BarStrokeColor" value="#555555"></div>
+                            <input type="color" id="BarStrokeColor" value="#888888"></div>
                     </div>
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>手绘抖动</span><span id="BarJitterVal">0</span></div>
@@ -242,18 +242,18 @@
                     <div class="sub-title"><span>显示数值标签</span><input type="checkbox" id="ShowValues"></div>
                     <div id="ValueLabelOpts" style="display:none; margin-top:6px;">
                         <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>数值字号</span><span id="ValueSizeVal">11</span></div>
-                                <input type="range" id="ValueSize" min="8" max="30" step="1" value="11"></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>数值字号</span><span id="ValueSizeVal">14</span></div>
+                                <input type="range" id="ValueSize" min="8" max="30" step="1" value="14"></div>
                             <div style="flex:1" class="stack"><div class="label-line"><span>数值颜色</span></div>
                                 <input type="color" id="ValueColor" value="#ffffff"></div>
                         </div>
                         <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>标签位置偏移</span><span id="ValueYOffsetVal">-20</span></div>
-                                <input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-20"></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>标签位置偏移</span><span id="ValueYOffsetVal">-2</span></div>
+                                <input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-2"></div>
                             <div style="flex:1" class="stack"><div class="label-line"><span>背景颜色</span></div>
                                 <input type="color" id="ValueBgColor" value="#555555"></div>
                         </div>
-                        <div class="sub-title"><span>显示背景</span><input type="checkbox" id="ValueBgEnabled" checked></div>
+                        <div class="sub-title"><span>显示背景</span><input type="checkbox" id="ValueBgEnabled"></div>
                     </div>
                 </div>
             </div>
@@ -279,8 +279,8 @@
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>Y轴刻度数</span><span id="GridYVal">4</span></div>
                             <input type="range" id="GridY" min="2" max="15" step="1" value="4"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>横纵轴字体字号</span><span id="AxisLabelSizeVal">11</span></div>
-                            <input type="range" id="AxisLabelSize" min="6" max="40" step="1" value="11"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>横纵轴字体字号</span><span id="AxisLabelSizeVal">16</span></div>
+                            <input type="range" id="AxisLabelSize" min="6" max="40" step="1" value="16"></div>
                     </div>
                     <div class="row stack">
                         <div class="label-line"><span>标签颜色</span></div>
@@ -298,8 +298,8 @@
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>横轴长度</span><span id="ChartExtraWVal">0</span></div>
                             <input type="range" id="ChartExtraW" min="-500" max="500" step="10" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>纵轴长度</span><span id="ChartExtraHVal">0</span></div>
-                            <input type="range" id="ChartExtraH" min="-500" max="500" step="10" value="0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>纵轴长度</span><span id="ChartExtraHVal">-50</span></div>
+                            <input type="range" id="ChartExtraH" min="-500" max="500" step="10" value="-50"></div>
                     </div>
                 </div>
                 <div class="sub-section ss-amber">
@@ -332,10 +332,10 @@
                 <div class="sub-section ss-green">
                     <div class="sub-section-label">尺寸 & 外观</div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>悬浮高度</span><span id="ElevationVal">50</span></div>
-                            <input type="range" id="Elevation" min="0" max="100" step="1" value="50"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
-                            <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>悬浮高度</span><span id="ElevationVal">42</span></div>
+                            <input type="range" id="Elevation" min="0" max="100" step="1" value="42"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">36</span></div>
+                            <input type="range" id="CardRadius" min="0" max="60" step="1" value="36"></div>
                     </div>
                     <div class="row stack"><div class="label-line"><span>内边距</span><span id="CardPadVal">32</span></div>
                         <input type="range" id="CardPad" min="10" max="100" step="2" value="32"></div>
@@ -364,16 +364,16 @@
                     <div class="sub-section-label">漂浮动画</div>
                     <div class="sub-title"><span>启用微动画</span><input type="checkbox" id="FloatEnabled" checked></div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴摆幅</span><span id="FloatRotateXVal">2.0°</span></div>
-                            <input type="range" id="FloatRotateX" min="0" max="8" step="0.5" value="2.0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴摆幅</span><span id="FloatRotateXVal">0°</span></div>
+                            <input type="range" id="FloatRotateX" min="0" max="8" step="0.5" value="0"></div>
                         <div style="flex:1" class="stack"><div class="label-line"><span>Y轴摆幅</span><span id="FloatRotateYVal">1.5°</span></div>
                             <input type="range" id="FloatRotateY" min="0" max="8" step="0.5" value="1.5"></div>
                     </div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>周期 (秒)</span><span id="FloatDurationVal">4s</span></div>
-                            <input type="range" id="FloatDuration" min="1" max="10" step="0.5" value="4"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>相位差</span><span id="FloatPhaseVal">25%</span></div>
-                            <input type="range" id="FloatPhase" min="0" max="100" step="5" value="25"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>周期 (秒)</span><span id="FloatDurationVal">4.5s</span></div>
+                            <input type="range" id="FloatDuration" min="1" max="10" step="0.5" value="4.5"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>相位差</span><span id="FloatPhaseVal">60%</span></div>
+                            <input type="range" id="FloatPhase" min="0" max="100" step="5" value="60"></div>
                     </div>
                 </div>
             </div>
@@ -450,44 +450,44 @@
             mainTitle: '汽车零售销量新能源月度渗透率走势',
             subTitle: '新能源乘用车渗透率超 50%',
             titleFont: "'Noto Sans SC', sans-serif",
-            mainTitleSize: 26,
-            subTitleSize: 36,
+            mainTitleSize: 36,
+            subTitleSize: 74,
             mainTitleWeight: 700,
-            subTitleWeight: 400,
+            subTitleWeight: 300,
             mainTitleColor: '#333333',
             subTitleColor: '#999999',
             mainTitleX: 0,
-            mainTitleY: -490,
-            subTitleX: 630,
-            subTitleY: 0,
+            mainTitleY: -496,
+            subTitleX: 570,
+            subTitleY: 50,
             showBrackets: true,
             // 数值标签
             showValues: false,
-            valueYOffset: -20,
-            valueBgEnabled: true,
+            valueYOffset: -2,
+            valueBgEnabled: false,
             valueBgColor: '#555555',
             // 柱状图
             barDirection: 'vertical',
             barWidth: 0.6,
-            barColor: '',
+            barColor: '#888888',
             barOpacity: 0.85,
             barRadius: 4,
             barGradient: false,
-            barGradientEnd: '',
+            barGradientEnd: '#cccccc',
             barStrokeWidth: 0,
-            barStrokeColor: '',
+            barStrokeColor: '#888888',
             barJitter: 0,
             // 网格与坐标
             gridY: 4,
             yAxisMode: 'zero',
             yMin: 0, yMax: 100,
             dashedGrid: false,
-            axisLabelSize: 11,
+            axisLabelSize: 16,
             axisLabelColor: '#999999',
             // 卡片漂浮 (WebGL)
             rotateX: 1.5, rotateY: -1,
-            elevation: 0.5,
-            cardRadius: 16,
+            elevation: 0.42,
+            cardRadius: 36,
             cardBorderWidth: 0,
             cardBorderColor: '#ffffff',
             cardGlowWidth: 0,
@@ -496,8 +496,8 @@
             cardScale: 0.8,
             cardPad: 32,
             floatEnabled: true,
-            floatRotateX: 2.0, floatRotateY: 1.5,
-            floatPhase: 25, floatDuration: 4,
+            floatRotateX: 0, floatRotateY: 1.5,
+            floatPhase: 60, floatDuration: 4.5,
             // 动画
             animDuration: 3.5,
             animEasing: 'easeInOut',
@@ -507,7 +507,7 @@
             entranceDuration: 0.8,
             entranceEasing: 'easeOut',
             entranceStartX: 0,
-            entranceStartY: 300,
+            entranceStartY: 1000,
             entranceEndX: 0,
             entranceEndY: 0,
             entranceStartOpacity: 0,
@@ -518,13 +518,13 @@
             chartOffX: 0,
             chartOffY: 0,
             chartExtraW: 0,
-            chartExtraH: 0,
+            chartExtraH: -50,
             // 纸张纹理（主题风格）
             noiseGrain: 35, vignette: 15,
             // 公用
             gridOpacity: 0.30,
             cardBg: '#faf8f3',
-            valueSize: 11,
+            valueSize: 14,
             valueColor: '#ffffff',
             showGrid: true,
             gridColor: '#c3bcaf',
@@ -541,31 +541,47 @@
                 axisLabelColor: '#999999',
                 valueColor: '#555555',
                 gridColor: '#c3bcaf',
+                gridOpacity: 0.30,
+                dashedGrid: false,
                 cardBg: '#faf8f3',
                 cardBorderWidth: 1,
                 cardBorderColor: '#c8c3b8',
                 cardGlowWidth: 0,
+                cardGlowColor: '#3b82f6',
+                cardGlowIntensity: 70,
                 subTitleGlow: false,
                 barColor: '#888888',
                 barStrokeWidth: 1,
+                barStrokeColor: '#888888',
                 barJitter: 25,
+                barWidth: 0.6,
+                barRadius: 4,
+                barOpacity: 0.85,
+                barGradient: false,
             },
             cyber: {
-                mainTitleColor: '#ffffff',
-                subTitleColor: '#ffffff',
-                axisLabelColor: '#888888',
-                valueColor: '#ffffff',
-                gridColor: '#333333',
-                cardBg: '#1a1a2e',
+                mainTitleColor: '#525252',
+                subTitleColor: '#8A8A8A',
+                axisLabelColor: '#999999',
+                valueColor: '#878787',
+                gridColor: '#A3A3A3',
+                gridOpacity: 1.0,
+                dashedGrid: true,
+                cardBg: '#FAF8F3',
                 cardBorderWidth: 2,
-                cardBorderColor: '#00f2ff',
+                cardBorderColor: '#99FAFF',
                 cardGlowWidth: 20,
-                cardGlowColor: '#00f2ff',
+                cardGlowColor: '#FFFFFF',
                 cardGlowIntensity: 50,
                 subTitleGlow: true,
-                barColor: '#00f2ff',
+                barColor: '#888888',
                 barStrokeWidth: 1,
-                barStrokeColor: '#00f2ff',
+                barStrokeColor: '#878787',
+                barJitter: 25,
+                barWidth: 0.4,
+                barRadius: 0,
+                barOpacity: 0.5,
+                barGradient: true,
             },
         };
 
@@ -574,38 +590,56 @@
             currentMode = mode;
             document.body.className = `mode-${mode}`;
 
-            // 仅应用颜色预设，非颜色参数保持不变
             const preset = MODE_PRESETS[mode];
             Object.assign(config, preset);
 
             // 同步控件
-            updateUI('TitleColor', config.mainTitleColor);
-            updateUI('SubTitleColor', config.subTitleColor);
-            updateUI('AxisLabelColor', config.axisLabelColor);
-            updateUI('ValueColor', config.valueColor);
-            updateUI('GridColor', config.gridColor);
-            updateUI('CardBg', config.cardBg);
-            updateUI('CardBorderWidth', config.cardBorderWidth, 'CardBorderWidthVal');
-            updateUI('CardBorderColor', config.cardBorderColor);
-            updateUI('CardGlowWidth', config.cardGlowWidth, 'CardGlowWidthVal');
-            updateUI('CardGlowColor', config.cardGlowColor);
-            updateUI('CardGlowIntensity', config.cardGlowIntensity, 'CardGlowIntensityVal');
-            updateUI('SubTitleGlow', config.subTitleGlow, null, true);
-            updateUI('BarColor', config.barColor);
-            updateUI('BarStrokeWidth', config.barStrokeWidth, 'BarStrokeWidthVal');
-            updateUI('BarStrokeColor', config.barStrokeColor);
-            updateUI('BarJitter', config.barJitter, 'BarJitterVal');
+            updateUI('TitleColor',        config.mainTitleColor);
+            updateUI('SubTitleColor',     config.subTitleColor);
+            updateUI('AxisLabelColor',    config.axisLabelColor);
+            updateUI('ValueColor',        config.valueColor);
+            updateUI('GridColor',         config.gridColor);
+            updateUI('CardBg',            config.cardBg);
+            updateUI('CardBorderWidth',   config.cardBorderWidth,  'CardBorderWidthVal');
+            updateUI('CardBorderColor',   config.cardBorderColor);
+            updateUI('CardGlowWidth',     config.cardGlowWidth,    'CardGlowWidthVal');
+            updateUI('CardGlowColor',     config.cardGlowColor);
+            updateUI('CardGlowIntensity', config.cardGlowIntensity,'CardGlowIntensityVal');
+            updateUI('SubTitleGlow',      config.subTitleGlow,     null, 'checkbox');
+            updateUI('BarColor',          config.barColor);
+            updateUI('BarStrokeWidth',    config.barStrokeWidth,   'BarStrokeWidthVal');
+            updateUI('BarStrokeColor',    config.barStrokeColor);
+            updateUI('BarJitter',         config.barJitter,        'BarJitterVal');
+            updateUI('BarRadius',         config.barRadius,        'BarRadiusVal');
+            updateUI('DashedGrid',        config.dashedGrid,       null, 'checkbox');
+            updateUI('BarGradient',       config.barGradient,      null, 'checkbox');
+            updateUI('BarGradientEnd',    config.barGradientEnd);
+            updateUI('BarWidth',          config.barWidth,         'BarWidthVal',   'pct');
+            updateUI('BarOpacity',        config.barOpacity,       'BarOpacityVal', 'pct');
+            updateUI('GridOpacity',       config.gridOpacity,      'GridOpacityVal','pct');
+            document.getElementById('BarGradientEndRow').style.display = config.barGradient ? '' : 'none';
 
             _paperTexCache = null;
             _staticBgCache = null;
             myResetAnimStart();
         }
 
-        function updateUI(id, value, displayId, isCheckbox) {
+        // value は生の config 値（pct の場合 0-1）
+        function updateUI(id, value, displayId, type) {
             const el = document.getElementById(id);
             if (!el) return;
-            if (isCheckbox) { el.checked = value; }
-            else { el.value = value; }
+            if (type === 'checkbox') {
+                el.checked = value;
+            } else if (type === 'pct') {
+                el.value = Math.round(value * 100);
+                if (displayId) {
+                    const disp = document.getElementById(displayId);
+                    if (disp) disp.textContent = Math.round(value * 100) + '%';
+                }
+                return;
+            } else {
+                el.value = value;
+            }
             if (displayId) {
                 const disp = document.getElementById(displayId);
                 if (disp) disp.textContent = value;
