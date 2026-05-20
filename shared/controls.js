@@ -224,6 +224,10 @@ export function injectPanels(opts = {}) {
  * @param {boolean} [opts.useRafForFrames=false]
  * @param {boolean} [opts.useManualWebmFrames=false]
  * @param {number}  [opts.encodeQueueMax=2]
+ * @param {boolean} [opts.skipMainCanvas=false] - 跳过 getElementById(canvasId) 与尺寸设置（用于 WebGL/SVG 效果）
+ * @param {boolean} [opts.skipDrawContext=false] - 跳过 2D context 创建（与 skipMainCanvas 配合）
+ * @param {HTMLCanvasElement|string|Function} [opts.recorderCanvas] - Recorder 实际抓帧的 canvas；可传 DOM 元素、id、或 lazy getter
+ * @param {{bgRect, patternEl}} [opts.svgTargets] - 透传给 Background（仅 SVG 效果使用）
  * @returns {{ ctx, canvas, bg, recorder, baseWidth, baseHeight, scale, clearFrame, drawBg, startPreviewLoop, resetAnimStart }}
  */
 export function initEffect(opts) {
@@ -258,15 +262,20 @@ export function initEffect(opts) {
     // 1.11 颜色选择器旁注入 hex 输入框
     if (!isPreview) initColorInputs();
 
-    // 2. Canvas 初始化（预览模式降低分辨率）
+    // 2. Canvas 初始化（预览模式降低分辨率；可跳过供 WebGL/SVG 效果使用）
     const baseWidth = opts.baseWidth || 1440;
     const baseHeight = opts.baseHeight || 1080;
     const scale = isPreview ? 1 : (opts.scale || 2);
-    const canvas = document.getElementById(opts.canvasId || 'mainCanvas');
-    canvas.width = baseWidth * scale;
-    canvas.height = baseHeight * scale;
-    const ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
-    ctx.scale(scale, scale);
+    let canvas = null, ctx = null;
+    if (!opts.skipMainCanvas) {
+        canvas = document.getElementById(opts.canvasId || 'mainCanvas');
+        canvas.width = baseWidth * scale;
+        canvas.height = baseHeight * scale;
+        if (!opts.skipDrawContext) {
+            ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
+            ctx.scale(scale, scale);
+        }
+    }
 
     // 3. Background
     const bg = new Background({
@@ -279,13 +288,21 @@ export function initEffect(opts) {
         baseWidth,
         baseHeight,
         scaleFactor: scale,
+        svgTargets: opts.svgTargets,
     });
 
     // 4. Recorder（预览模式用空桩）
+    function resolveRecorderCanvas() {
+        const rc = opts.recorderCanvas;
+        if (!rc) return canvas;
+        if (typeof rc === 'string') return document.getElementById(rc);
+        if (typeof rc === 'function') return rc();
+        return rc;
+    }
     const recorder = isPreview
         ? { isRecording: false, format: 'png_seq' }
         : new Recorder({
-            canvas,
+            canvas: resolveRecorderCanvas(),
             onFrame: opts.onFrame,
             fileName: opts.fileName || 'Effect',
             width: baseWidth * scale,
@@ -302,8 +319,9 @@ export function initEffect(opts) {
         animStartTime = performance.now();
     }
 
-    // 6. 画布工具函数
+    // 6. 画布工具函数（skipDrawContext 模式下为 no-op）
     function clearFrame() {
+        if (!ctx) return;
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -311,6 +329,7 @@ export function initEffect(opts) {
     }
 
     function drawBg(timeMs) {
+        if (!ctx) return;
         if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
             ctx.fillStyle = getTheme().canvasBg;
             ctx.fillRect(0, 0, baseWidth, baseHeight);
