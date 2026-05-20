@@ -303,6 +303,17 @@
         enhanceAllSelects();
 
         const svg = document.getElementById('mainSvg');
+
+        // 让 SVG 像 canvas 一样按内在 1440×1080 缩放到 preview-area
+        if (!new URLSearchParams(location.search).has('preview')) {
+            const preview = svg.parentElement;
+            new ResizeObserver(() => {
+                const k = Math.min(preview.clientWidth / 1440, preview.clientHeight / 1080);
+                svg.style.width  = (1440 * k) + 'px';
+                svg.style.height = (1080 * k) + 'px';
+            }).observe(preview);
+        }
+
         const contentGroup = document.getElementById('contentGroup');
         const scanGroup = document.getElementById('scanStackGroup');
         const centerText = document.getElementById('centerFixedText');
