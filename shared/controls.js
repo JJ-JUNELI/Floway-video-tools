@@ -581,6 +581,7 @@ export function initColorInputs() {
         const hexInput = document.createElement('input');
         hexInput.type = 'text';
         hexInput.className = 'hex-input';
+        hexInput.name = (colorInput.id || 'color') + 'Hex';
         hexInput.value = colorInput.value.toUpperCase();
         hexInput.maxLength = 7;
         hexInput.spellcheck = false;
