@@ -855,11 +855,11 @@ input:checked + .slider:before {
     overflow: hidden;
     border: none;
     border-radius: 0;
-    background-color: #0b0e14;
+    background-color: #06080b;
 }
 
 canvas {
-    background: transparent;
+    background: #0e1117;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -869,8 +869,6 @@ canvas {
     width: auto;
     height: auto;
     display: block;
-    border-radius: 4px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
 }
 
 #mainSvg {
@@ -884,15 +882,7 @@ canvas {
     height: auto;
     aspect-ratio: 4/3;
     display: block;
-    border-radius: 4px;
-    background-color: #0e1117;
-    background-image:
-        linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.06) 75%),
-        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.06) 75%);
-    background-size: 16px 16px;
-    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    background: #0e1117;
 }
 
 body.logo canvas {
@@ -1015,16 +1005,7 @@ body.logo canvas {
     width: auto;
     height: auto;
     display: block;
-    border-radius: 4px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
-    background-color: #0e1117;
-    background-image:
-        linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.06) 75%),
-        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.06) 75%);
-    background-size: 16px 16px;
-    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    background: #0e1117;
 }
 
 /* ========================================
@@ -1375,24 +1356,12 @@ body.logo canvas {
         linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
 }
 [data-theme="light"] .preview-area {
-    background-color: #dde2e8;
+    background-color: #c9d0d8;
 }
+[data-theme="light"] canvas,
 [data-theme="light"] .effect-canvas,
 [data-theme="light"] #mainSvg {
-    background-color: #f1f5f9;
-    background-image:
-        linear-gradient(45deg, rgba(0,0,0,0.06) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(0,0,0,0.06) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.06) 75%),
-        linear-gradient(-45deg, transparent 75%, rgba(0,0,0,0.06) 75%);
-    background-size: 16px 16px;
-    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
-}
-[data-theme="light"] canvas {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-}
-[data-theme="light"] .effect-canvas {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    background: #f1f5f9;
 }
 
 [data-theme="light"].logo canvas {
