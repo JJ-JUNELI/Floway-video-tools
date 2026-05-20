@@ -855,6 +855,14 @@ input:checked + .slider:before {
     overflow: hidden;
     border: none;
     border-radius: 0;
+    background-color: #0b0e14;
+    background-image:
+        linear-gradient(45deg, rgba(255,255,255,0.025) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.025) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.025) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.025) 75%);
+    background-size: 24px 24px;
+    background-position: 0 0, 0 12px, 12px -12px, -12px 0px;
 }
 
 canvas {
@@ -887,15 +895,7 @@ canvas {
     border-radius: 4px;
 }
 
-/* Canvas 棋盘格 (logo-matrix) */
 body.logo canvas {
-    background-image:
-        linear-gradient(45deg, #0a0e14 25%, transparent 25%),
-        linear-gradient(-45deg, #0a0e14 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #0a0e14 75%),
-        linear-gradient(-45deg, transparent 75%, #0a0e14 75%);
-    background-size: 20px 20px;
-    background-color: #0e1117;
     box-shadow: none;
 }
 
@@ -1007,7 +1007,6 @@ body.logo canvas {
 
 .effect-canvas {
     border: 1px solid var(--border);
-    background: var(--bg-dark);
     position: absolute;
     top: 50%;
     left: 50%;
@@ -1368,6 +1367,16 @@ body.logo canvas {
         linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
 }
+[data-theme="light"] .preview-area {
+    background-color: #e8ecf0;
+    background-image:
+        linear-gradient(45deg, rgba(0,0,0,0.04) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(0,0,0,0.04) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.04) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(0,0,0,0.04) 75%);
+    background-size: 24px 24px;
+    background-position: 0 0, 0 12px, 12px -12px, -12px 0px;
+}
 [data-theme="light"] canvas {
     box-shadow: 0 4px 16px rgba(0,0,0,0.08);
 }
@@ -1379,15 +1388,7 @@ body.logo canvas {
     border: 1px solid rgba(0,0,0,0.06);
 }
 
-/* Logo checkerboard (亮色浅棋盘) */
 [data-theme="light"].logo canvas {
-    background-image:
-        linear-gradient(45deg, #e8ecf0 25%, transparent 25%),
-        linear-gradient(-45deg, #e8ecf0 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #e8ecf0 75%),
-        linear-gradient(-45deg, transparent 75%, #e8ecf0 75%);
-    background-size: 20px 20px;
-    background-color: #f1f5f9;
     box-shadow: none;
 }
 
@@ -1456,4 +1457,6 @@ body.logo canvas {
 .preview-mode .preview-area {
     overflow: hidden !important;
     position: relative !important;
+    background: transparent !important;
+    background-image: none !important;
 }
