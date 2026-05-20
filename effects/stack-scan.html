@@ -289,18 +289,9 @@
         </svg>
 
     <script type="module">
-        import { Recorder } from '../shared/recorder.js';
-        import { Background } from '../shared/background.js';
-        import { injectPanels, initSidebarResize, initHeaderPlayButton } from '../shared/controls.js';
-        import { enhanceAllSelects } from '../shared/custom-select.js';
+        import { initEffect } from '../shared/controls.js';
         import { SvgRenderer } from '../shared/svg-renderer.js';
-        import { getEasing, bindUI, setupFontSelector, fontSelectHTML } from '../shared/utils.js';
         import { getTheme, toggleTheme, moonSVG, sunSVG } from '../shared/themes.js';
-
-        injectPanels({ defaultBgMode: 'transparent', defaultPatternColor: '#222222' });
-        initSidebarResize();
-        initHeaderPlayButton();
-        enhanceAllSelects();
 
         const svg = document.getElementById('mainSvg');
 
@@ -376,35 +367,28 @@
             previewMode: false,
         };
 
-        // 状态
-        const bg = new Background({
-            modeSelectId: '#BgMode',
-            uploadInputId: '#BgUpload',
-            patternColorId: '#PatternColor',
-            patternRowId: '#PatternColorRow',
-            defaultMode: 'transparent',
+        // SVG 渲染管线（序列化 SVG → 隐藏 Canvas → Recorder 抓帧）
+        // 必须在 initEffect 之前创建，因为要把 exportCanvas 传给 recorderCanvas
+        const svgRenderer = new SvgRenderer(svg, baseWidth * scaleFactor, baseHeight * scaleFactor);
+
+        const { bg, recorder, bindUI, getEasing, setupFontSelector, fontSelectHTML } = initEffect({
+            skipMainCanvas: true,
+            skipDrawContext: true,
+            recorderCanvas: svgRenderer.exportCanvas,
+            baseWidth, baseHeight, scale: scaleFactor,
+            defaultBgMode: 'transparent',
             defaultPatternColor: '#222222',
-            baseWidth,
-            baseHeight,
-            scaleFactor: 2,
+            fileName: 'StackScan',
+            useManualWebmFrames: true,
             svgTargets: {
                 bgRect: document.getElementById('svgBg'),
                 patternEl: document.getElementById('bgPattern'),
             },
-        });
-
-        // SVG 渲染管线（序列化 SVG → 隐藏 Canvas → Recorder 抓帧）
-        const svgRenderer = new SvgRenderer(svg, baseWidth * scaleFactor, baseHeight * scaleFactor);
-
-        const recorder = new Recorder({
-            canvas: svgRenderer.exportCanvas,
             onFrame: async (timeMs) => {
                 updateSVG(timeMs);
                 svgRenderer.drawBackground(bg, recorder.format);
                 await svgRenderer.rasterize();
             },
-            fileName: 'StackScan',
-            useManualWebmFrames: true,
         });
 
         // === 主渲染更新 ===
