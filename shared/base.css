@@ -871,6 +871,13 @@ canvas {
     display: block;
 }
 
+/* WebGL 合成 canvas（Template C 效果）：透明底、无阴影圆角 */
+canvas.webgl-canvas {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+}
+
 #mainSvg {
     position: absolute;
     top: 50%;
