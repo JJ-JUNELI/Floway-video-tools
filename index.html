@@ -190,10 +190,17 @@
             position: relative;
             z-index: 2;
         }
-        @keyframes heroFloat {
-            0%, 100% { transform: translateY(var(--fy, 0px)) rotate(var(--fr, 0deg)); }
-            50%       { transform: translateY(calc(var(--fy, 0px) - 7px)) rotate(var(--fr, 0deg)); }
+        /* 外层：负责动画 + 倾斜 + 透明度；本身无 border-radius */
+        .hero-wrap {
+            display: inline-flex;
+            animation: heroFloat var(--dur, 4s) ease-in-out infinite;
+            animation-delay: var(--fd, 0s);
         }
+        @keyframes heroFloat {
+            0%, 100% { transform: rotate(var(--fr, 0deg)) translateY(var(--fy, 0px)); }
+            50%       { transform: rotate(var(--fr, 0deg)) translateY(calc(var(--fy, 0px) - 7px)); }
+        }
+        /* 内层：纯外观，绝不参与 transform；border-radius 永远在静止状态渲染 */
         .hero-icon {
             --cat: #818cf8;
             width: 74px; height: 74px;
@@ -206,16 +213,8 @@
             position: relative;
             z-index: 2;
             transition: background .2s ease, border-color .2s ease;
-            animation: heroFloat var(--dur, 4s) ease-in-out infinite;
-            animation-delay: var(--fd, 0s);
-            /* 防锯齿：overflow:hidden 让 border-radius 成为裁切遮罩 */
-            overflow: hidden;
-            will-change: transform;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
         }
         .hero-icon svg {
-            /* width % 对宽等比缩放；height:auto 按 viewBox 比例，避免 flex 高度解析不稳定 */
             width: 50%; height: auto;
             fill: none;
             stroke-linecap: round;
@@ -801,38 +800,54 @@
         <div class="hero-icons">
             <div class="hero-row">
                 <!-- bar-chart 柱状图 -->
-                <div class="hero-icon" style="--cat:#60a5fa;--fy:-4px;--fr:-2deg;--dur:4.2s;--fd:0s;width:70px;height:70px;opacity:0.82;">
-                    <svg viewBox="0 0 24 24"><rect class="g-main" x="2" y="14" width="4" height="7" rx="1"/><rect class="g-main" x="9" y="9" width="4" height="12" rx="1"/><rect class="g-main" x="16" y="5" width="4" height="16" rx="1"/></svg>
+                <div class="hero-wrap" style="--fr:-2deg;--fy:-4px;--dur:4.2s;--fd:0s;opacity:0.82;">
+                    <div class="hero-icon" style="--cat:#60a5fa;width:70px;height:70px;">
+                        <svg viewBox="0 0 24 24"><rect class="g-main" x="2" y="14" width="4" height="7" rx="1"/><rect class="g-main" x="9" y="9" width="4" height="12" rx="1"/><rect class="g-main" x="16" y="5" width="4" height="16" rx="1"/></svg>
+                    </div>
                 </div>
                 <!-- chart-fx 折线图 -->
-                <div class="hero-icon" style="--cat:#f472b6;--fy:-10px;--fr:-1deg;--dur:3.8s;--fd:-0.7s;width:78px;height:78px;opacity:0.92;">
-                    <svg viewBox="0 0 24 24"><polyline class="g-main" points="3,17 7,10 12,13 17,6 21,9"/><circle class="g-dot" cx="3" cy="17" r="1.5"/><circle class="g-dot" cx="21" cy="9" r="1.5"/></svg>
+                <div class="hero-wrap" style="--fr:-1deg;--fy:-10px;--dur:3.8s;--fd:-0.7s;opacity:0.92;">
+                    <div class="hero-icon" style="--cat:#f472b6;width:78px;height:78px;">
+                        <svg viewBox="0 0 24 24"><polyline class="g-main" points="3,17 7,10 12,13 17,6 21,9"/><circle class="g-dot" cx="3" cy="17" r="1.5"/><circle class="g-dot" cx="21" cy="9" r="1.5"/></svg>
+                    </div>
                 </div>
                 <!-- pie-chart 饼图 -->
-                <div class="hero-icon" style="--cat:#fb923c;--fy:-10px;--fr:1deg;--dur:4.0s;--fd:-1.4s;width:78px;height:78px;opacity:0.92;">
-                    <svg viewBox="0 0 24 24"><path class="g-main" d="M21.21 15.89A9 9 0 1 1 8 2.83"/><path class="g-main" d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                <div class="hero-wrap" style="--fr:1deg;--fy:-10px;--dur:4.0s;--fd:-1.4s;opacity:0.92;">
+                    <div class="hero-icon" style="--cat:#fb923c;width:78px;height:78px;">
+                        <svg viewBox="0 0 24 24"><path class="g-main" d="M21.21 15.89A9 9 0 1 1 8 2.83"/><path class="g-main" d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                    </div>
                 </div>
                 <!-- text-animator 文字动效 -->
-                <div class="hero-icon" style="--cat:#818cf8;--fy:-4px;--fr:2deg;--dur:4.4s;--fd:-2.1s;width:70px;height:70px;opacity:0.82;">
-                    <svg viewBox="0 0 24 24"><polyline class="g-main" points="4 7 4 4 20 4 20 7"/><line class="g-main" x1="9" y1="20" x2="15" y2="20"/><line class="g-main" x1="12" y1="4" x2="12" y2="20"/></svg>
+                <div class="hero-wrap" style="--fr:2deg;--fy:-4px;--dur:4.4s;--fd:-2.1s;opacity:0.82;">
+                    <div class="hero-icon" style="--cat:#818cf8;width:70px;height:70px;">
+                        <svg viewBox="0 0 24 24"><polyline class="g-main" points="4 7 4 4 20 4 20 7"/><line class="g-main" x1="9" y1="20" x2="15" y2="20"/><line class="g-main" x1="12" y1="4" x2="12" y2="20"/></svg>
+                    </div>
                 </div>
             </div>
             <div class="hero-row">
                 <!-- stack-scan 文字突出扫描 -->
-                <div class="hero-icon" style="--cat:#a78bfa;--fy:4px;--fr:-1.5deg;--dur:3.6s;--fd:-2.8s;width:68px;height:68px;opacity:0.74;">
-                    <svg viewBox="0 0 24 24"><path class="g-main" d="M3 7V5a2 2 0 0 1 2-2h2"/><path class="g-main" d="M17 3h2a2 2 0 0 1 2 2v2"/><path class="g-main" d="M21 17v2a2 2 0 0 1-2 2h-2"/><path class="g-main" d="M7 21H5a2 2 0 0 1-2-2v-2"/><line class="g-main" x1="7" y1="12" x2="17" y2="12"/></svg>
+                <div class="hero-wrap" style="--fr:-1.5deg;--fy:4px;--dur:3.6s;--fd:-2.8s;opacity:0.74;">
+                    <div class="hero-icon" style="--cat:#a78bfa;width:68px;height:68px;">
+                        <svg viewBox="0 0 24 24"><path class="g-main" d="M3 7V5a2 2 0 0 1 2-2h2"/><path class="g-main" d="M17 3h2a2 2 0 0 1 2 2v2"/><path class="g-main" d="M21 17v2a2 2 0 0 1-2 2h-2"/><path class="g-main" d="M7 21H5a2 2 0 0 1-2-2v-2"/><line class="g-main" x1="7" y1="12" x2="17" y2="12"/></svg>
+                    </div>
                 </div>
                 <!-- particle-field 粒子场 -->
-                <div class="hero-icon" style="--cat:#fbbf24;--fy:6px;--fr:-0.5deg;--dur:4.2s;--fd:-0.3s;width:72px;height:72px;opacity:0.80;">
-                    <svg viewBox="0 0 24 24"><path class="g-main" d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/><circle class="g-dot" cx="5" cy="4" r="1.2"/><circle class="g-dot" cx="19" cy="19" r="1.2"/></svg>
+                <div class="hero-wrap" style="--fr:-0.5deg;--fy:6px;--dur:4.2s;--fd:-0.3s;opacity:0.80;">
+                    <div class="hero-icon" style="--cat:#fbbf24;width:72px;height:72px;">
+                        <svg viewBox="0 0 24 24"><path class="g-main" d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/><circle class="g-dot" cx="5" cy="4" r="1.2"/><circle class="g-dot" cx="19" cy="19" r="1.2"/></svg>
+                    </div>
                 </div>
                 <!-- logo-matrix Logo矩阵 -->
-                <div class="hero-icon" style="--cat:#22d3ee;--fy:6px;--fr:0.5deg;--dur:3.8s;--fd:-1.0s;width:72px;height:72px;opacity:0.80;">
-                    <svg viewBox="0 0 24 24"><circle class="g-dot" cx="6" cy="6" r="1.5"/><circle class="g-dot" cx="12" cy="6" r="1.5"/><circle class="g-dot" cx="18" cy="6" r="1.5"/><circle class="g-dot" cx="6" cy="12" r="1.5"/><circle class="g-dot" cx="12" cy="12" r="2"/><circle class="g-dot" cx="18" cy="12" r="1.5"/><circle class="g-dot" cx="6" cy="18" r="1.5"/><circle class="g-dot" cx="12" cy="18" r="1.5"/><circle class="g-dot" cx="18" cy="18" r="1.5"/></svg>
+                <div class="hero-wrap" style="--fr:0.5deg;--fy:6px;--dur:3.8s;--fd:-1.0s;opacity:0.80;">
+                    <div class="hero-icon" style="--cat:#22d3ee;width:72px;height:72px;">
+                        <svg viewBox="0 0 24 24"><circle class="g-dot" cx="6" cy="6" r="1.5"/><circle class="g-dot" cx="12" cy="6" r="1.5"/><circle class="g-dot" cx="18" cy="6" r="1.5"/><circle class="g-dot" cx="6" cy="12" r="1.5"/><circle class="g-dot" cx="12" cy="12" r="2"/><circle class="g-dot" cx="18" cy="12" r="1.5"/><circle class="g-dot" cx="6" cy="18" r="1.5"/><circle class="g-dot" cx="12" cy="18" r="1.5"/><circle class="g-dot" cx="18" cy="18" r="1.5"/></svg>
+                    </div>
                 </div>
                 <!-- card-3d 3D卡片漂浮 -->
-                <div class="hero-icon" style="--cat:#34d399;--fy:4px;--fr:1.5deg;--dur:4.0s;--fd:-1.7s;width:68px;height:68px;opacity:0.74;">
-                    <svg viewBox="0 0 24 24"><path class="g-main" d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline class="g-main" points="3.27 6.96 12 12.01 20.73 6.96"/><line class="g-main" x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                <div class="hero-wrap" style="--fr:1.5deg;--fy:4px;--dur:4.0s;--fd:-1.7s;opacity:0.74;">
+                    <div class="hero-icon" style="--cat:#34d399;width:68px;height:68px;">
+                        <svg viewBox="0 0 24 24"><path class="g-main" d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline class="g-main" points="3.27 6.96 12 12.01 20.73 6.96"/><line class="g-main" x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    </div>
                 </div>
             </div>
         </div>
