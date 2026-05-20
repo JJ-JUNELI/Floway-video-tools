@@ -860,8 +860,8 @@
             dataPoints.forEach((item, i) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="text" value="${item.label}" oninput="updateData(${i}, 'label', this.value)"></td>
-                    <td><input type="number" value="${item.value}" oninput="updateData(${i}, 'value', this.value)"></td>
+                    <td><input type="text" name="dataLabel${i}" value="${item.label}" oninput="updateData(${i}, 'label', this.value)"></td>
+                    <td><input type="number" name="dataValue${i}" value="${item.value}" oninput="updateData(${i}, 'value', this.value)"></td>
                     <td class="op-cell">
                         <button class="btn-icon" onclick="moveRow(${i}, -1)" title="上移">↑</button>
                         <button class="btn-icon" onclick="moveRow(${i}, 1)" title="下移">↓</button>
