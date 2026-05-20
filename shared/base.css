@@ -856,13 +856,6 @@ input:checked + .slider:before {
     border: none;
     border-radius: 0;
     background-color: #0b0e14;
-    background-image:
-        linear-gradient(45deg, rgba(255,255,255,0.025) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(255,255,255,0.025) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.025) 75%),
-        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.025) 75%);
-    background-size: 24px 24px;
-    background-position: 0 0, 0 12px, 12px -12px, -12px 0px;
 }
 
 canvas {
@@ -881,7 +874,6 @@ canvas {
 }
 
 #mainSvg {
-    background: transparent;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -893,6 +885,14 @@ canvas {
     aspect-ratio: 4/3;
     display: block;
     border-radius: 4px;
+    background-color: #0e1117;
+    background-image:
+        linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.06) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.06) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
 }
 
 body.logo canvas {
@@ -1006,7 +1006,6 @@ body.logo canvas {
 }
 
 .effect-canvas {
-    border: 1px solid var(--border);
     position: absolute;
     top: 50%;
     left: 50%;
@@ -1018,6 +1017,14 @@ body.logo canvas {
     display: block;
     border-radius: 4px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    background-color: #0e1117;
+    background-image:
+        linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.06) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.06) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
 }
 
 /* ========================================
@@ -1368,24 +1375,24 @@ body.logo canvas {
         linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
 }
 [data-theme="light"] .preview-area {
-    background-color: #e8ecf0;
+    background-color: #dde2e8;
+}
+[data-theme="light"] .effect-canvas,
+[data-theme="light"] #mainSvg {
+    background-color: #f1f5f9;
     background-image:
-        linear-gradient(45deg, rgba(0,0,0,0.04) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(0,0,0,0.04) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.04) 75%),
-        linear-gradient(-45deg, transparent 75%, rgba(0,0,0,0.04) 75%);
-    background-size: 24px 24px;
-    background-position: 0 0, 0 12px, 12px -12px, -12px 0px;
+        linear-gradient(45deg, rgba(0,0,0,0.06) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(0,0,0,0.06) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.06) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(0,0,0,0.06) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
 }
 [data-theme="light"] canvas {
     box-shadow: 0 4px 16px rgba(0,0,0,0.08);
 }
 [data-theme="light"] .effect-canvas {
-    border-color: rgba(0,0,0,0.06);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-}
-[data-theme="light"] #mainSvg {
-    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
 }
 
 [data-theme="light"].logo canvas {
