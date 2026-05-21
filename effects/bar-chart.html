@@ -98,6 +98,9 @@
         .ss-purple { border-left: 2px solid rgba(168,85,247,0.35); }
         .ss-rose   { border-left: 2px solid rgba(244,63,94,0.35); }
         .ss-teal   { border-left: 2px solid rgba(20,184,166,0.35); }
+        .ctrl-row > span[id] { flex: 0 0 30px; text-align: right; font-size: 11px; color: var(--accent); }
+        .ctrl-row > span.clr { font-size: 11px; color: var(--text-sub); flex: 0 0 auto; white-space: nowrap; }
+        .ctrl-row > input[type=color] { flex: 0 0 28px; width: 28px; height: 22px; padding: 1px; border: 1px solid var(--border,#ddd); border-radius: 3px; cursor: pointer; }
     </style>
 </head>
 <body class="mode-paper">
@@ -154,23 +157,13 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>顶部圆角</span><span id="BarRadiusVal">4</span></div>
                             <input type="range" id="BarRadius" min="0" max="20" step="1" value="4"></div>
                     </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>填充透明度</span><span id="BarOpacityVal">70%</span></div>
-                            <input type="range" id="BarOpacity" min="0" max="100" step="5" value="70"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>柱子颜色</span></div>
-                            <input type="color" id="BarColor" value="#888888"></div>
-                    </div>
+                    <div class="ctrl-row"><span>填充透明度</span><input type="range" id="BarOpacity" min="0" max="100" step="5" value="70"><span id="BarOpacityVal">70%</span><span class="clr">颜色</span><input type="color" id="BarColor" value="#888888"></div>
                     <div class="sub-title"><span>渐变填充</span><input type="checkbox" id="BarGradient"></div>
                     <div class="row stack" id="BarGradientEndRow" style="display:none;">
                         <div class="label-line"><span>渐变终止色</span></div>
                         <input type="color" id="BarGradientEnd" value="#cccccc">
                     </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="BarStrokeWidthVal">0</span></div>
-                            <input type="range" id="BarStrokeWidth" min="0" max="6" step="0.5" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>描边颜色</span></div>
-                            <input type="color" id="BarStrokeColor" value="#555555"></div>
-                    </div>
+                    <div class="ctrl-row"><span>描边宽度</span><input type="range" id="BarStrokeWidth" min="0" max="6" step="0.5" value="0"><span id="BarStrokeWidthVal">0</span><span class="clr">颜色</span><input type="color" id="BarStrokeColor" value="#555555"></div>
                     <div class="ctrl-row"><span>手绘抖动</span><input type="range" id="BarJitter" min="0" max="100" step="1" value="0"><span id="BarJitterVal">0</span></div>
                 </div>
                 <!-- 动画设置 -->
@@ -196,18 +189,8 @@
                 <div class="sub-section ss-green">
                     <div class="sub-title"><span>显示数值标签</span><input type="checkbox" id="ShowValues"></div>
                     <div id="ValueLabelOpts" style="display:none; margin-top:6px;">
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>数值字号</span><span id="ValueSizeVal">11</span></div>
-                                <input type="range" id="ValueSize" min="8" max="30" step="1" value="11"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>数值颜色</span></div>
-                                <input type="color" id="ValueColor" value="#ffffff"></div>
-                        </div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>标签偏移</span><span id="ValueYOffsetVal">-20</span></div>
-                                <input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-20"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>背景颜色</span></div>
-                                <input type="color" id="ValueBgColor" value="#555555"></div>
-                        </div>
+                        <div class="ctrl-row"><span>数值字号</span><input type="range" id="ValueSize" min="8" max="30" step="1" value="11"><span id="ValueSizeVal">11</span><span class="clr">颜色</span><input type="color" id="ValueColor" value="#ffffff"></div>
+                        <div class="ctrl-row"><span>标签偏移</span><input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-20"><span id="ValueYOffsetVal">-20</span><span class="clr">颜色</span><input type="color" id="ValueBgColor" value="#555555"></div>
                         <div class="sub-title"><span>显示背景</span><input type="checkbox" id="ValueBgEnabled" checked></div>
                     </div>
                 </div>
@@ -295,7 +278,7 @@
                             <input type="range" id="AxisLabelSize" min="6" max="40" step="1" value="11"></div>
                     </div>
                     <div class="row stack">
-                        <div class="label-line"><span>标签颜色</span></div>
+                        <div class="label-line"><span>颜色</span></div>
                         <input type="color" id="AxisLabelColor" value="#999999">
                     </div>
                 </div>
@@ -318,12 +301,7 @@
                     <div class="sub-section-label">网格线</div>
                     <div class="sub-title"><span>显示网格线</span><input type="checkbox" id="ShowGrid" checked></div>
                     <div class="sub-title"><span>虚线网格</span><input type="checkbox" id="DashedGrid"></div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>网格透明度</span><span id="GridOpacityVal">30%</span></div>
-                            <input type="range" id="GridOpacity" min="0" max="100" step="5" value="30"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>网格颜色</span></div>
-                            <input type="color" id="GridColor" value="#c3bcaf"></div>
-                    </div>
+                    <div class="ctrl-row"><span>网格透明度</span><input type="range" id="GridOpacity" min="0" max="100" step="5" value="30"><span id="GridOpacityVal">30%</span><span class="clr">颜色</span><input type="color" id="GridColor" value="#c3bcaf"></div>
                 </div>
             </div>
 
@@ -355,21 +333,11 @@
                     </div>
                     <div class="sub-title"><span>启用描边</span><input type="checkbox" id="CardBorderEnabled"></div>
                     <div id="CardBorderOpts" style="display:none">
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
-                                <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
-                            <div class="stack" style="flex:1"><div class="label-line"><span>描边颜色</span></div>
-                                <input type="color" id="CardBorderColor" value="#ffffff"></div>
-                        </div>
+                        <div class="ctrl-row"><span>描边宽度</span><input type="range" id="CardBorderWidth" min="0" max="25" value="0"><span id="CardBorderWidthVal">0</span><span class="clr">颜色</span><input type="color" id="CardBorderColor" value="#ffffff"></div>
                     </div>
                     <div class="sub-title"><span>启用辉光</span><input type="checkbox" id="CardGlowEnabled"></div>
                     <div id="CardGlowOpts" style="display:none">
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
-                                <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
-                            <div class="stack" style="flex:1"><div class="label-line"><span>辉光颜色</span></div>
-                                <input type="color" id="CardGlowColor" value="#3b82f6"></div>
-                        </div>
+                        <div class="ctrl-row"><span>辉光宽度</span><input type="range" id="CardGlowWidth" min="0" max="80" value="0"><span id="CardGlowWidthVal">0</span><span class="clr">颜色</span><input type="color" id="CardGlowColor" value="#3b82f6"></div>
                         <div class="ctrl-row"><span>辉光强度</span><input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"><span id="CardGlowIntensityVal">70%</span></div>
                     </div>
                 </div>
