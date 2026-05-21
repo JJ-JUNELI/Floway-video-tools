@@ -350,12 +350,7 @@
                 </div>
                 <div class="sub-section ss-green">
                     <div class="sub-section-label">尺寸 & 外观</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>悬浮高度</span><span id="ElevationVal">50</span></div>
-                            <input type="range" id="Elevation" min="0" max="100" step="1" value="50"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角</span><span id="CardRadiusVal">16</span></div>
-                            <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
-                    </div>
+                    <div class="ctrl-row"><span>圆角</span><input type="range" id="CardRadius" min="0" max="60" step="1" value="16"><span id="CardRadiusVal">16</span></div>
                     <div class="ctrl-row"><span>内边距</span><input type="range" id="CardPad" min="10" max="100" step="2" value="32"><span id="CardPadVal">32</span></div>
                     <div class="row stack">
                         <div class="label-line"><span>卡片底色</span></div>
@@ -369,6 +364,13 @@
                     <div id="CardGlowOpts" style="display:none">
                         <div class="ctrl-row"><span>辉光宽度</span><input type="range" id="CardGlowWidth" min="0" max="80" value="0"><span id="CardGlowWidthVal">0</span><span class="clr">颜色</span><input type="color" id="CardGlowColor" value="#3b82f6"></div>
                         <div class="ctrl-row"><span>辉光强度</span><input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"><span id="CardGlowIntensityVal">70%</span></div>
+                    </div>
+                    <div class="sub-title"><span>启用投影</span><input type="checkbox" id="ShadowEnabled" checked></div>
+                    <div id="ShadowOpts">
+                        <div class="ctrl-row"><span>角度</span><input type="range" id="ShadowAngle" min="0" max="360" step="1" value="90"><span id="ShadowAngleVal">90°</span></div>
+                        <div class="ctrl-row"><span>距离</span><input type="range" id="ShadowDistance" min="0" max="60" step="1" value="10"><span id="ShadowDistanceVal">10px</span></div>
+                        <div class="ctrl-row"><span>模糊</span><input type="range" id="ShadowBlur" min="0" max="80" step="1" value="20"><span id="ShadowBlurVal">20px</span></div>
+                        <div class="ctrl-row"><span>不透明度</span><input type="range" id="ShadowOpacity" min="0" max="100" step="1" value="25"><span id="ShadowOpacityVal">25%</span></div>
                     </div>
                 </div>
                 <div class="sub-section ss-purple">
@@ -504,7 +506,11 @@
             axisLabelColor: '#999999',
             // 卡片漂浮 (WebGL)
             rotateX: 1.5, rotateY: -1,
-            elevation: 0.5,
+            shadowEnabled: true,
+            shadowAngle: 90,
+            shadowDistance: 10,
+            shadowBlur: 20,
+            shadowOpacity: 25,
             cardRadius: 16,
             cardBorderEnabled: false,
             cardBorderWidth: 0,
@@ -627,6 +633,12 @@
             updateUI('CardGlowWidth', config.cardGlowWidth, 'CardGlowWidthVal');
             updateUI('CardGlowColor', config.cardGlowColor);
             updateUI('CardGlowIntensity', config.cardGlowIntensity, 'CardGlowIntensityVal');
+            updateUI('ShadowEnabled', config.shadowEnabled, null, true);
+            document.getElementById('ShadowOpts').style.display = config.shadowEnabled ? '' : 'none';
+            updateUI('ShadowAngle', config.shadowAngle);
+            updateUI('ShadowDistance', config.shadowDistance);
+            updateUI('ShadowBlur', config.shadowBlur);
+            updateUI('ShadowOpacity', config.shadowOpacity);
             updateUI('GlowBlur', config.glowBlur, 'GlowBlurVal');
             updateUI('SubTitleGlow', config.subTitleGlow, null, true);
             updateUI('AreaFollowLine', config.areaFollowLine, null, true);
@@ -735,7 +747,11 @@
             ['RotateX',         'rotateX',        'float', 'RotateXVal',   '°'],
             ['RotateY',         'rotateY',        'float', 'RotateYVal',   '°'],
             ['CardScale',       'cardScale',      '%',     'CardScaleVal', '%'],
-            ['Elevation',       'elevation',      '%',     'ElevationVal'],
+            ['ShadowEnabled',   'shadowEnabled',  'checked'],
+            ['ShadowAngle',     'shadowAngle',    'int',   'ShadowAngleVal',    '°'],
+            ['ShadowDistance',  'shadowDistance', 'int',   'ShadowDistanceVal', 'px'],
+            ['ShadowBlur',      'shadowBlur',     'int',   'ShadowBlurVal',     'px'],
+            ['ShadowOpacity',   'shadowOpacity',  'int',   'ShadowOpacityVal',  '%'],
             ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal'],
             ['CardPad',         'cardPad',        'int',   'CardPadVal'],
             ['CardBg',          'cardBg'],
@@ -772,6 +788,9 @@
                 if (key === 'cardGlowEnabled') {
                     document.getElementById('CardGlowOpts').style.display = config.cardGlowEnabled ? '' : 'none';
                 }
+                if (key === 'shadowEnabled') {
+                    document.getElementById('ShadowOpts').style.display = config.shadowEnabled ? '' : 'none';
+                }
                 if (key === 'showMainTitle') {
                     document.getElementById('MainTitleOpts').style.display = config.showMainTitle ? '' : 'none';
                 }
@@ -793,6 +812,7 @@
         // 初始化条件显示
         document.getElementById('CardBorderOpts').style.display = config.cardBorderEnabled ? '' : 'none';
         document.getElementById('CardGlowOpts').style.display = config.cardGlowEnabled ? '' : 'none';
+        document.getElementById('ShadowOpts').style.display = config.shadowEnabled ? '' : 'none';
         document.getElementById('MainTitleOpts').style.display = config.showMainTitle ? '' : 'none';
         document.getElementById('SubTitleOpts').style.display = config.showSubTitle ? '' : 'none';
 
@@ -1629,7 +1649,13 @@
                 rx: _currentRx,
                 ry: _currentRy,
                 perspective: 900,
-                elevation: config.elevation,
+                shadow: {
+                    enabled: config.shadowEnabled,
+                    angle: config.shadowAngle,
+                    distance: config.shadowDistance,
+                    blur: config.shadowBlur,
+                    opacity: config.shadowOpacity,
+                },
                 cardScale: baseCardScale,
                 scaleX: c2dPad > 0 ? baseCardScale * offscreen.width / fullW : undefined,
                 scaleY: c2dPad > 0 ? baseCardScale * offscreen.height / fullH : undefined,

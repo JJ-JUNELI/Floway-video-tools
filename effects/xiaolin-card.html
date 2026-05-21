@@ -236,16 +236,27 @@
                     <div class="sub-section-label">尺寸 & 外观</div>
                     <div class="row stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
                         <input type="range" id="CardScale" min="40" max="100" step="1" value="80"></div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
-                            <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>悬浮高度</span><span id="ElevationVal">50</span><span>px</span></div>
-                            <input type="range" id="Elevation" min="0" max="100" step="1" value="50"></div>
-                    </div>
+                    <div class="row stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
+                        <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
                     <div class="row stack">
                         <div class="label-line"><span>卡片底色</span></div>
                         <input type="color" id="CardBg" value="#1a1a2e"></div>
                     <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>底色透明度</span><span id="CardBgAlphaVal">80</span></div><input type="range" id="CardBgAlpha" min="0" max="100" value="80"></div></div>
+                    <div class="sub-title"><span>启用投影</span><input type="checkbox" id="ShadowEnabled" checked></div>
+                    <div id="ShadowOpts">
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>角度</span><span id="ShadowAngleVal">90°</span></div>
+                                <input type="range" id="ShadowAngle" min="0" max="360" step="1" value="90"></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>距离</span><span id="ShadowDistanceVal">10px</span></div>
+                                <input type="range" id="ShadowDistance" min="0" max="60" step="1" value="10"></div>
+                        </div>
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>模糊</span><span id="ShadowBlurVal">20px</span></div>
+                                <input type="range" id="ShadowBlur" min="0" max="80" step="1" value="20"></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>不透明度</span><span id="ShadowOpacityVal">25%</span></div>
+                                <input type="range" id="ShadowOpacity" min="0" max="100" step="1" value="25"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -379,7 +390,11 @@
             cardRadius: 16,
             cardBgColor: '#1a1a2e',
             cardBgAlpha: 80,
-            elevation: 0.5,
+            shadowEnabled: true,
+            shadowAngle: 90,
+            shadowDistance: 10,
+            shadowBlur: 20,
+            shadowOpacity: 25,
             rotateX: 1.5, rotateY: -1,
             floatEnabled: true,
             floatDuration: 4,
@@ -679,9 +694,13 @@
         bindUI(config, [
             ['CardScale',   'cardScale',    '%',   'CardScaleVal',   '%'],
             ['CardRadius',  'cardRadius',   'int', 'CardRadiusVal'],
-            ['Elevation',   'elevation',    'int', 'ElevationVal'],
             ['CardBg',      'cardBgColor'],
             ['CardBgAlpha', 'cardBgAlpha', 'int', 'CardBgAlphaVal'],
+            ['ShadowEnabled',  'shadowEnabled',  'checked'],
+            ['ShadowAngle',    'shadowAngle',    'int', 'ShadowAngleVal',    '°'],
+            ['ShadowDistance', 'shadowDistance', 'int', 'ShadowDistanceVal', 'px'],
+            ['ShadowBlur',     'shadowBlur',     'int', 'ShadowBlurVal',     'px'],
+            ['ShadowOpacity',  'shadowOpacity',  'int', 'ShadowOpacityVal',  '%'],
             ['RotateX',     'rotateX',      'float', 'RotateXVal',   '°'],
             ['RotateY',     'rotateY',      'float', 'RotateYVal',   '°'],
             ['FloatEnabled',   'floatEnabled',   'checked'],
@@ -720,6 +739,9 @@
                     document.getElementById('EntranceOpts').style.display = config.entranceEnabled ? '' : 'none';
                     document.getElementById('EntranceDetailOpts').style.display = config.entranceEnabled ? '' : 'none';
                 }
+                if (key === 'shadowEnabled') {
+                    document.getElementById('ShadowOpts').style.display = config.shadowEnabled ? '' : 'none';
+                }
                 if (key === 'cardRatioW' || key === 'cardRatioH') {
                     startLoop();
                 }
@@ -729,6 +751,8 @@
                 startLoop();
             }
         });
+
+        document.getElementById('ShadowOpts').style.display = config.shadowEnabled ? '' : 'none';
 
         // ====== 漂浮动画 ======
         let _currentRx = config.rotateX * Math.PI / 180;
@@ -903,7 +927,13 @@
                 rx: _currentRx,
                 ry: _currentRy,
                 perspective: 900,
-                elevation: config.elevation,
+                shadow: {
+                    enabled: config.shadowEnabled,
+                    angle: config.shadowAngle,
+                    distance: config.shadowDistance,
+                    blur: config.shadowBlur,
+                    opacity: config.shadowOpacity,
+                },
                 cardScale: baseCardScale,
                 scaleX: baseCardScale * offscreen.width / fullW,
                 scaleY: baseCardScale * offscreen.height / fullH,
