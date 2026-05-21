@@ -206,8 +206,7 @@
                         <span>动画</span>
                         <button id="BtnPlay" class="btn-play">▶ 播放</button>
                     </div>
-                    <div class="row stack"><div class="label-line"><span>动画时长</span><span id="AnimDurationVal">3.5s</span></div>
-                        <input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="3.5"></div>
+                    <div class="ctrl-row"><span>动画时长</span><input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="3.5"><span id="AnimDurationVal">3.5s</span></div>
                     <div class="row stack"><div class="label-line"><span>动画曲线</span></div>
                         <select id="AnimEasing">
                             <option value="linear">线性 (Linear)</option>
@@ -224,10 +223,7 @@
                 <div class="sub-section ss-green">
                     <div class="sub-title"><span>显示数据点</span><input type="checkbox" id="ShowPoints" checked></div>
                     <div id="PointSizeOpts" style="margin-top:6px;">
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>数据点大小</span><span id="PointSizeVal">4</span></div>
-                                <input type="range" id="PointSize" min="1" max="20" step="0.5" value="4"></div>
-                        </div>
+                        <div class="ctrl-row"><span>数据点大小</span><input type="range" id="PointSize" min="1" max="20" step="0.5" value="4"><span id="PointSizeVal">4</span></div>
                     </div>
                     <div class="sub-title"><span>显示数值标签</span><input type="checkbox" id="ShowValues"></div>
                     <div id="ValueLabelOpts" style="display:none; margin-top:6px;">
@@ -251,52 +247,42 @@
             <!-- 标题设置 -->
             <div class="control-group">
                 <div class="group-title"><span>📝 标题设置</span></div>
+                <div class="row stack"><div class="label-line"><span>标题字体</span></div>
+                    <div id="TitleFontMount" style="width:100%"></div></div>
                 <div class="sub-section ss-blue">
-                    <div class="sub-section-label">内容</div>
+                    <div class="sub-section-label">主标题</div>
                     <div class="sub-title"><span>启用主标题</span><input type="checkbox" id="ShowMainTitle" checked></div>
-                    <div class="row stack">
-                        <div class="label-line"><span>主标题</span></div>
-                        <input type="text" id="MainTitle" value="汽车零售销量新能源月度渗透率走势">
-                    </div>
-                    <div class="sub-title"><span>启用副标题</span><input type="checkbox" id="ShowSubTitle" checked></div>
-                    <div class="row stack">
-                        <div class="label-line"><span>副标题 (右侧文字)</span></div>
-                        <input type="text" id="SubTitle" value="新能源乘用车渗透率超 50%">
-                    </div>
-                    <div class="row stack"><div class="label-line"><span>标题字体</span></div>
-                        <div id="TitleFontMount" style="width:100%"></div></div>
-                </div>
-                <div class="sub-section ss-green">
-                    <div class="sub-section-label">样式</div>
-                    <div class="row">
-                        <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
-                            <div class="stack"><div class="label-line"><span>主标题字号</span><span id="TitleSizeVal">26</span></div>
-                                <input type="range" id="TitleSize" min="12" max="72" step="2" value="26"></div>
-                            <div class="stack"><div class="label-line"><span>主标题字重</span><span id="MainTitleWeightVal">700</span></div>
-                                <input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"></div>
-                            <div class="stack">
-                                <div class="label-line"><span>主标题颜色</span></div>
-                                <input type="color" id="TitleColor" value="#333333">
-                            </div>
-                            <div class="stack"><div class="label-line"><span>主标题 X</span><span id="MainTitleXVal">0</span></div>
-                                <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
-                            <div class="stack"><div class="label-line"><span>主标题 Y</span><span id="MainTitleYVal">-490</span></div>
-                                <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
-                            <div class="sub-title"><span>显示主标题括号</span><input type="checkbox" id="ShowBrackets" checked></div>
+                    <div id="MainTitleOpts">
+                        <div class="row stack">
+                            <div class="label-line"><span>文字</span></div>
+                            <input type="text" id="MainTitle" value="汽车零售销量新能源月度渗透率走势">
                         </div>
-                        <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
-                            <div class="stack"><div class="label-line"><span>副标题字号</span><span id="SubTitleSizeVal">36</span></div>
-                                <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
-                            <div class="stack"><div class="label-line"><span>副标题字重</span><span id="SubTitleWeightVal">400</span></div>
-                                <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
-                            <div class="stack">
-                                <div class="label-line"><span>副标题颜色</span></div>
-                                <input type="color" id="SubTitleColor" value="#999999">
-                            </div>
-                            <div class="stack"><div class="label-line"><span>副标题 X</span><span id="SubTitleXVal">630</span></div>
-                                <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
-                            <div class="stack"><div class="label-line"><span>副标题 Y</span><span id="SubTitleYVal">0</span></div>
-                                <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
+                        <div class="advanced-params">
+                            <div class="ctrl-row"><span>字号</span><input type="range" id="TitleSize" min="12" max="72" step="2" value="26"><span id="TitleSizeVal">26</span></div>
+                            <div class="ctrl-row"><span>字重</span><input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"><span id="MainTitleWeightVal">700</span></div>
+                            <div class="row stack"><div class="label-line"><span>颜色</span></div>
+                                <input type="color" id="TitleColor" value="#333333"></div>
+                            <div class="ctrl-row"><span>X</span><input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"><span id="MainTitleXVal">0</span></div>
+                            <div class="ctrl-row"><span>Y</span><input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"><span id="MainTitleYVal">-490</span></div>
+                            <div class="sub-title"><span>显示括号</span><input type="checkbox" id="ShowBrackets" checked></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sub-section ss-purple">
+                    <div class="sub-section-label">副标题</div>
+                    <div class="sub-title"><span>启用副标题</span><input type="checkbox" id="ShowSubTitle" checked></div>
+                    <div id="SubTitleOpts">
+                        <div class="row stack">
+                            <div class="label-line"><span>文字</span></div>
+                            <input type="text" id="SubTitle" value="新能源乘用车渗透率超 50%">
+                        </div>
+                        <div class="advanced-params">
+                            <div class="ctrl-row"><span>字号</span><input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"><span id="SubTitleSizeVal">36</span></div>
+                            <div class="ctrl-row"><span>字重</span><input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"><span id="SubTitleWeightVal">400</span></div>
+                            <div class="row stack"><div class="label-line"><span>颜色</span></div>
+                                <input type="color" id="SubTitleColor" value="#999999"></div>
+                            <div class="ctrl-row"><span>X</span><input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"><span id="SubTitleXVal">630</span></div>
+                            <div class="ctrl-row"><span>Y</span><input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"><span id="SubTitleYVal">0</span></div>
                             <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
                         </div>
                     </div>
@@ -309,17 +295,12 @@
                 <div class="paper-only">
                     <div class="sub-section ss-amber">
                         <div class="sub-section-label">📄 纸张纹理</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
-                            <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div></div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
-                                <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
-                        </div>
+                        <div class="ctrl-row"><span>纹理强度</span><input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"><span id="NoiseGrainVal">35</span></div>
+                        <div class="ctrl-row"><span>暗角</span><input type="range" id="Vignette" min="0" max="100" step="1" value="15"><span id="VignetteVal">15</span></div>
                     </div>
                     <div class="sub-section ss-blue">
                         <div class="sub-section-label">手绘线条</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>抖动幅度</span><span id="LineJitterVal">25</span></div>
-                            <input type="range" id="LineJitter" min="0" max="100" step="1" value="25"></div></div>
+                        <div class="ctrl-row"><span>抖动幅度</span><input type="range" id="LineJitter" min="0" max="100" step="1" value="25"><span id="LineJitterVal">25</span></div>
                     </div>
                 </div>
             </div>
@@ -392,8 +373,7 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
                             <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
                     </div>
-                    <div class="row stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
-                        <input type="range" id="CardScale" min="40" max="100" step="1" value="80"></div>
+                    <div class="ctrl-row"><span>卡片缩放</span><input type="range" id="CardScale" min="40" max="100" step="1" value="80"><span id="CardScaleVal">80%</span></div>
                 </div>
                 <div class="sub-section ss-green">
                     <div class="sub-section-label">尺寸 & 外观</div>
@@ -403,8 +383,7 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
                             <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
                     </div>
-                    <div class="row stack"><div class="label-line"><span>内边距</span><span id="CardPadVal">32</span></div>
-                        <input type="range" id="CardPad" min="10" max="100" step="2" value="32"></div>
+                    <div class="ctrl-row"><span>内边距</span><input type="range" id="CardPad" min="10" max="100" step="2" value="32"><span id="CardPadVal">32</span></div>
                     <div class="row stack">
                         <div class="label-line"><span>卡片底色</span></div>
                         <input type="color" id="CardBg" value="#faf8f3">
@@ -426,10 +405,7 @@
                             <div class="stack" style="flex:1"><div class="label-line"><span>辉光颜色</span></div>
                                 <input type="color" id="CardGlowColor" value="#3b82f6"></div>
                         </div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
-                                <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
-                        </div>
+                        <div class="ctrl-row"><span>辉光强度</span><input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"><span id="CardGlowIntensityVal">70%</span></div>
                     </div>
                 </div>
                 <div class="sub-section ss-purple">
@@ -833,6 +809,12 @@
                 if (key === 'cardGlowEnabled') {
                     document.getElementById('CardGlowOpts').style.display = config.cardGlowEnabled ? '' : 'none';
                 }
+                if (key === 'showMainTitle') {
+                    document.getElementById('MainTitleOpts').style.display = config.showMainTitle ? '' : 'none';
+                }
+                if (key === 'showSubTitle') {
+                    document.getElementById('SubTitleOpts').style.display = config.showSubTitle ? '' : 'none';
+                }
                 if (key === 'entranceEnabled') {
                     const show = config.entranceEnabled;
                     document.getElementById('EntranceOpts').style.display = show ? '' : 'none';
@@ -848,6 +830,8 @@
         // 初始化条件显示
         document.getElementById('CardBorderOpts').style.display = config.cardBorderEnabled ? '' : 'none';
         document.getElementById('CardGlowOpts').style.display = config.cardGlowEnabled ? '' : 'none';
+        document.getElementById('MainTitleOpts').style.display = config.showMainTitle ? '' : 'none';
+        document.getElementById('SubTitleOpts').style.display = config.showSubTitle ? '' : 'none';
 
         // ====== 漂浮动画（合并到主循环）======
         let _currentRx = config.rotateX * Math.PI / 180;
