@@ -4,7 +4,7 @@
     <script>if(location.search.includes("preview")){document.documentElement.classList.add("preview-mode");var s=document.createElement("style");s.textContent=".preview-mode,.preview-mode body{overflow:hidden!important;background:transparent!important;background-image:none!important}.preview-mode .sidebar,.preview-mode .sidebar-resize-handle,.preview-mode #RecIndicator,.preview-mode #DebugLog{display:none!important}";document.head.appendChild(s)}</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>3D 卡片效果</title>
+    <title>小lin说卡片</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="../shared/mp4-muxer.js"></script>
@@ -171,7 +171,7 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <a href="../index.html" class="btn-icon" title="返回首页" style="text-decoration:none; margin-right:8px; font-size:15px;">←</a>
-            <div class="app-title"><svg class="app-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span>3D 卡片</span><span style="font-size:9px; color:var(--text-sub)">v1.0</span></div>
+            <div class="app-title"><svg class="app-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3" stroke-width="1.5" fill="none" stroke="currentColor"/><path d="M3 11 A9.5 9.5 0 0 1 14 4" stroke-width="3" stroke-linecap="round" fill="none" stroke="currentColor"/><circle cx="14" cy="4" r="2.2" fill="currentColor"/></svg><span>小lin说卡片</span><span style="font-size:9px; color:var(--text-sub)">v1.0</span></div>
             <div style="display:flex; align-items:center; gap:10px;">
                 <button id="themeToggle" class="btn-theme" title="切换主题"></button>
             </div>
@@ -249,107 +249,25 @@
                 </div>
             </div>
 
-            <!-- 边框样式 -->
+            <!-- 旋转光效 -->
             <div class="control-group">
-                <div class="group-title"><span>✴️ 边框样式</span></div>
-                <div class="row">
-                    <select id="BorderStyle" style="flex:1">
-                        <option value="none">无边框</option>
-                        <option value="solid-glow">实线 + 辉光</option>
-                        <option value="edge-feather">边缘羽化</option>
-                        <option value="browser-chrome">浏览器窗口</option>
-                        <option value="rotating-light">旋转光边</option>
-                    </select>
+                <div class="group-title"><span>✨ 旋转光效</span></div>
+                <div class="sub-section ss-amber">
+                    <div class="sub-section-label">旋转描边</div>
+                    <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>旋转速度</span><span id="RotatingSpeedVal">30</span></div><input type="range" id="RotatingSpeed" min="0" max="100" value="30"></div></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>亮边颜色</span></div>
+                        <input type="color" id="RotatingLightColor" value="#60a5fa"></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>暗边颜色</span></div>
+                        <input type="color" id="RotatingDimColor" value="#1e1e3a"></div>
+                    <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="RotatingBorderWidthVal">4</span></div><input type="range" id="RotatingBorderWidth" min="0" max="20" value="4"></div></div>
+                    <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>亮段数量</span><span id="RotatingSegmentsVal">1</span></div><input type="range" id="RotatingSegments" min="1" max="8" value="1"></div></div>
                 </div>
-
-                <!-- ① 实线+辉光 -->
-                <div id="SolidGlowOpts" class="border-opts" style="display:none">
-                    <div class="sub-section ss-amber">
-                        <div class="sub-section-label">描边</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="SolidBorderWidthVal">8</span></div><input type="range" id="SolidBorderWidth" min="0" max="25" value="8"></div></div>
-                        <div class="row stack">
-                            <div class="label-line"><span>描边颜色</span></div>
-                            <input type="color" id="SolidBorderColor" value="#ffffff"></div>
-                    </div>
-                    <div class="sub-section ss-blue">
-                        <div class="sub-section-label">辉光</div>
-                        <div class="row" style="justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--text-sub)">辉光方向</span>
-                            <select id="SolidGlowDir" style="width:100px">
-                                <option value="outer">外辉光</option>
-                                <option value="inner">内辉光</option>
-                                <option value="both">双向</option>
-                            </select>
-                        </div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="SolidGlowWidthVal">30</span></div><input type="range" id="SolidGlowWidth" min="0" max="80" value="30"></div></div>
-                        <div class="row stack">
-                            <div class="label-line"><span>辉光颜色</span></div>
-                            <input type="color" id="SolidGlowColor" value="#3b82f6"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="SolidGlowIntensityVal">70%</span></div><input type="range" id="SolidGlowIntensity" min="0" max="100" value="70"></div></div>
-                    </div>
-                </div>
-
-                <!-- ② 边缘羽化 -->
-                <div id="EdgeFeatherOpts" class="border-opts" style="display:none">
-                    <div class="sub-section ss-green">
-                        <div class="sub-section-label">羽化参数</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>模糊范围</span><span id="FeatherBlurVal">20</span></div><input type="range" id="FeatherBlur" min="0" max="60" value="20"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>模糊强度</span><span id="FeatherIntensityVal">70%</span></div><input type="range" id="FeatherIntensity" min="0" max="100" value="70"></div></div>
-                    </div>
-                </div>
-
-                <!-- ③ 浏览器窗口 -->
-                <div id="BrowserChromeOpts" class="border-opts" style="display:none">
-                    <div class="sub-section ss-amber">
-                        <div class="sub-section-label">描边 + 辉光</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="ChromeBorderWidthVal">2</span></div><input type="range" id="ChromeBorderWidth" min="0" max="20" value="2"></div></div>
-                        <div class="row stack">
-                            <div class="label-line"><span>描边颜色</span></div>
-                            <input type="color" id="ChromeBorderColor" value="#ffffff"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="ChromeGlowWidthVal">15</span></div><input type="range" id="ChromeGlowWidth" min="0" max="60" value="15"></div></div>
-                        <div class="row stack">
-                            <div class="label-line"><span>辉光颜色</span></div>
-                            <input type="color" id="ChromeGlowColor" value="#3b82f6"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="ChromeGlowIntensityVal">50%</span></div><input type="range" id="ChromeGlowIntensity" min="0" max="100" value="50"></div></div>
-                    </div>
-                    <div class="sub-section ss-blue">
-                        <div class="sub-section-label">浏览器 UI</div>
-                        <div class="row stack">
-                            <div class="label-line"><span>标题栏色</span></div>
-                            <input type="color" id="ChromeBarColor" value="#1e1e2e"></div>
-                        <div class="row"><input type="text" id="ChromeUrlText" value="floway.tools" style="flex:1;background:var(--panel-bg);border:1px solid var(--border);border-radius:4px;color:var(--text-main);padding:3px 8px;font-size:11px"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>分割线透明</span><span id="ChromeSepAlphaVal">30%</span></div><input type="range" id="ChromeSepAlpha" min="0" max="100" value="30"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>URL栏透明</span><span id="ChromeUrlAlphaVal">30%</span></div><input type="range" id="ChromeUrlAlpha" min="0" max="100" value="30"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>URL字透明</span><span id="ChromeTextAlphaVal">50%</span></div><input type="range" id="ChromeTextAlpha" min="0" max="100" value="50"></div></div>
-                    </div>
-                    <div class="sub-section ss-green">
-                        <div class="sub-section-label">内边框</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>内边框宽</span><span id="ChromeInnerWidthVal">4</span></div><input type="range" id="ChromeInnerWidth" min="0" max="20" value="4"></div></div>
-                        <div class="row stack">
-                            <div class="label-line"><span>内边框色</span></div>
-                            <input type="color" id="ChromeInnerColor" value="#333344"></div>
-                    </div>
-                </div>
-
-                <!-- ④ 旋转光边 -->
-                <div id="RotatingLightOpts" class="border-opts" style="display:none">
-                    <div class="sub-section ss-amber">
-                        <div class="sub-section-label">描边</div>
-                        <div class="row" style="justify-content:space-between;align-items:center">
-                            <span style="font-size:12px;color:var(--text-sub)">启用光斑</span>
-                            <input type="checkbox" id="RotatingBgMode" checked>
-                        </div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>旋转速度</span><span id="RotatingSpeedVal">30</span></div><input type="range" id="RotatingSpeed" min="0" max="100" value="30"></div></div>
-                        <div class="row stack">
-                            <div class="label-line"><span>亮边颜色</span></div>
-                            <input type="color" id="RotatingLightColor" value="#60a5fa"></div>
-                        <div class="row stack">
-                            <div class="label-line"><span>暗边颜色</span></div>
-                            <input type="color" id="RotatingDimColor" value="#1e1e3a"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="RotatingBorderWidthVal">3</span></div><input type="range" id="RotatingBorderWidth" min="0" max="20" value="3"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>亮段数量</span><span id="RotatingSegmentsVal">1</span></div><input type="range" id="RotatingSegments" min="1" max="8" value="1"></div></div>
-                    </div>
-                    <div class="sub-section ss-blue">
-                        <div class="sub-section-label">光斑</div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">光斑背景</div>
+                    <div class="sub-title"><span>启用光斑</span><input type="checkbox" id="RotatingBgMode" checked></div>
+                    <div id="RotatingBlobOpts">
                         <div class="row stack">
                             <div class="label-line"><span>光斑1色</span></div>
                             <input type="color" id="RotatingBlob1" value="#3b82f6"></div>
@@ -359,11 +277,10 @@
                         <div class="row stack">
                             <div class="label-line"><span>光斑3色</span></div>
                             <input type="color" id="RotatingBlob3" value="#ec4899"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>光斑大小</span><span id="RotatingBlobSizeVal">300</span></div><input type="range" id="RotatingBlobSize" min="50" max="1200" value="300"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>光斑速度</span><span id="RotatingBlobSpeedVal">30</span></div><input type="range" id="RotatingBlobSpeed" min="0" max="100" value="30"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>光斑大小</span><span id="RotatingBlobSizeVal">350</span></div><input type="range" id="RotatingBlobSize" min="50" max="1200" value="350"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>光斑速度</span><span id="RotatingBlobSpeedVal">25</span></div><input type="range" id="RotatingBlobSpeed" min="0" max="100" value="25"></div></div>
                     </div>
                 </div>
-
             </div>
 
             <!-- 透视旋转 -->
@@ -382,7 +299,7 @@
 
             <!-- 漂浮动画 -->
             <div class="control-group">
-                <div class="group-title"><span>✨ 漂浮动画</span></div>
+                <div class="group-title"><span>🌊 漂浮动画</span></div>
                 <div class="sub-section ss-purple">
                     <div class="sub-section-label">漂浮参数</div>
                     <div class="sub-title"><span>启用微动画</span><input type="checkbox" id="FloatEnabled" checked></div>
@@ -401,7 +318,7 @@
                 </div>
             </div>
 
-            <!-- 入场动画（共享面板，含播放按钮 + 扩大范围） -->
+            <!-- 入场动画（共享面板，含播放按钮） -->
             <div data-shared-panel="entryAnimation"></div>
 
             <div id="shared-controls-placeholder"></div>
@@ -418,8 +335,7 @@
         import { initEffect } from '../shared/controls.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=sdf-pad2';
-        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingBlobs, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=2';
-
+        import { drawRotatingBlobs, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=2';
 
         // ====== Canvas 初始化 ======
         const baseWidth = 1440, baseHeight = 1080, scale = 2;
@@ -444,7 +360,7 @@
             skipMainCanvas: true,
             skipDrawContext: true,
             recorderCanvas: glCanvas,
-            fileName: 'Card3D',
+            fileName: 'XiaolinCard',
             baseWidth, baseHeight, scale,
             defaultBgMode: 'transparent',
             onFrame: drawFrame,
@@ -479,25 +395,18 @@
             entranceStartScale: 100, entranceEndScale: 100,
             cardRatioW: 4,
             cardRatioH: 3,
-            borderStyle: 'none',
-            // ① 实线+辉光
-            solidBorderWidth: 8, solidBorderColor: '#ffffff',
-            solidGlowWidth: 30, solidGlowColor: '#3b82f6', solidGlowIntensity: 0.7,
-            solidGlowDir: 'outer',
-            // ② 边缘羽化
-            featherBlur: 20, featherIntensity: 0.7,
-            // ③ 浏览器窗口
-            chromeBorderWidth: 2, chromeBorderColor: '#ffffff',
-            chromeGlowWidth: 15, chromeGlowColor: '#3b82f6', chromeGlowIntensity: 0.5,
-            chromeBarColor: '#1e1e2e', chromeUrlText: 'floway.tools',
-            chromeSepAlpha: 0.3, chromeUrlAlpha: 0.3, chromeTextAlpha: 0.5,
-            chromeInnerWidth: 4, chromeInnerColor: '#333344',
-            // ④ 旋转光边
-            rotatingSpeed: 30, rotatingLightColor: '#60a5fa', rotatingDimColor: '#1e1e3a',
-            rotatingBorderWidth: 3, rotatingSegments: 1,
+            // 旋转光边
+            rotatingSpeed: 30,
+            rotatingLightColor: '#60a5fa',
+            rotatingDimColor: '#1e1e3a',
+            rotatingBorderWidth: 4,
+            rotatingSegments: 1,
             rotatingBgMode: true,
-            rotatingBlob1: '#3b82f6', rotatingBlob2: '#8b5cf6', rotatingBlob3: '#ec4899',
-            rotatingBlobSize: 300, rotatingBlobSpeed: 30,
+            rotatingBlob1: '#3b82f6',
+            rotatingBlob2: '#8b5cf6',
+            rotatingBlob3: '#ec4899',
+            rotatingBlobSize: 350,
+            rotatingBlobSpeed: 25,
         };
 
         // ====== 素材管理 ======
@@ -505,9 +414,9 @@
         let currentMediaType = null;
         let currentMediaName = '';
         let currentBlobURL = null;
-        let originalImage = null;   // 裁切前的原始 Image
-        let croppedCanvas = null;   // 裁切后的 canvas（用作 currentMedia）
-        let cropActive = false;     // 裁切模式是否激活
+        let originalImage = null;
+        let croppedCanvas = null;
+        let cropActive = false;
 
         function setRatioLocked(locked) {
             const row = document.getElementById('RatioRow');
@@ -516,9 +425,8 @@
             row.style.pointerEvents = locked ? 'none' : '';
         }
 
-        // 有图片 + 非光斑模式 → 锁定；其他情况 → 解锁
         function syncRatioLock() {
-            const isBlobBg = config.borderStyle === 'rotating-light' && config.rotatingBgMode;
+            const isBlobBg = config.rotatingBgMode;
             setRatioLocked(!!currentMedia && !isBlobBg);
         }
 
@@ -528,7 +436,6 @@
             const url = URL.createObjectURL(file);
             currentBlobURL = url;
 
-            // 清理旧的
             if (currentMedia) {
                 if (currentMediaType === 'video') { currentMedia.pause(); currentMedia.src = ''; }
                 currentMedia = null;
@@ -545,7 +452,6 @@
                 img.onload = () => {
                     originalImage = img;
                     currentMediaName = file.name;
-                    // 进入裁切模式
                     enterCropMode(file.name, img.naturalWidth, img.naturalHeight);
                 };
                 img.src = url;
@@ -611,8 +517,8 @@
         const cropBox = document.getElementById('CropBox');
         const cropSizeLabel = document.getElementById('CropSizeLabel');
         const cropBtnRow = document.getElementById('CropBtnRow');
-        let thumbRect = {};       // 缩略图在 DropZone 中的实际显示区域
-        let cropRect = { x: 0, y: 0, w: 0, h: 0 }; // 相对 DropZone 的绝对像素坐标
+        let thumbRect = {};
+        let cropRect = { x: 0, y: 0, w: 0, h: 0 };
         const MIN_CROP = 20;
 
         function enterCropMode(name, iw, ih) {
@@ -664,7 +570,6 @@
             cropSizeLabel.textContent = pw + ' × ' + ph;
         }
 
-        // 拖拽交互
         let cropDragging = null;
         cropBox.addEventListener('mousedown', e => {
             e.preventDefault();
@@ -708,7 +613,6 @@
         });
         document.addEventListener('mouseup', () => { cropDragging = null; });
 
-        // 确认裁切
         document.getElementById('CropBtnConfirm').addEventListener('click', () => {
             if (!originalImage) return;
             const sx = (cropRect.x - thumbRect.x) / thumbRect.scale;
@@ -727,11 +631,9 @@
             cropActive = false;
             cropOverlay.classList.remove('active');
 
-            // 显示裁切后的缩略图
             cropThumb.src = croppedCanvas.toDataURL();
             cropThumb.style.display = 'block';
 
-            // 保留裁切按钮（改为重新裁切）
             document.getElementById('CropBtnReset').textContent = '重新裁切';
             document.getElementById('CropBtnConfirm').style.display = 'none';
 
@@ -740,7 +642,6 @@
             startLoop();
         });
 
-        // 重选区域 / 重新裁切
         document.getElementById('CropBtnReset').addEventListener('click', () => {
             if (!originalImage) return;
             cropActive = true;
@@ -755,13 +656,11 @@
             }));
         });
 
-        // 文件上传
         document.getElementById('MediaUpload').addEventListener('change', (e) => {
             loadFile(e.target.files[0]);
         });
         document.getElementById('RemoveMedia').addEventListener('click', removeMedia);
 
-        // 拖拽
         const dropZone = document.getElementById('DropZone');
         dropZone.addEventListener('click', () => {
             if (cropActive) return;
@@ -780,7 +679,7 @@
         bindUI(config, [
             ['CardScale',   'cardScale',    '%',   'CardScaleVal',   '%'],
             ['CardRadius',  'cardRadius',   'int', 'CardRadiusVal'],
-            ['Elevation',   'elevation',    '%',   'ElevationVal'],
+            ['Elevation',   'elevation',    'int', 'ElevationVal'],
             ['CardBg',      'cardBgColor'],
             ['CardBgAlpha', 'cardBgAlpha', 'int', 'CardBgAlphaVal'],
             ['RotateX',     'rotateX',      'float', 'RotateXVal',   '°'],
@@ -803,30 +702,7 @@
             ['EntranceEndScale',      'entranceEndScale',      'int',   'EntranceEndScaleVal',      '%'],
             ['CardRatioW', 'cardRatioW', 'int'],
             ['CardRatioH', 'cardRatioH', 'int'],
-            // ① 实线+辉光
-            ['SolidBorderWidth', 'solidBorderWidth', 'int', 'SolidBorderWidthVal'],
-            ['SolidBorderColor', 'solidBorderColor'],
-            ['SolidGlowWidth', 'solidGlowWidth', 'int', 'SolidGlowWidthVal'],
-            ['SolidGlowColor', 'solidGlowColor'],
-            ['SolidGlowIntensity', 'solidGlowIntensity', '%', 'SolidGlowIntensityVal', '%'],
-            ['SolidGlowDir', 'solidGlowDir'],
-            // ② 边缘羽化
-            ['FeatherBlur', 'featherBlur', 'int', 'FeatherBlurVal'],
-            ['FeatherIntensity', 'featherIntensity', '%', 'FeatherIntensityVal', '%'],
-            // ③ 浏览器窗口
-            ['ChromeBorderWidth', 'chromeBorderWidth', 'int', 'ChromeBorderWidthVal'],
-            ['ChromeBorderColor', 'chromeBorderColor'],
-            ['ChromeGlowWidth', 'chromeGlowWidth', 'int', 'ChromeGlowWidthVal'],
-            ['ChromeGlowColor', 'chromeGlowColor'],
-            ['ChromeGlowIntensity', 'chromeGlowIntensity', '%', 'ChromeGlowIntensityVal', '%'],
-            ['ChromeBarColor', 'chromeBarColor'],
-            ['ChromeUrlText', 'chromeUrlText'],
-            ['ChromeSepAlpha', 'chromeSepAlpha', '%', 'ChromeSepAlphaVal', '%'],
-            ['ChromeUrlAlpha', 'chromeUrlAlpha', '%', 'ChromeUrlAlphaVal', '%'],
-            ['ChromeTextAlpha', 'chromeTextAlpha', '%', 'ChromeTextAlphaVal', '%'],
-            ['ChromeInnerWidth', 'chromeInnerWidth', 'int', 'ChromeInnerWidthVal'],
-            ['ChromeInnerColor', 'chromeInnerColor'],
-            // ④ 旋转光边
+            // 旋转光边
             ['RotatingSpeed', 'rotatingSpeed', 'int', 'RotatingSpeedVal'],
             ['RotatingLightColor', 'rotatingLightColor'],
             ['RotatingDimColor', 'rotatingDimColor'],
@@ -852,22 +728,6 @@
                 }
                 startLoop();
             }
-        });
-
-        // 边框风格切换
-        const borderPanelMap = {
-            'solid-glow': 'SolidGlowOpts',
-            'edge-feather': 'EdgeFeatherOpts',
-            'browser-chrome': 'BrowserChromeOpts',
-            'rotating-light': 'RotatingLightOpts',
-        };
-        document.getElementById('BorderStyle').addEventListener('change', (e) => {
-            config.borderStyle = e.target.value;
-            document.querySelectorAll('.border-opts').forEach(el => el.style.display = 'none');
-            const panelId = borderPanelMap[config.borderStyle];
-            if (panelId) document.getElementById(panelId).style.display = '';
-            syncRatioLock();
-            myResetAnimStart();
         });
 
         // ====== 漂浮动画 ======
@@ -930,16 +790,6 @@
         // ====== 工具函数 ======
         function lerp(a, b, t) { return a + (b - a) * t; }
 
-        // ====== 卡片内容绘制 ======
-        function drawMediaFit(ctx, media, w, h) {
-            const mw = media.videoWidth || media.naturalWidth || media.width;
-            const mh = media.videoHeight || media.naturalHeight || media.height;
-            if (!mw || !mh) return;
-            const s = Math.min(w / mw, h / mh);
-            const dw = mw * s, dh = mh * s;
-            ctx.drawImage(media, (w - dw) / 2, (h - dh) / 2, dw, dh);
-        }
-
         function getMediaSize(media) {
             return {
                 w: media.videoWidth || media.naturalWidth || media.width || 0,
@@ -947,12 +797,8 @@
             };
         }
 
-        // 卡片在画布中的区域
-        // 旋转光边+光斑模式：忽略图片，用用户比例
-        // 有素材时：跟随素材比例（contain 居中）
-        // 无素材时：按用户设定的 W:H 比例居中
         function getCardBounds(w, h) {
-            const isBlobBg = config.borderStyle === 'rotating-light' && config.rotatingBgMode;
+            const isBlobBg = config.rotatingBgMode;
             if (currentMedia && !isBlobBg) {
                 const { w: mw, h: mh } = getMediaSize(currentMedia);
                 if (mw && mh) {
@@ -970,57 +816,14 @@
             return { x: (w - cw) / 2, y: (h - ch) / 2, w: cw, h: ch };
         }
 
-        function drawCardContent(w, h) {
-            ctx.save();
-
-            const bounds = getCardBounds(w, h);
-
-            ctx.beginPath();
-            ctx.rect(bounds.x, bounds.y, bounds.w, bounds.h);
-            ctx.clip();
-
-            ctx.translate(bounds.x, bounds.y);
-
-            // 底色层：受 cardBgAlpha 控制
-            const bgA = (config.cardBgAlpha ?? 100) / 100;
-            ctx.globalAlpha = bgA;
-            ctx.fillStyle = config.cardBgColor;
-            ctx.fillRect(0, 0, bounds.w, bounds.h);
-            ctx.globalAlpha = 1;
-
-            if (currentMedia) {
-                if ((currentMediaType === 'video' && currentMedia.readyState >= 2) || currentMediaType === 'image') {
-                    drawMediaFit(ctx, currentMedia, bounds.w, bounds.h);
-                }
-            }
-
-            ctx.restore();
-        }
-
-        // 预计算 Canvas 2D 效果视觉延伸范围（逻辑像素）
-        function getEffectPad(style, config) {
-            if (style === 'solid-glow') return (config.solidBorderWidth || 0) + (config.solidGlowWidth || 0);
-            if (style === 'edge-feather') return (config.featherBlur || 0) * (config.featherIntensity || 0);
-            if (style === 'browser-chrome') {
-                const tH = Math.round(baseWidth * 0.04);
-                return (config.chromeBorderWidth || 0) + (config.chromeGlowWidth || 0) + tH;
-            }
-            if (style === 'rotating-light') return config.rotatingBorderWidth || 0;
-            return 0;
-        }
-
         // ====== 主渲染函数 ======
         function drawFrame(timeMs) {
             const w = baseWidth, h = baseHeight;
             const isHold = !isFinite(timeMs);
             const timeSec = (isHold ? performance.now() : timeMs) * 0.001;
-            const style = config.borderStyle;
-            const isCanvas2D = style !== 'none';
 
-            // 漂浮旋转（统一用 timeMs，录制和预览同一时间基准）
             updateFloatRotation(timeMs);
 
-            // 入场动画进度
             let entranceProgress = 1;
             if (config.entranceEnabled && !isHold) {
                 const entranceDur = config.entranceDuration * 1000;
@@ -1028,15 +831,13 @@
                 entranceProgress = getEasing(config.entranceEasing)(entranceRaw);
             }
 
-            // 视频帧同步（录制时）
             if (currentMediaType === 'video' && recorder.isRecording && currentMedia) {
                 const t = (timeMs / 1000) % currentMedia.duration;
                 if (isFinite(t)) currentMedia.currentTime = t;
             }
 
-            // 清除画布（Canvas 2D 模式下扩大 canvas 给效果留空间）
-            const c2dHalfPad = isCanvas2D ? getEffectPad(style, config) : 0;
-            const c2dPad = isCanvas2D ? (c2dHalfPad * 2 + 10) : 0;
+            const effectHalfPad = config.rotatingBorderWidth || 0;
+            const c2dPad = effectHalfPad * 2 + 10;
             const c2dPhysPad = c2dPad * scale;
             const needW = fullW + c2dPhysPad * 2;
             const needH = fullH + c2dPhysPad * 2;
@@ -1052,7 +853,6 @@
             bgCtx.clearRect(0, 0, bgOffscreen.width, bgOffscreen.height);
             bgCtx.restore();
 
-            // 背景（所有模式共用）
             if (bg.mode === 'transparent') {
                 if (recorder.isRecording && recorder.format !== 'png_seq') {
                     bgCtx.fillStyle = '#000000';
@@ -1063,111 +863,39 @@
             }
 
             const baseBounds = getCardBounds(w, h);
-
-            // 入场动画插值
             const entranceX = lerp(config.entranceStartX, config.entranceEndX, entranceProgress);
             const entranceY = lerp(config.entranceStartY, config.entranceEndY, entranceProgress);
             const entranceAlpha = lerp(config.entranceStartOpacity / 100, config.entranceEndOpacity / 100, entranceProgress);
             const entranceScale = lerp(config.entranceStartScale / 100, config.entranceEndScale / 100, entranceProgress);
 
-            let effectPadding = 0;
+            const cr = config.cardRadius;
+            const blobMode = config.rotatingBgMode;
+            const bgA = (config.cardBgAlpha ?? 100) / 100;
 
-            if (isCanvas2D) {
-                // Canvas 2D 效果画到 offscreen（canvas 已扩大），3D 变换交给 WebGL
-                // 统一的内容绘制函数：底色（带透明度）→ 图片（全不透明）
-                const bgA = (config.cardBgAlpha ?? 100) / 100;
-                const drawMedia = (c, cx, cy, cw, ch) => {
-                    c.save();
-                    c.translate(cx, cy);
-                    // 底色层：受 cardBgAlpha 控制
-                    c.globalAlpha = bgA;
-                    c.fillStyle = config.cardBgColor;
-                    c.fillRect(0, 0, cw, ch);
-                    // 内容层：始终全不透明
-                    c.globalAlpha = 1;
-                    if (currentMedia) {
-                        drawMediaFit(c, currentMedia, cw, ch);
-                    }
-                    c.restore();
-                };
-
-                if (style === 'solid-glow') {
-                    const cr = config.cardRadius;
-                    ctx.save();
-                    ctx.beginPath();
-                    rrect(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h, cr);
-                    ctx.clip();
-                    drawMedia(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
-                    ctx.restore();
-                    effectPadding = drawSolidGlow(ctx, baseBounds, {
-                        borderWidth: config.solidBorderWidth,
-                        borderColor: config.solidBorderColor,
-                        glowWidth: config.solidGlowWidth,
-                        glowColor: config.solidGlowColor,
-                        glowIntensity: config.solidGlowIntensity,
-                        glowDir: config.solidGlowDir,
-                        cornerRadius: cr,
-                    });
-                } else if (style === 'edge-feather') {
-                    drawMedia(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
-                    // drawEdgeFeather 读 canvas 物理像素，需要补偿 canvas 扩大的偏移
-                    const feCard = { x: baseBounds.x + c2dPad, y: baseBounds.y + c2dPad, w: baseBounds.w, h: baseBounds.h };
-                    effectPadding = drawEdgeFeather(ctx, feCard, {
-                        featherBlur: config.featherBlur,
-                        featherIntensity: config.featherIntensity,
-                        featherCornerRadius: config.cardRadius,
-                    }, offscreen);
-                } else if (style === 'browser-chrome') {
-                    // 浏览器窗口内容区强制 cover 模式，不留黑边
-                    const drawChromeContent = (c, cx, cy, cw, ch) => {
-                        c.save();
-                        c.translate(cx, cy);
-                        c.globalAlpha = bgA;
-                        c.fillStyle = config.cardBgColor;
-                        c.fillRect(0, 0, cw, ch);
-                        c.globalAlpha = 1;
-                        if (currentMedia) {
-                            const mw = currentMedia.videoWidth || currentMedia.naturalWidth || currentMedia.width;
-                            const mh = currentMedia.videoHeight || currentMedia.naturalHeight || currentMedia.height;
-                            if (mw && mh) {
-                                const s = Math.max(cw / mw, ch / mh);
-                                const dw = mw * s, dh = mh * s;
-                                c.drawImage(currentMedia, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
-                            }
-                        }
-                        c.restore();
-                    };
-                    effectPadding = drawBrowserChrome(ctx, baseBounds, config, drawChromeContent);
-                } else if (style === 'rotating-light') {
-                    const cr = config.cardRadius;
-                    const blobMode = config.rotatingBgMode;
-                    ctx.save();
-                    ctx.beginPath();
-                    rrect(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h, cr);
-                    ctx.clip();
-                    // 层 0：卡片底色（用户控制的背景色 + 透明度）
-                    ctx.globalAlpha = bgA;
-                    ctx.fillStyle = config.cardBgColor;
-                    ctx.fillRect(baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
-                    ctx.globalAlpha = 1;
-                    // 层 1：光斑（仅在光斑模式下绘制）
-                    if (blobMode) {
-                        drawRotatingBlobs(ctx, baseBounds, config, timeSec);
-                    }
-                    // 层 2：内容（图片，光斑模式下不画）
-                    if (currentMedia && !blobMode) {
-                        ctx.translate(baseBounds.x, baseBounds.y);
-                        drawMediaFit(ctx, currentMedia, baseBounds.w, baseBounds.h);
-                    }
-                    ctx.restore();
-                    effectPadding = drawRotatingStroke(ctx, baseBounds, config, timeSec);
-                }
-            } else {
-                drawCardContent(w, h);
+            ctx.save();
+            ctx.beginPath();
+            rrect(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h, cr);
+            ctx.clip();
+            ctx.globalAlpha = bgA;
+            ctx.fillStyle = config.cardBgColor;
+            ctx.fillRect(baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
+            ctx.globalAlpha = 1;
+            if (blobMode) {
+                drawRotatingBlobs(ctx, baseBounds, config, timeSec);
             }
+            if (currentMedia && !blobMode) {
+                ctx.translate(baseBounds.x, baseBounds.y);
+                const mw = currentMedia.videoWidth || currentMedia.naturalWidth || currentMedia.width;
+                const mh = currentMedia.videoHeight || currentMedia.naturalHeight || currentMedia.height;
+                if (mw && mh) {
+                    const s = Math.min(baseBounds.w / mw, baseBounds.h / mh);
+                    const dw = mw * s, dh = mh * s;
+                    ctx.drawImage(currentMedia, (baseBounds.w - dw) / 2, (baseBounds.h - dh) / 2, dw, dh);
+                }
+            }
+            ctx.restore();
+            drawRotatingStroke(ctx, baseBounds, config, timeSec);
 
-            // 统一通过 WebGL 渲染（3D 变换 + 阴影）
-            // Canvas 2D 模式：canvas 已扩大，用 scaleX/scaleY 分别补偿宽高比
             const baseCardScale = config.cardScale * entranceScale;
             glComp.render({
                 bgCanvas: bgOffscreen,
@@ -1177,17 +905,15 @@
                 perspective: 900,
                 elevation: config.elevation,
                 cardScale: baseCardScale,
-                scaleX: isCanvas2D ? baseCardScale * offscreen.width / fullW : undefined,
-                scaleY: isCanvas2D ? baseCardScale * offscreen.height / fullH : undefined,
-                cardRadius: isCanvas2D ? 0 : config.cardRadius,
+                scaleX: baseCardScale * offscreen.width / fullW,
+                scaleY: baseCardScale * offscreen.height / fullH,
+                cardRadius: 0,
                 offsetX: entranceX,
                 offsetY: entranceY,
                 cardAlpha: entranceAlpha,
-                cardBounds: isCanvas2D
-                    ? { x: c2dPad, y: c2dPad, w: baseWidth, h: baseHeight }
-                    : baseBounds,
+                cardBounds: { x: c2dPad, y: c2dPad, w: baseWidth, h: baseHeight },
                 effectPadding: 0,
-                skipSDF: isCanvas2D,
+                skipSDF: true,
             });
         }
 
@@ -1219,14 +945,11 @@
             const entranceDur = config.entranceEnabled ? config.entranceDuration * 1000 : 0;
             const animDone = entranceDur > 0 && time > entranceDur;
 
-            // 旋转光边和漂浮需要持续动画，动画结束后继续用真实时间
-            const isContinuousAnim = config.borderStyle === 'rotating-light' || config.floatEnabled;
-            if (animDone && !isContinuousAnim) time = Infinity;
+            if (animDone) time = Infinity;
             drawFrame(time);
 
-            // 视频持续播放需要循环，漂浮也需要
-            const needLoop = !animDone || config.floatEnabled || currentMediaType === 'video'
-                || isContinuousAnim;
+            // 旋转光边需要持续动画
+            const needLoop = !animDone || config.floatEnabled || currentMediaType === 'video' || true;
             if (needLoop) {
                 _loopId = requestAnimationFrame(mainLoop);
             }

@@ -379,21 +379,27 @@
                         <div class="label-line"><span>卡片底色</span></div>
                         <input type="color" id="CardBg" value="#faf8f3">
                     </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
-                            <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
-                        <div class="stack" style="flex:1"><div class="label-line"><span>描边颜色</span></div>
-                            <input type="color" id="CardBorderColor" value="#ffffff"></div>
+                    <div class="sub-title"><span>启用描边</span><input type="checkbox" id="CardBorderEnabled"></div>
+                    <div id="CardBorderOpts" style="display:none">
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
+                                <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
+                            <div class="stack" style="flex:1"><div class="label-line"><span>描边颜色</span></div>
+                                <input type="color" id="CardBorderColor" value="#ffffff"></div>
+                        </div>
                     </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
-                            <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
-                        <div class="stack" style="flex:1"><div class="label-line"><span>辉光颜色</span></div>
-                            <input type="color" id="CardGlowColor" value="#3b82f6"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
-                            <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
+                    <div class="sub-title"><span>启用辉光</span><input type="checkbox" id="CardGlowEnabled"></div>
+                    <div id="CardGlowOpts" style="display:none">
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
+                                <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
+                            <div class="stack" style="flex:1"><div class="label-line"><span>辉光颜色</span></div>
+                                <input type="color" id="CardGlowColor" value="#3b82f6"></div>
+                        </div>
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
+                                <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="sub-section ss-purple">
@@ -531,8 +537,10 @@
             rotateX: 1.5, rotateY: -1,
             elevation: 0.5,
             cardRadius: 16,
+            cardBorderEnabled: false,
             cardBorderWidth: 0,
             cardBorderColor: '#ffffff',
+            cardGlowEnabled: false,
             cardGlowWidth: 0,
             cardGlowColor: '#3b82f6',
             cardGlowIntensity: 70,
@@ -595,7 +603,9 @@
                 valueColor: '#555555',
                 gridColor: '#c3bcaf',
                 cardBg: '#faf8f3',
+                cardBorderEnabled: false,
                 cardBorderWidth: 0,
+                cardGlowEnabled: false,
                 cardGlowWidth: 0,
                 glowBlur: 0,
                 subTitleGlow: false,
@@ -609,8 +619,10 @@
                 valueColor: '#ffffff',
                 gridColor: '#333333',
                 cardBg: '#1a1a2e',
+                cardBorderEnabled: true,
                 cardBorderWidth: 2,
                 cardBorderColor: '#00f2ff',
+                cardGlowEnabled: true,
                 cardGlowWidth: 20,
                 cardGlowColor: '#00f2ff',
                 cardGlowIntensity: 50,
@@ -637,8 +649,12 @@
             updateUI('ValueColor', config.valueColor);
             updateUI('GridColor', config.gridColor);
             updateUI('CardBg', config.cardBg);
+            updateUI('CardBorderEnabled', config.cardBorderEnabled, null, true);
+            document.getElementById('CardBorderOpts').style.display = config.cardBorderEnabled ? '' : 'none';
             updateUI('CardBorderWidth', config.cardBorderWidth, 'CardBorderWidthVal');
             updateUI('CardBorderColor', config.cardBorderColor);
+            updateUI('CardGlowEnabled', config.cardGlowEnabled, null, true);
+            document.getElementById('CardGlowOpts').style.display = config.cardGlowEnabled ? '' : 'none';
             updateUI('CardGlowWidth', config.cardGlowWidth, 'CardGlowWidthVal');
             updateUI('CardGlowColor', config.cardGlowColor);
             updateUI('CardGlowIntensity', config.cardGlowIntensity, 'CardGlowIntensityVal');
@@ -696,8 +712,10 @@
             ['NoiseGrain',      'noiseGrain',     'int',   'NoiseGrainVal'],
             ['Vignette',        'vignette',       'int',   'VignetteVal'],
             ['LineJitter',      'lineJitter',     'int',   'LineJitterVal'],
+            ['CardBorderEnabled','cardBorderEnabled','checked'],
             ['CardBorderWidth', 'cardBorderWidth', 'int',   'CardBorderWidthVal'],
             ['CardBorderColor', 'cardBorderColor'],
+            ['CardGlowEnabled', 'cardGlowEnabled', 'checked'],
             ['CardGlowWidth',   'cardGlowWidth',   'int',   'CardGlowWidthVal'],
             ['CardGlowColor',   'cardGlowColor'],
             ['CardGlowIntensity','cardGlowIntensity','int', 'CardGlowIntensityVal', '%'],
@@ -752,7 +770,6 @@
             ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal'],
             ['CardPad',         'cardPad',        'int',   'CardPadVal'],
             ['CardBg',          'cardBg'],
-            ['CardBorderColor', 'cardBorderColor'],
             ['FloatEnabled',    'floatEnabled',   'checked'],
             ['FloatRotateX',    'floatRotateX',   'float', 'FloatRotateXVal', '°'],
             ['FloatRotateY',    'floatRotateY',   'float', 'FloatRotateYVal', '°'],
@@ -780,6 +797,12 @@
                     document.getElementById('YAxisCustomPanel').style.display =
                         config.yAxisMode === 'custom' ? 'block' : 'none';
                 }
+                if (key === 'cardBorderEnabled') {
+                    document.getElementById('CardBorderOpts').style.display = config.cardBorderEnabled ? '' : 'none';
+                }
+                if (key === 'cardGlowEnabled') {
+                    document.getElementById('CardGlowOpts').style.display = config.cardGlowEnabled ? '' : 'none';
+                }
                 if (key === 'entranceEnabled') {
                     const show = config.entranceEnabled;
                     document.getElementById('EntranceOpts').style.display = show ? '' : 'none';
@@ -791,6 +814,10 @@
                 startLoop();
             }
         });
+
+        // 初始化条件显示
+        document.getElementById('CardBorderOpts').style.display = config.cardBorderEnabled ? '' : 'none';
+        document.getElementById('CardGlowOpts').style.display = config.cardGlowEnabled ? '' : 'none';
 
         // ====== 漂浮动画（合并到主循环）======
         let _currentRx = config.rotateX * Math.PI / 180;
@@ -1519,7 +1546,7 @@
         // ====== 主渲染函数 ======
         function drawFrame(timeMs) {
             // Canvas padding for border/glow overflow
-            const halfPad = (config.cardBorderWidth || 0) * 2 + (config.cardGlowWidth || 0);
+            const halfPad = (config.cardBorderEnabled ? (config.cardBorderWidth || 0) : 0) * 2 + (config.cardGlowEnabled ? (config.cardGlowWidth || 0) : 0);
             const c2dPad = halfPad > 0 ? halfPad * 2 + 10 : 0;
             const c2dPhysPad = c2dPad * scale;
             const needW = fullW + c2dPhysPad * 2;
@@ -1577,8 +1604,8 @@
             drawContent(w, h, lineProgress, lineRaw, isHold);
 
             // 描边 + 辉光（drawContent 之后，clip 已恢复）
-            const bw = config.cardBorderWidth || 0;
-            const gw = config.cardGlowWidth || 0;
+            const bw = config.cardBorderEnabled ? (config.cardBorderWidth || 0) : 0;
+            const gw = config.cardGlowEnabled ? (config.cardGlowWidth || 0) : 0;
             if (bw > 0 || gw > 0) {
                 const baseCard = {x: 0, y: 0, w, h};
 
