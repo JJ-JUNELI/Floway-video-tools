@@ -148,7 +148,7 @@
                 <div id="LineOptions">
                 <div class="sub-section ss-blue">
                     <div class="sub-section-label">线条</div>
-                    <div class="ctrl-row"><span>线条粗细</span><input type="range" id="LineWidth" min="0.5" max="15" step="0.5" value="1.2"><span id="LineWidthVal">1.2</span><span class="clr">颜色</span><input type="color" id="LineColor" value="#555555"></div>
+                    <div class="ctrl-row"><span>线条粗细</span><input type="range" id="LineWidth" min="0.5" max="15" step="0.5" value="1.2"><span id="LineWidthVal">1.2px</span><span class="clr">颜色</span><input type="color" id="LineColor" value="#555555"></div>
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>曲线张力</span><span id="TensionVal">0</span></div>
                             <input type="range" id="Tension" min="0" max="1" step="0.1" value="0"></div>
@@ -176,7 +176,7 @@
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>柱宽比例</span><span id="BarWidthVal">60%</span></div>
                             <input type="range" id="BarWidth" min="10" max="100" step="5" value="60"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>顶部圆角</span><span id="BarRadiusVal">4</span></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>顶部圆角</span><span id="BarRadiusVal">4px</span></div>
                             <input type="range" id="BarRadius" min="0" max="20" step="1" value="4"></div>
                     </div>
                     <div class="ctrl-row"><span>填充透明度</span><input type="range" id="BarOpacity" min="0" max="100" step="5" value="70"><span id="BarOpacityVal">70%</span><span class="clr">颜色</span><input type="color" id="BarColor" value="#888888"></div>
@@ -211,12 +211,12 @@
                 <div class="sub-section ss-green">
                     <div class="sub-title"><span>显示数据点</span><input type="checkbox" id="ShowPoints" checked></div>
                     <div id="PointSizeOpts" style="margin-top:6px;">
-                        <div class="ctrl-row"><span>数据点大小</span><input type="range" id="PointSize" min="1" max="20" step="0.5" value="4"><span id="PointSizeVal">4</span></div>
+                        <div class="ctrl-row"><span>数据点大小</span><input type="range" id="PointSize" min="1" max="20" step="0.5" value="4"><span id="PointSizeVal">4px</span></div>
                     </div>
                     <div class="sub-title"><span>显示数值标签</span><input type="checkbox" id="ShowValues"></div>
                     <div id="ValueLabelOpts" style="display:none; margin-top:6px;">
                         <div class="ctrl-row"><span>数值字号</span><input type="range" id="ValueSize" min="8" max="30" step="1" value="11"><span id="ValueSizeVal">11</span><span class="clr">颜色</span><input type="color" id="ValueColor" value="#ffffff"></div>
-                        <div class="ctrl-row"><span>Y轴偏移</span><input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-20"><span id="ValueYOffsetVal">-20</span><span class="clr">颜色</span><input type="color" id="ValueBgColor" value="#555555"></div>
+                        <div class="ctrl-row"><span>Y轴偏移</span><input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-20"><span id="ValueYOffsetVal">-20px</span><span class="clr">颜色</span><input type="color" id="ValueBgColor" value="#555555"></div>
                         <div class="sub-title"><span>显示背景</span><input type="checkbox" id="ValueBgEnabled" checked></div>
                     </div>
                 </div>
@@ -240,8 +240,8 @@
                             <div class="ctrl-row"><span>字重</span><input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"><span id="MainTitleWeightVal">700</span></div>
                             <div class="row stack"><div class="label-line"><span>颜色</span></div>
                                 <input type="color" id="TitleColor" value="#333333"></div>
-                            <div class="ctrl-row"><span>X</span><input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"><span id="MainTitleXVal">0</span></div>
-                            <div class="ctrl-row"><span>Y</span><input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"><span id="MainTitleYVal">-490</span></div>
+                            <div class="ctrl-row"><span>X</span><input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"><span id="MainTitleXVal">0px</span></div>
+                            <div class="ctrl-row"><span>Y</span><input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"><span id="MainTitleYVal">-490px</span></div>
                             <div class="sub-title"><span>显示括号</span><input type="checkbox" id="ShowBrackets" checked></div>
                         </div>
                     </div>
@@ -259,8 +259,8 @@
                             <div class="ctrl-row"><span>字重</span><input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"><span id="SubTitleWeightVal">400</span></div>
                             <div class="row stack"><div class="label-line"><span>颜色</span></div>
                                 <input type="color" id="SubTitleColor" value="#999999"></div>
-                            <div class="ctrl-row"><span>X</span><input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"><span id="SubTitleXVal">630</span></div>
-                            <div class="ctrl-row"><span>Y</span><input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"><span id="SubTitleYVal">0</span></div>
+                            <div class="ctrl-row"><span>X</span><input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"><span id="SubTitleXVal">630px</span></div>
+                            <div class="ctrl-row"><span>Y</span><input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"><span id="SubTitleYVal">0px</span></div>
                             <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
                         </div>
                     </div>
@@ -314,17 +314,19 @@
                 </div>
                 <div class="sub-section ss-purple">
                     <div class="sub-section-label">图表区域</div>
+                    <div class="advanced-params">
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="ChartOffXVal">0</span></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="ChartOffXVal">0px</span></div>
                             <input type="range" id="ChartOffX" min="-300" max="300" step="5" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><span id="ChartOffYVal">0</span></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><span id="ChartOffYVal">0px</span></div>
                             <input type="range" id="ChartOffY" min="-300" max="300" step="5" value="0"></div>
                     </div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>横轴长度</span><span id="ChartExtraWVal">0</span></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>横轴长度</span><span id="ChartExtraWVal">0px</span></div>
                             <input type="range" id="ChartExtraW" min="-500" max="500" step="10" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>纵轴长度</span><span id="ChartExtraHVal">0</span></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>纵轴长度</span><span id="ChartExtraHVal">0px</span></div>
                             <input type="range" id="ChartExtraH" min="-500" max="500" step="10" value="0"></div>
+                    </div>
                     </div>
                 </div>
                 <div class="sub-section ss-amber">
@@ -350,8 +352,8 @@
                 </div>
                 <div class="sub-section ss-green">
                     <div class="sub-section-label">尺寸 & 外观</div>
-                    <div class="ctrl-row"><span>圆角</span><input type="range" id="CardRadius" min="0" max="60" step="1" value="16"><span id="CardRadiusVal">16</span></div>
-                    <div class="ctrl-row"><span>内边距</span><input type="range" id="CardPad" min="10" max="100" step="2" value="32"><span id="CardPadVal">32</span></div>
+                    <div class="ctrl-row"><span>圆角</span><input type="range" id="CardRadius" min="0" max="60" step="1" value="16"><span id="CardRadiusVal">16px</span></div>
+                    <div class="ctrl-row"><span>内边距</span><input type="range" id="CardPad" min="10" max="100" step="2" value="32"><span id="CardPadVal">32px</span></div>
                     <div class="row stack">
                         <div class="label-line"><span>卡片底色</span></div>
                         <input type="color" id="CardBg" value="#faf8f3">
@@ -681,10 +683,10 @@
             ['SubTitleWeight',  'subTitleWeight', 'int',   'SubTitleWeightVal'],
             ['TitleColor',      'mainTitleColor'],
             ['SubTitleColor',   'subTitleColor'],
-            ['MainTitleX',      'mainTitleX',     'int',   'MainTitleXVal'],
-            ['MainTitleY',      'mainTitleY',     'int',   'MainTitleYVal'],
-            ['SubTitleX',       'subTitleX',      'int',   'SubTitleXVal'],
-            ['SubTitleY',       'subTitleY',      'int',   'SubTitleYVal'],
+            ['MainTitleX',      'mainTitleX',     'int',   'MainTitleXVal',  'px'],
+            ['MainTitleY',      'mainTitleY',     'int',   'MainTitleYVal',  'px'],
+            ['SubTitleX',       'subTitleX',      'int',   'SubTitleXVal',   'px'],
+            ['SubTitleY',       'subTitleY',      'int',   'SubTitleYVal',   'px'],
             // 主题风格
             ['ShowBrackets',    'showBrackets',   'checked'],
             ['SubTitleGlow',    'subTitleGlow',   'checked'],
@@ -707,7 +709,7 @@
             ['ShowGrid',        'showGrid',       'checked'],
             ['GridOpacity',     'gridOpacity',    '%',     'GridOpacityVal', '%'],
             // 折线样式
-            ['LineWidth',       'lineWidth',      'float', 'LineWidthVal'],
+            ['LineWidth',       'lineWidth',      'float', 'LineWidthVal',   'px'],
             ['LineColor',       'lineColor'],
             ['AreaColor',       'areaColor'],
             ['FillOpacity',     'fillOpacity',    '%',     'FillOpacityVal', '%'],
@@ -716,18 +718,18 @@
             ['ShowLine',        'showLine',       'checked'],
             ['ShowBars',        'showBars',       'checked'],
             ['BarWidth',        'barWidth',       '%',     'BarWidthVal',    '%'],
-            ['BarRadius',       'barRadius',      'int',   'BarRadiusVal'],
+            ['BarRadius',       'barRadius',      'int',   'BarRadiusVal',   'px'],
             ['BarOpacity',      'barOpacity',     '%',     'BarOpacityVal',  '%'],
             ['BarColor',        'barColor'],
             ['BarGradient',     'barGradient',    'checked'],
             ['BarGradientEnd',  'barGradientEnd'],
             ['BarStrokeWidth',  'barStrokeWidth', 'float', 'BarStrokeWidthVal'],
             ['BarStrokeColor',  'barStrokeColor'],
-            ['PointSize',       'pointSize',      'float', 'PointSizeVal'],
+            ['PointSize',       'pointSize',      'float', 'PointSizeVal',   'px'],
             ['ShowValues',      'showValues',     'checked'],
             ['ValueSize',       'valueSize',      'int',   'ValueSizeVal'],
             ['ValueColor',      'valueColor'],
-            ['ValueYOffset',    'valueYOffset',   'int',   'ValueYOffsetVal'],
+            ['ValueYOffset',    'valueYOffset',   'int',   'ValueYOffsetVal','px'],
             ['ValueBgEnabled',  'valueBgEnabled', 'checked'],
             ['ValueBgColor',    'valueBgColor'],
             // 网格与坐标
@@ -739,10 +741,10 @@
             ['AxisLabelSize',   'axisLabelSize',  'int',   'AxisLabelSizeVal'],
             ['AxisLabelColor',  'axisLabelColor'],
             ['GridColor',       'gridColor'],
-            ['ChartOffX',       'chartOffX',      'int',   'ChartOffXVal'],
-            ['ChartOffY',       'chartOffY',      'int',   'ChartOffYVal'],
-            ['ChartExtraW',     'chartExtraW',    'int',   'ChartExtraWVal'],
-            ['ChartExtraH',     'chartExtraH',    'int',   'ChartExtraHVal'],
+            ['ChartOffX',       'chartOffX',      'int',   'ChartOffXVal',   'px'],
+            ['ChartOffY',       'chartOffY',      'int',   'ChartOffYVal',   'px'],
+            ['ChartExtraW',     'chartExtraW',    'int',   'ChartExtraWVal', 'px'],
+            ['ChartExtraH',     'chartExtraH',    'int',   'ChartExtraHVal', 'px'],
             // 卡片漂浮
             ['RotateX',         'rotateX',        'float', 'RotateXVal',   '°'],
             ['RotateY',         'rotateY',        'float', 'RotateYVal',   '°'],
@@ -752,8 +754,8 @@
             ['ShadowDistance',  'shadowDistance', 'int',   'ShadowDistanceVal', 'px'],
             ['ShadowBlur',      'shadowBlur',     'int',   'ShadowBlurVal',     'px'],
             ['ShadowOpacity',   'shadowOpacity',  'int',   'ShadowOpacityVal',  '%'],
-            ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal'],
-            ['CardPad',         'cardPad',        'int',   'CardPadVal'],
+            ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal',  'px'],
+            ['CardPad',         'cardPad',        'int',   'CardPadVal',     'px'],
             ['CardBg',          'cardBg'],
             ['FloatEnabled',    'floatEnabled',   'checked'],
             ['FloatRotateX',    'floatRotateX',   'float', 'FloatRotateXVal', '°'],

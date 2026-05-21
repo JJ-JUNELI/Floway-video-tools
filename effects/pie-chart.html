@@ -250,7 +250,7 @@
                             <div class="advanced-params">
                                 <div class="sub-title"><span>显示引线</span><input type="checkbox" id="ShowLeaderLines" checked></div>
                                 <div id="LeaderLineOpts">
-                                    <div class="ctrl-row"><span>引线粗细</span><input type="range" id="LeaderLineWidth" min="0.5" max="4" step="0.5" value="1"><span id="LeaderLineWidthVal">1</span><span class="clr">颜色</span><input type="color" id="LeaderLineColor" value="#999999"></div>
+                                    <div class="ctrl-row"><span>引线粗细</span><input type="range" id="LeaderLineWidth" min="0.5" max="4" step="0.5" value="1"><span id="LeaderLineWidthVal">1px</span><span class="clr">颜色</span><input type="color" id="LeaderLineColor" value="#999999"></div>
                                 </div>
                             </div>
                         </div>
@@ -296,9 +296,9 @@
                             <input type="color" id="TitleColor" value="#333333">
                         </div>
                         <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="MainTitleXVal">0</span></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="MainTitleXVal">0px</span></div>
                                 <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><span id="MainTitleYVal">-490</span></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><span id="MainTitleYVal">-490px</span></div>
                                 <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
                         </div>
                         <div class="sub-title"><span>显示括号</span><input type="checkbox" id="ShowBrackets" checked></div>
@@ -325,9 +325,9 @@
                             <input type="color" id="SubTitleColor" value="#999999">
                         </div>
                         <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="SubTitleXVal">630</span></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="SubTitleXVal">630px</span></div>
                                 <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><span id="SubTitleYVal">0</span></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><span id="SubTitleYVal">0px</span></div>
                                 <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
                         </div>
                         <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
@@ -358,7 +358,7 @@
                 </div>
                 <div class="sub-section ss-green">
                     <div class="sub-section-label">形态</div>
-                    <div class="ctrl-row"><span>圆角</span><input type="range" id="CardRadius" min="0" max="60" step="1" value="16"><span id="CardRadiusVal">16</span></div>
+                    <div class="ctrl-row"><span>圆角</span><input type="range" id="CardRadius" min="0" max="60" step="1" value="16"><span id="CardRadiusVal">16px</span></div>
                     <div class="advanced-params">
                         <div class="sub-title" style="margin-top:4px"><span>启用描边</span><input type="checkbox" id="CardBorderEnabled"></div>
                         <div id="CardBorderOpts" style="display:none">
@@ -632,10 +632,10 @@
             ['SubTitleWeight',  'subTitleWeight', 'int',   'SubTitleWeightVal'],
             ['TitleColor',      'mainTitleColor'],
             ['SubTitleColor',   'subTitleColor'],
-            ['MainTitleX',      'mainTitleX',     'int',   'MainTitleXVal'],
-            ['MainTitleY',      'mainTitleY',     'int',   'MainTitleYVal'],
-            ['SubTitleX',       'subTitleX',      'int',   'SubTitleXVal'],
-            ['SubTitleY',       'subTitleY',      'int',   'SubTitleYVal'],
+            ['MainTitleX',      'mainTitleX',     'int',   'MainTitleXVal',  'px'],
+            ['MainTitleY',      'mainTitleY',     'int',   'MainTitleYVal',  'px'],
+            ['SubTitleX',       'subTitleX',      'int',   'SubTitleXVal',   'px'],
+            ['SubTitleY',       'subTitleY',      'int',   'SubTitleYVal',   'px'],
             // 卡片背景
             ['ShowBrackets',    'showBrackets',   'checked'],
             ['SubTitleGlow',    'subTitleGlow',   'checked'],
@@ -674,7 +674,7 @@
             ['LabelMode',       'labelMode'],
             ['ShowLeaderLines', 'showLeaderLines', 'checked'],
             ['LeaderLineColor', 'leaderLineColor'],
-            ['LeaderLineWidth', 'leaderLineWidth', 'float', 'LeaderLineWidthVal'],
+            ['LeaderLineWidth', 'leaderLineWidth', 'float', 'LeaderLineWidthVal', 'px'],
             ['ShowPercentage',  'showPercentage', 'checked'],
             ['LabelFontSize',   'labelFontSize',  'int',   'LabelFontSizeVal'],
             ['LabelLineGap',    'labelLineGap',   'int',   'LabelLineGapVal'],
@@ -689,7 +689,7 @@
             ['ShadowDistance',  'shadowDistance', 'int',   'ShadowDistanceVal', 'px'],
             ['ShadowBlur',      'shadowBlur',     'int',   'ShadowBlurVal',     'px'],
             ['ShadowOpacity',   'shadowOpacity',  'int',   'ShadowOpacityVal',  '%'],
-            ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal'],
+            ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal',  'px'],
             ['CardBorderEnabled', 'cardBorderEnabled', 'checked'],
             ['CardBorderWidth',  'cardBorderWidth', 'int',   'CardBorderWidthVal'],
             ['CardBorderColor',  'cardBorderColor'],
