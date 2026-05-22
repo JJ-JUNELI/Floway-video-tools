@@ -166,10 +166,14 @@
                     <div class="ctrl-row"><span>描边宽度</span><input type="range" id="BarStrokeWidth" min="0" max="6" step="0.5" value="0"><span id="BarStrokeWidthVal">0</span><span class="clr">颜色</span><input type="color" id="BarStrokeColor" value="#555555"></div>
                     <div class="ctrl-row"><span>手绘抖动</span><input type="range" id="BarJitter" min="0" max="100" step="1" value="0"><span id="BarJitterVal">0</span></div>
                 </div>
-                <!-- 动画设置 -->
-                <div class="sub-section ss-purple">
+            </div>
+
+            <!-- 动画 -->
+            <div class="control-group">
+                <div class="group-title"><span>🎬 动画</span></div>
+                <div class="sub-section ss-rose">
                     <div class="sub-section-label" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>动画</span>
+                        <span>动画设置</span>
                         <button id="BtnPlay" class="btn-play">▶ 播放</button>
                     </div>
                     <div class="ctrl-row"><span>动画时长</span><input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="3.5"><span id="AnimDurationVal">3.5s</span></div>
@@ -241,21 +245,9 @@
                 </div>
             </div>
 
-            <!-- 主题风格 -->
-            <div class="control-group">
-                <div class="group-title"><span>🖌️ 主题风格</span></div>
-                <div class="paper-only">
-                    <div class="sub-section ss-amber">
-                        <div class="sub-section-label">📄 纸张纹理</div>
-                        <div class="ctrl-row"><span>纹理强度</span><input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"><span id="NoiseGrainVal">35</span></div>
-                        <div class="ctrl-row"><span>暗角</span><input type="range" id="Vignette" min="0" max="100" step="1" value="15"><span id="VignetteVal">15</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 网格与坐标（公用 + 颜色） -->
+            <!-- 坐标轴与网格 -->
             <div class="control-group collapsible" data-default-collapsed>
-                <div class="group-title"><span>▦ 网格与坐标</span></div>
+                <div class="group-title"><span>▦ 坐标轴与网格</span></div>
                 <div class="sub-section ss-teal">
                     <div class="sub-section-label">Y 轴</div>
                     <div class="row stack"><div class="label-line"><span>Y轴模式</span></div>
@@ -307,23 +299,22 @@
                 </div>
             </div>
 
-            <!-- 卡片漂浮（公用 + 赛博颜色） -->
-            <div class="control-group collapsible" data-default-collapsed>
-                <div class="group-title"><span>🃏 卡片漂浮</span></div>
-                <div class="sub-section ss-blue">
-                    <div class="sub-section-label">透视角度</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
-                            <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
-                            <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
-                    </div>
-                    <div class="ctrl-row"><span>卡片缩放</span><input type="range" id="CardScale" min="40" max="100" step="1" value="80"><span id="CardScaleVal">80%</span></div>
+            <!-- 卡片外观 -->
+            <div class="control-group">
+                <div class="group-title"><span>🖼️ 卡片外观</span></div>
+                <div class="sub-section ss-amber paper-only">
+                    <div class="sub-section-label">纸张纹理</div>
+                    <div class="ctrl-row"><span>纹理强度</span><input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"><span id="NoiseGrainVal">35</span></div>
+                    <div class="ctrl-row"><span>暗角</span><input type="range" id="Vignette" min="0" max="100" step="1" value="15"><span id="VignetteVal">15</span></div>
                 </div>
                 <div class="sub-section ss-green">
-                    <div class="sub-section-label">尺寸 & 外观</div>
-                    <div class="ctrl-row"><span>圆角</span><input type="range" id="CardRadius" min="0" max="60" step="1" value="16"><span id="CardRadiusVal">16px</span></div>
-                    <div class="ctrl-row"><span>内边距</span><input type="range" id="CardPad" min="10" max="100" step="2" value="32"><span id="CardPadVal">32px</span></div>
+                    <div class="sub-section-label">形态</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角</span><span id="CardRadiusVal">16px</span></div>
+                            <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>内边距</span><span id="CardPadVal">32px</span></div>
+                            <input type="range" id="CardPad" min="10" max="100" step="2" value="32"></div>
+                    </div>
                     <div class="row stack">
                         <div class="label-line"><span>卡片底色</span></div>
                         <input type="color" id="CardBg" value="#faf8f3">
@@ -344,6 +335,21 @@
                         <div class="ctrl-row"><span>模糊</span><input type="range" id="ShadowBlur" min="0" max="80" step="1" value="20"><span id="ShadowBlurVal">20px</span></div>
                         <div class="ctrl-row"><span>不透明度</span><input type="range" id="ShadowOpacity" min="0" max="100" step="1" value="25"><span id="ShadowOpacityVal">25%</span></div>
                     </div>
+                </div>
+            </div>
+
+            <!-- 卡片漂浮 -->
+            <div class="control-group collapsible" data-default-collapsed>
+                <div class="group-title"><span>🃏 卡片漂浮</span></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">透视角度</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
+                            <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
+                            <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
+                    </div>
+                    <div class="ctrl-row"><span>卡片缩放</span><input type="range" id="CardScale" min="40" max="100" step="1" value="80"><span id="CardScaleVal">80%</span></div>
                 </div>
                 <div class="sub-section ss-purple">
                     <div class="sub-section-label">漂浮动画</div>

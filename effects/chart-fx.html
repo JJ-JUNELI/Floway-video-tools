@@ -134,27 +134,16 @@
                     <span>📊 数据管理</span>
                     <button class="btn-icon" onclick="resetData()" title="重置" style="width:28px;height:32px;font-size:13px;">↺</button>
                 </div>
-                <div class="sub-section ss-blue">
-                    <div class="sub-section-label">折线图数据</div>
-                    <table class="data-table">
-                        <thead><tr><th style="width:30%">名称</th><th style="width:32%">折线图数值</th><th style="width:38%">操作</th></tr></thead>
-                        <tbody id="LineDataBody"></tbody>
-                    </table>
-                    <button class="btn-add" onclick="addRow()">+ 添加数据行</button>
-                </div>
-                <div id="BarDataSection" class="sub-section ss-amber" style="margin-top:10px;">
-                    <div class="sub-section-label">柱状图数据</div>
-                    <table class="data-table">
-                        <thead><tr><th style="width:42%">名称（联动）</th><th style="width:58%">柱状图数值</th></tr></thead>
-                        <tbody id="BarDataBody"></tbody>
-                    </table>
-                </div>
+                <table class="data-table">
+                    <thead><tr><th style="width:28%">名称</th><th style="width:20%">折线值</th><th style="width:20%">柱状值</th><th style="width:32%">操作</th></tr></thead>
+                    <tbody id="DataBody"></tbody>
+                </table>
+                <button class="btn-add" onclick="addRow()">+ 添加数据行</button>
             </div>
 
-            <!-- 折线样式 -->
+            <!-- 折线图 -->
             <div class="control-group">
-                <div class="group-title"><span>📊 图表样式</span></div>
-                <div id="LineOptions">
+                <div class="group-title"><span>📈 折线图</span></div>
                 <div class="sub-section ss-blue">
                     <div class="sub-section-label">线条</div>
                     <div class="ctrl-row"><span>线条粗细</span><input type="range" id="LineWidth" min="0.5" max="15" step="0.5" value="1.2"><span id="LineWidthVal">1.2px</span><span class="clr">颜色</span><input type="color" id="LineColor" value="#555555"></div>
@@ -165,6 +154,9 @@
                             <input type="range" id="GlowBlur" min="0" max="80" step="5" value="0"></div>
                     </div>
                     <div class="ctrl-row"><span>手绘抖动</span><input type="range" id="LineJitter" min="0" max="100" step="1" value="25"><span id="LineJitterVal">25</span></div>
+                </div>
+                <div class="sub-section ss-teal">
+                    <div class="sub-section-label">面积填充</div>
                     <div class="sub-title"><span>渐变填充</span><input type="checkbox" id="ShowArea" checked></div>
                     <div class="sub-title"><span>跟随线条颜色</span><input type="checkbox" id="AreaFollowLine"></div>
                     <div class="row stack" id="AreaColorRow">
@@ -178,7 +170,27 @@
                             <input type="range" id="DropLineOpacity" min="0" max="100" step="5" value="20"></div>
                     </div>
                 </div>
+                <div class="sub-section ss-green">
+                    <div class="sub-section-label">数据点</div>
+                    <div class="sub-title"><span>显示数据点</span><input type="checkbox" id="ShowPoints" checked></div>
+                    <div id="PointSizeOpts" style="margin-top:6px;">
+                        <div class="ctrl-row"><span>数据点大小</span><input type="range" id="PointSize" min="1" max="20" step="0.5" value="4"><span id="PointSizeVal">4px</span></div>
+                    </div>
                 </div>
+                <div class="sub-section ss-rose">
+                    <div class="sub-section-label">数值标签</div>
+                    <div class="sub-title"><span>显示数值标签</span><input type="checkbox" id="ShowValues"></div>
+                    <div id="ValueLabelOpts" style="display:none; margin-top:6px;">
+                        <div class="ctrl-row"><span>数值字号</span><input type="range" id="ValueSize" min="8" max="30" step="1" value="11"><span id="ValueSizeVal">11</span><span class="clr">颜色</span><input type="color" id="ValueColor" value="#ffffff"></div>
+                        <div class="ctrl-row"><span>Y轴偏移</span><input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-20"><span id="ValueYOffsetVal">-20px</span><span class="clr">颜色</span><input type="color" id="ValueBgColor" value="#555555"></div>
+                        <div class="sub-title"><span>显示背景</span><input type="checkbox" id="ValueBgEnabled" checked></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 柱状图 -->
+            <div class="control-group">
+                <div class="group-title"><span>📊 柱状图</span></div>
                 <div class="sub-title"><span>显示柱状图</span><input type="checkbox" id="ShowBars" checked></div>
                 <div id="BarOptions">
                 <div class="sub-section ss-amber">
@@ -199,43 +211,11 @@
                     <div class="ctrl-row"><span>手绘抖动</span><input type="range" id="BarJitter" min="0" max="100" step="1" value="0"><span id="BarJitterVal">0</span></div>
                 </div>
                 </div>
-                <!-- 动画设置 -->
-                <div class="sub-section ss-purple">
-                    <div class="sub-section-label" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>动画</span>
-                        <button id="BtnPlay" class="btn-play">▶ 播放</button>
-                    </div>
-                    <div class="ctrl-row"><span>动画时长</span><input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="3.5"><span id="AnimDurationVal">3.5s</span></div>
-                    <div class="row stack"><div class="label-line"><span>动画曲线</span></div>
-                        <select id="AnimEasing">
-                            <option value="linear">线性 (Linear)</option>
-                            <option value="easeIn">先慢后快 (Ease In)</option>
-                            <option value="easeOut">先快后慢 (Ease Out)</option>
-                            <option value="easeInOut" selected>丝滑缓动 (Smooth)</option>
-                        </select></div>
-                </div>
             </div>
 
-            <!-- 数据点 & 标签 -->
+            <!-- 标题与图例 -->
             <div class="control-group">
-                <div class="group-title"><span>🔵 数据点 & 标签</span></div>
-                <div class="sub-section ss-green">
-                    <div class="sub-title"><span>显示数据点</span><input type="checkbox" id="ShowPoints" checked></div>
-                    <div id="PointSizeOpts" style="margin-top:6px;">
-                        <div class="ctrl-row"><span>数据点大小</span><input type="range" id="PointSize" min="1" max="20" step="0.5" value="4"><span id="PointSizeVal">4px</span></div>
-                    </div>
-                    <div class="sub-title"><span>显示数值标签</span><input type="checkbox" id="ShowValues"></div>
-                    <div id="ValueLabelOpts" style="display:none; margin-top:6px;">
-                        <div class="ctrl-row"><span>数值字号</span><input type="range" id="ValueSize" min="8" max="30" step="1" value="11"><span id="ValueSizeVal">11</span><span class="clr">颜色</span><input type="color" id="ValueColor" value="#ffffff"></div>
-                        <div class="ctrl-row"><span>Y轴偏移</span><input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-20"><span id="ValueYOffsetVal">-20px</span><span class="clr">颜色</span><input type="color" id="ValueBgColor" value="#555555"></div>
-                        <div class="sub-title"><span>显示背景</span><input type="checkbox" id="ValueBgEnabled" checked></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 标题设置 -->
-            <div class="control-group">
-                <div class="group-title"><span>📝 标题设置</span></div>
+                <div class="group-title"><span>📝 标题与图例</span></div>
                 <div class="row stack"><div class="label-line"><span>标题字体</span></div>
                     <div id="TitleFontMount" style="width:100%"></div></div>
                 <div class="sub-section ss-blue">
@@ -298,21 +278,28 @@
                 </div>
             </div>
 
-            <!-- 主题风格 -->
+            <!-- 动画 -->
             <div class="control-group">
-                <div class="group-title"><span>🖌️ 主题风格</span></div>
-                <div class="paper-only">
-                    <div class="sub-section ss-amber">
-                        <div class="sub-section-label">📄 纸张纹理</div>
-                        <div class="ctrl-row"><span>纹理强度</span><input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"><span id="NoiseGrainVal">35</span></div>
-                        <div class="ctrl-row"><span>暗角</span><input type="range" id="Vignette" min="0" max="100" step="1" value="15"><span id="VignetteVal">15</span></div>
+                <div class="group-title"><span>🎬 动画</span></div>
+                <div class="sub-section ss-rose">
+                    <div class="sub-section-label" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>动画设置</span>
+                        <button id="BtnPlay" class="btn-play">▶ 播放</button>
                     </div>
+                    <div class="ctrl-row"><span>动画时长</span><input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="3.5"><span id="AnimDurationVal">3.5s</span></div>
+                    <div class="row stack"><div class="label-line"><span>动画曲线</span></div>
+                        <select id="AnimEasing">
+                            <option value="linear">线性 (Linear)</option>
+                            <option value="easeIn">先慢后快 (Ease In)</option>
+                            <option value="easeOut">先快后慢 (Ease Out)</option>
+                            <option value="easeInOut" selected>丝滑缓动 (Smooth)</option>
+                        </select></div>
                 </div>
             </div>
 
-            <!-- 网格与坐标（公用 + 颜色） -->
+            <!-- 坐标轴与网格 -->
             <div class="control-group collapsible" data-default-collapsed>
-                <div class="group-title"><span>▦ 网格与坐标</span></div>
+                <div class="group-title"><span>▦ 坐标轴与网格</span></div>
                 <div class="sub-section ss-teal">
                     <div class="sub-section-label">左轴（折线图）</div>
                     <div class="row stack"><div class="label-line"><span>Y轴模式</span></div>
@@ -382,23 +369,22 @@
                 </div>
             </div>
 
-            <!-- 卡片漂浮（公用 + 赛博颜色） -->
-            <div class="control-group collapsible" data-default-collapsed>
-                <div class="group-title"><span>🃏 卡片漂浮</span></div>
-                <div class="sub-section ss-blue">
-                    <div class="sub-section-label">透视角度</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
-                            <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
-                            <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
-                    </div>
-                    <div class="ctrl-row"><span>卡片缩放</span><input type="range" id="CardScale" min="40" max="100" step="1" value="80"><span id="CardScaleVal">80%</span></div>
+            <!-- 卡片外观 -->
+            <div class="control-group">
+                <div class="group-title"><span>🖼️ 卡片外观</span></div>
+                <div class="sub-section ss-amber paper-only">
+                    <div class="sub-section-label">纸张纹理</div>
+                    <div class="ctrl-row"><span>纹理强度</span><input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"><span id="NoiseGrainVal">35</span></div>
+                    <div class="ctrl-row"><span>暗角</span><input type="range" id="Vignette" min="0" max="100" step="1" value="15"><span id="VignetteVal">15</span></div>
                 </div>
                 <div class="sub-section ss-green">
-                    <div class="sub-section-label">尺寸 & 外观</div>
-                    <div class="ctrl-row"><span>圆角</span><input type="range" id="CardRadius" min="0" max="60" step="1" value="16"><span id="CardRadiusVal">16px</span></div>
-                    <div class="ctrl-row"><span>内边距</span><input type="range" id="CardPad" min="10" max="100" step="2" value="32"><span id="CardPadVal">32px</span></div>
+                    <div class="sub-section-label">形态</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角</span><span id="CardRadiusVal">16px</span></div>
+                            <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>内边距</span><span id="CardPadVal">32px</span></div>
+                            <input type="range" id="CardPad" min="10" max="100" step="2" value="32"></div>
+                    </div>
                     <div class="row stack">
                         <div class="label-line"><span>卡片底色</span></div>
                         <input type="color" id="CardBg" value="#faf8f3">
@@ -419,6 +405,21 @@
                         <div class="ctrl-row"><span>模糊</span><input type="range" id="ShadowBlur" min="0" max="80" step="1" value="20"><span id="ShadowBlurVal">20px</span></div>
                         <div class="ctrl-row"><span>不透明度</span><input type="range" id="ShadowOpacity" min="0" max="100" step="1" value="25"><span id="ShadowOpacityVal">25%</span></div>
                     </div>
+                </div>
+            </div>
+
+            <!-- 卡片漂浮 -->
+            <div class="control-group collapsible" data-default-collapsed>
+                <div class="group-title"><span>🃏 卡片漂浮</span></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">透视角度</div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
+                            <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
+                            <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
+                    </div>
+                    <div class="ctrl-row"><span>卡片缩放</span><input type="range" id="CardScale" min="40" max="100" step="1" value="80"><span id="CardScaleVal">80%</span></div>
                 </div>
                 <div class="sub-section ss-purple">
                     <div class="sub-section-label">漂浮动画</div>
@@ -980,43 +981,28 @@
         function lerp(a, b, t) { return a + (b - a) * t; }
 
         // ====== 数据表格 ======
-        function renderLineTable() {
-            const tbody = document.getElementById('LineDataBody');
-            tbody.innerHTML = '';
-            dataPoints.forEach((item, i) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
+        function renderTable() {
+            const tbody = document.getElementById('DataBody');
+            tbody.innerHTML = dataPoints.map((item, i) => `
+                <tr>
                     <td><input type="text" value="${item.label}" oninput="updateData(${i}, 'label', this.value)"></td>
                     <td><input type="number" value="${item.lineValue}" oninput="updateData(${i}, 'lineValue', this.value)"></td>
+                    <td><input type="number" value="${item.barValue}" oninput="updateData(${i}, 'barValue', this.value)"></td>
                     <td class="op-cell">
                         <button class="btn-icon" onclick="moveRow(${i}, -1)" title="上移">↑</button>
                         <button class="btn-icon" onclick="moveRow(${i}, 1)" title="下移">↓</button>
                         <button class="btn-icon del" onclick="removeRow(${i})" title="删除">×</button>
-                    </td>`;
-                tbody.appendChild(tr);
-            });
+                    </td>
+                </tr>`).join('');
         }
-        function renderBarTable() {
-            const tbody = document.getElementById('BarDataBody');
-            tbody.innerHTML = '';
-            dataPoints.forEach((item, i) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><span style="font-size:12px;color:var(--text-sub);padding:4px 8px;display:block;">${item.label}</span></td>
-                    <td><input type="number" value="${item.barValue}" oninput="updateData(${i}, 'barValue', this.value)"></td>`;
-                tbody.appendChild(tr);
-            });
-        }
-        function renderTables() { renderLineTable(); renderBarTable(); }
         window.updateData = (i, k, v) => {
             dataPoints[i][k] = k === 'label' ? v : (parseFloat(v) || 0);
-            if (k === 'label') renderBarTable();
             _pathPtsCache = null; _labelMeasureCache = null; startLoop();
         };
-        window.addRow = () => { dataPoints.push({ label: '新项', barValue: 0, lineValue: 0 }); renderTables(); _pathPtsCache = null; startLoop(); };
-        window.removeRow = (i) => { if (dataPoints.length <= 2) { alert('至少保留两个数据点'); return; } dataPoints.splice(i, 1); renderTables(); _pathPtsCache = null; startLoop(); };
-        window.moveRow = (i, dir) => { if (i+dir < 0 || i+dir >= dataPoints.length) return; const t = dataPoints[i]; dataPoints[i] = dataPoints[i+dir]; dataPoints[i+dir] = t; renderTables(); _pathPtsCache = null; startLoop(); };
-        window.resetData = () => { dataPoints = INITIAL_DATA.map(d => ({...d})); renderTables(); _pathPtsCache = null; startLoop(); };
+        window.addRow = () => { dataPoints.push({ label: '新项', barValue: 0, lineValue: 0 }); renderTable(); _pathPtsCache = null; startLoop(); };
+        window.removeRow = (i) => { if (dataPoints.length <= 2) { alert('至少保留两个数据点'); return; } dataPoints.splice(i, 1); renderTable(); _pathPtsCache = null; startLoop(); };
+        window.moveRow = (i, dir) => { if (i+dir < 0 || i+dir >= dataPoints.length) return; const t = dataPoints[i]; dataPoints[i] = dataPoints[i+dir]; dataPoints[i+dir] = t; renderTable(); _pathPtsCache = null; startLoop(); };
+        window.resetData = () => { dataPoints = INITIAL_DATA.map(d => ({...d})); renderTable(); _pathPtsCache = null; startLoop(); };
 
         document.getElementById('BtnPlay').addEventListener('click', () => myResetAnimStart());
         initThemeToggle();
@@ -1043,13 +1029,10 @@
         if (config.areaFollowLine) areaColorRow.style.display = 'none';
 
 
-        // 条件显示：柱状图选项
+        // 条件显示：柱状图样式面板
         const barOptsEl = document.getElementById('BarOptions');
-        const barDataSectionEl = document.getElementById('BarDataSection');
         function updateBarVisibility() {
-            const v = config.showBars ? '' : 'none';
-            barOptsEl.style.display = v;
-            barDataSectionEl.style.display = v;
+            barOptsEl.style.display = config.showBars ? '' : 'none';
         }
         document.getElementById('ShowBars').addEventListener('change', updateBarVisibility);
         updateBarVisibility();
@@ -1880,7 +1863,7 @@
         }
 
         // ====== 预览循环（按需启停）======
-        renderTables();
+        renderTable();
 
         let _animStartTime = performance.now();
         let _loopId = null;
