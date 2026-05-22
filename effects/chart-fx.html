@@ -154,7 +154,6 @@
             <!-- 折线样式 -->
             <div class="control-group">
                 <div class="group-title"><span>📊 图表样式</span></div>
-                <div class="sub-title"><span>显示折线</span><input type="checkbox" id="ShowLine" checked></div>
                 <div id="LineOptions">
                 <div class="sub-section ss-blue">
                     <div class="sub-section-label">线条</div>
@@ -532,7 +531,6 @@
             subTitleY: 0,
             showBrackets: true,
             // 折线
-            showLine: true,
             lineWidth: 1.2,
             lineColor: '#555555',
             showPoints: true,
@@ -648,8 +646,11 @@
                 cardBg: '#faf8f3',
                 cardBorderEnabled: false,
                 cardBorderWidth: 0,
+                cardBorderColor: '#ffffff',
                 cardGlowEnabled: false,
                 cardGlowWidth: 0,
+                cardGlowColor: '#3b82f6',
+                cardGlowIntensity: 70,
                 glowBlur: 0,
                 subTitleGlow: false,
                 areaFollowLine: false,
@@ -724,6 +725,7 @@
             _paperTexCache = null;
             _staticBgCache = null;
             _pathPtsCache = null;
+            _colorCache = null;
             myResetAnimStart();
         }
 
@@ -790,7 +792,6 @@
             ['FillOpacity',     'fillOpacity',    '%',     'FillOpacityVal', '%'],
             ['DropLineOpacity', 'dropLineOpacity', '%',    'DropLineOpacityVal', '%'],
             ['ShowPoints',      'showPoints',     'checked'],
-            ['ShowLine',        'showLine',       'checked'],
             ['ShowBars',        'showBars',       'checked'],
             ['BarWidth',        'barWidth',       '%',     'BarWidthVal',    '%'],
             ['BarRadius',       'barRadius',      'int',   'BarRadiusVal',   'px'],
@@ -1041,12 +1042,6 @@
         });
         if (config.areaFollowLine) areaColorRow.style.display = 'none';
 
-        // 条件显示：折线选项（关闭折线时折叠）
-        const lineOptsEl = document.getElementById('LineOptions');
-        document.getElementById('ShowLine').addEventListener('change', () => {
-            lineOptsEl.style.display = config.showLine ? '' : 'none';
-        });
-        if (!config.showLine) lineOptsEl.style.display = 'none';
 
         // 条件显示：柱状图选项
         const barOptsEl = document.getElementById('BarOptions');
@@ -1210,7 +1205,7 @@
         let _labelMeasureCache = null; // 数值标签文字宽度缓存
 
         function getLabelMeasures() {
-            const vals = config.showLine ? dataPoints.map(d=>d.lineValue) : dataPoints.map(d=>d.barValue);
+            const vals = dataPoints.map(d=>d.lineValue);
             const key = `${vals.join(',')}|${config.valueSize}|${config.titleFont}`;
             if (!_labelMeasureCache || _labelMeasureCache.key !== key) {
                 const mCtx = offscreen.getContext('2d');
@@ -1225,7 +1220,7 @@
         }
 
         function getColorCache() {
-            const key = `${config.lineColor}|${config.barColor||''}|${config.barGradientEnd||''}|${config.barOpacity}|${config.valueBgColor}|${config.valueColor}|${config.gridColor}|${config.areaColor}|${config.fillOpacity}`;
+            const key = `${config.lineColor}|${config.barColor||''}|${config.barGradientEnd||''}|${config.barOpacity}|${config.valueBgColor}|${config.valueColor}|${config.gridColor}|${config.gridOpacity}|${config.areaColor}|${config.fillOpacity}`;
             if (!_colorCache || _colorCache.key !== key) {
                 const bc = config.barColor || config.lineColor;
                 const gEnd = config.barGradientEnd || bc;
@@ -1236,7 +1231,7 @@
                     barGradEnd: hexToRgba(gEnd, config.barOpacity),
                     valueBgFill: hexToRgba(config.valueBgColor, 0.15),
                     valueBgStroke: hexToRgba(config.valueBgColor, 0.3),
-                    gridRgba: hexToRgba(config.gridColor, 0.5),
+                    gridRgba: hexToRgba(config.gridColor, config.gridOpacity),
                     gridAxisRgba: hexToRgba(config.gridColor, 0.5),
                     areaFill: config.areaFollowLine ? null : hexToRgba(config.areaColor, config.fillOpacity),
                 };
@@ -1292,7 +1287,6 @@
 
             // === 网格 ===
             if (config.showGrid && config.gridOpacity > 0) {
-                const gv = config.gridOpacity;
                 ctx.save();
                 ctx.strokeStyle = cc.gridRgba;
                 ctx.lineWidth = 0.5;
@@ -1380,7 +1374,7 @@
             }
 
             // === 图例（分置两侧：左=折线图/左轴，右=柱状图/右轴）===
-            if (config.showLegend && (config.showBars || config.showLine)) {
+            if (config.showLegend) {
                 const ly = padT - 22 + config.legendOffY;
                 const fs = config.legendSize || Math.max(10, config.axisLabelSize);
                 ctx.save();
@@ -1388,15 +1382,15 @@
                 ctx.textBaseline = 'middle';
                 ctx.globalAlpha = titleAlpha;
                 // 左侧：折线图（对应左轴）
-                if (config.showLine) {
+                {
                     let lx = chartX;
                     ctx.save();
                     ctx.strokeStyle = config.lineColor;
-                    ctx.lineWidth = Math.max(1.5, config.lineWidth);
+                    ctx.lineWidth = Math.min(Math.max(1.5, config.lineWidth), 4);
                     ctx.lineCap = 'round';
-                    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 20, ly); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 24, ly); ctx.stroke();
                     ctx.restore();
-                    lx += 24;
+                    lx += 28;
                     ctx.fillStyle = config.axisLabelColor;
                     ctx.textAlign = 'left';
                     ctx.fillText(config.lineLegend, lx, ly);
@@ -1596,7 +1590,6 @@
             }
 
             // === 折线相关 ===
-            if (config.showLine) {
             // === 填充 ===
             if (config.showArea && lineDrawn >= 2) {
                 const bottomY = padT + ch;
@@ -1660,7 +1653,6 @@
                 });
                 ctx.restore();
             }
-            } // end if (config.showLine)
 
             // === 数据点 ===
             if (config.showPoints) {
@@ -1734,9 +1726,8 @@
                 ctx.fillStyle = config.valueColor;
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.globalAlpha = labelAlpha;
-                const useLineVal = config.showLine;
                 points.forEach((p, i) => {
-                    const txt = String(useLineVal ? dataPoints[i].lineValue : dataPoints[i].barValue);
+                    const txt = String(dataPoints[i].lineValue);
                     ctx.fillText(txt, p.x, p.y + yOffset - th / 2);
                 });
                 ctx.restore();
