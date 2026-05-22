@@ -354,7 +354,7 @@
                 </div>
                 <div class="sub-section ss-purple">
                     <div class="sub-section-label">图表区域</div>
-                    <div class="ctrl-row"><span>点间距</span><input type="range" id="PointSpacing" min="0" max="200" step="5" value="0"><span id="PointSpacingVal">自动</span></div>
+                    <div class="ctrl-row"><span>点间距</span><input type="range" id="PointSpacing" min="20" max="100" step="5" value="100"><span id="PointSpacingVal">全宽</span></div>
                     <div class="advanced-params">
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="ChartOffXVal">0px</span></div>
@@ -559,7 +559,7 @@
             yMin2: 0, yMax2: 100,
             dashedGrid: false,
             axisOverflow: 20,
-            pointSpacing: 0,
+            pointSpacing: 100,
             axisLabelSize: 11,
             axisLabelColor: '#999999',
             // 卡片漂浮 (WebGL)
@@ -861,7 +861,7 @@
                 }
                 if (key === 'pointSpacing') {
                     document.getElementById('PointSpacingVal').textContent =
-                        config.pointSpacing === 0 ? '自动' : config.pointSpacing + 'px';
+                        config.pointSpacing >= 100 ? '全宽' : config.pointSpacing + '%';
                     _pathPtsCache = null;
                 }
                 if (key === 'cardBorderEnabled') {
@@ -1241,16 +1241,11 @@
             const chartX = padL + sideInset;        // 可用绘图区左起点
             const plotW = Math.max(cw - sideInset * 2, 1); // 可用绘图区宽度
 
-            // 点间距：0=自动撑满，>0=固定px居中
+            // 点间距：100=全宽撑满，<100=按比例压缩并居中
             const _n = dataPoints.length;
-            let dataSpan, centerOff;
-            if (config.pointSpacing > 0 && _n > 1) {
-                dataSpan = Math.min(config.pointSpacing * (_n - 1), plotW);
-                centerOff = (plotW - dataSpan) / 2;
-            } else {
-                dataSpan = plotW;
-                centerOff = 0;
-            }
+            const _spacingRatio = Math.min(config.pointSpacing, 100) / 100;
+            const dataSpan = plotW * _spacingRatio;
+            const centerOff = (plotW - dataSpan) / 2;
             const getPointX = i => chartX + centerOff + (_n > 1 ? i / (_n - 1) * dataSpan : dataSpan / 2);
             const actualSlotW = _n > 1 ? dataSpan / (_n - 1) : dataSpan;
             const actualBarHalfW = actualSlotW * config.barWidth / 2;
@@ -1292,8 +1287,8 @@
                     const ratio = i / config.gridY;
                     const y = padT + ch - ratio * ch;
                     const isOuter = (i === 0 || i === config.gridY);
-                    const x0 = isOuter ? getPointX(0) - ov : getPointX(0);
-                    const x1 = isOuter ? plotRight + ov : plotRight;
+                    const x0 = isOuter ? chartX - ov : chartX;
+                    const x1 = isOuter ? chartX + plotW + ov : chartX + plotW;
                     ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
                 }
                 ctx.restore();
@@ -1307,8 +1302,8 @@
                 ctx.lineWidth = 1;
                 // X轴基线（与底部网格线共享 overflow 超出）
                 ctx.beginPath();
-                ctx.moveTo(getPointX(0) - ov, padT + ch);
-                ctx.lineTo(plotRight + ov, padT + ch);
+                ctx.moveTo(chartX - ov, padT + ch);
+                ctx.lineTo(chartX + plotW + ov, padT + ch);
                 ctx.stroke();
                 ctx.restore();
             }
@@ -1319,7 +1314,7 @@
             ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
             const yStep = (barYMax - barYMin) / config.gridY;
             const yDec = yStep >= 1 ? 0 : (yStep >= 0.1 ? 1 : 2);
-            const leftLabelX = getPointX(0) - actualBarHalfW - 20;  // 跟随首柱左缘，居中时同步内移
+            const leftLabelX = padL - 14;
             for (let i = 0; i <= config.gridY; i++) {
                 const ratio = i / config.gridY;
                 ctx.fillText((barYMin + ratio * (barYMax - barYMin)).toFixed(yDec), leftLabelX, padT + ch - ratio * ch);
@@ -1333,7 +1328,7 @@
                 ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
                 const yStep2 = (lineYMax - lineYMin) / config.gridY;
                 const yDec2 = yStep2 >= 1 ? 0 : (yStep2 >= 0.1 ? 1 : 2);
-                const rightLabelX = plotRight + actualBarHalfW + 14;
+                const rightLabelX = chartX + plotW + barHalfW + 14;
                 for (let i = 0; i <= config.gridY; i++) {
                     const ratio = i / config.gridY;
                     ctx.fillText((lineYMin + ratio * (lineYMax - lineYMin)).toFixed(yDec2), rightLabelX, padT + ch - ratio * ch);
