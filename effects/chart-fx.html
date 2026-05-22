@@ -1224,9 +1224,12 @@
             const ch = (h - (_pad + 50) - (_pad + 55)) + config.chartExtraH;
             const { yMin: barYMin, yMax: barYMax } = getYRange(dataPoints.map(d=>d.barValue), config.yAxisMode, config.yMin, config.yMax);
             const { yMin: lineYMin, yMax: lineYMax } = getYRange(dataPoints.map(d=>d.lineValue), config.yAxisMode2, config.yMin2, config.yMax2);
-            // 图表内容整体右移半个柱宽，避开Y轴标签区（Y轴标签位置不变）
+            // 数据点两侧各内缩半个柱宽 + 小间距，避免首/尾柱压住左右 Y 轴标签
             const barHalfW = (cw / Math.max(dataPoints.length, 1)) * config.barWidth / 2;
-            const chartX = padL + barHalfW; // 图表内容实际起始x（整体右移半个柱宽）
+            const sideInset = barHalfW + 6;
+            const chartX = padL + sideInset;        // 第一个数据点 x
+            const plotW = Math.max(cw - sideInset * 2, 1); // 数据点跨度（首→尾）
+            const plotRight = chartX + plotW;        // 最后一个数据点 x
 
             // 裁剪圆角
             ctx.save();
@@ -1252,14 +1255,14 @@
                 if (config.dashedGrid) ctx.setLineDash([3, 6]);
                 // 竖线（每个数据点）
                 for (let i = 0; i < dataPoints.length; i++) {
-                    const x = chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw;
+                    const x = chartX + (i / Math.max(dataPoints.length - 1, 1)) * plotW;
                     ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ch); ctx.stroke();
                 }
                 // 横线（Y轴刻度，从图表区开始到结束）
                 for (let i = 0; i <= config.gridY; i++) {
                     const ratio = i / config.gridY;
                     const y = padT + ch - ratio * ch;
-                    ctx.beginPath(); ctx.moveTo(chartX, y); ctx.lineTo(chartX + cw, y); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(chartX, y); ctx.lineTo(plotRight, y); ctx.stroke();
                 }
                 ctx.restore();
             }
@@ -1270,10 +1273,10 @@
                 const axisAlpha = isHold ? 1 : clamp(rawProgress * 1.5, 0, 0.35);
                 ctx.strokeStyle = cc.gridAxisRgba;
                 ctx.lineWidth = 1;
-                // X轴基线：左边不动（padL），右边延伸到图表区末尾
+                // X轴基线：左边不动（padL），右边延伸到最后一个数据点
                 ctx.beginPath();
                 ctx.moveTo(padL, padT + ch);
-                ctx.lineTo(chartX + cw, padT + ch);
+                ctx.lineTo(plotRight, padT + ch);
                 ctx.stroke();
                 ctx.restore();
             }
@@ -1297,9 +1300,10 @@
                 ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
                 const yStep2 = (lineYMax - lineYMin) / config.gridY;
                 const yDec2 = yStep2 >= 1 ? 0 : (yStep2 >= 0.1 ? 1 : 2);
+                const rightLabelX = plotRight + barHalfW + 14;
                 for (let i = 0; i <= config.gridY; i++) {
                     const ratio = i / config.gridY;
-                    ctx.fillText((lineYMin + ratio * (lineYMax - lineYMin)).toFixed(yDec2), chartX + cw + 10, padT + ch - ratio * ch);
+                    ctx.fillText((lineYMin + ratio * (lineYMax - lineYMin)).toFixed(yDec2), rightLabelX, padT + ch - ratio * ch);
                 }
                 ctx.restore();
             }
@@ -1309,7 +1313,7 @@
             ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
             ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
             dataPoints.forEach((d, i) => {
-                ctx.fillText(d.label, chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw, padT + ch + 22);
+                ctx.fillText(d.label, chartX + (i / Math.max(dataPoints.length - 1, 1)) * plotW, padT + ch + 22);
             });
             ctx.restore();
 
@@ -1375,10 +1379,10 @@
             // === 路径点（张力平滑 + 可选抖动） ===
             const jitter = isPaper ? config.lineJitter / 100 : 0;
             const tens = config.tension;
-            const ptsKey = `${dataPoints.map(d=>d.lineValue).join(',')}|${jitter}|${tens}|${config.cardPad}|${config.chartOffX}|${config.chartOffY}|${config.chartExtraW}|${config.chartExtraH}|${w}|${lineYMin}-${lineYMax}`;
+            const ptsKey = `${dataPoints.map(d=>d.lineValue).join(',')}|${jitter}|${tens}|${config.cardPad}|${config.chartOffX}|${config.chartOffY}|${config.chartExtraW}|${config.chartExtraH}|${config.barWidth}|${w}|${lineYMin}-${lineYMax}`;
             if (!_pathPtsCache || _pathPtsCache.key !== ptsKey) {
                 const pts = dataPoints.map((d, i) => ({
-                    x: chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw,
+                    x: chartX + (i / Math.max(dataPoints.length - 1, 1)) * plotW,
                     y: padT + ch - ((clamp(d.lineValue, lineYMin, lineYMax) - lineYMin) / (lineYMax - lineYMin)) * ch
                 }));
                 _lineSeed = 54321;
@@ -1467,7 +1471,7 @@
 
                 ctx.save();
                 dataPoints.forEach((d, i) => {
-                    const barCx = chartX + (i / Math.max(barCount - 1, 1)) * cw;
+                    const barCx = chartX + (i / Math.max(barCount - 1, 1)) * plotW;
                     const bx = barCx - bw / 2;
                     const valH = ((clamp(d.barValue, barYMin, barYMax) - barYMin) / (barYMax - barYMin)) * ch * barProgress;
                     const bh = valH;
