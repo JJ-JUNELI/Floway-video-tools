@@ -142,7 +142,7 @@
                     </table>
                     <button class="btn-add" onclick="addRow()">+ 添加数据行</button>
                 </div>
-                <div class="sub-section ss-amber" style="margin-top:10px;">
+                <div id="BarDataSection" class="sub-section ss-amber" style="margin-top:10px;">
                     <div class="sub-section-label">柱状图数据</div>
                     <table class="data-table">
                         <thead><tr><th style="width:42%">名称（联动）</th><th style="width:58%">柱状图数值</th></tr></thead>
@@ -194,9 +194,9 @@
                     <div class="sub-title"><span>渐变填充</span><input type="checkbox" id="BarGradient"></div>
                     <div class="row stack" id="BarGradientEndRow" style="display:none;">
                         <div class="label-line"><span>渐变终止色</span></div>
-                        <input type="color" id="BarGradientEnd" value="#cccccc">
+                        <input type="color" id="BarGradientEnd" value="#c5d9e6">
                     </div>
-                    <div class="ctrl-row"><span>描边宽度</span><input type="range" id="BarStrokeWidth" min="0" max="6" step="0.5" value="0"><span id="BarStrokeWidthVal">0</span><span class="clr">颜色</span><input type="color" id="BarStrokeColor" value="#555555"></div>
+                    <div class="ctrl-row"><span>描边宽度</span><input type="range" id="BarStrokeWidth" min="0" max="6" step="0.5" value="0"><span id="BarStrokeWidthVal">0</span><span class="clr">颜色</span><input type="color" id="BarStrokeColor" value="#7a9aac"></div>
                     <div class="ctrl-row"><span>手绘抖动</span><input type="range" id="BarJitter" min="0" max="100" step="1" value="0"><span id="BarJitterVal">0</span></div>
                 </div>
                 </div>
@@ -282,12 +282,18 @@
                     <div class="sub-title"><span>显示图例</span><input type="checkbox" id="ShowLegend" checked></div>
                     <div id="LegendOpts">
                         <div class="ctrl-row">
+                            <span>折线图</span>
+                            <input type="text" id="LineLegend" value="渗透率（%）" style="flex:1; height:28px; padding:4px 8px;">
+                        </div>
+                        <div class="ctrl-row" style="margin-top:4px;">
                             <span>柱状图</span>
                             <input type="text" id="BarLegend" value="月度销量" style="flex:1; height:28px; padding:4px 8px;">
                         </div>
-                        <div class="ctrl-row" style="margin-top:4px;">
-                            <span>折线图</span>
-                            <input type="text" id="LineLegend" value="渗透率（%）" style="flex:1; height:28px; padding:4px 8px;">
+                        <div class="row">
+                            <div style="flex:1" class="stack"><div class="label-line"><span>字号</span><span id="LegendSizeVal">11</span></div>
+                                <input type="range" id="LegendSize" min="8" max="24" step="1" value="11"></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>上下位置</span><span id="LegendOffYVal">0px</span></div>
+                                <input type="range" id="LegendOffY" min="-30" max="30" step="1" value="0"></div>
                         </div>
                     </div>
                 </div>
@@ -309,7 +315,7 @@
             <div class="control-group collapsible" data-default-collapsed>
                 <div class="group-title"><span>▦ 网格与坐标</span></div>
                 <div class="sub-section ss-teal">
-                    <div class="sub-section-label">Y 轴</div>
+                    <div class="sub-section-label">左轴（折线图）</div>
                     <div class="row stack"><div class="label-line"><span>Y轴模式</span></div>
                         <select id="YAxisMode">
                             <option value="zero" selected>从零开始</option>
@@ -335,7 +341,7 @@
                     </div>
                 </div>
                 <div class="sub-section ss-blue">
-                    <div class="sub-section-label">右轴（折线）</div>
+                    <div class="sub-section-label">右轴（柱状图）</div>
                     <div class="row stack"><div class="label-line"><span>Y轴模式</span></div>
                         <select id="YAxisMode2">
                             <option value="zero">从零开始</option>
@@ -539,6 +545,8 @@
             showLegend: true,
             barLegend: '月度销量',
             lineLegend: '渗透率（%）',
+            legendSize: 11,
+            legendOffY: 0,
             // 柱状图
             showBars: true,
             barWidth: 0.6,
@@ -546,9 +554,9 @@
             barOpacity: 0.7,
             barRadius: 4,
             barGradient: false,
-            barGradientEnd: '',
+            barGradientEnd: '#c5d9e6',
             barStrokeWidth: 0,
-            barStrokeColor: '',
+            barStrokeColor: '#7a9aac',
             barJitter: 0,
             // 网格与坐标
             gridY: 4,
@@ -632,6 +640,8 @@
                 subTitleColor: '#999999',
                 lineColor: '#e07b5a',
                 barColor: '#a8c5da',
+                barGradientEnd: '#c5d9e6',
+                barStrokeColor: '#7a9aac',
                 axisLabelColor: '#999999',
                 valueColor: '#555555',
                 gridColor: '#c3bcaf',
@@ -650,6 +660,8 @@
                 subTitleColor: '#ffffff',
                 lineColor: '#ffae00',
                 barColor: '#00c8ff',
+                barGradientEnd: '#80e4ff',
+                barStrokeColor: '#00e4ff',
                 axisLabelColor: '#888888',
                 valueColor: '#ffffff',
                 gridColor: '#333333',
@@ -682,6 +694,8 @@
             updateUI('SubTitleColor', config.subTitleColor);
             updateUI('LineColor', config.lineColor);
             updateUI('BarColor', config.barColor);
+            updateUI('BarGradientEnd', config.barGradientEnd);
+            updateUI('BarStrokeColor', config.barStrokeColor);
             updateUI('AxisLabelColor', config.axisLabelColor);
             updateUI('ValueColor', config.valueColor);
             updateUI('GridColor', config.gridColor);
@@ -798,6 +812,8 @@
             ['ShowLegend',      'showLegend',     'checked'],
             ['BarLegend',       'barLegend'],
             ['LineLegend',      'lineLegend'],
+            ['LegendSize',      'legendSize',     'int',   'LegendSizeVal'],
+            ['LegendOffY',      'legendOffY',     'int',   'LegendOffYVal', 'px'],
             // 网格与坐标
             ['GridY',           'gridY',          'int',   'GridYVal'],
             ['YAxisMode',       'yAxisMode'],
@@ -1034,10 +1050,14 @@
 
         // 条件显示：柱状图选项
         const barOptsEl = document.getElementById('BarOptions');
-        document.getElementById('ShowBars').addEventListener('change', () => {
-            barOptsEl.style.display = config.showBars ? '' : 'none';
-        });
-        barOptsEl.style.display = config.showBars ? '' : 'none';
+        const barDataSectionEl = document.getElementById('BarDataSection');
+        function updateBarVisibility() {
+            const v = config.showBars ? '' : 'none';
+            barOptsEl.style.display = v;
+            barDataSectionEl.style.display = v;
+        }
+        document.getElementById('ShowBars').addEventListener('change', updateBarVisibility);
+        updateBarVisibility();
 
         // 条件显示：渐变终止色
         const barGradEndRow = document.getElementById('BarGradientEndRow');
@@ -1208,7 +1228,7 @@
             const key = `${config.lineColor}|${config.barColor||''}|${config.barGradientEnd||''}|${config.barOpacity}|${config.valueBgColor}|${config.valueColor}|${config.gridColor}|${config.areaColor}|${config.fillOpacity}`;
             if (!_colorCache || _colorCache.key !== key) {
                 const bc = config.barColor || config.lineColor;
-                const gEnd = config.barGradientEnd || lightenColor(bc, 40);
+                const gEnd = config.barGradientEnd || bc;
                 _colorCache = {
                     key,
                     lineRgba: config.lineColor,
@@ -1233,11 +1253,11 @@
             // 布局计算
             const _pad = config.cardPad;
             const padL = _pad + 98 + config.chartOffX - config.chartExtraW / 2;
-            const padT = _pad + 50 + config.chartOffY - config.chartExtraH / 2;
+            const padT = _pad + 70 + config.chartOffY - config.chartExtraH / 2;
             const cw = (w - (_pad + 98) * 2) + config.chartExtraW;
-            const ch = (h - (_pad + 50) - (_pad + 55)) + config.chartExtraH;
-            const { yMin: barYMin, yMax: barYMax } = getYRange(dataPoints.map(d=>d.barValue), config.yAxisMode, config.yMin, config.yMax);
-            const { yMin: lineYMin, yMax: lineYMax } = getYRange(dataPoints.map(d=>d.lineValue), config.yAxisMode2, config.yMin2, config.yMax2);
+            const ch = (h - (_pad + 70) - (_pad + 55)) + config.chartExtraH;
+            const { yMin: lineYMin, yMax: lineYMax } = getYRange(dataPoints.map(d=>d.lineValue), config.yAxisMode, config.yMin, config.yMax);
+            const { yMin: barYMin, yMax: barYMax } = getYRange(dataPoints.map(d=>d.barValue), config.yAxisMode2, config.yMin2, config.yMax2);
             // 数据点两侧各内缩半个柱宽 + 小间距，避免首/尾柱压住左右 Y 轴标签
             const barHalfW = (cw / Math.max(dataPoints.length, 1)) * config.barWidth / 2;
             const sideInset = barHalfW + 6;
@@ -1308,30 +1328,30 @@
                 ctx.restore();
             }
 
-            // === Y 轴标签（左轴 = 柱状图）===
+            // === Y 轴标签（左轴 = 折线图）===
             ctx.save();
             ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
             ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-            const yStep = (barYMax - barYMin) / config.gridY;
+            const yStep = (lineYMax - lineYMin) / config.gridY;
             const yDec = yStep >= 1 ? 0 : (yStep >= 0.1 ? 1 : 2);
             const leftLabelX = padL - 14;
             for (let i = 0; i <= config.gridY; i++) {
                 const ratio = i / config.gridY;
-                ctx.fillText((barYMin + ratio * (barYMax - barYMin)).toFixed(yDec), leftLabelX, padT + ch - ratio * ch);
+                ctx.fillText((lineYMin + ratio * (lineYMax - lineYMin)).toFixed(yDec), leftLabelX, padT + ch - ratio * ch);
             }
             ctx.restore();
 
-            // === Y 轴标签（右轴 = 折线图）===
-            if (config.showLine) {
+            // === Y 轴标签（右轴 = 柱状图）===
+            if (config.showBars) {
                 ctx.save();
                 ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
                 ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-                const yStep2 = (lineYMax - lineYMin) / config.gridY;
+                const yStep2 = (barYMax - barYMin) / config.gridY;
                 const yDec2 = yStep2 >= 1 ? 0 : (yStep2 >= 0.1 ? 1 : 2);
                 const rightLabelX = chartX + plotW + barHalfW + 14;
                 for (let i = 0; i <= config.gridY; i++) {
                     const ratio = i / config.gridY;
-                    ctx.fillText((lineYMin + ratio * (lineYMax - lineYMin)).toFixed(yDec2), rightLabelX, padT + ch - ratio * ch);
+                    ctx.fillText((barYMin + ratio * (barYMax - barYMin)).toFixed(yDec2), rightLabelX, padT + ch - ratio * ch);
                 }
                 ctx.restore();
             }
@@ -1359,38 +1379,38 @@
                 ctx.restore();
             }
 
-            // === 图例（分置两侧，各贴对应 Y 轴：左=柱，右=折线）===
+            // === 图例（分置两侧：左=折线图/左轴，右=柱状图/右轴）===
             if (config.showLegend && (config.showBars || config.showLine)) {
-                const ly = padT - 18;
-                const fs = Math.max(10, config.axisLabelSize);
+                const ly = padT - 22 + config.legendOffY;
+                const fs = config.legendSize || Math.max(10, config.axisLabelSize);
                 ctx.save();
                 ctx.font = `${fs}px ${config.titleFont}`;
                 ctx.textBaseline = 'middle';
                 ctx.globalAlpha = titleAlpha;
-                // 左侧：柱状图（对应左轴）
-                if (config.showBars) {
-                    let lx = chartX;
-                    const bc = config.barColor || config.lineColor;
-                    ctx.fillStyle = hexToRgba(bc, config.barOpacity);
-                    ctx.fillRect(lx, ly - 5, 11, 11);
-                    lx += 15;
-                    ctx.fillStyle = config.axisLabelColor;
-                    ctx.textAlign = 'left';
-                    ctx.fillText(config.barLegend, lx, ly);
-                }
-                // 右侧：折线图（对应右轴）
+                // 左侧：折线图（对应左轴）
                 if (config.showLine) {
-                    const rightEdge = chartX + plotW;
-                    ctx.fillStyle = config.axisLabelColor;
-                    ctx.textAlign = 'right';
-                    ctx.fillText(config.lineLegend, rightEdge, ly);
-                    const segRight = rightEdge - ctx.measureText(config.lineLegend).width - 8;
+                    let lx = chartX;
                     ctx.save();
                     ctx.strokeStyle = config.lineColor;
                     ctx.lineWidth = Math.max(1.5, config.lineWidth);
                     ctx.lineCap = 'round';
-                    ctx.beginPath(); ctx.moveTo(segRight - 20, ly); ctx.lineTo(segRight, ly); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 20, ly); ctx.stroke();
                     ctx.restore();
+                    lx += 24;
+                    ctx.fillStyle = config.axisLabelColor;
+                    ctx.textAlign = 'left';
+                    ctx.fillText(config.lineLegend, lx, ly);
+                }
+                // 右侧：柱状图（对应右轴）
+                if (config.showBars) {
+                    const rightEdge = chartX + plotW;
+                    const bc = config.barColor || config.lineColor;
+                    ctx.fillStyle = config.axisLabelColor;
+                    ctx.textAlign = 'right';
+                    ctx.fillText(config.barLegend, rightEdge, ly);
+                    const swatchLeft = rightEdge - ctx.measureText(config.barLegend).width - 18;
+                    ctx.fillStyle = hexToRgba(bc, config.barOpacity);
+                    ctx.fillRect(swatchLeft - 11, ly - 5, 11, 11);
                 }
                 ctx.restore();
             }
@@ -1562,13 +1582,12 @@
                             ctx.arcTo(bx + bw, by, bx + bw, by + r, r);
                             jitLine(bx + bw, by + r, bx + bw, by + bh, 16);
                         } else {
-                            ctx.moveTo(bx + r, by);
-                            ctx.lineTo(bx + bw - r, by);
-                            ctx.arcTo(bx + bw, by, bx + bw, by + r, r);
-                            ctx.lineTo(bx + bw, by + bh);
                             ctx.moveTo(bx, by + bh);
                             ctx.lineTo(bx, by + r);
                             ctx.arcTo(bx, by, bx + r, by, r);
+                            ctx.lineTo(bx + bw - r, by);
+                            ctx.arcTo(bx + bw, by, bx + bw, by + r, r);
+                            ctx.lineTo(bx + bw, by + bh);
                         }
                         ctx.stroke();
                     }
