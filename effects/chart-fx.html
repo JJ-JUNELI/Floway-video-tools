@@ -134,19 +134,19 @@
                     <span>📊 数据管理</span>
                     <button class="btn-icon" onclick="resetData()" title="重置" style="width:28px;height:32px;font-size:13px;">↺</button>
                 </div>
-                <div class="sub-section ss-amber">
-                    <div class="sub-section-label">柱状图数据</div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">折线图数据</div>
                     <table class="data-table">
-                        <thead><tr><th style="width:30%">名称</th><th style="width:32%">柱状图数值</th><th style="width:38%">操作</th></tr></thead>
-                        <tbody id="BarDataBody"></tbody>
+                        <thead><tr><th style="width:30%">名称</th><th style="width:32%">折线图数值</th><th style="width:38%">操作</th></tr></thead>
+                        <tbody id="LineDataBody"></tbody>
                     </table>
                     <button class="btn-add" onclick="addRow()">+ 添加数据行</button>
                 </div>
-                <div class="sub-section ss-blue" style="margin-top:10px;">
-                    <div class="sub-section-label">折线图数据</div>
+                <div class="sub-section ss-amber" style="margin-top:10px;">
+                    <div class="sub-section-label">柱状图数据</div>
                     <table class="data-table">
-                        <thead><tr><th style="width:42%">名称（联动）</th><th style="width:58%">折线图数值</th></tr></thead>
-                        <tbody id="LineDataBody"></tbody>
+                        <thead><tr><th style="width:42%">名称（联动）</th><th style="width:58%">柱状图数值</th></tr></thead>
+                        <tbody id="BarDataBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -963,14 +963,14 @@
         function lerp(a, b, t) { return a + (b - a) * t; }
 
         // ====== 数据表格 ======
-        function renderBarTable() {
-            const tbody = document.getElementById('BarDataBody');
+        function renderLineTable() {
+            const tbody = document.getElementById('LineDataBody');
             tbody.innerHTML = '';
             dataPoints.forEach((item, i) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><input type="text" value="${item.label}" oninput="updateData(${i}, 'label', this.value)"></td>
-                    <td><input type="number" value="${item.barValue}" oninput="updateData(${i}, 'barValue', this.value)"></td>
+                    <td><input type="number" value="${item.lineValue}" oninput="updateData(${i}, 'lineValue', this.value)"></td>
                     <td class="op-cell">
                         <button class="btn-icon" onclick="moveRow(${i}, -1)" title="上移">↑</button>
                         <button class="btn-icon" onclick="moveRow(${i}, 1)" title="下移">↓</button>
@@ -979,21 +979,21 @@
                 tbody.appendChild(tr);
             });
         }
-        function renderLineTable() {
-            const tbody = document.getElementById('LineDataBody');
+        function renderBarTable() {
+            const tbody = document.getElementById('BarDataBody');
             tbody.innerHTML = '';
             dataPoints.forEach((item, i) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><span style="font-size:12px;color:var(--text-sub);padding:4px 8px;display:block;">${item.label}</span></td>
-                    <td><input type="number" value="${item.lineValue}" oninput="updateData(${i}, 'lineValue', this.value)"></td>`;
+                    <td><input type="number" value="${item.barValue}" oninput="updateData(${i}, 'barValue', this.value)"></td>`;
                 tbody.appendChild(tr);
             });
         }
-        function renderTables() { renderBarTable(); renderLineTable(); }
+        function renderTables() { renderLineTable(); renderBarTable(); }
         window.updateData = (i, k, v) => {
             dataPoints[i][k] = k === 'label' ? v : (parseFloat(v) || 0);
-            if (k === 'label') renderLineTable();
+            if (k === 'label') renderBarTable();
             _pathPtsCache = null; _labelMeasureCache = null; startLoop();
         };
         window.addRow = () => { dataPoints.push({ label: '新项', barValue: 0, lineValue: 0 }); renderTables(); _pathPtsCache = null; startLoop(); };
@@ -1277,13 +1277,10 @@
                 ctx.strokeStyle = cc.gridRgba;
                 ctx.lineWidth = 0.5;
                 if (config.dashedGrid) ctx.setLineDash([3, 6]);
-                // 竖线（每个数据点）；首尾线向外超出
+                // 竖线（每个数据点）；不向外超出
                 for (let i = 0; i < dataPoints.length; i++) {
                     const x = getPointX(i);
-                    const isOuter = (i === 0 || i === dataPoints.length - 1);
-                    const y0 = isOuter ? padT - ov : padT;
-                    const y1 = isOuter ? padT + ch + ov : padT + ch;
-                    ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ch); ctx.stroke();
                 }
                 // 横线（Y轴刻度）；顶/底线向外超出
                 for (let i = 0; i <= config.gridY; i++) {
@@ -1362,16 +1359,17 @@
                 ctx.restore();
             }
 
-            // === 图例 ===
+            // === 图例（分置两侧，各贴对应 Y 轴：左=柱，右=折线）===
             if (config.showLegend && (config.showBars || config.showLine)) {
                 const ly = padT - 18;
-                let lx = chartX;
                 const fs = Math.max(10, config.axisLabelSize);
                 ctx.save();
                 ctx.font = `${fs}px ${config.titleFont}`;
                 ctx.textBaseline = 'middle';
                 ctx.globalAlpha = titleAlpha;
+                // 左侧：柱状图（对应左轴）
                 if (config.showBars) {
+                    let lx = chartX;
                     const bc = config.barColor || config.lineColor;
                     ctx.fillStyle = hexToRgba(bc, config.barOpacity);
                     ctx.fillRect(lx, ly - 5, 11, 11);
@@ -1379,19 +1377,20 @@
                     ctx.fillStyle = config.axisLabelColor;
                     ctx.textAlign = 'left';
                     ctx.fillText(config.barLegend, lx, ly);
-                    lx += ctx.measureText(config.barLegend).width + 22;
                 }
+                // 右侧：折线图（对应右轴）
                 if (config.showLine) {
+                    const rightEdge = chartX + plotW;
+                    ctx.fillStyle = config.axisLabelColor;
+                    ctx.textAlign = 'right';
+                    ctx.fillText(config.lineLegend, rightEdge, ly);
+                    const segRight = rightEdge - ctx.measureText(config.lineLegend).width - 8;
                     ctx.save();
                     ctx.strokeStyle = config.lineColor;
                     ctx.lineWidth = Math.max(1.5, config.lineWidth);
                     ctx.lineCap = 'round';
-                    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 20, ly); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(segRight - 20, ly); ctx.lineTo(segRight, ly); ctx.stroke();
                     ctx.restore();
-                    lx += 24;
-                    ctx.fillStyle = config.axisLabelColor;
-                    ctx.textAlign = 'left';
-                    ctx.fillText(config.lineLegend, lx, ly);
                 }
                 ctx.restore();
             }
