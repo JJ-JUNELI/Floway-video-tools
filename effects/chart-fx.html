@@ -189,7 +189,7 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>顶部圆角</span><span id="BarRadiusVal">4px</span></div>
                             <input type="range" id="BarRadius" min="0" max="20" step="1" value="4"></div>
                     </div>
-                    <div class="ctrl-row"><span>填充透明度</span><input type="range" id="BarOpacity" min="0" max="100" step="5" value="70"><span id="BarOpacityVal">70%</span><span class="clr">颜色</span><input type="color" id="BarColor" value="#888888"></div>
+                    <div class="ctrl-row"><span>填充透明度</span><input type="range" id="BarOpacity" min="0" max="100" step="5" value="70"><span id="BarOpacityVal">70%</span><span class="clr">颜色</span><input type="color" id="BarColor" value="#a8c5da"></div>
                     <div class="sub-title"><span>渐变填充</span><input type="checkbox" id="BarGradient"></div>
                     <div class="row stack" id="BarGradientEndRow" style="display:none;">
                         <div class="label-line"><span>渐变终止色</span></div>
@@ -354,6 +354,7 @@
                 </div>
                 <div class="sub-section ss-purple">
                     <div class="sub-section-label">图表区域</div>
+                    <div class="ctrl-row"><span>点间距</span><input type="range" id="PointSpacing" min="0" max="200" step="5" value="0"><span id="PointSpacingVal">自动</span></div>
                     <div class="advanced-params">
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="ChartOffXVal">0px</span></div>
@@ -374,6 +375,7 @@
                     <div class="sub-title"><span>显示网格线</span><input type="checkbox" id="ShowGrid" checked></div>
                     <div class="sub-title"><span>虚线网格</span><input type="checkbox" id="DashedGrid"></div>
                     <div class="ctrl-row"><span>网格透明度</span><input type="range" id="GridOpacity" min="0" max="100" step="5" value="30"><span id="GridOpacityVal">30%</span><span class="clr">颜色</span><input type="color" id="GridColor" value="#c3bcaf"></div>
+                    <div class="ctrl-row"><span>轴线超出</span><input type="range" id="AxisOverflow" min="0" max="60" step="2" value="20"><span id="AxisOverflowVal">20px</span></div>
                 </div>
             </div>
 
@@ -556,6 +558,8 @@
             yAxisMode2: 'auto',
             yMin2: 0, yMax2: 100,
             dashedGrid: false,
+            axisOverflow: 20,
+            pointSpacing: 0,
             axisLabelSize: 11,
             axisLabelColor: '#999999',
             // 卡片漂浮 (WebGL)
@@ -800,6 +804,8 @@
             ['YMin2',           'yMin2',          'float'],
             ['YMax2',           'yMax2',          'float'],
             ['DashedGrid',      'dashedGrid',     'checked'],
+            ['AxisOverflow',    'axisOverflow',   'int',   'AxisOverflowVal', 'px'],
+            ['PointSpacing',    'pointSpacing',   'int'],
             ['AxisLabelSize',   'axisLabelSize',  'int',   'AxisLabelSizeVal'],
             ['AxisLabelColor',  'axisLabelColor'],
             ['GridColor',       'gridColor'],
@@ -852,6 +858,11 @@
                 }
                 if (key === 'showLegend') {
                     document.getElementById('LegendOpts').style.display = config.showLegend ? '' : 'none';
+                }
+                if (key === 'pointSpacing') {
+                    document.getElementById('PointSpacingVal').textContent =
+                        config.pointSpacing === 0 ? '自动' : config.pointSpacing + 'px';
+                    _pathPtsCache = null;
                 }
                 if (key === 'cardBorderEnabled') {
                     document.getElementById('CardBorderOpts').style.display = config.cardBorderEnabled ? '' : 'none';
@@ -1227,9 +1238,24 @@
             // 数据点两侧各内缩半个柱宽 + 小间距，避免首/尾柱压住左右 Y 轴标签
             const barHalfW = (cw / Math.max(dataPoints.length, 1)) * config.barWidth / 2;
             const sideInset = barHalfW + 6;
-            const chartX = padL + sideInset;        // 第一个数据点 x
-            const plotW = Math.max(cw - sideInset * 2, 1); // 数据点跨度（首→尾）
-            const plotRight = chartX + plotW;        // 最后一个数据点 x
+            const chartX = padL + sideInset;        // 可用绘图区左起点
+            const plotW = Math.max(cw - sideInset * 2, 1); // 可用绘图区宽度
+
+            // 点间距：0=自动撑满，>0=固定px居中
+            const _n = dataPoints.length;
+            let dataSpan, centerOff;
+            if (config.pointSpacing > 0 && _n > 1) {
+                dataSpan = Math.min(config.pointSpacing * (_n - 1), plotW);
+                centerOff = (plotW - dataSpan) / 2;
+            } else {
+                dataSpan = plotW;
+                centerOff = 0;
+            }
+            const getPointX = i => chartX + centerOff + (_n > 1 ? i / (_n - 1) * dataSpan : dataSpan / 2);
+            const actualSlotW = _n > 1 ? dataSpan / (_n - 1) : dataSpan;
+            const actualBarHalfW = actualSlotW * config.barWidth / 2;
+            const plotRight = getPointX(_n - 1);   // 最后一个数据点 x
+            const ov = config.axisOverflow;         // 轴线向外超出量
 
             // 裁剪圆角
             ctx.save();
@@ -1253,16 +1279,22 @@
                 ctx.strokeStyle = cc.gridRgba;
                 ctx.lineWidth = 0.5;
                 if (config.dashedGrid) ctx.setLineDash([3, 6]);
-                // 竖线（每个数据点）
+                // 竖线（每个数据点）；首尾线向外超出
                 for (let i = 0; i < dataPoints.length; i++) {
-                    const x = chartX + (i / Math.max(dataPoints.length - 1, 1)) * plotW;
-                    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ch); ctx.stroke();
+                    const x = getPointX(i);
+                    const isOuter = (i === 0 || i === dataPoints.length - 1);
+                    const y0 = isOuter ? padT - ov : padT;
+                    const y1 = isOuter ? padT + ch + ov : padT + ch;
+                    ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke();
                 }
-                // 横线（Y轴刻度，从图表区开始到结束）
+                // 横线（Y轴刻度）；顶/底线向外超出
                 for (let i = 0; i <= config.gridY; i++) {
                     const ratio = i / config.gridY;
                     const y = padT + ch - ratio * ch;
-                    ctx.beginPath(); ctx.moveTo(chartX, y); ctx.lineTo(plotRight, y); ctx.stroke();
+                    const isOuter = (i === 0 || i === config.gridY);
+                    const x0 = isOuter ? getPointX(0) - ov : getPointX(0);
+                    const x1 = isOuter ? plotRight + ov : plotRight;
+                    ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
                 }
                 ctx.restore();
             }
@@ -1273,10 +1305,10 @@
                 const axisAlpha = isHold ? 1 : clamp(rawProgress * 1.5, 0, 0.35);
                 ctx.strokeStyle = cc.gridAxisRgba;
                 ctx.lineWidth = 1;
-                // X轴基线：左边不动（padL），右边延伸到最后一个数据点
+                // X轴基线（与底部网格线共享 overflow 超出）
                 ctx.beginPath();
-                ctx.moveTo(padL, padT + ch);
-                ctx.lineTo(plotRight, padT + ch);
+                ctx.moveTo(getPointX(0) - ov, padT + ch);
+                ctx.lineTo(plotRight + ov, padT + ch);
                 ctx.stroke();
                 ctx.restore();
             }
@@ -1300,7 +1332,7 @@
                 ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
                 const yStep2 = (lineYMax - lineYMin) / config.gridY;
                 const yDec2 = yStep2 >= 1 ? 0 : (yStep2 >= 0.1 ? 1 : 2);
-                const rightLabelX = plotRight + barHalfW + 14;
+                const rightLabelX = plotRight + actualBarHalfW + 14;
                 for (let i = 0; i <= config.gridY; i++) {
                     const ratio = i / config.gridY;
                     ctx.fillText((lineYMin + ratio * (lineYMax - lineYMin)).toFixed(yDec2), rightLabelX, padT + ch - ratio * ch);
@@ -1313,7 +1345,7 @@
             ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
             ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
             dataPoints.forEach((d, i) => {
-                ctx.fillText(d.label, chartX + (i / Math.max(dataPoints.length - 1, 1)) * plotW, padT + ch + 22);
+                ctx.fillText(d.label, getPointX(i), padT + ch + 22);
             });
             ctx.restore();
 
@@ -1379,10 +1411,10 @@
             // === 路径点（张力平滑 + 可选抖动） ===
             const jitter = isPaper ? config.lineJitter / 100 : 0;
             const tens = config.tension;
-            const ptsKey = `${dataPoints.map(d=>d.lineValue).join(',')}|${jitter}|${tens}|${config.cardPad}|${config.chartOffX}|${config.chartOffY}|${config.chartExtraW}|${config.chartExtraH}|${config.barWidth}|${w}|${lineYMin}-${lineYMax}`;
+            const ptsKey = `${dataPoints.map(d=>d.lineValue).join(',')}|${jitter}|${tens}|${config.cardPad}|${config.chartOffX}|${config.chartOffY}|${config.chartExtraW}|${config.chartExtraH}|${config.barWidth}|${config.pointSpacing}|${w}|${lineYMin}-${lineYMax}`;
             if (!_pathPtsCache || _pathPtsCache.key !== ptsKey) {
                 const pts = dataPoints.map((d, i) => ({
-                    x: chartX + (i / Math.max(dataPoints.length - 1, 1)) * plotW,
+                    x: getPointX(i),
                     y: padT + ch - ((clamp(d.lineValue, lineYMin, lineYMax) - lineYMin) / (lineYMax - lineYMin)) * ch
                 }));
                 _lineSeed = 54321;
@@ -1457,8 +1489,7 @@
             // === 柱状图 ===
             if (config.showBars) {
                 const barCount = dataPoints.length;
-                const slotW = cw / Math.max(barCount, 1);
-                const bw = slotW * config.barWidth;
+                const bw = actualSlotW * config.barWidth;
                 const bColor = config.barColor || config.lineColor;
                 const sColor = config.barStrokeColor || bColor;
                 const barProgress = isHold ? 1 : clamp(progress, 0, 1);
@@ -1471,7 +1502,7 @@
 
                 ctx.save();
                 dataPoints.forEach((d, i) => {
-                    const barCx = chartX + (i / Math.max(barCount - 1, 1)) * plotW;
+                    const barCx = getPointX(i);
                     const bx = barCx - bw / 2;
                     const valH = ((clamp(d.barValue, barYMin, barYMax) - barYMin) / (barYMax - barYMin)) * ch * barProgress;
                     const bh = valH;
