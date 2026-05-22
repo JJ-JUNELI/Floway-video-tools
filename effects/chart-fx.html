@@ -1319,9 +1319,10 @@
             ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
             const yStep = (barYMax - barYMin) / config.gridY;
             const yDec = yStep >= 1 ? 0 : (yStep >= 0.1 ? 1 : 2);
+            const leftLabelX = getPointX(0) - actualBarHalfW - 20;  // 跟随首柱左缘，居中时同步内移
             for (let i = 0; i <= config.gridY; i++) {
                 const ratio = i / config.gridY;
-                ctx.fillText((barYMin + ratio * (barYMax - barYMin)).toFixed(yDec), padL - 14, padT + ch - ratio * ch);
+                ctx.fillText((barYMin + ratio * (barYMax - barYMin)).toFixed(yDec), leftLabelX, padT + ch - ratio * ch);
             }
             ctx.restore();
 
