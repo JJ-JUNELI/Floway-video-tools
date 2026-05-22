@@ -186,7 +186,7 @@
                             <option value="color">有色间隔</option>
                         </select></div>
                     <div id="SliceGapOpts">
-                        <div class="row stack"><div class="label-line"><span>分割线粗细</span><span id="SliceGapVal">3px</span></div>
+                        <div class="row stack"><div class="label-line"><span>分割线粗细</span><span id="SliceGapVal">3</span></div>
                             <input type="range" id="SliceGap" min="0" max="20" step="1" value="3"></div>
                         <div id="SliceGapColorWrap" class="row stack" style="display:none">
                             <div class="label-line"><span>分割线颜色</span></div>
@@ -250,7 +250,7 @@
                             <div class="advanced-params">
                                 <div class="sub-title"><span>显示引线</span><input type="checkbox" id="ShowLeaderLines" checked></div>
                                 <div id="LeaderLineOpts">
-                                    <div class="ctrl-row"><span>引线粗细</span><input type="range" id="LeaderLineWidth" min="0.5" max="4" step="0.5" value="1"><span id="LeaderLineWidthVal">1px</span><span class="clr">颜色</span><input type="color" id="LeaderLineColor" value="#999999"></div>
+                                    <div class="ctrl-row"><span>引线粗细</span><input type="range" id="LeaderLineWidth" min="0.5" max="4" step="0.5" value="1"><span id="LeaderLineWidthVal">1</span><span class="clr">颜色</span><input type="color" id="LeaderLineColor" value="#999999"></div>
                                 </div>
                             </div>
                         </div>
@@ -296,9 +296,9 @@
                             <input type="color" id="TitleColor" value="#333333">
                         </div>
                         <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="MainTitleXVal">0px</span></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="MainTitleXVal">0</span></div>
                                 <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><span id="MainTitleYVal">-490px</span></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><span id="MainTitleYVal">-490</span></div>
                                 <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
                         </div>
                         <div class="sub-title"><span>显示括号</span><input type="checkbox" id="ShowBrackets" checked></div>
@@ -325,9 +325,9 @@
                             <input type="color" id="SubTitleColor" value="#999999">
                         </div>
                         <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="SubTitleXVal">630px</span></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="SubTitleXVal">630</span></div>
                                 <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><span id="SubTitleYVal">0px</span></div>
+                            <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><span id="SubTitleYVal">0</span></div>
                                 <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
                         </div>
                         <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
@@ -359,9 +359,9 @@
                 <div class="sub-section ss-green">
                     <div class="sub-section-label">形态</div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角</span><span id="CardRadiusVal">16px</span></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角</span><span id="CardRadiusVal">16</span></div>
                             <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>内边距</span><span id="CardPadVal">32px</span></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>内边距</span><span id="CardPadVal">32</span></div>
                             <input type="range" id="CardPad" min="10" max="100" step="2" value="32"></div>
                     </div>
                     <div class="advanced-params">
@@ -378,8 +378,8 @@
                     <div class="sub-title"><span>启用投影</span><input type="checkbox" id="ShadowEnabled" checked></div>
                     <div id="ShadowOpts">
                         <div class="ctrl-row"><span>角度</span><input type="range" id="ShadowAngle" min="0" max="360" step="1" value="90"><span id="ShadowAngleVal">90°</span></div>
-                        <div class="ctrl-row"><span>距离</span><input type="range" id="ShadowDistance" min="0" max="60" step="1" value="10"><span id="ShadowDistanceVal">10px</span></div>
-                        <div class="ctrl-row"><span>模糊</span><input type="range" id="ShadowBlur" min="0" max="80" step="1" value="20"><span id="ShadowBlurVal">20px</span></div>
+                        <div class="ctrl-row"><span>距离</span><input type="range" id="ShadowDistance" min="0" max="60" step="1" value="10"><span id="ShadowDistanceVal">10</span></div>
+                        <div class="ctrl-row"><span>模糊</span><input type="range" id="ShadowBlur" min="0" max="80" step="1" value="20"><span id="ShadowBlurVal">20</span></div>
                         <div class="ctrl-row"><span>不透明度</span><input type="range" id="ShadowOpacity" min="0" max="100" step="1" value="25"><span id="ShadowOpacityVal">25%</span></div>
                     </div>
                 </div>
@@ -638,10 +638,10 @@
             ['SubTitleWeight',  'subTitleWeight', 'int',   'SubTitleWeightVal'],
             ['TitleColor',      'mainTitleColor'],
             ['SubTitleColor',   'subTitleColor'],
-            ['MainTitleX',      'mainTitleX',     'int',   'MainTitleXVal',  'px'],
-            ['MainTitleY',      'mainTitleY',     'int',   'MainTitleYVal',  'px'],
-            ['SubTitleX',       'subTitleX',      'int',   'SubTitleXVal',   'px'],
-            ['SubTitleY',       'subTitleY',      'int',   'SubTitleYVal',   'px'],
+            ['MainTitleX',      'mainTitleX',     'int',   'MainTitleXVal'],
+            ['MainTitleY',      'mainTitleY',     'int',   'MainTitleYVal'],
+            ['SubTitleX',       'subTitleX',      'int',   'SubTitleXVal'],
+            ['SubTitleY',       'subTitleY',      'int',   'SubTitleYVal'],
             // 卡片背景
             ['ShowBrackets',    'showBrackets',   'checked'],
             ['SubTitleGlow',    'subTitleGlow',   'checked'],
@@ -657,7 +657,7 @@
             ['DonutWidth',      'donutCenterPct', 'int',   'DonutWidthVal', '%'],
             ['StartAngle',      'startAngle',     'int',   'StartAngleVal', '°'],
             ['SliceGapStyle',   'sliceGapStyle'],
-            ['SliceGap',        'sliceGap',       'int',   'SliceGapVal', 'px'],
+            ['SliceGap',        'sliceGap',       'int',   'SliceGapVal'],
             ['SliceGapColor',   'sliceGapColor'],
             ['DonutCenterColor',    'donutCenterColor'],
             ['DonutCenterTransparent', 'donutCenterTransparent', 'checked'],
@@ -680,7 +680,7 @@
             ['LabelMode',       'labelMode'],
             ['ShowLeaderLines', 'showLeaderLines', 'checked'],
             ['LeaderLineColor', 'leaderLineColor'],
-            ['LeaderLineWidth', 'leaderLineWidth', 'float', 'LeaderLineWidthVal', 'px'],
+            ['LeaderLineWidth', 'leaderLineWidth', 'float', 'LeaderLineWidthVal'],
             ['ShowPercentage',  'showPercentage', 'checked'],
             ['LabelFontSize',   'labelFontSize',  'int',   'LabelFontSizeVal'],
             ['LabelLineGap',    'labelLineGap',   'int',   'LabelLineGapVal'],
@@ -692,11 +692,11 @@
             ['CardScale',       'cardScale',      '%',     'CardScaleVal', '%'],
             ['ShadowEnabled',   'shadowEnabled',  'checked'],
             ['ShadowAngle',     'shadowAngle',    'int',   'ShadowAngleVal',    '°'],
-            ['ShadowDistance',  'shadowDistance', 'int',   'ShadowDistanceVal', 'px'],
-            ['ShadowBlur',      'shadowBlur',     'int',   'ShadowBlurVal',     'px'],
+            ['ShadowDistance',  'shadowDistance', 'int',   'ShadowDistanceVal'],
+            ['ShadowBlur',      'shadowBlur',     'int',   'ShadowBlurVal'],
             ['ShadowOpacity',   'shadowOpacity',  'int',   'ShadowOpacityVal',  '%'],
-            ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal',  'px'],
-            ['CardPad',         'cardPad',        'int',   'CardPadVal',     'px'],
+            ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal'],
+            ['CardPad',         'cardPad',        'int',   'CardPadVal'],
             ['CardBorderEnabled', 'cardBorderEnabled', 'checked'],
             ['CardBorderWidth',  'cardBorderWidth', 'int',   'CardBorderWidthVal'],
             ['CardBorderColor',  'cardBorderColor'],
