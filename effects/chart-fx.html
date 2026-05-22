@@ -134,11 +134,21 @@
                     <span>📊 数据管理</span>
                     <button class="btn-icon" onclick="resetData()" title="重置" style="width:28px;height:32px;font-size:13px;">↺</button>
                 </div>
-                <table class="data-table">
-                    <thead><tr><th style="width:32%">名称</th><th style="width:36%">数值</th><th style="width:32%">操作</th></tr></thead>
-                    <tbody id="DataBody"></tbody>
-                </table>
-                <button class="btn-add" onclick="addRow()">+ 添加数据行</button>
+                <div class="sub-section ss-amber">
+                    <div class="sub-section-label">柱状图数据</div>
+                    <table class="data-table">
+                        <thead><tr><th style="width:30%">名称</th><th style="width:32%">柱状图数值</th><th style="width:38%">操作</th></tr></thead>
+                        <tbody id="BarDataBody"></tbody>
+                    </table>
+                    <button class="btn-add" onclick="addRow()">+ 添加数据行</button>
+                </div>
+                <div class="sub-section ss-blue" style="margin-top:10px;">
+                    <div class="sub-section-label">折线图数据</div>
+                    <table class="data-table">
+                        <thead><tr><th style="width:42%">名称（联动）</th><th style="width:58%">折线图数值</th></tr></thead>
+                        <tbody id="LineDataBody"></tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- 折线样式 -->
@@ -169,8 +179,8 @@
                     </div>
                 </div>
                 </div>
-                <div class="sub-title"><span>显示柱状图</span><input type="checkbox" id="ShowBars"></div>
-                <div id="BarOptions" style="display:none;">
+                <div class="sub-title"><span>显示柱状图</span><input type="checkbox" id="ShowBars" checked></div>
+                <div id="BarOptions">
                 <div class="sub-section ss-amber">
                     <div class="sub-section-label">柱子样式</div>
                     <div class="row">
@@ -265,6 +275,20 @@
                         </div>
                     </div>
                 </div>
+                <div class="sub-section ss-teal">
+                    <div class="sub-section-label">图例</div>
+                    <div class="sub-title"><span>显示图例</span><input type="checkbox" id="ShowLegend" checked></div>
+                    <div id="LegendOpts">
+                        <div class="ctrl-row">
+                            <span>柱状图</span>
+                            <input type="text" id="BarLegend" value="月度销量" style="flex:1; height:28px; padding:4px 8px;">
+                        </div>
+                        <div class="ctrl-row" style="margin-top:4px;">
+                            <span>折线图</span>
+                            <input type="text" id="LineLegend" value="渗透率（%）" style="flex:1; height:28px; padding:4px 8px;">
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- 主题风格 -->
@@ -310,6 +334,22 @@
                     <div class="row stack">
                         <div class="label-line"><span>颜色</span></div>
                         <input type="color" id="AxisLabelColor" value="#999999">
+                    </div>
+                </div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">右轴（折线）</div>
+                    <div class="row stack"><div class="label-line"><span>Y轴模式</span></div>
+                        <select id="YAxisMode2">
+                            <option value="zero">从零开始</option>
+                            <option value="auto" selected>自动取整</option>
+                            <option value="percent">百分比 (0-100)</option>
+                            <option value="custom">自定义范围</option>
+                        </select></div>
+                    <div id="YAxisCustomPanel2" style="display:none; margin-top:8px; padding-top:6px; border-top: 1px dashed var(--border);">
+                        <div class="row">
+                            <div class="stack" style="flex:1"><div class="label-line"><span>最小值</span></div><input type="number" id="YMin2" value="0"></div>
+                            <div class="stack" style="flex:1"><div class="label-line"><span>最大值</span></div><input type="number" id="YMax2" value="100"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="sub-section ss-purple">
@@ -451,12 +491,18 @@
 
         // ====== 数据点 ======
         const INITIAL_DATA = [
-            { label: '1月', value: 41 },  { label: '2月', value: 49 },
-            { label: '3月', value: 51.5 }, { label: '4月', value: 52.5 },
-            { label: '5月', value: 53.5 }, { label: '6月', value: 52 },
-            { label: '7月', value: 52 },   { label: '8月', value: 55.5 },
-            { label: '9月', value: 58.5 }, { label: '10月', value: 57.5 },
-            { label: '11月', value: 59 },  { label: '12月', value: 58 }
+            { label: '1月',  barValue: 420,  lineValue: 41   },
+            { label: '2月',  barValue: 510,  lineValue: 49   },
+            { label: '3月',  barValue: 580,  lineValue: 51.5 },
+            { label: '4月',  barValue: 620,  lineValue: 52.5 },
+            { label: '5月',  barValue: 655,  lineValue: 53.5 },
+            { label: '6月',  barValue: 640,  lineValue: 52   },
+            { label: '7月',  barValue: 650,  lineValue: 52   },
+            { label: '8月',  barValue: 700,  lineValue: 55.5 },
+            { label: '9月',  barValue: 760,  lineValue: 58.5 },
+            { label: '10月', barValue: 740,  lineValue: 57.5 },
+            { label: '11月', barValue: 780,  lineValue: 59   },
+            { label: '12月', barValue: 770,  lineValue: 58   },
         ];
         let dataPoints = INITIAL_DATA.map(d => ({...d}));
 
@@ -489,10 +535,14 @@
             valueBgEnabled: true,
             valueBgColor: '#555555',
             pointSize: 4,
+            // 图例
+            showLegend: true,
+            barLegend: '月度销量',
+            lineLegend: '渗透率（%）',
             // 柱状图
-            showBars: false,
+            showBars: true,
             barWidth: 0.6,
-            barColor: '',
+            barColor: '#a8c5da',
             barOpacity: 0.7,
             barRadius: 4,
             barGradient: false,
@@ -503,6 +553,8 @@
             gridY: 4,
             yAxisMode: 'zero',
             yMin: 0, yMax: 100,
+            yAxisMode2: 'auto',
+            yMin2: 0, yMax2: 100,
             dashedGrid: false,
             axisLabelSize: 11,
             axisLabelColor: '#999999',
@@ -575,7 +627,8 @@
             paper: {
                 mainTitleColor: '#333333',
                 subTitleColor: '#999999',
-                lineColor: '#555555',
+                lineColor: '#e07b5a',
+                barColor: '#a8c5da',
                 axisLabelColor: '#999999',
                 valueColor: '#555555',
                 gridColor: '#c3bcaf',
@@ -591,7 +644,8 @@
             cyber: {
                 mainTitleColor: '#ffffff',
                 subTitleColor: '#ffffff',
-                lineColor: '#00f2ff',
+                lineColor: '#ffae00',
+                barColor: '#00c8ff',
                 axisLabelColor: '#888888',
                 valueColor: '#ffffff',
                 gridColor: '#333333',
@@ -622,6 +676,7 @@
             updateUI('TitleColor', config.mainTitleColor);
             updateUI('SubTitleColor', config.subTitleColor);
             updateUI('LineColor', config.lineColor);
+            updateUI('BarColor', config.barColor);
             updateUI('AxisLabelColor', config.axisLabelColor);
             updateUI('ValueColor', config.valueColor);
             updateUI('GridColor', config.gridColor);
@@ -732,11 +787,18 @@
             ['ValueYOffset',    'valueYOffset',   'int',   'ValueYOffsetVal','px'],
             ['ValueBgEnabled',  'valueBgEnabled', 'checked'],
             ['ValueBgColor',    'valueBgColor'],
+            // 图例
+            ['ShowLegend',      'showLegend',     'checked'],
+            ['BarLegend',       'barLegend'],
+            ['LineLegend',      'lineLegend'],
             // 网格与坐标
             ['GridY',           'gridY',          'int',   'GridYVal'],
             ['YAxisMode',       'yAxisMode'],
             ['YMin',            'yMin',           'float'],
             ['YMax',            'yMax',           'float'],
+            ['YAxisMode2',      'yAxisMode2'],
+            ['YMin2',           'yMin2',          'float'],
+            ['YMax2',           'yMax2',          'float'],
             ['DashedGrid',      'dashedGrid',     'checked'],
             ['AxisLabelSize',   'axisLabelSize',  'int',   'AxisLabelSizeVal'],
             ['AxisLabelColor',  'axisLabelColor'],
@@ -783,6 +845,13 @@
                 if (key === 'yAxisMode') {
                     document.getElementById('YAxisCustomPanel').style.display =
                         config.yAxisMode === 'custom' ? 'block' : 'none';
+                }
+                if (key === 'yAxisMode2') {
+                    document.getElementById('YAxisCustomPanel2').style.display =
+                        config.yAxisMode2 === 'custom' ? 'block' : 'none';
+                }
+                if (key === 'showLegend') {
+                    document.getElementById('LegendOpts').style.display = config.showLegend ? '' : 'none';
                 }
                 if (key === 'cardBorderEnabled') {
                     document.getElementById('CardBorderOpts').style.display = config.cardBorderEnabled ? '' : 'none';
@@ -880,14 +949,14 @@
         function lerp(a, b, t) { return a + (b - a) * t; }
 
         // ====== 数据表格 ======
-        function renderTable() {
-            const tbody = document.getElementById('DataBody');
+        function renderBarTable() {
+            const tbody = document.getElementById('BarDataBody');
             tbody.innerHTML = '';
             dataPoints.forEach((item, i) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="text" name="dataLabel${i}" value="${item.label}" oninput="updateData(${i}, 'label', this.value)"></td>
-                    <td><input type="number" name="dataValue${i}" value="${item.value}" oninput="updateData(${i}, 'value', this.value)"></td>
+                    <td><input type="text" value="${item.label}" oninput="updateData(${i}, 'label', this.value)"></td>
+                    <td><input type="number" value="${item.barValue}" oninput="updateData(${i}, 'barValue', this.value)"></td>
                     <td class="op-cell">
                         <button class="btn-icon" onclick="moveRow(${i}, -1)" title="上移">↑</button>
                         <button class="btn-icon" onclick="moveRow(${i}, 1)" title="下移">↓</button>
@@ -896,11 +965,27 @@
                 tbody.appendChild(tr);
             });
         }
-        window.updateData = (i, k, v) => { dataPoints[i][k] = k === 'value' ? (parseFloat(v) || 0) : v; _pathPtsCache = null; startLoop(); };
-        window.addRow = () => { dataPoints.push({ label: '新项', value: 0 }); renderTable(); _pathPtsCache = null; startLoop(); };
-        window.removeRow = (i) => { if (dataPoints.length <= 2) { alert('至少保留两个数据点'); return; } dataPoints.splice(i, 1); renderTable(); _pathPtsCache = null; startLoop(); };
-        window.moveRow = (i, dir) => { if (i+dir < 0 || i+dir >= dataPoints.length) return; const t = dataPoints[i]; dataPoints[i] = dataPoints[i+dir]; dataPoints[i+dir] = t; renderTable(); _pathPtsCache = null; startLoop(); };
-        window.resetData = () => { dataPoints = INITIAL_DATA.map(d => ({...d})); renderTable(); _pathPtsCache = null; startLoop(); };
+        function renderLineTable() {
+            const tbody = document.getElementById('LineDataBody');
+            tbody.innerHTML = '';
+            dataPoints.forEach((item, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span style="font-size:12px;color:var(--text-sub);padding:4px 8px;display:block;">${item.label}</span></td>
+                    <td><input type="number" value="${item.lineValue}" oninput="updateData(${i}, 'lineValue', this.value)"></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        function renderTables() { renderBarTable(); renderLineTable(); }
+        window.updateData = (i, k, v) => {
+            dataPoints[i][k] = k === 'label' ? v : (parseFloat(v) || 0);
+            if (k === 'label') renderLineTable();
+            _pathPtsCache = null; _labelMeasureCache = null; startLoop();
+        };
+        window.addRow = () => { dataPoints.push({ label: '新项', barValue: 0, lineValue: 0 }); renderTables(); _pathPtsCache = null; startLoop(); };
+        window.removeRow = (i) => { if (dataPoints.length <= 2) { alert('至少保留两个数据点'); return; } dataPoints.splice(i, 1); renderTables(); _pathPtsCache = null; startLoop(); };
+        window.moveRow = (i, dir) => { if (i+dir < 0 || i+dir >= dataPoints.length) return; const t = dataPoints[i]; dataPoints[i] = dataPoints[i+dir]; dataPoints[i+dir] = t; renderTables(); _pathPtsCache = null; startLoop(); };
+        window.resetData = () => { dataPoints = INITIAL_DATA.map(d => ({...d})); renderTables(); _pathPtsCache = null; startLoop(); };
 
         document.getElementById('BtnPlay').addEventListener('click', () => myResetAnimStart());
         initThemeToggle();
@@ -938,7 +1023,7 @@
         document.getElementById('ShowBars').addEventListener('change', () => {
             barOptsEl.style.display = config.showBars ? '' : 'none';
         });
-        if (config.showBars) barOptsEl.style.display = '';
+        barOptsEl.style.display = config.showBars ? '' : 'none';
 
         // 条件显示：渐变终止色
         const barGradEndRow = document.getElementById('BarGradientEndRow');
@@ -956,13 +1041,12 @@
             return nice * mag;
         }
 
-        function getYRange() {
-            const values = dataPoints.map(d => d.value);
+        function getYRange(values, mode, cfgMin, cfgMax) {
             if (!values.length) return { yMin: 0, yMax: 100 };
 
-            if (config.yAxisMode === 'percent') return { yMin: 0, yMax: 100 };
-            if (config.yAxisMode === 'custom') {
-                let yMin = config.yMin, yMax = config.yMax;
+            if (mode === 'percent') return { yMin: 0, yMax: 100 };
+            if (mode === 'custom') {
+                let yMin = cfgMin, yMax = cfgMax;
                 if (yMax <= yMin) yMax = yMin + 1;
                 return { yMin, yMax };
             }
@@ -970,7 +1054,7 @@
             const dataMin = Math.min(...values), dataMax = Math.max(...values);
             const span = dataMax - dataMin || 10;
 
-            if (config.yAxisMode === 'auto') {
+            if (mode === 'auto') {
                 const step = getYStep(span);
                 let yMin = Math.floor(dataMin / step) * step;
                 let yMax = Math.ceil(dataMax / step) * step;
@@ -1092,13 +1176,14 @@
         let _labelMeasureCache = null; // 数值标签文字宽度缓存
 
         function getLabelMeasures() {
-            const key = `${dataPoints.map(d=>d.value).join(',')}|${config.valueSize}|${config.titleFont}`;
+            const vals = config.showLine ? dataPoints.map(d=>d.lineValue) : dataPoints.map(d=>d.barValue);
+            const key = `${vals.join(',')}|${config.valueSize}|${config.titleFont}`;
             if (!_labelMeasureCache || _labelMeasureCache.key !== key) {
                 const mCtx = offscreen.getContext('2d');
                 mCtx.font = `bold ${config.valueSize}px ${config.titleFont}`;
                 _labelMeasureCache = {
                     key,
-                    widths: dataPoints.map(d => mCtx.measureText(String(d.value)).width),
+                    widths: vals.map(v => mCtx.measureText(String(v)).width),
                     th: config.valueSize + 6,
                 };
             }
@@ -1137,7 +1222,8 @@
             const padT = _pad + 50 + config.chartOffY - config.chartExtraH / 2;
             const cw = (w - (_pad + 98) * 2) + config.chartExtraW;
             const ch = (h - (_pad + 50) - (_pad + 55)) + config.chartExtraH;
-            const { yMin, yMax } = getYRange();
+            const { yMin: barYMin, yMax: barYMax } = getYRange(dataPoints.map(d=>d.barValue), config.yAxisMode, config.yMin, config.yMax);
+            const { yMin: lineYMin, yMax: lineYMax } = getYRange(dataPoints.map(d=>d.lineValue), config.yAxisMode2, config.yMin2, config.yMax2);
             // 图表内容整体右移半个柱宽，避开Y轴标签区（Y轴标签位置不变）
             const barHalfW = (cw / Math.max(dataPoints.length, 1)) * config.barWidth / 2;
             const chartX = padL + barHalfW; // 图表内容实际起始x（整体右移半个柱宽）
@@ -1192,17 +1278,31 @@
                 ctx.restore();
             }
 
-            // === Y 轴标签 ===
+            // === Y 轴标签（左轴 = 柱状图）===
             ctx.save();
             ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
             ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-            const yStep = (yMax - yMin) / config.gridY;
+            const yStep = (barYMax - barYMin) / config.gridY;
             const yDec = yStep >= 1 ? 0 : (yStep >= 0.1 ? 1 : 2);
             for (let i = 0; i <= config.gridY; i++) {
                 const ratio = i / config.gridY;
-                ctx.fillText((yMin + ratio * (yMax - yMin)).toFixed(yDec), padL - 14, padT + ch - ratio * ch);
+                ctx.fillText((barYMin + ratio * (barYMax - barYMin)).toFixed(yDec), padL - 14, padT + ch - ratio * ch);
             }
             ctx.restore();
+
+            // === Y 轴标签（右轴 = 折线图）===
+            if (config.showLine) {
+                ctx.save();
+                ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
+                ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+                const yStep2 = (lineYMax - lineYMin) / config.gridY;
+                const yDec2 = yStep2 >= 1 ? 0 : (yStep2 >= 0.1 ? 1 : 2);
+                for (let i = 0; i <= config.gridY; i++) {
+                    const ratio = i / config.gridY;
+                    ctx.fillText((lineYMin + ratio * (lineYMax - lineYMin)).toFixed(yDec2), chartX + cw + 10, padT + ch - ratio * ch);
+                }
+                ctx.restore();
+            }
 
             // === X 轴标签 ===
             ctx.save();
@@ -1227,6 +1327,40 @@
                 ctx.restore();
             }
 
+            // === 图例 ===
+            if (config.showLegend && (config.showBars || config.showLine)) {
+                const ly = padT - 18;
+                let lx = chartX;
+                const fs = Math.max(10, config.axisLabelSize);
+                ctx.save();
+                ctx.font = `${fs}px ${config.titleFont}`;
+                ctx.textBaseline = 'middle';
+                ctx.globalAlpha = titleAlpha;
+                if (config.showBars) {
+                    const bc = config.barColor || config.lineColor;
+                    ctx.fillStyle = hexToRgba(bc, config.barOpacity);
+                    ctx.fillRect(lx, ly - 5, 11, 11);
+                    lx += 15;
+                    ctx.fillStyle = config.axisLabelColor;
+                    ctx.textAlign = 'left';
+                    ctx.fillText(config.barLegend, lx, ly);
+                    lx += ctx.measureText(config.barLegend).width + 22;
+                }
+                if (config.showLine) {
+                    ctx.save();
+                    ctx.strokeStyle = config.lineColor;
+                    ctx.lineWidth = Math.max(1.5, config.lineWidth);
+                    ctx.lineCap = 'round';
+                    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 20, ly); ctx.stroke();
+                    ctx.restore();
+                    lx += 24;
+                    ctx.fillStyle = config.axisLabelColor;
+                    ctx.textAlign = 'left';
+                    ctx.fillText(config.lineLegend, lx, ly);
+                }
+                ctx.restore();
+            }
+
             // 副标题已移至最顶层绘制
 
             if (!dataPoints.length) {
@@ -1241,11 +1375,11 @@
             // === 路径点（张力平滑 + 可选抖动） ===
             const jitter = isPaper ? config.lineJitter / 100 : 0;
             const tens = config.tension;
-            const ptsKey = `${dataPoints.map(d=>d.value).join(',')}|${jitter}|${tens}|${config.cardPad}|${config.chartOffX}|${config.chartOffY}|${config.chartExtraW}|${config.chartExtraH}|${w}|${yMin}-${yMax}`;
+            const ptsKey = `${dataPoints.map(d=>d.lineValue).join(',')}|${jitter}|${tens}|${config.cardPad}|${config.chartOffX}|${config.chartOffY}|${config.chartExtraW}|${config.chartExtraH}|${w}|${lineYMin}-${lineYMax}`;
             if (!_pathPtsCache || _pathPtsCache.key !== ptsKey) {
                 const pts = dataPoints.map((d, i) => ({
                     x: chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw,
-                    y: padT + ch - ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch
+                    y: padT + ch - ((clamp(d.lineValue, lineYMin, lineYMax) - lineYMin) / (lineYMax - lineYMin)) * ch
                 }));
                 _lineSeed = 54321;
                 const pp = [{ x: pts[0].x, y: pts[0].y }];
@@ -1335,7 +1469,7 @@
                 dataPoints.forEach((d, i) => {
                     const barCx = chartX + (i / Math.max(barCount - 1, 1)) * cw;
                     const bx = barCx - bw / 2;
-                    const valH = ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch * barProgress;
+                    const valH = ((clamp(d.barValue, barYMin, barYMax) - barYMin) / (barYMax - barYMin)) * ch * barProgress;
                     const bh = valH;
                     const by = baseY - valH;
 
@@ -1520,8 +1654,9 @@
                 ctx.fillStyle = config.valueColor;
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.globalAlpha = labelAlpha;
+                const useLineVal = config.showLine;
                 points.forEach((p, i) => {
-                    const txt = String(dataPoints[i].value);
+                    const txt = String(useLineVal ? dataPoints[i].lineValue : dataPoints[i].barValue);
                     ctx.fillText(txt, p.x, p.y + yOffset - th / 2);
                 });
                 ctx.restore();
@@ -1674,7 +1809,7 @@
         }
 
         // ====== 预览循环（按需启停）======
-        renderTable();
+        renderTables();
 
         let _animStartTime = performance.now();
         let _loopId = null;
