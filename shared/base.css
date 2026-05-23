@@ -855,7 +855,7 @@ input:checked + .slider:before {
     overflow: hidden;
     border: none;
     border-radius: 0;
-    background-color: #06080b;
+    background-color: transparent;
 }
 
 canvas {
@@ -1345,7 +1345,7 @@ body.logo canvas {
         linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
 }
 [data-theme="light"] .preview-area {
-    background-color: #c9d0d8;
+    background-color: transparent;
 }
 [data-theme="light"] canvas,
 [data-theme="light"] #mainSvg {

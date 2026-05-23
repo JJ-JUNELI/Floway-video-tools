@@ -146,14 +146,16 @@
                 <div class="group-title"><span>📈 折线图</span></div>
                 <div class="sub-section ss-blue">
                     <div class="sub-section-label">线条</div>
-                    <div class="ctrl-row"><span>线条粗细</span><input type="range" id="LineWidth" min="0.5" max="15" step="0.5" value="1.2"><span id="LineWidthVal">1.2</span><span class="clr">颜色</span><input type="color" id="LineColor" value="#555555"></div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>曲线张力</span><span id="TensionVal">0</span></div>
-                            <input type="range" id="Tension" min="0" max="1" step="0.1" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>线条辉光</span><span id="GlowBlurVal">0</span></div>
-                            <input type="range" id="GlowBlur" min="0" max="80" step="5" value="0"></div>
-                    </div>
-                    <div class="ctrl-row"><span>手绘抖动</span><input type="range" id="LineJitter" min="0" max="100" step="1" value="25"><span id="LineJitterVal">25</span></div>
+                    <div class="stack"><div class="label-line"><span>线条粗细</span><span id="LineWidthVal">1.2</span></div>
+                        <input type="range" id="LineWidth" min="0.5" max="15" step="0.5" value="1.2"></div>
+                    <div class="row stack"><div class="label-line"><span>线条颜色</span></div>
+                        <input type="color" id="LineColor" value="#555555"></div>
+                    <div class="stack"><div class="label-line"><span>曲线张力</span><span id="TensionVal">0</span></div>
+                        <input type="range" id="Tension" min="0" max="1" step="0.1" value="0"></div>
+                    <div class="stack"><div class="label-line"><span>线条辉光</span><span id="GlowBlurVal">0</span></div>
+                        <input type="range" id="GlowBlur" min="0" max="80" step="5" value="0"></div>
+                    <div class="stack"><div class="label-line"><span>手绘抖动</span><span id="LineJitterVal">25</span></div>
+                        <input type="range" id="LineJitter" min="0" max="100" step="1" value="25"></div>
                 </div>
                 <div class="sub-section ss-teal">
                     <div class="sub-section-label">面积填充</div>
@@ -163,12 +165,10 @@
                         <div class="label-line"><span>自定义填充色</span></div>
                         <input type="color" id="AreaColor" value="#b4a58c">
                     </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>填充透明度</span><span id="FillOpacityVal">20%</span></div>
-                            <input type="range" id="FillOpacity" min="0" max="100" step="5" value="20"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>垂线透明度</span><span id="DropLineOpacityVal">20%</span></div>
-                            <input type="range" id="DropLineOpacity" min="0" max="100" step="5" value="20"></div>
-                    </div>
+                    <div class="stack"><div class="label-line"><span>填充透明度</span><span id="FillOpacityVal">20%</span></div>
+                        <input type="range" id="FillOpacity" min="0" max="100" step="5" value="20"></div>
+                    <div class="stack"><div class="label-line"><span>垂线透明度</span><span id="DropLineOpacityVal">20%</span></div>
+                        <input type="range" id="DropLineOpacity" min="0" max="100" step="5" value="20"></div>
                 </div>
                 <div class="sub-section ss-green">
                     <div class="sub-section-label">数据点</div>
@@ -195,12 +195,10 @@
                 <div id="BarOptions">
                 <div class="sub-section ss-amber">
                     <div class="sub-section-label">柱子样式</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>柱宽比例</span><span id="BarWidthVal">60%</span></div>
-                            <input type="range" id="BarWidth" min="10" max="100" step="5" value="60"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>顶部圆角</span><span id="BarRadiusVal">4</span></div>
-                            <input type="range" id="BarRadius" min="0" max="20" step="1" value="4"></div>
-                    </div>
+                    <div class="stack"><div class="label-line"><span>柱宽比例</span><span id="BarWidthVal">60%</span></div>
+                        <input type="range" id="BarWidth" min="10" max="100" step="5" value="60"></div>
+                    <div class="stack"><div class="label-line"><span>顶部圆角</span><span id="BarRadiusVal">4</span></div>
+                        <input type="range" id="BarRadius" min="0" max="20" step="1" value="4"></div>
                     <div class="ctrl-row"><span>填充透明度</span><input type="range" id="BarOpacity" min="0" max="100" step="5" value="70"><span id="BarOpacityVal">70%</span><span class="clr">颜色</span><input type="color" id="BarColor" value="#a8c5da"></div>
                     <div class="sub-title"><span>渐变填充</span><input type="checkbox" id="BarGradient"></div>
                     <div class="row stack" id="BarGradientEndRow" style="display:none;">
@@ -268,12 +266,10 @@
                             <span>柱状图</span>
                             <input type="text" id="BarLegend" value="月度销量" style="flex:1; height:28px; padding:4px 8px;">
                         </div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>字号</span><span id="LegendSizeVal">11</span></div>
-                                <input type="range" id="LegendSize" min="8" max="24" step="1" value="11"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>上下位置</span><span id="LegendOffYVal">0</span></div>
-                                <input type="range" id="LegendOffY" min="-30" max="30" step="1" value="0"></div>
-                        </div>
+                        <div class="stack"><div class="label-line"><span>字号</span><span id="LegendSizeVal">11</span></div>
+                            <input type="range" id="LegendSize" min="8" max="24" step="1" value="11"></div>
+                        <div class="stack"><div class="label-line"><span>上下位置</span><span id="LegendOffYVal">0</span></div>
+                            <input type="range" id="LegendOffY" min="-30" max="30" step="1" value="0"></div>
                     </div>
                 </div>
             </div>
