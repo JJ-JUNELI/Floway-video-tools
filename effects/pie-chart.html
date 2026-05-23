@@ -220,11 +220,13 @@
                 </div>
                 <div class="sub-section ss-rose">
                     <div class="sub-section-label">效果</div>
-                    <div class="ctrl-row"><span>透明度</span><input type="range" id="SliceOpacity" min="0" max="100" step="5" value="100"><span id="SliceOpacityVal">100%</span></div>
+                    <div class="stack"><div class="label-line"><span>透明度</span><span id="SliceOpacityVal">100%</span></div>
+                        <input type="range" id="SliceOpacity" min="0" max="100" step="5" value="100"></div>
                     <div class="advanced-params">
                         <div class="sub-title"><span>切片辉光</span><input type="checkbox" id="SliceGlowEnabled"></div>
                         <div id="SliceGlowOpts" style="display:none">
-                            <div class="ctrl-row"><span>辉光强度</span><input type="range" id="SliceGlow" min="0" max="100" step="2" value="0"><span id="SliceGlowVal">0</span></div>
+                            <div class="stack"><div class="label-line"><span>辉光强度</span><span id="SliceGlowVal">0</span></div>
+                                <input type="range" id="SliceGlow" min="0" max="100" step="2" value="0"></div>
                         </div>
                     </div>
                 </div>
@@ -242,11 +244,17 @@
                                 <option value="inside">扇形内部</option>
                             </select></div>
                         <div id="OutsideLabelOpts">
-                            <div class="ctrl-row"><span>标签距离</span><input type="range" id="LabelDistance" min="5" max="150" step="5" value="60"><span id="LabelDistanceVal">60</span></div>
+                            <div class="stack"><div class="label-line"><span>标签距离</span><span id="LabelDistanceVal">60</span></div>
+                                <input type="range" id="LabelDistance" min="5" max="150" step="5" value="60"></div>
                             <div class="advanced-params">
                                 <div class="sub-title"><span>显示引线</span><input type="checkbox" id="ShowLeaderLines" checked></div>
                                 <div id="LeaderLineOpts">
-                                    <div class="ctrl-row"><span>引线粗细</span><input type="range" id="LeaderLineWidth" min="0.5" max="4" step="0.5" value="1"><span id="LeaderLineWidthVal">1</span><span class="clr">颜色</span><input type="color" id="LeaderLineColor" value="#999999"></div>
+                                    <div class="stack"><div class="label-line"><span>引线粗细</span><span id="LeaderLineWidthVal">1</span></div>
+                                        <input type="range" id="LeaderLineWidth" min="0.5" max="4" step="0.5" value="1"></div>
+                                    <div class="row stack">
+                                        <div class="label-line"><span>引线颜色</span></div>
+                                        <input type="color" id="LeaderLineColor" value="#999999">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -338,8 +346,10 @@
                     <div class="lock-hint">需先启用背景</div>
                     <div class="sub-title"><span>启用纹理</span><input type="checkbox" id="TextureEnabled" checked></div>
                     <div id="TextureOpts">
-                        <div class="ctrl-row"><span>纹理强度</span><input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"><span id="NoiseGrainVal">35</span></div>
-                        <div class="ctrl-row"><span>暗角</span><input type="range" id="Vignette" min="0" max="100" step="1" value="15"><span id="VignetteVal">15</span></div>
+                        <div class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
+                            <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div>
+                        <div class="stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
+                            <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
                     </div>
                 </div>
                 <div class="sub-section ss-green">
@@ -351,20 +361,35 @@
                     <div class="advanced-params">
                         <div class="sub-title" style="margin-top:4px"><span>启用描边</span><input type="checkbox" id="CardBorderEnabled"></div>
                         <div id="CardBorderOpts" style="display:none">
-                            <div class="ctrl-row"><span>描边宽度</span><input type="range" id="CardBorderWidth" min="0" max="25" value="0"><span id="CardBorderWidthVal">0</span><span class="clr">颜色</span><input type="color" id="CardBorderColor" value="#ffffff"></div>
+                            <div class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
+                                <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
+                            <div class="row stack">
+                                <div class="label-line"><span>描边颜色</span></div>
+                                <input type="color" id="CardBorderColor" value="#ffffff">
+                            </div>
                         </div>
                         <div class="sub-title"><span>启用辉光</span><input type="checkbox" id="CardGlowEnabled"></div>
                         <div id="CardGlowOpts" style="display:none">
-                            <div class="ctrl-row"><span>辉光宽度</span><input type="range" id="CardGlowWidth" min="0" max="80" value="0"><span id="CardGlowWidthVal">0</span><span class="clr">颜色</span><input type="color" id="CardGlowColor" value="#3b82f6"></div>
-                            <div class="ctrl-row"><span>辉光强度</span><input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"><span id="CardGlowIntensityVal">70%</span></div>
+                            <div class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
+                                <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
+                            <div class="row stack">
+                                <div class="label-line"><span>辉光颜色</span></div>
+                                <input type="color" id="CardGlowColor" value="#3b82f6">
+                            </div>
+                            <div class="stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
+                                <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
                         </div>
                     </div>
                     <div class="sub-title"><span>启用投影</span><input type="checkbox" id="ShadowEnabled" checked></div>
                     <div id="ShadowOpts">
-                        <div class="ctrl-row"><span>角度</span><input type="range" id="ShadowAngle" min="0" max="360" step="1" value="90"><span id="ShadowAngleVal">90°</span></div>
-                        <div class="ctrl-row"><span>距离</span><input type="range" id="ShadowDistance" min="0" max="60" step="1" value="10"><span id="ShadowDistanceVal">10</span></div>
-                        <div class="ctrl-row"><span>模糊</span><input type="range" id="ShadowBlur" min="0" max="80" step="1" value="20"><span id="ShadowBlurVal">20</span></div>
-                        <div class="ctrl-row"><span>不透明度</span><input type="range" id="ShadowOpacity" min="0" max="100" step="1" value="25"><span id="ShadowOpacityVal">25%</span></div>
+                        <div class="stack"><div class="label-line"><span>角度</span><span id="ShadowAngleVal">90°</span></div>
+                            <input type="range" id="ShadowAngle" min="0" max="360" step="1" value="90"></div>
+                        <div class="stack"><div class="label-line"><span>距离</span><span id="ShadowDistanceVal">10</span></div>
+                            <input type="range" id="ShadowDistance" min="0" max="60" step="1" value="10"></div>
+                        <div class="stack"><div class="label-line"><span>模糊</span><span id="ShadowBlurVal">20</span></div>
+                            <input type="range" id="ShadowBlur" min="0" max="80" step="1" value="20"></div>
+                        <div class="stack"><div class="label-line"><span>不透明度</span><span id="ShadowOpacityVal">25%</span></div>
+                            <input type="range" id="ShadowOpacity" min="0" max="100" step="1" value="25"></div>
                     </div>
                 </div>
             </div>
@@ -374,23 +399,20 @@
                 <div class="group-title"><span>🃏 卡片漂浮</span></div>
                 <div class="sub-section ss-blue">
                     <div class="sub-section-label">透视角度</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
-                            <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
-                            <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
-                    </div>
-                    <div class="ctrl-row"><span>卡片缩放</span><input type="range" id="CardScale" min="40" max="100" step="1" value="80"><span id="CardScaleVal">80%</span></div>
+                    <div class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
+                        <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5"></div>
+                    <div class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
+                        <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
+                    <div class="stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
+                        <input type="range" id="CardScale" min="40" max="100" step="1" value="80"></div>
                 </div>
                 <div class="sub-section ss-purple">
                     <div class="sub-section-label">微动画</div>
                     <div class="sub-title"><span>启用微动画</span><input type="checkbox" id="FloatEnabled" checked></div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴摆幅</span><span id="FloatRotateXVal">2.0°</span></div>
-                            <input type="range" id="FloatRotateX" min="0" max="8" step="0.5" value="2.0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴摆幅</span><span id="FloatRotateYVal">1.5°</span></div>
-                            <input type="range" id="FloatRotateY" min="0" max="8" step="0.5" value="1.5"></div>
-                    </div>
+                    <div class="stack"><div class="label-line"><span>X轴摆幅</span><span id="FloatRotateXVal">2.0°</span></div>
+                        <input type="range" id="FloatRotateX" min="0" max="8" step="0.5" value="2.0"></div>
+                    <div class="stack"><div class="label-line"><span>Y轴摆幅</span><span id="FloatRotateYVal">1.5°</span></div>
+                        <input type="range" id="FloatRotateY" min="0" max="8" step="0.5" value="1.5"></div>
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>周期</span><span id="FloatDurationVal">4s</span></div>
                             <input type="range" id="FloatDuration" min="1" max="10" step="0.5" value="4"></div>
@@ -408,7 +430,8 @@
                         <span>动画</span>
                         <button id="BtnPlay" class="btn-play">▶ 播放</button>
                     </div>
-                    <div class="ctrl-row"><span>动画时长</span><input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="2.5"><span id="AnimDurationVal">2.5s</span></div>
+                    <div class="stack"><div class="label-line"><span>动画时长</span><span id="AnimDurationVal">2.5s</span></div>
+                        <input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="2.5"></div>
                     <div class="advanced-params">
                         <div class="row stack"><div class="label-line"><span>动画曲线</span></div>
                             <select id="AnimEasing">
