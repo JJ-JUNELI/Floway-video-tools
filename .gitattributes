@@ -1,0 +1,9 @@
+# 默认按文本处理，自动规范换行
+* text=auto
+
+# Shell 脚本必须用 LF，否则在 WSL/Linux 下 \r 会导致语法错误
+*.sh text eol=lf
+
+# Windows 批处理脚本用 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
