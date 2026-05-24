@@ -19,8 +19,9 @@
             --text-primary:   #e5e7eb;
             --text-secondary: #98989d;
             --text-muted:     #636366;
-            --accent:         #f97316;
-            --accent-dim:     rgba(249,115,22,0.10);
+            --accent:         #6CA8D9;
+            --accent-strong:  #4A82B8;
+            --accent-dim:     rgba(108,168,217,0.12);
             --radius-sm:      8px;
             --radius-md:      12px;
             --radius-lg:      16px;
@@ -38,8 +39,9 @@
             --text-primary:   #1e293b;
             --text-secondary: #64748b;
             --text-muted:     #94a3b8;
-            --accent:         #ea580c;
-            --accent-dim:     rgba(234,88,12,0.08);
+            --accent:         #c15f3c;
+            --accent-strong:  #a44d2e;
+            --accent-dim:     rgba(193,95,60,0.08);
         }
 
         html { scroll-behavior: smooth; }
@@ -176,8 +178,8 @@
             z-index: 0;
             pointer-events: none;
             background:
-                radial-gradient(ellipse 45% 40% at 50% 50%, rgba(251, 146, 60, 0.12) 0%, transparent 60%),
-                radial-gradient(ellipse 75% 60% at 50% 50%, rgba(245, 158, 11, 0.07) 0%, transparent 70%);
+                radial-gradient(ellipse 45% 40% at 50% 50%, rgba(108, 168, 217, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 75% 60% at 50% 50%, rgba(74, 130, 184, 0.07) 0%, transparent 70%);
             filter: blur(8px);
         }
         /* Wrapper holds positioning + float animation; .hero-icon never receives transform */
@@ -221,8 +223,8 @@
         }
         [data-theme="light"] .hero-icons::before {
             background:
-                radial-gradient(ellipse 45% 40% at 50% 50%, rgba(249, 115, 22, 0.08) 0%, transparent 60%),
-                radial-gradient(ellipse 75% 60% at 50% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 70%);
+                radial-gradient(ellipse 45% 40% at 50% 50%, rgba(193, 95, 60, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 75% 60% at 50% 50%, rgba(164, 77, 46, 0.05) 0%, transparent 70%);
         }
 
         /* Hero Title */
@@ -384,9 +386,9 @@
             border-radius: inherit;
             background: transparent;
             box-shadow:
-                0 0 20px 2px rgba(249,115,22,0.15),
-                0 0 50px 4px rgba(249,115,22,0.07),
-                0 0 90px 6px rgba(249,115,22,0.03);
+                0 0 20px 2px rgba(108,168,217,0.15),
+                0 0 50px 4px rgba(108,168,217,0.07),
+                0 0 90px 6px rgba(108,168,217,0.03);
             z-index: -1;
             opacity: 0;
             pointer-events: none;
@@ -481,9 +483,9 @@
             border-color: var(--border-strong);
         }
         .filter-pill.active {
-            background: var(--accent);
+            background: var(--accent-strong);
             color: #fff;
-            border-color: var(--accent);
+            border-color: var(--accent-strong);
         }
         .filter-pill-count {
             opacity: 0.55;
@@ -530,9 +532,9 @@
             border-radius: inherit;
             background: transparent;
             box-shadow:
-                0 0 16px 1.5px rgba(249,115,22,0.12),
-                0 0 40px 3px rgba(249,115,22,0.05),
-                0 0 72px 4px rgba(249,115,22,0.02);
+                0 0 16px 1.5px rgba(108,168,217,0.12),
+                0 0 40px 3px rgba(108,168,217,0.05),
+                0 0 72px 4px rgba(108,168,217,0.02);
             z-index: -1;
             opacity: 0;
             pointer-events: none;
@@ -619,7 +621,7 @@
         }
         .version-tag.hot {
             color: var(--accent);
-            border-color: rgba(249,115,22,0.25);
+            border-color: var(--accent);
             background: var(--accent-dim);
         }
         .ext-badge-dev {
@@ -713,7 +715,7 @@
         }
         .page-num:hover { color: var(--text-primary); }
         .page-num.active {
-            background: var(--accent);
+            background: var(--accent-strong);
             color: #fff;
             font-weight: 700;
         }
