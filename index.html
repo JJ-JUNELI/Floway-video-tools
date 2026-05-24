@@ -160,41 +160,46 @@
             overflow: hidden;
         }
 
-        /* Icon Cluster */
+        /* Icon Cluster — Raycast-style depth-of-field */
         .hero-icons {
             position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 44px;
-            padding: 52px 28px 42px;
-            border-radius: 22px;
+            width: 520px;
+            max-width: 100%;
+            height: 280px;
+            margin: 0 auto 44px;
             overflow: visible;
         }
         .hero-icons::before {
             content: "";
             position: absolute;
-            inset: -20%;
+            inset: -15%;
             z-index: 0;
             pointer-events: none;
             background:
-                radial-gradient(ellipse 60% 50% at 50% 45%, rgba(99,102,241,0.06) 0%, transparent 70%);
-            border-radius: 30px;
+                radial-gradient(ellipse 45% 40% at 50% 50%, rgba(244, 114, 182, 0.10) 0%, transparent 60%),
+                radial-gradient(ellipse 75% 60% at 50% 50%, rgba(129, 140, 248, 0.06) 0%, transparent 70%);
+            filter: blur(8px);
         }
-        .hero-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            position: relative;
-            z-index: 2;
+        /* Wrapper holds positioning + float animation; .hero-icon never receives transform */
+        .hero-wrap {
+            position: absolute;
+            left: var(--x); top: var(--y);
+            z-index: var(--z, 2);
+            transform: translate(-50%, -50%);
+            animation: heroFloat var(--dur, 6s) ease-in-out infinite alternate;
+            animation-delay: var(--delay, 0s);
+            animation-fill-mode: backwards;
+            will-change: transform;
+        }
+        @keyframes heroFloat {
+            from { transform: translate(-50%, calc(-50% - 5px)); }
+            to   { transform: translate(-50%, calc(-50% + 5px)); }
         }
         .hero-icon {
-            width: 74px; height: 74px;
+            width: var(--size, 76px);
+            height: var(--size, 76px);
             border-radius: 18px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 28px;
             background: rgba(13, 13, 17, 0.85);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
@@ -202,13 +207,22 @@
             box-shadow:
                 0 6px 24px rgba(0, 0, 0, 0.5),
                 inset 0 1px 0 rgba(255, 255, 255, 0.06);
-            position: relative;
-            z-index: 2;
         }
+        .hero-wrap.d-center { z-index: 5; }
+        .hero-wrap.d-near   { z-index: 4; opacity: 0.95; }
+        .hero-wrap.d-mid    { z-index: 3; opacity: 0.75; }
+        .hero-wrap.d-mid .hero-icon  { filter: blur(1.5px); }
+        .hero-wrap.d-far    { z-index: 2; opacity: 0.45; }
+        .hero-wrap.d-far .hero-icon  { filter: blur(5px); }
         [data-theme="light"] .hero-icon {
             background: rgba(255,255,255,0.85);
             border-color: rgba(0,0,0,0.08);
             box-shadow: 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+        [data-theme="light"] .hero-icons::before {
+            background:
+                radial-gradient(ellipse 45% 40% at 50% 50%, rgba(236, 72, 153, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 75% 60% at 50% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
         }
 
         /* Hero Title */
@@ -529,12 +543,55 @@
         .ext-card:hover::before { opacity: 1; }
 
         .ext-icon {
+            --cat: #818cf8;
             width: 56px; height: 56px;
-            border-radius: 14px;
+            border-radius: 15px;
             flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
-            font-size: 26px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+            /* 分类色淡色块：干净轻渐变，无重影无雾 */
+            background: linear-gradient(155deg,
+                color-mix(in srgb, var(--cat) 24%, #171b22) 0%,
+                color-mix(in srgb, var(--cat) 11%, #14171d) 100%);
+            border: 1px solid color-mix(in srgb, var(--cat) 26%, transparent);
+            transition: background .2s ease, border-color .2s ease;
+        }
+        .ext-icon svg {
+            width: 26px; height: 26px;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .ext-icon svg .g-main { stroke: color-mix(in srgb, var(--cat) 78%, #ffffff); stroke-width: 2; }
+        .ext-icon svg .g-dot  { fill: color-mix(in srgb, var(--cat) 78%, #ffffff); stroke: none; }
+
+        /* 分类色：图表蓝 / 文字靛 / 视觉紫 / 粒子青 */
+        .ext-card[data-category="chart"]    .ext-icon { --cat: #60a5fa; }
+        .ext-card[data-category="text"]     .ext-icon { --cat: #818cf8; }
+        .ext-card[data-category="visual"]   .ext-icon { --cat: #a78bfa; }
+        .ext-card[data-category="particle"] .ext-icon { --cat: #22d3ee; }
+
+        /* hover：色块与描边轻微加深，不浮不糊 */
+        .ext-card:hover .ext-icon {
+            background: linear-gradient(155deg,
+                color-mix(in srgb, var(--cat) 34%, #171b22) 0%,
+                color-mix(in srgb, var(--cat) 17%, #14171d) 100%);
+            border-color: color-mix(in srgb, var(--cat) 44%, transparent);
+        }
+
+        /* 亮色主题：同逻辑，色块基底换白 */
+        [data-theme="light"] .ext-icon {
+            background: linear-gradient(155deg,
+                color-mix(in srgb, var(--cat) 13%, #ffffff) 0%,
+                color-mix(in srgb, var(--cat) 6%, #ffffff) 100%);
+            border: 1px solid color-mix(in srgb, var(--cat) 24%, transparent);
+        }
+        [data-theme="light"] .ext-icon svg .g-main { stroke: color-mix(in srgb, var(--cat) 90%, #1e293b); }
+        [data-theme="light"] .ext-icon svg .g-dot  { fill: color-mix(in srgb, var(--cat) 90%, #1e293b); }
+        [data-theme="light"] .ext-card:hover .ext-icon {
+            background: linear-gradient(155deg,
+                color-mix(in srgb, var(--cat) 19%, #ffffff) 0%,
+                color-mix(in srgb, var(--cat) 10%, #ffffff) 100%);
+            border-color: color-mix(in srgb, var(--cat) 38%, transparent);
         }
         .ext-info { flex: 1; min-width: 0; }
         .ext-title-row {
@@ -688,18 +745,16 @@
             .nav-links { display: none; }
             .hero { padding: 100px 20px 48px; }
             .hero h1 { font-size: 40px; }
-            .hero-icons { gap: 12px; padding: 36px 16px 28px; }
-            .hero-row { gap: 10px; }
-            .hero-icon { width: 52px; height: 52px; font-size: 23px; border-radius: 14px; }
+            .hero-icons { width: 400px; height: 220px; margin-bottom: 36px; }
+            .hero-icon { border-radius: 14px; }
             .main { padding: 0 20px 60px; }
             .featured-grid { grid-template-columns: 1fr; }
             .filter-bar { flex-direction: column; align-items: stretch; }
             .filter-pills { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
         }
         @media (max-width: 480px) {
-            .hero-icon { width: 44px; height: 44px; font-size: 19px; }
-            .hero-row { gap: 8px; }
-            .hero-icons { gap: 10px; }
+            .hero-icons { width: 320px; height: 180px; }
+            .hero-icon { border-radius: 12px; }
             .ext-meta { flex-wrap: wrap; gap: 8px; }
         }
 
@@ -735,35 +790,56 @@
     <!-- ========== HERO ========== -->
     <header class="hero">
         <div class="hero-icons">
-            <div class="hero-row">
-                <div class="hero-icon" style="width:68px;height:68px;transform:translateY(-2px) rotate(-1.5deg);opacity:0.78;">
-                    <svg width="34" height="34" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi1" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs><rect x="3" y="20" width="6" height="10" rx="1.5" fill="url(#gi1)" opacity=".5"/><rect x="12" y="13" width="6" height="17" rx="1.5" fill="url(#gi1)" opacity=".7"/><rect x="21" y="7" width="6" height="23" rx="1.5" fill="url(#gi1)"/><polyline points="5,19 14,11 24,5" stroke="#93c5fd" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="24" cy="5" r="2" fill="#bfdbfe"/></svg>
-                </div>
-                <div class="hero-icon" style="width:76px;height:76px;transform:translateY(-6px) rotate(-0.5deg);opacity:0.90;">
-                    <svg width="38" height="38" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi2" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#fbbf24"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><path d="M18 4l2.5 6.5L27 12l-5 4.5 1.5 7L18 20l-5.5 3.5 1.5-7-5-4.5 6.5-1.5z" fill="url(#gi2)"/><path d="M8 22l1.5 4L6 28l3.5-.5L12 30l1-4" stroke="#fcd34d" stroke-width="1.5" stroke-linecap="round" fill="none" opacity=".7"/><path d="M26 16l2 5-4 2 3 .5L30 27l-1-3.5" stroke="#fcd34d" stroke-width="1.2" stroke-linecap="round" fill="none" opacity=".5"/></svg>
-                </div>
-                <div class="hero-icon" style="width:82px;height:82px;transform:translateY(-12px) rotate(0deg);opacity:1;">
-                    <svg width="42" height="42" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi3" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs><rect x="6" y="8" width="24" height="18" rx="2" stroke="url(#gi3)" stroke-width="2" fill="none"/><line x1="6" y1="14" x2="30" y2="14" stroke="url(#gi3)" stroke-width="1.5" opacity=".5"/><rect x="10" y="17" width="16" height="2" rx="1" fill="url(#gi3)" opacity=".35"/><rect x="10" y="21" width="10" height="2" rx="1" fill="url(#gi3)" opacity=".25"/><line x1="15" y1="26" x2="21" y2="26" stroke="url(#gi3)" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="26" x2="18" y2="30" stroke="url(#gi3)" stroke-width="2"/></svg>
-                </div>
-                <div class="hero-icon" style="width:76px;height:76px;transform:translateY(-6px) rotate(0.5deg);opacity:0.90;">
-                    <svg width="38" height="38" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi4" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs><polygon points="18,3 33,12 33,24 18,33 3,24 3,12" stroke="url(#gi4)" stroke-width="1.8" fill="none"/><polygon points="18,9 27,14.5 27,21.5 18,27 9,21.5 9,14.5" fill="url(#gi4)" opacity=".25"/></svg>
-                </div>
-                <div class="hero-icon" style="width:68px;height:68px;transform:translateY(2px) rotate(1.5deg);opacity:0.78;">
-                    <svg width="34" height="34" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi5" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#fb923c"/><stop offset="100%" stop-color="#ea580c"/></linearGradient></defs><path d="M7 24c3-4 6-8 12-12s10-5 14-4" stroke="url(#gi5)" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="7" cy="24" r="2.2" fill="url(#gi5)"/><circle cx="19" cy="12" r="1.8" fill="#fed7aa"/></svg>
+            <!-- 中心：紫色卡片图标（最大、最清晰） -->
+            <div class="hero-wrap d-center" style="--x:50%; --y:50%; --size:88px; --dur:7s; --delay:0s;">
+                <div class="hero-icon">
+                    <svg width="44" height="44" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi3" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs><rect x="6" y="8" width="24" height="18" rx="2" stroke="url(#gi3)" stroke-width="2" fill="none"/><line x1="6" y1="14" x2="30" y2="14" stroke="url(#gi3)" stroke-width="1.5" opacity=".5"/><rect x="10" y="17" width="16" height="2" rx="1" fill="url(#gi3)" opacity=".35"/><rect x="10" y="21" width="10" height="2" rx="1" fill="url(#gi3)" opacity=".25"/><line x1="15" y1="26" x2="21" y2="26" stroke="url(#gi3)" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="26" x2="18" y2="30" stroke="url(#gi3)" stroke-width="2"/></svg>
                 </div>
             </div>
-            <div class="hero-row">
-                <div class="hero-icon" style="width:70px;height:70px;transform:translateY(4px) rotate(-1deg);opacity:0.72;">
-                    <svg width="35" height="35" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi6" x1="0" y1="36" x2="36" y2="0"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs><polyline points="4,28 12,18 20,22 32,8" stroke="url(#gi6)" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>
+
+            <!-- 近景：4 个清晰卫星 -->
+            <div class="hero-wrap d-near" style="--x:28%; --y:28%; --size:76px; --dur:5.5s; --delay:0.6s;">
+                <div class="hero-icon">
+                    <svg width="38" height="38" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi2" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#fbbf24"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><path d="M18 4l2.5 6.5L27 12l-5 4.5 1.5 7L18 20l-5.5 3.5 1.5-7-5-4.5 6.5-1.5z" fill="url(#gi2)"/><path d="M8 22l1.5 4L6 28l3.5-.5L12 30l1-4" stroke="#fcd34d" stroke-width="1.5" stroke-linecap="round" fill="none" opacity=".7"/><path d="M26 16l2 5-4 2 3 .5L30 27l-1-3.5" stroke="#fcd34d" stroke-width="1.2" stroke-linecap="round" fill="none" opacity=".5"/></svg>
                 </div>
-                <div class="hero-icon" style="width:74px;height:74px;transform:translateY(4px) rotate(-0.5deg);opacity:0.80;">
-                    <svg width="37" height="37" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi7" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#d4a574"/><stop offset="100%" stop-color="#b8956e"/></linearGradient></defs><rect x="5" y="4" width="26" height="28" rx="2" fill="#faf6f1" stroke="url(#gi7)" stroke-width="1.5"/><polyline points="10,26 15,22 20,24 26,18" stroke="url(#gi7)" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="26" cy="18" r="1.5" fill="url(#gi7)"/></svg>
+            </div>
+            <div class="hero-wrap d-near" style="--x:72%; --y:30%; --size:74px; --dur:6.2s; --delay:1.4s;">
+                <div class="hero-icon">
+                    <svg width="37" height="37" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi4" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs><polygon points="18,3 33,12 33,24 18,33 3,24 3,12" stroke="url(#gi4)" stroke-width="1.8" fill="none"/><polygon points="18,9 27,14.5 27,21.5 18,27 9,21.5 9,14.5" fill="url(#gi4)" opacity=".25"/></svg>
                 </div>
-                <div class="hero-icon" style="width:74px;height:74px;transform:translateY(4px) rotate(0.5deg);opacity:0.80;">
+            </div>
+            <div class="hero-wrap d-near" style="--x:30%; --y:73%; --size:74px; --dur:5.8s; --delay:2.1s;">
+                <div class="hero-icon">
                     <svg width="37" height="37" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi8a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient><linearGradient id="gi8b" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#0891b2"/></linearGradient></defs><path d="M4 10 L18 4 L32 10 L32 26 L18 32 L4 26 Z" fill="url(#gi8a)" opacity=".85"/><path d="M4 10 L18 16 L18 32 L4 26 Z" fill="url(#gi8b)" opacity=".6"/></svg>
                 </div>
-                <div class="hero-icon" style="width:70px;height:70px;transform:translateY(6px) rotate(1deg);opacity:0.72;">
-                    <svg width="35" height="35" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi9a" x1="0" y1="36" x2="0" y2="0"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#10b981"/></linearGradient><linearGradient id="gi9b" x1="0" y1="36" x2="0" y2="0"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient><linearGradient id="gi9c" x1="0" y1="36" x2="0" y2="0"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs><rect x="6" y="16" width="5" height="14" rx="1.5" fill="url(#gi9a)" opacity=".7"/><rect x="14" y="10" width="5" height="20" rx="1.5" fill="url(#gi9b)" opacity=".8"/><rect x="22" y="6" width="5" height="24" rx="1.5" fill="url(#gi9c)"/></svg>
+            </div>
+            <div class="hero-wrap d-near" style="--x:70%; --y:72%; --size:72px; --dur:6.5s; --delay:1.0s;">
+                <div class="hero-icon">
+                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi7" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#d4a574"/><stop offset="100%" stop-color="#b8956e"/></linearGradient></defs><rect x="5" y="4" width="26" height="28" rx="2" fill="#faf6f1" stroke="url(#gi7)" stroke-width="1.5"/><polyline points="10,26 15,22 20,24 26,18" stroke="url(#gi7)" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="26" cy="18" r="1.5" fill="url(#gi7)"/></svg>
+                </div>
+            </div>
+
+            <!-- 中景：2 个轻微模糊 -->
+            <div class="hero-wrap d-mid" style="--x:10%; --y:48%; --size:70px; --dur:7.5s; --delay:0.3s;">
+                <div class="hero-icon">
+                    <svg width="35" height="35" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi1" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs><rect x="3" y="20" width="6" height="10" rx="1.5" fill="url(#gi1)" opacity=".5"/><rect x="12" y="13" width="6" height="17" rx="1.5" fill="url(#gi1)" opacity=".7"/><rect x="21" y="7" width="6" height="23" rx="1.5" fill="url(#gi1)"/><polyline points="5,19 14,11 24,5" stroke="#93c5fd" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="24" cy="5" r="2" fill="#bfdbfe"/></svg>
+                </div>
+            </div>
+            <div class="hero-wrap d-mid" style="--x:90%; --y:50%; --size:70px; --dur:6.8s; --delay:1.7s;">
+                <div class="hero-icon">
+                    <svg width="35" height="35" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi5" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#fb923c"/><stop offset="100%" stop-color="#ea580c"/></linearGradient></defs><path d="M7 24c3-4 6-8 12-12s10-5 14-4" stroke="url(#gi5)" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="7" cy="24" r="2.2" fill="url(#gi5)"/><circle cx="19" cy="12" r="1.8" fill="#fed7aa"/></svg>
+                </div>
+            </div>
+
+            <!-- 远景：2 个高度模糊 -->
+            <div class="hero-wrap d-far" style="--x:48%; --y:12%; --size:64px; --dur:8s; --delay:0.9s;">
+                <div class="hero-icon">
+                    <svg width="32" height="32" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi6" x1="0" y1="36" x2="36" y2="0"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs><polyline points="4,28 12,18 20,22 32,8" stroke="url(#gi6)" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>
+                </div>
+            </div>
+            <div class="hero-wrap d-far" style="--x:52%; --y:88%; --size:64px; --dur:7.2s; --delay:2.4s;">
+                <div class="hero-icon">
+                    <svg width="32" height="32" viewBox="0 0 36 36" fill="none"><defs><linearGradient id="gi9a" x1="0" y1="36" x2="0" y2="0"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#10b981"/></linearGradient><linearGradient id="gi9b" x1="0" y1="36" x2="0" y2="0"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient><linearGradient id="gi9c" x1="0" y1="36" x2="0" y2="0"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs><rect x="6" y="16" width="5" height="14" rx="1.5" fill="url(#gi9a)" opacity=".7"/><rect x="14" y="10" width="5" height="20" rx="1.5" fill="url(#gi9b)" opacity=".8"/><rect x="22" y="6" width="5" height="24" rx="1.5" fill="url(#gi9c)"/></svg>
                 </div>
             </div>
         </div>
@@ -786,6 +862,7 @@
         </section>
 
         <!-- Featured -->
+        <!-- 精选推荐区（暂时隐藏，需要时取消注释）
         <section class="featured-section">
             <div class="section-label">精选推荐</div>
             <div class="section-sublabel">我们的热门工具，助你快速上手 🎯</div>
@@ -794,7 +871,7 @@
                 <a href="effects/chart-fx.html" class="featured-card" data-category="chart" data-name="图表 折线图 纸张 赛博 WebGL 3D 漂浮 数据可视化">
                     <iframe class="preview-frame" scrolling="no" src="effects/chart-fx.html?preview" loading="lazy" tabindex="-1"></iframe>
                     <div class="featured-card-body">
-                        <div class="featured-card-title">图表效果</div>
+                        <div class="featured-card-title">折线图</div>
                         <p class="featured-card-desc">双风格动态折线图生成器。纸张模式：噪声纹理+手绘线条。赛博模式：暗色卡片+发光曲线。</p>
                         <div class="card-tags">
                             <span class="tag-pill">v3.0</span>
@@ -815,10 +892,10 @@
                     </div>
                 </a>
 
-                <a href="effects/stack-scan.html" class="featured-card" data-category="text" data-name="堆叠扫描 赛博朋克 文字 扫描 MP4 PNG">
+                <a href="effects/stack-scan.html" class="featured-card" data-category="text" data-name="文字突出扫描 堆叠扫描 赛博朋克 文字 扫描 MP4 PNG">
                     <iframe class="preview-frame" scrolling="no" src="effects/stack-scan.html?preview" loading="lazy" tabindex="-1"></iframe>
                     <div class="featured-card-body">
-                        <div class="featured-card-title">堆叠扫描</div>
+                        <div class="featured-card-title">文字突出扫描</div>
                         <p class="featured-card-desc">赛博朋克风格堆叠扫描文字。支持 MP4/PNG 序列导出、多字体及防掉帧渲染。</p>
                         <div class="card-tags">
                             <span class="tag-pill">v19.4</span>
@@ -828,11 +905,12 @@
                 </a>
             </div>
         </section>
+        -->
 
         <!-- Filter Bar -->
         <div class="filter-bar" id="FilterTabs">
             <div class="filter-pills">
-                <button class="filter-pill active" data-filter="all">全部<span class="filter-pill-count" id="ToolCount">8</span></button>
+                <button class="filter-pill active" data-filter="all">全部<span class="filter-pill-count" id="ToolCount">9</span></button>
                 <button class="filter-pill" data-filter="text">文字类</button>
                 <button class="filter-pill" data-filter="visual">视觉类</button>
                 <button class="filter-pill" data-filter="chart">图表类</button>
@@ -847,36 +925,22 @@
 
             <div class="ext-grid" id="ToolGrid">
 
-                <a href="effects/chart-fx.html" class="ext-card" data-category="chart" data-name="图表 折线图 纸张 赛博 WebGL 3D 漂浮 数据可视化">
-                    <div class="ext-icon" style="background:linear-gradient(135deg,#1a1a2e,#16213e)">📈</div>
+                <a href="effects/stack-scan.html" class="ext-card" data-category="text" data-name="文字突出扫描 堆叠扫描 赛博朋克 文字 扫描 MP4 PNG">
+                    <div class="ext-icon"><svg viewBox="0 0 24 24"><path class="g-main" d="M3 7V5a2 2 0 0 1 2-2h2"/><path class="g-main" d="M17 3h2a2 2 0 0 1 2 2v2"/><path class="g-main" d="M21 17v2a2 2 0 0 1-2 2h-2"/><path class="g-main" d="M7 21H5a2 2 0 0 1-2-2v-2"/><line class="g-main" x1="7" y1="10" x2="17" y2="10"/><line class="g-main" x1="7" y1="14" x2="14" y2="14"/><line class="g-main" x1="7" y1="17.5" x2="17" y2="17.5" stroke-dasharray="2 2"/></svg></div>
                     <div class="ext-info">
-                        <div class="ext-title-row"><span class="ext-title">图表效果</span><span class="version-tag hot">v3.0</span></div>
-                        <p class="ext-desc">双风格动态折线图。纸张模式 + 赛博模式，WebGL 3D 漂浮卡片合成。</p>
+                        <div class="ext-title-row"><span class="ext-title">文字突出扫描</span><span class="version-tag hot">v19.4</span></div>
+                        <p class="ext-desc">赛博朋克扫描文字效果。多字体斜体、透明度延迟、防掉帧渲染。</p>
                         <div class="ext-meta">
                             <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
                             <span class="ext-meta-item">·</span>
-                            <span class="ext-meta-item">图表类</span>
-                        </div>
-                    </div>
-                    <div class="ext-action"><button class="btn-install">打开</button></div>
-                </a>
-
-                <a href="effects/bar-chart.html" class="ext-card" data-category="chart" data-name="柱状图 柱状图 纸张 赛博 WebGL 3D 漂浮 数据可视化">
-                    <div class="ext-icon" style="background:linear-gradient(135deg,#2d1b69,#11998e)">📊</div>
-                    <div class="ext-info">
-                        <div class="ext-title-row"><span class="ext-title">柱状图效果</span><span class="version-tag hot">v1.0</span></div>
-                        <p class="ext-desc">动态柱状图。纸张模式 + 赛博模式，WebGL 3D 漂浮卡片合成。</p>
-                        <div class="ext-meta">
-                            <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
-                            <span class="ext-meta-item">·</span>
-                            <span class="ext-meta-item">图表类</span>
+                            <span class="ext-meta-item">文字类</span>
                         </div>
                     </div>
                     <div class="ext-action"><button class="btn-install">打开</button></div>
                 </a>
 
                 <a href="effects/text-animator.html" class="ext-card" data-category="text" data-name="文字动效 文字 标题 动画 VP9 录制 超采样 阴影 渐变 PNG MP4">
-                    <div class="ext-icon" style="background:linear-gradient(135deg,#0f0c29,#302b63)">✨</div>
+                    <div class="ext-icon"><svg viewBox="0 0 24 24"><path class="g-main" d="M3 20 L9 4 L15 20"/><line class="g-main" x1="5.5" y1="14" x2="12.5" y2="14"/><path class="g-main" d="m19 5 .8 2.2L22 8l-2.2.8L19 11l-.8-2.2L16 8l2.2-.8z"/><circle class="g-dot" cx="20.5" cy="16.5" r="1"/></svg></div>
                     <div class="ext-info">
                         <div class="ext-title-row"><span class="ext-title">文字动效</span><span class="version-tag hot">v60.6</span></div>
                         <p class="ext-desc">科技感标题动画引擎。VP9 录制、超采样、阴影渐变效果。</p>
@@ -889,22 +953,8 @@
                     <div class="ext-action"><button class="btn-install">打开</button></div>
                 </a>
 
-                <a href="effects/stack-scan.html" class="ext-card" data-category="text" data-name="堆叠扫描 赛博朋克 文字 扫描 MP4 PNG">
-                    <div class="ext-icon" style="background:linear-gradient(135deg,#0d0d0d,#1a1a2e)">📠</div>
-                    <div class="ext-info">
-                        <div class="ext-title-row"><span class="ext-title">堆叠扫描</span><span class="version-tag hot">v19.4</span></div>
-                        <p class="ext-desc">赛博朋克扫描文字效果。多字体斜体、透明度延迟、防掉帧渲染。</p>
-                        <div class="ext-meta">
-                            <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
-                            <span class="ext-meta-item">·</span>
-                            <span class="ext-meta-item">文字类</span>
-                        </div>
-                    </div>
-                    <div class="ext-action"><button class="btn-install">打开</button></div>
-                </a>
-
                 <a href="effects/logo-matrix.html" class="ext-card" data-category="visual" data-name="Logo 矩阵 循环 背景 阵列 羽化 纹理 H.264">
-                    <div class="ext-icon" style="background:linear-gradient(135deg,#667eea,#764ba2)">💠</div>
+                    <div class="ext-icon"><svg viewBox="0 0 24 24"><rect class="g-main" x="2" y="2" width="6" height="6" rx="1"/><rect class="g-main" x="9" y="2" width="6" height="6" rx="1"/><rect class="g-main" x="16" y="2" width="6" height="6" rx="1"/><rect class="g-main" x="2" y="9" width="6" height="6" rx="1"/><rect class="g-dot" x="9" y="9" width="6" height="6" rx="1"/><rect class="g-main" x="16" y="9" width="6" height="6" rx="1"/><rect class="g-main" x="2" y="16" width="6" height="6" rx="1"/><rect class="g-main" x="9" y="16" width="6" height="6" rx="1"/><rect class="g-main" x="16" y="16" width="6" height="6" rx="1"/></svg></div>
                     <div class="ext-info">
                         <div class="ext-title-row"><span class="ext-title">Logo 矩阵</span><span class="version-tag">v25.0</span></div>
                         <p class="ext-desc">循环 Logo 阵列背景。帧同步录制、羽化遮罩、多种科技纹理。</p>
@@ -918,7 +968,7 @@
                 </a>
 
                 <a href="effects/particle-field.html" class="ext-card" data-category="particle" data-name="粒子场 动态 粒子 连线 效果">
-                    <div class="ext-icon" style="background:linear-gradient(135deg,#11998e,#38ef7d)">⚡</div>
+                    <div class="ext-icon"><svg viewBox="0 0 24 24"><line class="g-main" x1="5" y1="6" x2="12" y2="4"/><line class="g-main" x1="12" y1="4" x2="19" y2="9"/><line class="g-main" x1="5" y1="6" x2="10" y2="14"/><line class="g-main" x1="10" y1="14" x2="19" y2="9"/><line class="g-main" x1="10" y1="14" x2="16" y2="19"/><line class="g-main" x1="19" y1="9" x2="16" y2="19"/><circle class="g-dot" cx="5" cy="6" r="1.8"/><circle class="g-dot" cx="12" cy="4" r="1.8"/><circle class="g-dot" cx="19" cy="9" r="1.8"/><circle class="g-dot" cx="10" cy="14" r="1.8"/><circle class="g-dot" cx="16" cy="19" r="1.8"/></svg></div>
                     <div class="ext-info">
                         <div class="ext-title-row"><span class="ext-title">粒子场</span><span class="version-tag hot">v1.0</span></div>
                         <p class="ext-desc">动态粒子连线场效果。可调节数量、大小、速度及连线距离。</p>
@@ -931,8 +981,22 @@
                     <div class="ext-action"><button class="btn-install">打开</button></div>
                 </a>
 
+                <a href="effects/chart-fx.html" class="ext-card" data-category="chart" data-name="图表 折线图 纸张 赛博 WebGL 3D 漂浮 数据可视化">
+                    <div class="ext-icon"><svg viewBox="0 0 24 24"><rect class="g-main" x="2" y="4" width="20" height="16" rx="2"/><polyline class="g-main" points="5,16 9,11 13,13 17,8 19,10"/><circle class="g-dot" cx="17" cy="8" r="1.3"/></svg></div>
+                    <div class="ext-info">
+                        <div class="ext-title-row"><span class="ext-title">折线图</span><span class="version-tag hot">v3.0</span></div>
+                        <p class="ext-desc">双风格动态折线图。纸张模式 + 赛博模式，WebGL 3D 漂浮卡片合成。</p>
+                        <div class="ext-meta">
+                            <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
+                            <span class="ext-meta-item">·</span>
+                            <span class="ext-meta-item">图表类</span>
+                        </div>
+                    </div>
+                    <div class="ext-action"><button class="btn-install">打开</button></div>
+                </a>
+
                 <a href="effects/card-3d.html" class="ext-card" data-category="visual" data-name="3D 卡片 悬浮 展示 图片 视频 WebGL 透视">
-                    <div class="ext-icon" style="background:linear-gradient(135deg,#434343,#000000)">🧊</div>
+                    <div class="ext-icon"><svg viewBox="0 0 24 24"><rect class="g-main" x="3" y="3" width="13" height="13" rx="2"/><rect class="g-main" x="8" y="8" width="13" height="13" rx="2"/></svg></div>
                     <div class="ext-info">
                         <div class="ext-title-row"><span class="ext-title">3D 卡片</span><span class="version-tag hot">v1.0</span></div>
                         <p class="ext-desc">3D 悬浮展示卡片。支持图片/视频素材导入，自定义圆角、透视角度和漂浮动画。</p>
@@ -945,8 +1009,22 @@
                     <div class="ext-action"><button class="btn-install">打开</button></div>
                 </a>
 
+                <a href="effects/bar-chart.html" class="ext-card" data-category="chart" data-name="柱状图 柱状图 纸张 赛博 WebGL 3D 漂浮 数据可视化">
+                    <div class="ext-icon"><svg viewBox="0 0 24 24"><rect class="g-main" x="2" y="4" width="20" height="16" rx="2"/><rect class="g-main" x="6" y="12" width="3" height="5" rx="0.5"/><rect class="g-main" x="10.5" y="9" width="3" height="8" rx="0.5"/><rect class="g-main" x="15" y="7" width="3" height="10" rx="0.5"/></svg></div>
+                    <div class="ext-info">
+                        <div class="ext-title-row"><span class="ext-title">柱状图效果</span><span class="version-tag hot">v1.0</span></div>
+                        <p class="ext-desc">动态柱状图。纸张模式 + 赛博模式，WebGL 3D 漂浮卡片合成。</p>
+                        <div class="ext-meta">
+                            <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
+                            <span class="ext-meta-item">·</span>
+                            <span class="ext-meta-item">图表类</span>
+                        </div>
+                    </div>
+                    <div class="ext-action"><button class="btn-install">打开</button></div>
+                </a>
+
                 <a class="ext-card" href="effects/pie-chart.html" data-category="chart" data-name="饼图 饼状图 环形图 赛博 纸张 数据可视化">
-                    <div class="ext-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">🥧</div>
+                    <div class="ext-icon"><svg viewBox="0 0 24 24"><circle class="g-main" cx="12" cy="12" r="9"/><line class="g-main" x1="12" y1="3" x2="12" y2="12"/><line class="g-main" x1="12" y1="12" x2="20.5" y2="16.5"/><circle class="g-dot" cx="12" cy="12" r="1.5"/></svg></div>
                     <div class="ext-info">
                         <div class="ext-title-row"><span class="ext-title">饼图效果</span><span class="version-tag hot">v1.0</span></div>
                         <p class="ext-desc">实心饼图与环形图，标签引导线、百分比显示，纸张/赛博双主题，WebGL 3D 漂浮。</p>
@@ -954,6 +1032,20 @@
                             <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
                             <span class="ext-meta-item">·</span>
                             <span class="ext-meta-item">图表类</span>
+                        </div>
+                    </div>
+                    <div class="ext-action"><button class="btn-install">打开</button></div>
+                </a>
+
+                <a href="effects/xiaolin-card.html" class="ext-card" data-category="visual" data-name="小lin说卡片 旋转光 边框 发光 卡片 3D WebGL">
+                    <div class="ext-icon"><svg viewBox="0 0 24 24"><rect class="g-main" x="3" y="4" width="18" height="16" rx="3" stroke-width="1.5"/><path class="g-main" d="M3 11 A9.5 9.5 0 0 1 14 4" stroke-width="3" stroke-linecap="round"/><circle class="g-dot" cx="14" cy="4" r="2.2"/><circle class="g-dot" cx="9" cy="13" r="1.2" opacity="0.5"/><circle class="g-dot" cx="13" cy="11" r="1.5" opacity="0.65"/><circle class="g-dot" cx="17" cy="14" r="1" opacity="0.4"/></svg></div>
+                    <div class="ext-info">
+                        <div class="ext-title-row"><span class="ext-title">小lin说卡片</span><span class="version-tag hot">v1.0</span></div>
+                        <p class="ext-desc">旋转光边框展示卡片。彩色光流在边框上循环流动，搭配动态光斑背景，WebGL 3D 漂浮合成。</p>
+                        <div class="ext-meta">
+                            <span class="ext-meta-item"><span class="ext-author-avatar">F</span>Floway Team</span>
+                            <span class="ext-meta-item">·</span>
+                            <span class="ext-meta-item">视觉类</span>
                         </div>
                     </div>
                     <div class="ext-action"><button class="btn-install">打开</button></div>

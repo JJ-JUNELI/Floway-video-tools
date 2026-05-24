@@ -4,7 +4,7 @@
     <script>if(location.search.includes("preview")){document.documentElement.classList.add("preview-mode");var s=document.createElement("style");s.textContent=".preview-mode,.preview-mode body{overflow:hidden!important;background:transparent!important;background-image:none!important}.preview-mode .sidebar,.preview-mode .sidebar-resize-handle,.preview-mode #RecIndicator,.preview-mode #DebugLog{display:none!important}";document.head.appendChild(s)}</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>STACK SCAN FX</title>
+    <title>文字突出扫描</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="../shared/mp4-muxer.js"></script>
@@ -20,10 +20,9 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <a href="../index.html" class="btn-icon" title="返回首页" style="text-decoration:none; margin-right:8px; font-size:15px;">←</a>
-            <div class="app-title">STACK SCAN <span style="color:var(--accent)">v19.4</span></div>
+            <div class="app-title"><svg class="app-icon" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg><span>文字突出扫描</span><span style="font-size:9px; color:var(--text-sub, #888)">v19.4</span></div>
             <div style="display:flex; align-items:center; gap:10px;">
-                <button id="themeToggle" class="btn-icon" title="切换主题 (暗色/亮色)">☀</button>
-                <div class="version-badge">STABLE FIX</div>
+                <button id="themeToggle" class="btn-theme" title="切换主题"></button>
             </div>
         </div>
 
@@ -48,7 +47,7 @@
             </div>
 
             <div class="control-group">
-                <div class="group-title"><span>📚 主样式 (Main Style)</span></div>
+                <div class="group-title"><span>📚 主样式</span></div>
                 
                 <div class="row stack">
                     <div class="label-line"><span>主字体</span></div>
@@ -57,12 +56,12 @@
 
                 <div class="row stack">
                     <div class="label-line"><span>主字重 (Weight)</span><span id="MainWeightVal">900</span></div>
-                    <input type="range" id="MainWeightInput" min="100" max="900" step="100" value="900">
+                    <input type="range" id="MainWeight" min="100" max="900" step="100" value="900">
                 </div>
                 
                 <div class="row stack">
                     <div class="label-line"><span>主字号 (Size)</span><span id="MainSizeVal">130</span></div>
-                    <input type="range" id="MainSizeInput" min="50" max="300" step="5" value="130">
+                    <input type="range" id="MainSize" min="50" max="300" step="5" value="130">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>颜色 (Color)</span></div>
@@ -71,12 +70,12 @@
                 
                 <div class="row stack">
                     <div class="label-line"><span>描边粗细 (Stroke)</span><span id="StrokeWidthVal">4</span></div>
-                    <input type="range" id="StrokeWidthInput" min="1" max="15" step="0.5" value="4">
+                    <input type="range" id="StrokeWidth" min="1" max="15" step="0.5" value="4">
                 </div>
                 
                 <div class="row stack">
                     <div class="label-line"><span>📏 描边位置</span></div>
-                    <select id="StrokeAlignInput">
+                    <select id="StrokeAlign">
                         <option value="center">↔️ 居中描边 (Center)</option>
                         <option value="inner" selected>➡️ 内描边 (Inner)</option>
                         <option value="outer">⬅️ 外描边 (Outer)</option>
@@ -85,36 +84,36 @@
 
                 <div class="row stack">
                     <div class="label-line"><span>✨ 强力辉光 (Nuclear Glow)</span><span id="GlowIntensityVal">30</span></div>
-                    <input type="range" id="GlowIntensityInput" min="0" max="100" step="1" value="30">
+                    <input type="range" id="GlowIntensity" min="0" max="100" step="1" value="30">
                 </div>
                 
                 <div class="divider-dash" style="margin: 10px 0;"></div>
                 
                 <div class="row stack">
                     <div class="label-line"><span>↔️ 整体水平位置 (Pos X)</span><span id="PosXVal">0</span></div>
-                    <input type="range" id="PosXInput" min="-400" max="400" step="1" value="0">
+                    <input type="range" id="PosX" min="-400" max="400" step="1" value="0">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>↕️ 整体垂直位置 (Pos Y)</span><span id="PosYVal">0</span></div>
-                    <input type="range" id="PosYInput" min="-400" max="400" step="1" value="0">
+                    <input type="range" id="PosY" min="-400" max="400" step="1" value="0">
                 </div>
             </div>
 
             <div class="control-group" style="border-left: 3px solid var(--accent);">
                 <div class="group-title">
                     <span>⚡ 动画序列 (Animation)</span>
-                    <button id="BtnPlay" class="btn btn-primary" style="width:auto; padding:4px 10px;">▶ 播放</button>
                 </div>
+                <button id="BtnPlay" class="btn-play">▶ 播放</button>
 
                 <div class="anim-panel start">
                     <div class="anim-header"><span style="color:var(--danger)">初始状态 (Start)</span></div>
                     <div class="row stack">
                         <div class="label-line"><span>初始字距</span><span id="StartSpacingVal">55</span></div>
-                        <input type="range" id="StartSpacingInput" min="-100" max="200" value="55">
+                        <input type="range" id="StartSpacing" min="-100" max="200" value="55">
                     </div>
                     <div class="row stack">
                         <div class="label-line"><span>初始透明度</span><span id="StartOpacityVal">0.0</span></div>
-                        <input type="range" id="StartOpacityInput" min="0" max="1" step="0.1" value="0.0">
+                        <input type="range" id="StartOpacity" min="0" max="1" step="0.1" value="0.0">
                     </div>
                 </div>
 
@@ -122,11 +121,11 @@
                     <div class="anim-header"><span style="color:var(--accent)">目标状态 (End)</span></div>
                     <div class="row stack">
                         <div class="label-line"><span>结束字距</span><span id="EndSpacingVal">0</span></div>
-                        <input type="range" id="EndSpacingInput" min="-100" max="200" value="0">
+                        <input type="range" id="EndSpacing" min="-100" max="200" value="0">
                     </div>
                     <div class="row stack">
                         <div class="label-line"><span>结束透明度</span><span id="EndOpacityVal">1.0</span></div>
-                        <input type="range" id="EndOpacityInput" min="0" max="1" step="0.1" value="1.0">
+                        <input type="range" id="EndOpacity" min="0" max="1" step="0.1" value="1.0">
                     </div>
                 </div>
 
@@ -134,7 +133,7 @@
 
                 <div class="row stack">
                     <div class="label-line"><span>📈 字距/透明度运动曲线</span></div>
-                    <select id="EasingInput">
+                    <select id="Easing">
                         <option value="linear">📏 匀速 (Linear)</option>
                         <option value="easeIn">🐢 先慢后快 (Ease In)</option>
                         <option value="easeOut" selected>🚀 先快后慢 (Ease Out)</option>
@@ -144,45 +143,45 @@
 
                 <div class="row stack">
                     <div class="label-line"><span>⏳ 字距动画时长</span><span id="SpacingDurationVal">2.0s</span></div>
-                    <input type="range" id="SpacingDurationInput" min="0.5" max="5.0" step="0.1" value="2.0">
+                    <input type="range" id="SpacingDuration" min="0.5" max="5.0" step="0.1" value="2.0">
                 </div>
                 
                 <div class="row stack">
                     <div class="label-line"><span>⏳ 透明度变化时长</span><span id="OpacityDurationVal">2.0s</span></div>
-                    <input type="range" id="OpacityDurationInput" min="0.5" max="5.0" step="0.1" value="2.0">
+                    <input type="range" id="OpacityDuration" min="0.5" max="5.0" step="0.1" value="2.0">
                 </div>
 
                 <div class="row stack" style="border-left: 2px solid var(--text-sub); padding-left: 8px; margin-top: 5px;">
                     <div class="label-line"><span>⏳ 透明度启动延迟 (Opacity Delay)</span><span id="OpacityDelayVal">0.2s</span></div>
-                    <input type="range" id="OpacityDelayInput" min="0.0" max="5.0" step="0.1" value="0.2">
+                    <input type="range" id="OpacityDelay" min="0.0" max="5.0" step="0.1" value="0.2">
                 </div>
 
                 <div class="row stack" style="border-left: 2px solid var(--accent); padding-left: 8px; margin-top: 10px;">
                     <div class="label-line"><span style="color:var(--accent)">⏱️ 扫光启动延迟 (Scan Delay)</span><span id="ScanDelayVal">1.0s</span></div>
-                    <input type="range" id="ScanDelayInput" min="0.0" max="5.0" step="0.1" value="1.0">
+                    <input type="range" id="ScanDelay" min="0.0" max="5.0" step="0.1" value="1.0">
                 </div>
 
                 <div class="row stack">
                     <div class="label-line"><span>🚀 扫光速度</span><span id="SpeedVal">33.5</span></div>
-                    <input type="range" id="SpeedInput" min="0.1" max="100.0" step="0.5" value="33.5">
+                    <input type="range" id="Speed" min="0.1" max="100.0" step="0.5" value="33.5">
                 </div>
                 
                 <div class="row stack">
                     <div class="label-line"><span>堆叠行数 (奇数)</span><span id="StackCountVal">9</span></div>
-                    <input type="range" id="StackCountInput" min="1" max="21" step="2" value="9">
+                    <input type="range" id="StackCount" min="1" max="21" step="2" value="9">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>行间距</span><span id="StackGapVal">5</span></div>
-                    <input type="range" id="StackGapInput" min="-50" max="100" step="1" value="5">
+                    <input type="range" id="StackGap" min="-50" max="100" step="1" value="5">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>背景拖尾 (Trail)</span><span id="TrailLenVal">10.0</span></div>
-                    <input type="range" id="TrailLenInput" min="1.0" max="20.0" step="0.1" value="10.0">
+                    <input type="range" id="TrailLen" min="1.0" max="20.0" step="0.1" value="10.0">
                 </div>
             </div>
 
             <div class="control-group">
-                <div class="group-title"><span>🌫️ 背景水印 (Watermark)</span></div>
+                <div class="group-title"><span>🌫️ 背景水印</span></div>
                 
                 <div class="row stack">
                      <div class="label-line"><span>水印字体</span></div>
@@ -191,7 +190,7 @@
 
                 <div class="row stack">
                     <div class="label-line"><span>水印字重 (仅预设可用)</span><span id="BgWeightVal">900</span></div>
-                    <input type="range" id="BgWeightInput" min="100" max="900" step="100" value="900">
+                    <input type="range" id="BgWeight" min="100" max="900" step="100" value="900">
                 </div>
 
                 <div class="switch-container">
@@ -202,26 +201,26 @@
                     </label>
                 </div>
 
-                 <div class="row" style="margin-top:5px; justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; color:var(--text-sub, #888);">水印颜色</span>
+                <div class="row stack" style="margin-top:5px;">
+                    <div class="label-line"><span>水印颜色</span></div>
                     <input type="color" id="BgTextColor" value="#121212">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>基础字号</span><span id="BgTextSizeVal">800</span></div>
-                    <input type="range" id="BgTextSizeInput" min="100" max="1500" step="50" value="800">
+                    <input type="range" id="BgTextSize" min="100" max="1500" step="50" value="800">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>字间距</span><span id="BgTextSpaceVal">0</span></div>
-                    <input type="range" id="BgTextSpaceInput" min="-100" max="500" step="10" value="0">
+                    <input type="range" id="BgTextSpace" min="-100" max="500" step="10" value="0">
                 </div>
                 
                 <div class="row stack" style="margin-top:5px; border-top:1px dashed #444; padding-top:5px;">
                     <div class="label-line"><span>↕️ 垂直偏移 (Offset Y)</span><span id="BgOffYVal">-15</span></div>
-                    <input type="range" id="BgOffYInput" min="-200" max="200" step="1" value="-15">
+                    <input type="range" id="BgOffY" min="-200" max="200" step="1" value="-15">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>↔️ 水平偏移 (Offset X)</span><span id="BgOffXVal">0</span></div>
-                    <input type="range" id="BgOffXInput" min="-200" max="200" step="1" value="0">
+                    <input type="range" id="BgOffX" min="-200" max="200" step="1" value="0">
                 </div>
 
                 <div class="switch-container" style="margin-top:10px;">
@@ -234,11 +233,11 @@
 
                 <div class="row stack" style="margin-top:10px;">
                     <div class="label-line"><span>横向缩放 (Scale X)</span><span id="BgScaleXVal">0.4</span></div>
-                    <input type="range" id="BgScaleXInput" min="0.1" max="3.0" step="0.1" value="0.4">
+                    <input type="range" id="BgScaleX" min="0.1" max="3.0" step="0.1" value="0.4">
                 </div>
                 <div class="row stack" id="BgScaleYRow" style="display:flex; opacity:1;">
                     <div class="label-line"><span>纵向缩放 (Scale Y)</span><span id="BgScaleYVal">0.8</span></div>
-                    <input type="range" id="BgScaleYInput" min="0.1" max="3.0" step="0.1" value="0.8">
+                    <input type="range" id="BgScaleY" min="0.1" max="3.0" step="0.1" value="0.8">
                 </div>
             </div>
             
@@ -248,10 +247,10 @@
         </div>
     </div>
 
-    <div class="preview-area">
+    <div class="preview-area" id="previewArea">
         <div id="RecIndicator"><div class="rec-dot"></div> RENDERING...</div>
         <div id="DebugLog"></div>
-        <svg id="mainSvg" viewBox="0 0 1440 1080" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <svg id="mainSvg" viewBox="0 0 1440 1080" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <filter id="filter-dilate" x="-50%" y="-50%" width="200%" height="200%">
                     <feMorphology operator="dilate" radius="2" in="SourceAlpha" result="DILATED"/>
@@ -290,17 +289,22 @@
         </svg>
 
     <script type="module">
-        import { Recorder } from '../shared/recorder.js';
-        import { Background } from '../shared/background.js';
-        import { injectPanels, initSidebarResize } from '../shared/controls.js';
+        import { initEffect } from '../shared/controls.js';
         import { SvgRenderer } from '../shared/svg-renderer.js';
-        import { getEasing, bindUI, setupFontSelector, fontSelectHTML } from '../shared/utils.js';
-        import { getTheme, toggleTheme } from '../shared/themes.js';
-
-        injectPanels({ defaultBgMode: 'transparent', defaultPatternColor: '#222222' });
-        initSidebarResize();
+        import { getTheme, toggleTheme, moonSVG, sunSVG } from '../shared/themes.js';
 
         const svg = document.getElementById('mainSvg');
+
+        // 让 SVG 像 canvas 一样按内在 1440×1080 缩放到 preview-area
+        if (!new URLSearchParams(location.search).has('preview')) {
+            const preview = svg.parentElement;
+            new ResizeObserver(() => {
+                const k = Math.min(preview.clientWidth / 1440, preview.clientHeight / 1080);
+                svg.style.width  = (1440 * k) + 'px';
+                svg.style.height = (1080 * k) + 'px';
+            }).observe(preview);
+        }
+
         const contentGroup = document.getElementById('contentGroup');
         const scanGroup = document.getElementById('scanStackGroup');
         const centerText = document.getElementById('centerFixedText');
@@ -363,35 +367,28 @@
             previewMode: false,
         };
 
-        // 状态
-        const bg = new Background({
-            modeSelectId: '#BgMode',
-            uploadInputId: '#BgUpload',
-            patternColorId: '#PatternColor',
-            patternRowId: '#PatternColorRow',
-            defaultMode: 'transparent',
+        // SVG 渲染管线（序列化 SVG → 隐藏 Canvas → Recorder 抓帧）
+        // 必须在 initEffect 之前创建，因为要把 exportCanvas 传给 recorderCanvas
+        const svgRenderer = new SvgRenderer(svg, baseWidth * scaleFactor, baseHeight * scaleFactor);
+
+        const { bg, recorder, bindUI, getEasing, setupFontSelector, fontSelectHTML } = initEffect({
+            skipMainCanvas: true,
+            skipDrawContext: true,
+            recorderCanvas: svgRenderer.exportCanvas,
+            baseWidth, baseHeight, scale: scaleFactor,
+            defaultBgMode: 'transparent',
             defaultPatternColor: '#222222',
-            baseWidth,
-            baseHeight,
-            scaleFactor: 2,
+            fileName: 'StackScan',
+            useManualWebmFrames: true,
             svgTargets: {
                 bgRect: document.getElementById('svgBg'),
                 patternEl: document.getElementById('bgPattern'),
             },
-        });
-
-        // SVG 渲染管线（序列化 SVG → 隐藏 Canvas → Recorder 抓帧）
-        const svgRenderer = new SvgRenderer(svg, baseWidth * scaleFactor, baseHeight * scaleFactor);
-
-        const recorder = new Recorder({
-            canvas: svgRenderer.exportCanvas,
             onFrame: async (timeMs) => {
                 updateSVG(timeMs);
                 svgRenderer.drawBackground(bg, recorder.format);
                 await svgRenderer.rasterize();
             },
-            fileName: 'StackScan',
-            useManualWebmFrames: true,
         });
 
         // === 主渲染更新 ===
@@ -563,38 +560,38 @@
         // === 字体选择器 ===
         document.getElementById('MainFontMount').innerHTML = fontSelectHTML('MainFontInput', config.mainFont);
         document.getElementById('BgFontMount').innerHTML = fontSelectHTML('BgFontInput', config.bgFont);
-        setupFontSelector({ selectId: 'MainFontInput', configKey: 'mainFont', fileInputId: 'MainFontInputUpload', weightInputId: 'MainWeightInput', config });
-        setupFontSelector({ selectId: 'BgFontInput', configKey: 'bgFont', fileInputId: 'BgFontInputUpload', weightInputId: 'BgWeightInput', config });
+        setupFontSelector({ selectId: 'MainFontInput', configKey: 'mainFont', fileInputId: 'MainFontInputUpload', weightInputId: 'MainWeight', config });
+        setupFontSelector({ selectId: 'BgFontInput', configKey: 'bgFont', fileInputId: 'BgFontInputUpload', weightInputId: 'BgWeight', config });
 
         // === UI BINDING ===
         bindUI(config, [
-            ['MainSizeInput', 'mainSize', 'int', 'MainSizeVal'],
-            ['MainWeightInput', 'mainWeight', 'int', 'MainWeightVal'],
-            ['StrokeWidthInput', 'strokeWidth', 'float', 'StrokeWidthVal'],
-            ['StackCountInput', 'stackCount', 'int', 'StackCountVal'],
-            ['StackGapInput', 'stackGap', 'int', 'StackGapVal'],
-            ['SpeedInput', 'speed', 'float', 'SpeedVal'],
-            ['GlowIntensityInput', 'glowIntensity', 'int', 'GlowIntensityVal'],
-            ['TrailLenInput', 'trailLen', 'float', 'TrailLenVal'],
-            ['BgWeightInput', 'bgWeight', 'int', 'BgWeightVal'],
-            ['BgTextSizeInput', 'bgTextSize', 'int', 'BgTextSizeVal'],
-            ['BgTextSpaceInput', 'bgTextSpace', 'int', 'BgTextSpaceVal'],
-            ['BgScaleXInput', 'bgScaleX', 'float', 'BgScaleXVal'],
-            ['BgScaleYInput', 'bgScaleY', 'float', 'BgScaleYVal'],
-            ['BgOffXInput', 'bgOffX', 'int', 'BgOffXVal'],
-            ['BgOffYInput', 'bgOffY', 'int', 'BgOffYVal'],
-            ['PosXInput', 'posX', 'int', 'PosXVal'],
-            ['PosYInput', 'posY', 'int', 'PosYVal'],
-            ['StartSpacingInput', 'startSpacing', 'int', 'StartSpacingVal'],
-            ['EndSpacingInput', 'endSpacing', 'int', 'EndSpacingVal'],
-            ['SpacingDurationInput', 'spacingDuration', 'float', 'SpacingDurationVal', 's'],
-            ['ScanDelayInput', 'scanDelay', 'float', 'ScanDelayVal', 's'],
-            ['StartOpacityInput', 'startOpacity', 'float', 'StartOpacityVal'],
-            ['EndOpacityInput', 'endOpacity', 'float', 'EndOpacityVal'],
-            ['OpacityDurationInput', 'opacityDuration', 'float', 'OpacityDurationVal', 's'],
-            ['OpacityDelayInput', 'opacityDelay', 'float', 'OpacityDelayVal', 's'],
-            ['StrokeAlignInput', 'strokeAlign'],
-            ['EasingInput', 'spacingEasing'],
+            ['MainSize', 'mainSize', 'int', 'MainSizeVal'],
+            ['MainWeight', 'mainWeight', 'int', 'MainWeightVal'],
+            ['StrokeWidth', 'strokeWidth', 'float', 'StrokeWidthVal'],
+            ['StackCount', 'stackCount', 'int', 'StackCountVal'],
+            ['StackGap', 'stackGap', 'int', 'StackGapVal'],
+            ['Speed', 'speed', 'float', 'SpeedVal'],
+            ['GlowIntensity', 'glowIntensity', 'int', 'GlowIntensityVal'],
+            ['TrailLen', 'trailLen', 'float', 'TrailLenVal'],
+            ['BgWeight', 'bgWeight', 'int', 'BgWeightVal'],
+            ['BgTextSize', 'bgTextSize', 'int', 'BgTextSizeVal'],
+            ['BgTextSpace', 'bgTextSpace', 'int', 'BgTextSpaceVal'],
+            ['BgScaleX', 'bgScaleX', 'float', 'BgScaleXVal'],
+            ['BgScaleY', 'bgScaleY', 'float', 'BgScaleYVal'],
+            ['BgOffX', 'bgOffX', 'int', 'BgOffXVal'],
+            ['BgOffY', 'bgOffY', 'int', 'BgOffYVal'],
+            ['PosX', 'posX', 'int', 'PosXVal'],
+            ['PosY', 'posY', 'int', 'PosYVal'],
+            ['StartSpacing', 'startSpacing', 'int', 'StartSpacingVal'],
+            ['EndSpacing', 'endSpacing', 'int', 'EndSpacingVal'],
+            ['SpacingDuration', 'spacingDuration', 'float', 'SpacingDurationVal', 's'],
+            ['ScanDelay', 'scanDelay', 'float', 'ScanDelayVal', 's'],
+            ['StartOpacity', 'startOpacity', 'float', 'StartOpacityVal'],
+            ['EndOpacity', 'endOpacity', 'float', 'EndOpacityVal'],
+            ['OpacityDuration', 'opacityDuration', 'float', 'OpacityDurationVal', 's'],
+            ['OpacityDelay', 'opacityDelay', 'float', 'OpacityDelayVal', 's'],
+            ['StrokeAlign', 'strokeAlign'],
+            ['Easing', 'spacingEasing'],
             ['BgItalicToggle', 'bgItalic', 'checked'],
             ['MainText', 'mainText'],
             ['BgTextStr', 'bgTextStr'],
@@ -606,7 +603,7 @@
             onChange: (val, key) => {
                 if (key === 'bgScaleX' && config.bgLockRatio) {
                     config.bgScaleY = config.bgScaleX;
-                    document.getElementById('BgScaleYInput').value = config.bgScaleX;
+                    document.getElementById('BgScaleY').value = config.bgScaleX;
                     const disp = document.getElementById('BgScaleYVal');
                     if (disp) disp.innerText = config.bgScaleX;
                 }
@@ -641,7 +638,7 @@
         function applyTheme() {
             const t = getTheme();
             const isLight = t.id === 'light';
-            document.getElementById('themeToggle').textContent = isLight ? '🌙' : '☀';
+            
 
             // SVG 文本填充：亮色用深色文字，暗色用白色
             centerText.setAttribute('fill', t.textMain);
@@ -655,10 +652,13 @@
         document.getElementById('themeToggle').addEventListener('click', () => {
             toggleTheme();
             applyTheme();
+            const t = document.getElementById('themeToggle');
+            t.innerHTML = getTheme().id === 'dark' ? sunSVG : moonSVG;
         });
 
         // 初始化主题
         applyTheme();
+        document.getElementById('themeToggle').innerHTML = getTheme().id === 'dark' ? sunSVG : moonSVG;
     </script>
 </body>
 </html>

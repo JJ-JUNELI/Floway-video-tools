@@ -3,7 +3,7 @@
 <head>
     <script>if(location.search.includes("preview")){document.documentElement.classList.add("preview-mode");var s=document.createElement("style");s.textContent=".preview-mode,.preview-mode body{overflow:hidden!important;background:transparent!important;background-image:none!important}.preview-mode .sidebar,.preview-mode .sidebar-resize-handle,.preview-mode #RecIndicator,.preview-mode #DebugLog{display:none!important}";document.head.appendChild(s)}</script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>饼图效果</title>
 
     <!-- 固定加载顺序，不要改 -->
@@ -41,12 +41,6 @@
         .btn-icon:hover { color: var(--text-main, #333); border-color: var(--accent, #555); background: #eee; }
         .btn-icon.del:hover { color: var(--danger, #cc3333); border-color: var(--danger, #cc3333); }
         .op-cell { white-space: nowrap; text-align: center; }
-        .btn-play {
-            background: var(--accent); color: #000; font-weight: bold;
-            border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer;
-            font-size: 11px; transition: 0.2s;
-        }
-        .btn-play:hover { filter: brightness(1.1); }
         .btn-add {
             background: var(--accent); color: #000; font-weight: bold;
             border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;
@@ -54,10 +48,28 @@
         }
         .btn-add:hover { filter: brightness(1.1); }
 
-        /* WebGL 合成 canvas */
-        #glCanvas { width: 100%; max-width: 1440px; aspect-ratio: 4 / 3; box-shadow: none; border-radius: 0; }
-
         /* 子板块分区 */
+        .ctrl-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 7px;
+        }
+        .ctrl-row:last-child { margin-bottom: 0; }
+        .ctrl-row > span:first-child {
+            flex: 0 0 auto;
+            min-width: 52px;
+            font-size: 12px;
+            color: var(--text-sub);
+            white-space: nowrap;
+        }
+        .ctrl-row > input[type=range] { flex: 1; min-width: 0; }
+        .ctrl-row > span:last-child {
+            flex: 0 0 30px;
+            text-align: right;
+            font-size: 11px;
+            color: var(--accent);
+        }
         .sub-section {
             margin-top: 10px;
             padding: 8px 10px 4px;
@@ -66,10 +78,18 @@
         }
         .sub-section:first-of-type { margin-top: 6px; }
         .sub-section-label {
-            font-size: 10px;
-            color: var(--text-sub, #888);
-            letter-spacing: 0.5px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
             margin-bottom: 6px;
+        }
+        /* A. 分组标题：提升为明确的一级标题 */
+        .controls-container .group-title {
+            font-size: 13px;
+            color: var(--text-main);
+            border-left-width: 4px;
         }
         .ss-blue   { border-left: 2px solid rgba(59,130,246,0.35); }
         .ss-green  { border-left: 2px solid rgba(34,197,94,0.35); }
@@ -77,6 +97,26 @@
         .ss-purple { border-left: 2px solid rgba(168,85,247,0.35); }
         .ss-rose   { border-left: 2px solid rgba(244,63,94,0.35); }
         .ss-teal   { border-left: 2px solid rgba(20,184,166,0.35); }
+        .ctrl-row > span[id] { flex: 0 0 30px; text-align: right; font-size: 11px; color: var(--accent); }
+        .ctrl-row > span.clr { font-size: 11px; color: var(--text-sub); flex: 0 0 auto; white-space: nowrap; }
+        .ctrl-row > input[type=color] { flex: 0 0 28px; width: 28px; height: 22px; padding: 1px; border: 1px solid var(--border,#ddd); border-radius: 3px; cursor: pointer; }
+
+        /* 坐标可编辑数值框 */
+        .num-edit {
+            width: 60px; min-width: 60px; max-width: 60px;
+            flex-shrink: 0; flex-grow: 0;
+            text-align: right; padding: 1px 4px;
+            background: var(--card-bg, #fafafa); border: 1px solid var(--border, #ddd);
+            color: var(--accent); border-radius: 3px; outline: none;
+            font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 11px;
+            -moz-appearance: textfield;
+        }
+        .num-edit::-webkit-outer-spin-button,
+        .num-edit::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .num-edit:focus { border-color: var(--accent, #555); }
+        .section-locked { opacity: .45; pointer-events: none; }
+        .section-locked .lock-hint { display: block; }
+        .lock-hint { display: none; font-size: 11px; color: var(--text-dim, #8a93a2); margin-top: 2px; margin-bottom: 6px; }
     </style>
 </head>
 <body>
@@ -85,10 +125,9 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <a href="../index.html" class="btn-icon" title="返回首页" style="text-decoration:none; margin-right:8px; font-size:15px;">←</a>
-            <div class="app-title">🥧 饼图效果 <span style="font-size:9px; color:var(--text-sub, #888)">v1.0</span></div>
+            <div class="app-title"><svg class="app-icon" viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><span>饼图效果</span><span style="font-size:9px; color:var(--text-sub, #888)">v1.0</span></div>
             <div style="display:flex; align-items:center; gap:10px;">
-                <button id="themeToggle" class="btn-icon" title="切换主题">☀</button>
-                <div class="version-badge">NEW</div>
+                <button id="themeToggle" class="btn-theme" title="切换主题"></button>
             </div>
         </div>
 
@@ -107,135 +146,24 @@
                 <button class="btn-add" onclick="addRow()">+ 添加数据行</button>
             </div>
 
-            <!-- 标题设置 -->
+            <!-- 饼图 -->
             <div class="control-group">
-                <div class="group-title"><span>📝 标题设置</span></div>
+                <div class="group-title"><span>🥧 饼图</span></div>
                 <div class="sub-section ss-blue">
-                    <div class="sub-section-label">内容</div>
-                    <div class="row stack"><div class="label-line"><span>主标题</span></div>
-                        <input type="text" id="MainTitle" value="汽车市场份额分布"></div>
-                    <div class="row stack"><div class="label-line"><span>副标题 (右侧文字)</span></div>
-                        <input type="text" id="SubTitle" value="2024 年度销售数据"></div>
-                    <div class="row stack"><div class="label-line"><span>标题字体</span></div>
-                        <div id="TitleFontMount" style="width:100%"></div></div>
-                </div>
-                <div class="sub-section ss-teal" id="CenterTextSection">
-                    <div class="sub-section-label">中心文字 (环形图)</div>
-                    <div class="row stack"><div class="label-line"><span>中心文字</span></div>
-                        <input type="text" id="CenterText" value="公司业务收入占比"></div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>字号</span><span id="CenterFontSizeVal">18</span></div>
-                            <input type="range" id="CenterFontSize" min="10" max="36" step="1" value="18"></div>
-                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>颜色</span></div>
-                            <input type="color" id="CenterColor" value="#333333"></div>
-                    </div>
-                </div>
-                <div class="sub-section ss-green">
-                    <div class="sub-section-label">样式</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题字号</span><span id="TitleSizeVal">26</span></div>
-                            <input type="range" id="TitleSize" min="12" max="72" step="2" value="26"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题字号</span><span id="SubTitleSizeVal">36</span></div>
-                            <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题字重</span><span id="MainTitleWeightVal">700</span></div>
-                            <input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题字重</span><span id="SubTitleWeightVal">400</span></div>
-                            <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
-                    </div>
-                    <div class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">主标题颜色</span>
-                        <input type="color" id="TitleColor" value="#333333"></div>
-                    <div class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">副标题颜色</span>
-                        <input type="color" id="SubTitleColor" value="#999999"></div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题 X</span><span id="MainTitleXVal">0</span></div>
-                            <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题 Y</span><span id="MainTitleYVal">-490</span></div>
-                            <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题 X</span><span id="SubTitleXVal">630</span></div>
-                            <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题 Y</span><span id="SubTitleYVal">0</span></div>
-                            <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
-                    </div>
-                    <div class="sub-title"><span>显示括号</span><input type="checkbox" id="ShowBrackets" checked></div>
-                    <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
-                </div>
-            </div>
-
-            <!-- 卡片背景 -->
-            <div class="control-group">
-                <div class="group-title"><span>🖌️ 卡片背景</span></div>
-                <div class="sub-section ss-amber">
-                    <div class="sub-section-label">背景模式</div>
-                    <div class="sub-title"><span>透明背景</span><input type="checkbox" id="CardBgTransparent"></div>
-                    <div id="CardBgColorRow" class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">卡片底色</span>
-                        <input type="color" id="CardBg" value="#f0f5fa"></div>
-                </div>
-                <div class="sub-section ss-blue" id="TextureSection">
-                    <div class="sub-section-label">纸张纹理</div>
-                    <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
-                        <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div></div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
-                            <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 饼图样式 -->
-            <div class="control-group">
-                <div class="group-title"><span>🥧 饼图样式</span></div>
-                <div class="sub-section ss-blue">
-                    <div class="sub-section-label">类型</div>
+                    <div class="sub-section-label">基本</div>
                     <div class="row stack"><div class="label-line"><span>饼图类型</span></div>
                         <select id="PieType">
                             <option value="solid">实心饼图</option>
                             <option value="donut" selected>环形图 (Donut)</option>
                         </select></div>
                     <div id="DonutOpts" style="margin-top:6px;">
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>环宽比例</span><span id="DonutWidthVal">35%</span></div>
-                            <input type="range" id="DonutWidth" min="20" max="80" step="5" value="35"></div></div>
-                        <div class="row">
-                            <div class="stack" style="width:70px;flex:none"><div class="label-line"><span>中心圆</span></div>
-                                <select id="DonutCenterMode">
-                                    <option value="color">填色</option>
-                                    <option value="transparent">透明</option>
-                                </select></div>
-                            <div id="DonutCenterColorWrap" class="stack" style="width:40px;flex:none"><div class="label-line"><span>颜色</span></div>
-                                <input type="color" id="DonutCenterColor" value="#ffffff"></div>
+                        <div class="row stack"><div class="label-line"><span>中心圆半径</span><span id="DonutWidthVal">65%</span></div>
+                            <input type="range" id="DonutWidth" min="20" max="80" step="5" value="65"></div>
+                        <div class="sub-title"><span>中心圆填充</span><input type="checkbox" id="DonutCenterMode" checked></div>
+                        <div id="DonutCenterColorWrap" class="row stack">
+                            <div class="label-line"><span>中心圆颜色</span></div>
+                            <input type="color" id="DonutCenterColor" value="#ffffff">
                         </div>
-                    </div>
-                </div>
-                <div class="sub-section ss-green">
-                    <div class="sub-section-label">布局</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>半径</span><span id="PieRadiusVal">250</span></div>
-                            <input type="range" id="PieRadius" min="100" max="400" step="5" value="250"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>起始角度</span><span id="StartAngleVal">0°</span></div>
-                            <input type="range" id="StartAngle" min="0" max="360" step="5" value="0"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>圆心 X</span><span id="PieCenterXVal">0</span></div>
-                            <input type="range" id="PieCenterX" min="-300" max="300" step="5" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>圆心 Y</span><span id="PieCenterYVal">0</span></div>
-                            <input type="range" id="PieCenterY" min="-300" max="300" step="5" value="0"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>间隔宽度</span><span id="SliceGapVal">3px</span></div>
-                            <input type="range" id="SliceGap" min="0" max="20" step="1" value="3"></div>
-                        <div class="stack" style="width:70px;flex:none"><div class="label-line"><span>间隔模式</span></div>
-                            <select id="SliceGapMode">
-                                <option value="transparent">透明</option>
-                                <option value="fill">填充</option>
-                            </select></div>
-                        <div id="SliceGapColorWrap" class="stack" style="width:40px;flex:none;display:none"><div class="label-line"><span>颜色</span></div>
-                            <input type="color" id="SliceGapColor" value="#ffffff"></div>
                     </div>
                     <div class="sub-title" style="margin-top:8px"><span>阶梯缩放</span><input type="checkbox" id="StairScale"></div>
                     <div id="StairOpts" style="display:none">
@@ -246,19 +174,60 @@
                                     <option value="asc">数值升序</option>
                                     <option value="none">原始顺序</option>
                                 </select></div>
-                            <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>缩放范围</span><span id="StairRangeVal">30%</span></div>
-                                <input type="range" id="StairRange" min="0" max="80" step="5" value="30"></div></div>
+                            <div class="row stack"><div class="label-line"><span>缩放范围</span><span id="StairRangeVal">30%</span></div>
+                                <input type="range" id="StairRange" min="0" max="80" step="5" value="30"></div>
                         </div>
                         <div class="sub-title"><span>手动模式</span><input type="checkbox" id="StairManual"></div>
+                    </div>
+                    <div class="row stack" style="margin-top:8px"><div class="label-line"><span>分割线</span></div>
+                        <select id="SliceGapStyle">
+                            <option value="none">无间隔</option>
+                            <option value="transparent" selected>透明间隔</option>
+                            <option value="color">有色间隔</option>
+                        </select></div>
+                    <div id="SliceGapOpts">
+                        <div class="row stack"><div class="label-line"><span>分割线粗细</span><span id="SliceGapVal">3</span></div>
+                            <input type="range" id="SliceGap" min="0" max="20" step="1" value="3"></div>
+                        <div id="SliceGapColorWrap" class="row stack" style="display:none">
+                            <div class="label-line"><span>分割线颜色</span></div>
+                            <input type="color" id="SliceGapColor" value="#ffffff">
+                        </div>
+                    </div>
+                </div>
+                <div class="sub-section ss-teal" id="CenterTextSection">
+                    <div class="sub-section-label">中心文字</div>
+                    <div class="row stack"><div class="label-line"><span>中心文字</span></div>
+                        <input type="text" id="CenterText" value="公司业务收入占比"></div>
+                    <div class="stack"><div class="label-line"><span>字号</span><span id="CenterFontSizeVal">18</span></div>
+                        <input type="range" id="CenterFontSize" min="10" max="36" step="1" value="18"></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>颜色</span></div>
+                        <input type="color" id="CenterColor" value="#333333">
+                    </div>
+                </div>
+                <div class="sub-section ss-green">
+                    <div class="sub-section-label">布局</div>
+                    <div class="stack"><div class="label-line"><span>半径</span><span id="PieRadiusVal">250</span></div>
+                        <input type="range" id="PieRadius" min="100" max="400" step="5" value="250"></div>
+                    <div class="stack"><div class="label-line"><span>旋转</span><span id="StartAngleVal">0°</span></div>
+                        <input type="range" id="StartAngle" min="0" max="360" step="5" value="0"></div>
+                    <div class="advanced-params">
+                        <div class="stack"><div class="label-line"><span>X</span><span id="PieCenterXVal">0</span></div>
+                            <input type="range" id="PieCenterX" min="-300" max="300" step="5" value="0"></div>
+                        <div class="stack"><div class="label-line"><span>Y</span><span id="PieCenterYVal">0</span></div>
+                            <input type="range" id="PieCenterY" min="-300" max="300" step="5" value="0"></div>
                     </div>
                 </div>
                 <div class="sub-section ss-rose">
                     <div class="sub-section-label">效果</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>透明度</span><span id="SliceOpacityVal">100%</span></div>
-                            <input type="range" id="SliceOpacity" min="10" max="100" step="5" value="100"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光</span><span id="SliceGlowVal">0</span></div>
-                            <input type="range" id="SliceGlow" min="0" max="100" step="2" value="0"></div>
+                    <div class="stack"><div class="label-line"><span>透明度</span><span id="SliceOpacityVal">100%</span></div>
+                        <input type="range" id="SliceOpacity" min="0" max="100" step="5" value="100"></div>
+                    <div class="advanced-params">
+                        <div class="sub-title"><span>切片辉光</span><input type="checkbox" id="SliceGlowEnabled"></div>
+                        <div id="SliceGlowOpts" style="display:none">
+                            <div class="stack"><div class="label-line"><span>辉光强度</span><span id="SliceGlowVal">0</span></div>
+                                <input type="range" id="SliceGlow" min="0" max="100" step="2" value="0"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -275,30 +244,180 @@
                                 <option value="inside">扇形内部</option>
                             </select></div>
                         <div id="OutsideLabelOpts">
-                            <div class="row">
-                                <div style="flex:1" class="stack"><div class="label-line"><span>标签距离</span><span id="LabelDistanceVal">60</span></div>
-                                    <input type="range" id="LabelDistance" min="5" max="150" step="5" value="60"></div>
-                            </div>
-                            <div class="sub-title"><span>显示引线</span><input type="checkbox" id="ShowLeaderLines" checked></div>
-                            <div id="LeaderLineOpts">
-                                <div class="row">
-                                    <div style="flex:1" class="stack"><div class="label-line"><span>引线粗细</span><span id="LeaderLineWidthVal">1</span></div>
+                            <div class="stack"><div class="label-line"><span>标签距离</span><span id="LabelDistanceVal">60</span></div>
+                                <input type="range" id="LabelDistance" min="5" max="150" step="5" value="60"></div>
+                            <div class="advanced-params">
+                                <div class="sub-title"><span>显示引线</span><input type="checkbox" id="ShowLeaderLines" checked></div>
+                                <div id="LeaderLineOpts">
+                                    <div class="stack"><div class="label-line"><span>引线粗细</span><span id="LeaderLineWidthVal">1</span></div>
                                         <input type="range" id="LeaderLineWidth" min="0.5" max="4" step="0.5" value="1"></div>
-                                    <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>引线颜色</span></div>
-                                        <input type="color" id="LeaderLineColor" value="#999999"></div>
+                                    <div class="row stack">
+                                        <div class="label-line"><span>引线颜色</span></div>
+                                        <input type="color" id="LeaderLineColor" value="#999999">
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="sub-title"><span>显示百分比</span><input type="checkbox" id="ShowPercentage" checked></div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>标签字号</span><span id="LabelFontSizeVal">14</span></div>
+                        <div class="advanced-params">
+                            <div class="sub-title"><span>显示百分比</span><input type="checkbox" id="ShowPercentage" checked></div>
+                            <div class="stack"><div class="label-line"><span>标签字号</span><span id="LabelFontSizeVal">14</span></div>
                                 <input type="range" id="LabelFontSize" min="8" max="30" step="1" value="14"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>行间距</span><span id="LabelLineGapVal">0</span></div>
+                            <div class="stack"><div class="label-line"><span>行间距</span><span id="LabelLineGapVal">0</span></div>
                                 <input type="range" id="LabelLineGap" min="-10" max="20" step="1" value="0"></div>
+                            <div class="row stack">
+                                <div class="label-line"><span>颜色</span></div>
+                                <input type="color" id="LabelColor" value="#555555">
+                            </div>
                         </div>
-                        <div class="row" style="justify-content:space-between; align-items:center;">
-                            <span style="font-size:12px; color:var(--text-sub, #888);">标签颜色</span>
-                            <input type="color" id="LabelColor" value="#555555"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 标题设置 -->
+            <div class="control-group">
+                <div class="group-title"><span>📝 标题</span></div>
+                <div class="row stack" style="padding:6px 4px 0;"><div class="label-line"><span>标题字体</span></div>
+                    <div id="TitleFontMount" style="width:100%"></div></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">主标题</div>
+                    <div class="sub-title"><span>启用主标题</span><input type="checkbox" id="ShowMainTitle" checked></div>
+                    <div id="MainTitleOpts">
+                    <div class="row stack">
+                        <div class="label-line"><span>文字</span></div>
+                        <input type="text" id="MainTitle" value="汽车市场份额分布">
+                    </div>
+                    <div class="advanced-params">
+                        <div class="stack"><div class="label-line"><span>字号</span><span id="TitleSizeVal">26</span></div>
+                            <input type="range" id="TitleSize" min="12" max="72" step="2" value="26"></div>
+                        <div class="stack"><div class="label-line"><span>字重</span><span id="MainTitleWeightVal">700</span></div>
+                            <input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>颜色</span></div>
+                            <input type="color" id="TitleColor" value="#333333">
+                        </div>
+                        <div class="stack"><div class="label-line"><span>X</span><span id="MainTitleXVal">0</span></div>
+                            <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
+                        <div class="stack"><div class="label-line"><span>Y</span><span id="MainTitleYVal">-490</span></div>
+                            <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
+                        <div class="sub-title"><span>显示括号</span><input type="checkbox" id="ShowBrackets" checked></div>
+                    </div>
+                    </div>
+                </div>
+                <div class="sub-section ss-purple">
+                    <div class="sub-section-label">副标题</div>
+                    <div class="sub-title"><span>启用副标题</span><input type="checkbox" id="ShowSubTitle" checked></div>
+                    <div id="SubTitleOpts">
+                    <div class="row stack">
+                        <div class="label-line"><span>文字</span></div>
+                        <input type="text" id="SubTitle" value="2024 年度销售数据">
+                    </div>
+                    <div class="advanced-params">
+                        <div class="stack"><div class="label-line"><span>字号</span><span id="SubTitleSizeVal">36</span></div>
+                            <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
+                        <div class="stack"><div class="label-line"><span>字重</span><span id="SubTitleWeightVal">400</span></div>
+                            <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>颜色</span></div>
+                            <input type="color" id="SubTitleColor" value="#999999">
+                        </div>
+                        <div class="stack"><div class="label-line"><span>X</span><span id="SubTitleXVal">630</span></div>
+                            <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
+                        <div class="stack"><div class="label-line"><span>Y</span><span id="SubTitleYVal">0</span></div>
+                            <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
+                        <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 卡片外观 -->
+            <div class="control-group">
+                <div class="group-title"><span>🖼️ 卡片外观</span></div>
+                <div class="sub-section ss-amber">
+                    <div class="sub-section-label">背景</div>
+                    <div class="sub-title"><span>启用背景</span><input type="checkbox" id="CardBgTransparent" checked></div>
+                    <div id="CardBgColorRow" class="row stack">
+                        <div class="label-line"><span>卡片底色</span></div>
+                        <input type="color" id="CardBg" value="#f0f5fa">
+                    </div>
+                </div>
+                <div class="sub-section ss-teal" id="TextureSection">
+                    <div class="sub-section-label">纸张纹理</div>
+                    <div class="lock-hint">需先启用背景</div>
+                    <div class="sub-title"><span>启用纹理</span><input type="checkbox" id="TextureEnabled" checked></div>
+                    <div id="TextureOpts">
+                        <div class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
+                            <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div>
+                        <div class="stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
+                            <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
+                    </div>
+                </div>
+                <div class="sub-section ss-green">
+                    <div class="sub-section-label">形态</div>
+                    <div class="stack"><div class="label-line"><span>圆角</span><span id="CardRadiusVal">16</span></div>
+                        <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
+                    <div class="stack"><div class="label-line"><span>内边距</span><span id="CardPadVal">32</span>px</div>
+                        <input type="range" id="CardPad" min="0" max="100" step="1" value="32"></div>
+                    <div class="advanced-params">
+                        <div class="sub-title" style="margin-top:4px"><span>启用描边</span><input type="checkbox" id="CardBorderEnabled"></div>
+                        <div id="CardBorderOpts" style="display:none">
+                            <div class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
+                                <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
+                            <div class="row stack">
+                                <div class="label-line"><span>描边颜色</span></div>
+                                <input type="color" id="CardBorderColor" value="#ffffff">
+                            </div>
+                        </div>
+                        <div class="sub-title"><span>启用辉光</span><input type="checkbox" id="CardGlowEnabled"></div>
+                        <div id="CardGlowOpts" style="display:none">
+                            <div class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
+                                <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
+                            <div class="row stack">
+                                <div class="label-line"><span>辉光颜色</span></div>
+                                <input type="color" id="CardGlowColor" value="#3b82f6">
+                            </div>
+                            <div class="stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
+                                <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
+                        </div>
+                    </div>
+                    <div class="sub-title"><span>启用投影</span><input type="checkbox" id="ShadowEnabled" checked></div>
+                    <div id="ShadowOpts">
+                        <div class="stack"><div class="label-line"><span>角度</span><span id="ShadowAngleVal">90°</span></div>
+                            <input type="range" id="ShadowAngle" min="0" max="360" step="1" value="90"></div>
+                        <div class="stack"><div class="label-line"><span>距离</span><span id="ShadowDistanceVal">10</span></div>
+                            <input type="range" id="ShadowDistance" min="0" max="60" step="1" value="10"></div>
+                        <div class="stack"><div class="label-line"><span>模糊</span><span id="ShadowBlurVal">20</span></div>
+                            <input type="range" id="ShadowBlur" min="0" max="80" step="1" value="20"></div>
+                        <div class="stack"><div class="label-line"><span>不透明度</span><span id="ShadowOpacityVal">25%</span></div>
+                            <input type="range" id="ShadowOpacity" min="0" max="100" step="1" value="25"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 卡片漂浮 -->
+            <div class="control-group collapsible" data-default-collapsed>
+                <div class="group-title"><span>🃏 卡片漂浮</span></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">透视角度</div>
+                    <div class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
+                        <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5"></div>
+                    <div class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
+                        <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
+                    <div class="stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
+                        <input type="range" id="CardScale" min="40" max="100" step="1" value="80"></div>
+                </div>
+                <div class="sub-section ss-purple">
+                    <div class="sub-section-label">微动画</div>
+                    <div class="sub-title"><span>启用微动画</span><input type="checkbox" id="FloatEnabled" checked></div>
+                    <div class="stack"><div class="label-line"><span>X轴摆幅</span><span id="FloatRotateXVal">2.0°</span></div>
+                        <input type="range" id="FloatRotateX" min="0" max="8" step="0.5" value="2.0"></div>
+                    <div class="stack"><div class="label-line"><span>Y轴摆幅</span><span id="FloatRotateYVal">1.5°</span></div>
+                        <input type="range" id="FloatRotateY" min="0" max="8" step="0.5" value="1.5"></div>
+                    <div class="row">
+                        <div style="flex:1" class="stack"><div class="label-line"><span>周期</span><span id="FloatDurationVal">4s</span></div>
+                            <input type="range" id="FloatDuration" min="1" max="10" step="0.5" value="4"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>相位差</span><span id="FloatPhaseVal">25%</span></div>
+                            <input type="range" id="FloatPhase" min="0" max="100" step="5" value="25"></div>
                     </div>
                 </div>
             </div>
@@ -311,71 +430,16 @@
                         <span>动画</span>
                         <button id="BtnPlay" class="btn-play">▶ 播放</button>
                     </div>
-                    <div class="row stack"><div class="label-line"><span>动画时长 (秒)</span><span id="AnimDurationVal">2.5s</span></div>
+                    <div class="stack"><div class="label-line"><span>动画时长</span><span id="AnimDurationVal">2.5s</span></div>
                         <input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="2.5"></div>
-                    <div class="row stack"><div class="label-line"><span>动画曲线</span></div>
-                        <select id="AnimEasing">
-                            <option value="linear">线性 (Linear)</option>
-                            <option value="easeIn">先慢后快 (Ease In)</option>
-                            <option value="easeOut">先快后慢 (Ease Out)</option>
-                            <option value="easeInOut" selected>丝滑缓动 (Smooth)</option>
-                        </select></div>
-                </div>
-            </div>
-
-            <!-- 卡片漂浮 -->
-            <div class="control-group collapsible" data-default-collapsed>
-                <div class="group-title"><span>🃏 卡片漂浮</span></div>
-                <div class="sub-section ss-blue">
-                    <div class="sub-section-label">透视角度</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
-                            <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
-                            <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
-                    </div>
-                    <div class="row stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
-                        <input type="range" id="CardScale" min="40" max="100" step="1" value="80"></div>
-                </div>
-                <div class="sub-section ss-green">
-                    <div class="sub-section-label">尺寸 & 外观</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>悬浮高度</span><span id="ElevationVal">50</span></div>
-                            <input type="range" id="Elevation" min="0" max="100" step="1" value="50"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
-                            <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
-                            <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
-                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>描边颜色</span></div>
-                            <input type="color" id="CardBorderColor" value="#ffffff"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
-                            <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
-                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>辉光颜色</span></div>
-                            <input type="color" id="CardGlowColor" value="#3b82f6"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
-                            <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
-                    </div>
-                </div>
-                <div class="sub-section ss-purple">
-                    <div class="sub-section-label">漂浮动画</div>
-                    <div class="sub-title"><span>启用微动画</span><input type="checkbox" id="FloatEnabled" checked></div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴摆幅</span><span id="FloatRotateXVal">2.0°</span></div>
-                            <input type="range" id="FloatRotateX" min="0" max="8" step="0.5" value="2.0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴摆幅</span><span id="FloatRotateYVal">1.5°</span></div>
-                            <input type="range" id="FloatRotateY" min="0" max="8" step="0.5" value="1.5"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>周期 (秒)</span><span id="FloatDurationVal">4s</span></div>
-                            <input type="range" id="FloatDuration" min="1" max="10" step="0.5" value="4"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>相位差</span><span id="FloatPhaseVal">25%</span></div>
-                            <input type="range" id="FloatPhase" min="0" max="100" step="5" value="25"></div>
+                    <div class="advanced-params">
+                        <div class="row stack"><div class="label-line"><span>动画曲线</span></div>
+                            <select id="AnimEasing">
+                                <option value="linear">线性 (Linear)</option>
+                                <option value="easeIn">先慢后快 (Ease In)</option>
+                                <option value="easeOut">先快后慢 (Ease Out)</option>
+                                <option value="easeInOut" selected>丝滑缓动 (Smooth)</option>
+                            </select></div>
                     </div>
                 </div>
             </div>
@@ -389,20 +453,21 @@
     </div>
 
     <!-- ====== 画布 ====== -->
-    <div class="preview-area">
+    <div class="preview-area" id="previewArea">
         <div id="RecIndicator"><div class="rec-dot"></div> RENDERING...</div>
-        <canvas id="glCanvas"></canvas>
+        <canvas id="glCanvas" class="webgl-canvas"></canvas>
     </div>
 
     <script type="module">
         import { WebGLComposite } from '../shared/webgl-composite.js';
         import { initEffect } from '../shared/controls.js';
-        import { getTheme, toggleTheme } from '../shared/themes.js';
+        import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { drawSolidGlow } from '../shared/border-effects.js';
 
         // ====== Canvas 初始化 ======
         const baseWidth = 1440, baseHeight = 1080, scale = 2;
         const fullW = baseWidth * scale, fullH = baseHeight * scale;
+        let _c2dPhysPad = 0; // 当前帧 offscreen 的物理像素 padding，供 drawContent 合成 sliceLayer 时用
 
         // WebGL canvas
         const glCanvas = document.getElementById('glCanvas');
@@ -421,21 +486,29 @@
         const bgCtx = bgOffscreen.getContext('2d', { alpha: true });
         bgCtx.scale(scale, scale);
 
-        // initEffect（dummy canvas 给 recorder 初始化，后续重定向到 glCanvas）
-        const dummyCanvas = document.createElement('canvas');
-        dummyCanvas.id = 'initDummy'; dummyCanvas.style.display = 'none';
-        document.body.appendChild(dummyCanvas);
+        // 离屏 2D — 饼图色块层（用来隔离 destination-out 分割线蒙版，不污染卡片背景）
+        const sliceLayer = document.createElement('canvas');
+        sliceLayer.width = fullW; sliceLayer.height = fullH;
+        const sliceCtx = sliceLayer.getContext('2d', { alpha: true });
+        sliceCtx.scale(scale, scale);
+
+        // 离屏 2D — 辉光层（多色 shadowBlur，按扫描进度羽化淡出，独立于硬边 clip）
+        const glowLayer = document.createElement('canvas');
+        glowLayer.width = fullW; glowLayer.height = fullH;
+        const glowCtx = glowLayer.getContext('2d', { alpha: true });
+        glowCtx.scale(scale, scale);
 
         const { bg, recorder, resetAnimStart,
                 clamp, hexToRgba, getEasing, bindUI,
                 fontSelectHTML, setupFontSelector } = initEffect({
-            canvasId: 'initDummy',
+            skipMainCanvas: true,
+            skipDrawContext: true,
+            recorderCanvas: glCanvas,
             fileName: 'PieChartFX',
             baseWidth, baseHeight, scale,
             defaultBgMode: 'transparent',
             onFrame: drawFrame,
         });
-        recorder.canvas = glCanvas;
 
         // ====== 数据点 ======
         const INITIAL_DATA = [
@@ -464,16 +537,21 @@
             subTitleY: 0,
             showBrackets: true,
             subTitleGlow: false,
+            showMainTitle: true,
+            showSubTitle: true,
 
             // 饼图样式
             pieType: 'donut',
             donutWidth: 35,
+            donutCenterPct: 65,
             donutCenterColor: '#ffffff',
             donutCenterTransparent: false,
-            donutCenterMode: 'color',
+            donutCenterMode: true,
             startAngle: 0,
+            sliceGapStyle: 'transparent',
+            sliceGapEnabled: true,
             sliceGap: 3,
-            sliceGapMode: 'transparent',
+            sliceGapMode: false,
             sliceGapColor: '#ffffff',
             pieRadius: 250,
             pieCenterX: 0,
@@ -504,8 +582,13 @@
 
             // 卡片漂浮 (WebGL)
             rotateX: 1.5, rotateY: -1,
-            elevation: 0.5,
+            shadowEnabled: true,
+            shadowAngle: 90,
+            shadowDistance: 10,
+            shadowBlur: 20,
+            shadowOpacity: 25,
             cardRadius: 16,
+            cardPad: 32,
             cardScale: 0.8,
             floatEnabled: true,
             floatRotateX: 2.0, floatRotateY: 1.5,
@@ -530,16 +613,20 @@
             entranceEndScale: 100,
 
             // 纸张纹理
+            textureEnabled: true,
             noiseGrain: 35, vignette: 15,
 
             // 卡片外观
             cardBg: '#f0f5fa',
             cardBgTransparent: false,
+            cardBorderEnabled: false,
             cardBorderWidth: 0,
             cardBorderColor: '#ffffff',
+            cardGlowEnabled: false,
             cardGlowWidth: 0,
             cardGlowColor: '#3b82f6',
             cardGlowIntensity: 70,
+            sliceGlowEnabled: false,
         };
 
         // ====== 字体选择器 ======
@@ -565,24 +652,28 @@
             // 卡片背景
             ['ShowBrackets',    'showBrackets',   'checked'],
             ['SubTitleGlow',    'subTitleGlow',   'checked'],
+            ['ShowMainTitle',   'showMainTitle',  'checked'],
+            ['ShowSubTitle',    'showSubTitle',   'checked'],
             ['CardBgTransparent','cardBgTransparent','checked'],
             ['CardBg',          'cardBg'],
+            ['TextureEnabled',  'textureEnabled', 'checked'],
             ['NoiseGrain',      'noiseGrain',     'int',   'NoiseGrainVal'],
             ['Vignette',        'vignette',       'int',   'VignetteVal'],
             // 饼图样式
             ['PieType',         'pieType'],
-            ['DonutWidth',      'donutWidth',     'int',   'DonutWidthVal', '%'],
+            ['DonutWidth',      'donutCenterPct', 'int',   'DonutWidthVal', '%'],
             ['StartAngle',      'startAngle',     'int',   'StartAngleVal', '°'],
-            ['SliceGap',        'sliceGap',       'int',   'SliceGapVal', 'px'],
-            ['SliceGapMode',    'sliceGapMode'],
+            ['SliceGapStyle',   'sliceGapStyle'],
+            ['SliceGap',        'sliceGap',       'int',   'SliceGapVal'],
             ['SliceGapColor',   'sliceGapColor'],
             ['DonutCenterColor',    'donutCenterColor'],
             ['DonutCenterTransparent', 'donutCenterTransparent', 'checked'],
-            ['DonutCenterMode', 'donutCenterMode'],
+            ['DonutCenterMode', 'donutCenterMode', 'checked'],
             ['PieRadius',       'pieRadius',      'int',   'PieRadiusVal'],
             ['PieCenterX',      'pieCenterX',     'int',   'PieCenterXVal'],
             ['PieCenterY',      'pieCenterY',     'int',   'PieCenterYVal'],
             ['SliceOpacity',   'sliceOpacity',    'int',   'SliceOpacityVal', '%'],
+            ['SliceGlowEnabled', 'sliceGlowEnabled', 'checked'],
             ['SliceGlow',      'sliceGlow',       'int',   'SliceGlowVal'],
             ['StairScale',     'stairScale',      'checked'],
             ['StairSort',      'stairSort'],
@@ -606,10 +697,17 @@
             ['RotateX',         'rotateX',        'float', 'RotateXVal',   '°'],
             ['RotateY',         'rotateY',        'float', 'RotateYVal',   '°'],
             ['CardScale',       'cardScale',      '%',     'CardScaleVal', '%'],
-            ['Elevation',       'elevation',      '%',     'ElevationVal'],
+            ['ShadowEnabled',   'shadowEnabled',  'checked'],
+            ['ShadowAngle',     'shadowAngle',    'int',   'ShadowAngleVal',    '°'],
+            ['ShadowDistance',  'shadowDistance', 'int',   'ShadowDistanceVal'],
+            ['ShadowBlur',      'shadowBlur',     'int',   'ShadowBlurVal'],
+            ['ShadowOpacity',   'shadowOpacity',  'int',   'ShadowOpacityVal',  '%'],
             ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal'],
+            ['CardPad',         'cardPad',        'int',   'CardPadVal'],
+            ['CardBorderEnabled', 'cardBorderEnabled', 'checked'],
             ['CardBorderWidth',  'cardBorderWidth', 'int',   'CardBorderWidthVal'],
             ['CardBorderColor',  'cardBorderColor'],
+            ['CardGlowEnabled',  'cardGlowEnabled', 'checked'],
             ['CardGlowWidth',    'cardGlowWidth',   'int',   'CardGlowWidthVal'],
             ['CardGlowColor',    'cardGlowColor'],
             ['CardGlowIntensity','cardGlowIntensity','int',  'CardGlowIntensityVal','%'],
@@ -641,6 +739,14 @@
                     document.getElementById('CenterTextSection').style.display =
                         config.pieType === 'donut' ? '' : 'none';
                 }
+                if (key === 'showMainTitle') {
+                    document.getElementById('MainTitleOpts').style.display =
+                        config.showMainTitle ? '' : 'none';
+                }
+                if (key === 'showSubTitle') {
+                    document.getElementById('SubTitleOpts').style.display =
+                        config.showSubTitle ? '' : 'none';
+                }
                 if (key === 'showLabels') {
                     document.getElementById('LabelOpts').style.display =
                         config.showLabels ? '' : 'none';
@@ -653,13 +759,21 @@
                     document.getElementById('LeaderLineOpts').style.display =
                         config.showLeaderLines ? '' : 'none';
                 }
-                if (key === 'sliceGapMode') {
+                if (key === 'donutCenterPct') {
+                    config.donutWidth = 100 - config.donutCenterPct;
+                }
+                if (key === 'sliceGapStyle') {
+                    const s = config.sliceGapStyle;
+                    config.sliceGapEnabled = s !== 'none';
+                    config.sliceGapMode = s === 'color';
+                    document.getElementById('SliceGapOpts').style.display =
+                        s === 'none' ? 'none' : '';
                     document.getElementById('SliceGapColorWrap').style.display =
-                        config.sliceGapMode === 'fill' ? '' : 'none';
+                        s === 'color' ? '' : 'none';
                 }
                 if (key === 'donutCenterMode') {
                     document.getElementById('DonutCenterColorWrap').style.display =
-                        config.donutCenterMode === 'color' ? '' : 'none';
+                        config.donutCenterMode ? '' : 'none';
                 }
                 if (key === 'stairScale' || key === 'stairManual') {
                     document.getElementById('StairOpts').style.display =
@@ -673,28 +787,45 @@
                     document.getElementById('EntranceOpts').style.display = show ? '' : 'none';
                     document.getElementById('EntranceDetailOpts').style.display = show ? '' : 'none';
                 }
+                if (key === 'textureEnabled') {
+                    document.getElementById('TextureOpts').style.display =
+                        config.textureEnabled ? '' : 'none';
+                }
+                if (key === 'sliceGlowEnabled') {
+                    document.getElementById('SliceGlowOpts').style.display =
+                        config.sliceGlowEnabled ? '' : 'none';
+                }
+                if (key === 'cardBorderEnabled') {
+                    document.getElementById('CardBorderOpts').style.display =
+                        config.cardBorderEnabled ? '' : 'none';
+                }
+                if (key === 'cardGlowEnabled') {
+                    document.getElementById('CardGlowOpts').style.display =
+                        config.cardGlowEnabled ? '' : 'none';
+                }
+                if (key === 'shadowEnabled') {
+                    document.getElementById('ShadowOpts').style.display =
+                        config.shadowEnabled ? '' : 'none';
+                }
                 if (key === 'cardBgTransparent') {
+                    config.cardBgTransparent = !config.cardBgTransparent; // 启用背景=checked → transparent=false
                     const transparent = config.cardBgTransparent;
                     document.getElementById('CardBgColorRow').style.display = transparent ? 'none' : '';
-                    document.getElementById('TextureSection').style.display = transparent ? 'none' : '';
+                    document.getElementById('TextureSection').classList.toggle('section-locked', transparent);
                     if (transparent) {
-                        config.floatEnabled = false;
-                        document.getElementById('FloatEnabled').checked = false;
-                        config.cardBorderWidth = 0;
-                        document.getElementById('CardBorderWidth').value = 0;
-                        document.getElementById('CardBorderWidthVal').textContent = '0';
-                        config.cardGlowWidth = 0;
-                        document.getElementById('CardGlowWidth').value = 0;
-                        document.getElementById('CardGlowWidthVal').textContent = '0';
-                        config.cardGlowIntensity = 0;
-                        document.getElementById('CardGlowIntensity').value = 0;
-                        document.getElementById('CardGlowIntensityVal').textContent = '0%';
+                        config.cardBorderEnabled = false;
+                        document.getElementById('CardBorderEnabled').checked = false;
+                        document.getElementById('CardBorderOpts').style.display = 'none';
+                        config.cardGlowEnabled = false;
+                        document.getElementById('CardGlowEnabled').checked = false;
+                        document.getElementById('CardGlowOpts').style.display = 'none';
                     }
                 }
                 _paperTexCache = null;
                 startLoop();
             }
         });
+
 
         // ====== 漂浮动画 ======
         let _currentRx = config.rotateX * Math.PI / 180;
@@ -840,11 +971,11 @@
             dataPoints.forEach((item, i) => {
                 const tr = document.createElement('tr');
                 const scaleCol = showScale
-                    ? `<td><input type="number" min="50" max="200" step="5" value="${item.scale || 100}" oninput="updateData(${i}, 'scale', this.value)"></td>` : '';
+                    ? `<td><input type="number" name="dataScale${i}" min="50" max="200" step="5" value="${item.scale || 100}" oninput="updateData(${i}, 'scale', this.value)"></td>` : '';
                 tr.innerHTML = `
-                    <td><input type="text" value="${item.label}" oninput="updateData(${i}, 'label', this.value)"></td>
-                    <td><input type="number" value="${item.value}" oninput="updateData(${i}, 'value', this.value)"></td>
-                    <td><input type="color" value="${item.color}" oninput="updateData(${i}, 'color', this.value)"></td>
+                    <td><input type="text" name="dataLabel${i}" value="${item.label}" oninput="updateData(${i}, 'label', this.value)"></td>
+                    <td><input type="number" name="dataValue${i}" value="${item.value}" oninput="updateData(${i}, 'value', this.value)"></td>
+                    <td><input type="color" name="dataColor${i}" value="${item.color}" oninput="updateData(${i}, 'color', this.value)"></td>
                     ${scaleCol}
                     <td class="op-cell">
                         <button class="btn-icon" onclick="moveRow(${i}, -1)" title="上移">↑</button>
@@ -875,19 +1006,16 @@
         };
 
         document.getElementById('BtnPlay').addEventListener('click', () => myResetAnimStart());
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            toggleTheme();
-            document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
-            _paperTexCache = null;
-            startLoop();
-        });
-        document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+        initThemeToggle();
 
         // 条件显示
         if (config.pieType !== 'donut') {
             document.getElementById('DonutOpts').style.display = 'none';
             document.getElementById('CenterTextSection').style.display = 'none';
         }
+        if (!config.shadowEnabled) document.getElementById('ShadowOpts').style.display = 'none';
+        if (!config.showMainTitle) document.getElementById('MainTitleOpts').style.display = 'none';
+        if (!config.showSubTitle) document.getElementById('SubTitleOpts').style.display = 'none';
         if (!config.showLabels) document.getElementById('LabelOpts').style.display = 'none';
         if (!config.showLabels || config.labelMode !== 'outside') document.getElementById('OutsideLabelOpts').style.display = 'none';
 
@@ -906,14 +1034,14 @@
             if (!isTransparent) {
                 ctx.fillStyle = config.cardBg;
                 ctx.fillRect(0, 0, w, h);
-                if (config.noiseGrain > 0 || config.vignette > 0) {
+                if (config.textureEnabled && (config.noiseGrain > 0 || config.vignette > 0)) {
                     const tex = generatePaperTexture(w, h);
                     if (tex) ctx.drawImage(tex, 0, 0, w, h);
                 }
             }
 
             // === 主标题 ===
-            {
+            if (config.showMainTitle) {
                 const titleAlpha = isHold ? 1 : clamp(rawProgress * 3, 0, 1);
                 ctx.save();
                 ctx.font = `${config.mainTitleWeight} ${config.mainTitleSize}px ${config.titleFont}`;
@@ -955,87 +1083,166 @@
                         config.stairSort === 'asc' ? a[1].value - b[1].value : b[1].value - a[1].value
                     );
                     const rank = sorted.findIndex(e => e[0] === i);
-                    // desc: rank 0 = 最大值 → 最大缩放; asc: rank 0 = 最小值 → 最小缩放
-                    return base + (config.stairSort === 'desc' ? (n - 1 - rank) : rank) * step;
+                    return base + (n - 1 - rank) * step;
                 });
 
                 let currentAngle = startRad;
 
-                // 第一遍：分隔线（先画，扇形会覆盖在上面）
-                if (config.sliceGap > 0) {
-                    let sepAngle = startRad;
-                    ctx.save();
-                    ctx.strokeStyle = config.sliceGapMode === 'transparent'
-                        ? config.cardBg : config.sliceGapColor;
-                    ctx.lineWidth = config.sliceGap;
-                    ctx.lineCap = 'butt';
-                    const baseInnerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
-                    for (let i = 0; i < dataPoints.length; i++) {
-                        const sliceAngle = (dataPoints[i].value / total) * Math.PI * 2;
-                        const boundaryAngle = sepAngle + sliceAngle;
-                        const isLast = i === dataPoints.length - 1;
-                        const snapAngle = isLast ? startRad + maxAngle : boundaryAngle;
-                        if (snapAngle - startRad <= maxAngle + 0.01) {
-                            const nextI = (i + 1) % dataPoints.length;
-                            const sR = radius * Math.max(scales[i], scales[nextI]);
-                            ctx.beginPath();
-                            ctx.moveTo(
-                                cx + Math.cos(snapAngle) * baseInnerR,
-                                cy + Math.sin(snapAngle) * baseInnerR
-                            );
-                            ctx.lineTo(
-                                cx + Math.cos(snapAngle) * sR,
-                                cy + Math.sin(snapAngle) * sR
-                            );
-                            ctx.stroke();
-                        }
-                        sepAngle += sliceAngle;
-                    }
-                    ctx.restore();
-                }
+                // 准备隔离层
+                sliceCtx.save();
+                sliceCtx.setTransform(1, 0, 0, 1, 0, 0);
+                sliceCtx.clearRect(0, 0, sliceLayer.width, sliceLayer.height);
+                sliceCtx.restore();
 
-                // 第二遍：绘制所有扇形（角度缩进让分隔线在底层露出）
-                const gapHalf = config.sliceGap > 0 ? (config.sliceGap / radius) / 2 : 0;
-                currentAngle = startRad;
-                for (let i = 0; i < dataPoints.length; i++) {
-                    const slice = dataPoints[i];
-                    const sliceAngle = (slice.value / total) * Math.PI * 2;
-                    const drawnAngle = currentAngle - startRad;
-                    const effectiveAngle = Math.min(sliceAngle, Math.max(0, maxAngle - drawnAngle));
+                glowCtx.save();
+                glowCtx.setTransform(1, 0, 0, 1, 0, 0);
+                glowCtx.clearRect(0, 0, glowLayer.width, glowLayer.height);
+                glowCtx.restore();
 
-                    if (effectiveAngle > 0.001) {
-                        const drawStart = currentAngle + gapHalf;
-                        const drawEnd = currentAngle + effectiveAngle - gapHalf;
-                        if (drawEnd <= drawStart) { currentAngle += sliceAngle; continue; }
-                        const sliceR = radius * scales[i];
-                        const innerR = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+                if (maxAngle > 0.001) {
+                    const hasGap = config.sliceGapEnabled && config.sliceGap > 0;
+                    const d = hasGap ? config.sliceGap / 2 : 0;       // 单边平行偏移量
+                    const donutInner = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
+                    const baseInnerR = donutInner;
+                    const outerMaxR = radius * Math.max(...scales);
+                    // 扫描头跟随 maxAngle，结束时与 startRad 起跑线精确重合
+                    const scanAngle = startRad + maxAngle;
 
-                        ctx.beginPath();
+                    // 内嵌缝隙扇形路径：两条径向边按 d 平行偏移，缝隙=未绘制的空白
+                    // 只有一条 fill 抗锯齿边对着透明，无 destination-out 双边相减残留
+                    const wedgePath = (c, a0, a1, R) => {
+                        const oR = hasGap ? Math.asin(Math.min(d / R, 1)) : 0;
+                        const o0 = a0 + oR, o1 = a1 - oR;
+                        if (o1 <= o0) return false;
+                        c.beginPath();
+                        c.arc(cx, cy, R, o0, o1);
                         if (config.pieType === 'donut') {
-                            ctx.arc(cx, cy, sliceR, drawStart, drawEnd);
-                            ctx.arc(cx, cy, innerR, drawEnd, drawStart, true);
-                            ctx.closePath();
+                            const ri = donutInner;
+                            if (hasGap && ri > 0.0001) {
+                                const iR = Math.asin(Math.min(d / ri, 1));
+                                let i0 = a0 + iR, i1 = a1 - iR;
+                                if (i1 <= i0) { const m = (a0 + a1) / 2; i0 = i1 = m; }
+                                c.arc(cx, cy, ri, i1, i0, true);
+                            } else {
+                                c.arc(cx, cy, ri, a1, a0, true);
+                            }
+                        } else if (hasGap) {
+                            // 两条偏移边的交点 = 内尖；O1→尖→O0 即两条平行偏移边
+                            const half = (a1 - a0) / 2;
+                            const sinH = Math.sin(half);
+                            const apexR = sinH > 1e-4 ? Math.min(d / sinH, R) : R;
+                            const mid = (a0 + a1) / 2;
+                            c.lineTo(cx + Math.cos(mid) * apexR, cy + Math.sin(mid) * apexR);
                         } else {
-                            ctx.moveTo(cx, cy);
-                            ctx.arc(cx, cy, sliceR, drawStart, drawEnd);
-                            ctx.closePath();
+                            c.lineTo(cx, cy);
                         }
+                        c.closePath();
+                        return true;
+                    };
 
-                        ctx.save();
-                        if (config.sliceOpacity < 100) ctx.globalAlpha = config.sliceOpacity / 100;
-                        if (config.sliceGlow > 0) {
-                            ctx.shadowColor = slice.color;
-                            ctx.shadowBlur = config.sliceGlow;
+                    // 第一遍：实色块（每块画到 min(末角, scanAngle)，缝隙留空）
+                    let a = startRad;
+                    for (let i = 0; i < dataPoints.length; i++) {
+                        const slice = dataPoints[i];
+                        const sliceAngle = (slice.value / total) * Math.PI * 2;
+                        const a0 = a;
+                        const a1 = Math.min(a + sliceAngle, scanAngle);
+                        if (a1 > a0 + 1e-6) {
+                            const sliceR = radius * scales[i];
+                            if (wedgePath(sliceCtx, a0, a1, sliceR)) {
+                                sliceCtx.save();
+                                if (config.sliceOpacity < 100) sliceCtx.globalAlpha = config.sliceOpacity / 100;
+                                const grad = sliceCtx.createRadialGradient(cx, cy, donutInner, cx, cy, sliceR);
+                                grad.addColorStop(0, slice.color);
+                                grad.addColorStop(1, lightenColor(slice.color, 35));
+                                sliceCtx.fillStyle = grad;
+                                sliceCtx.fill();
+                                sliceCtx.restore();
+                            }
                         }
-                        const grad = ctx.createRadialGradient(cx, cy, innerR, cx, cy, sliceR);
-                        grad.addColorStop(0, slice.color);
-                        grad.addColorStop(1, lightenColor(slice.color, 35));
-                        ctx.fillStyle = grad;
-                        ctx.fill();
-                        ctx.restore();
+                        a += sliceAngle;
+                        if (a >= scanAngle) break;
                     }
-                    currentAngle += sliceAngle;
+
+
+                    // 第二遍：彩色缝隙模式——在空白缝里画彩色分割线（线宽=sliceGap
+                    // 正好填满两块之间留空的缝）。透明模式无需任何处理：缝就是空白。
+                    if (hasGap && config.sliceGapMode) {
+                        const lineFrom = baseInnerR;
+                        const strokeRadial = (ang, sR) => {
+                            sliceCtx.beginPath();
+                            sliceCtx.moveTo(cx + Math.cos(ang) * lineFrom, cy + Math.sin(ang) * lineFrom);
+                            sliceCtx.lineTo(cx + Math.cos(ang) * sR, cy + Math.sin(ang) * sR);
+                            sliceCtx.stroke();
+                        };
+                        sliceCtx.save();
+                        sliceCtx.lineWidth = config.sliceGap;
+                        sliceCtx.lineCap = 'butt';
+                        sliceCtx.strokeStyle = config.sliceGapColor;
+                        // 起跑线（t=0 起常驻）
+                        strokeRadial(startRad, radius * Math.max(...scales));
+                        // 已扫过的内部分割线
+                        let sepAngle = startRad;
+                        for (let i = 0; i < dataPoints.length - 1; i++) {
+                            sepAngle += (dataPoints[i].value / total) * Math.PI * 2;
+                            if (sepAngle <= scanAngle) {
+                                strokeRadial(sepAngle, radius * Math.max(scales[i], scales[i + 1]));
+                            }
+                        }
+                        // 扫描头
+                        strokeRadial(scanAngle, outerMaxR);
+                        sliceCtx.restore();
+                        // 实心饼圆心连接
+                        if (config.pieType !== 'donut') {
+                            sliceCtx.save();
+                            sliceCtx.fillStyle = config.sliceGapColor;
+                            sliceCtx.beginPath();
+                            sliceCtx.arc(cx, cy, config.sliceGap / 2, 0, Math.PI * 2);
+                            sliceCtx.fill();
+                            sliceCtx.restore();
+                        }
+                    }
+
+                    // 辉光层：画 shadow 后用 destination-out 凿空楔形实体，只保留外缘晕光
+                    // 这样 glowLayer 不含实色填充，sliceOpacity 由 sliceLayer 独立控制
+                    if (config.sliceGlowEnabled && config.sliceGlow > 0 && total > 0) {
+                        let gAng = startRad;
+                        for (let i = 0; i < dataPoints.length; i++) {
+                            const sl = dataPoints[i];
+                            const sa = (sl.value / total) * Math.PI * 2;
+                            const a0 = gAng;
+                            const a1 = Math.min(gAng + sa, scanAngle);
+                            if (a1 > a0 + 1e-6) {
+                                const sR = radius * scales[i];
+                                if (wedgePath(glowCtx, a0, a1, sR)) {
+                                    glowCtx.save();
+                                    glowCtx.shadowColor = sl.color;
+                                    glowCtx.shadowBlur = config.sliceGlow;
+                                    glowCtx.fillStyle = sl.color;
+                                    glowCtx.fill();
+                                    glowCtx.restore();
+                                    // 凿空楔形实体，仅留边缘晕光
+                                    wedgePath(glowCtx, a0, a1, sR);
+                                    glowCtx.save();
+                                    glowCtx.globalCompositeOperation = 'destination-out';
+                                    glowCtx.fillStyle = 'rgba(0,0,0,1)';
+                                    glowCtx.fill();
+                                    glowCtx.restore();
+                                }
+                            }
+                            gAng += sa;
+                            if (gAng >= scanAngle) break;
+                        }
+                    }
                 }
+
+                // 合成到主 ctx：辉光层在下（已羽化），实色块层在上（硬边扫描）
+                // 用物理坐标 drawImage，保证与主 ctx 的 c2dPhysPad offset 对齐
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, _c2dPhysPad, _c2dPhysPad);
+                if (config.sliceGlowEnabled && config.sliceGlow > 0) ctx.drawImage(glowLayer, 0, 0);
+                ctx.drawImage(sliceLayer, 0, 0);
+                ctx.restore();
 
                 // 第三遍：环形图中心圆（覆盖内圆边缘）
                 if (config.pieType === 'donut') {
@@ -1043,9 +1250,13 @@
                     ctx.save();
                     ctx.beginPath();
                     ctx.arc(cx, cy, innerR + 1, 0, Math.PI * 2);
-                    ctx.fillStyle = config.donutCenterMode === 'transparent'
-                        ? config.cardBg : config.donutCenterColor;
-                    ctx.fill();
+                    if (config.donutCenterMode) {
+                        ctx.fillStyle = config.donutCenterColor;
+                        ctx.fill();
+                    } else {
+                        ctx.globalCompositeOperation = 'destination-out';
+                        ctx.fill();
+                    }
                     ctx.restore();
                 }
 
@@ -1087,7 +1298,14 @@
 
                         if (config.labelMode === 'inside') {
                             const innerEdge = config.pieType === 'donut' ? radius * (1 - config.donutWidth / 100) : 0;
-                            const midR = (innerEdge + sliceR) / 2;
+                            const halfA = sliceAngle / 2;
+                            const centroidFactor = halfA > 0.001 ? Math.sin(halfA) / halfA : 1;
+                            const rawCentroid = config.pieType === 'donut'
+                                ? (4 * centroidFactor / 6) * (Math.pow(sliceR, 3) - Math.pow(innerEdge, 3)) / (Math.pow(sliceR, 2) - Math.pow(innerEdge, 2))
+                                : (2 * sliceR * centroidFactor) / 3;
+                            const minR = innerEdge + (sliceR - innerEdge) * 0.5;
+                            const maxR = innerEdge + (sliceR - innerEdge) * 0.78;
+                            const midR = Math.max(minR, Math.min(maxR, rawCentroid));
                             const lx = cx + Math.cos(midAngle) * midR;
                             const ly = cy + Math.sin(midAngle) * midR;
 
@@ -1096,11 +1314,11 @@
 
                             if (config.showPercentage) {
                                 ctx.font = `700 ${config.labelFontSize}px ${config.titleFont}`;
-                                ctx.fillStyle = '#ffffff';
+                                ctx.fillStyle = config.labelColor;
                                 ctx.fillText(pct, lx, ly - config.labelFontSize * 0.4 - config.labelLineGap / 2);
                             }
                             ctx.font = `400 ${config.labelFontSize - 2}px ${config.titleFont}`;
-                            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                            ctx.fillStyle = config.labelColor;
                             ctx.fillText(slice.label, lx, ly + config.labelFontSize * 0.5 + config.labelLineGap / 2);
                         } else {
                             // 外部标签
@@ -1191,7 +1409,7 @@
             }
 
             // === 副标题 ===
-            {
+            if (config.showSubTitle) {
                 const subTitleAlpha = isHold ? 1 : clamp((rawProgress - 0.3) * 2, 0, 1);
                 ctx.save();
                 ctx.font = `${config.subTitleWeight} ${config.subTitleSize}px ${config.titleFont}`;
@@ -1208,10 +1426,13 @@
         // ====== 主渲染函数 ======
         function drawFrame(timeMs) {
             // Canvas padding for border/glow overflow
+            const effBorder = config.cardBorderEnabled ? (config.cardBorderWidth || 0) : 0;
+            const effGlow = config.cardGlowEnabled ? (config.cardGlowWidth || 0) : 0;
             const halfPad = config.cardBgTransparent ? 0
-                : (config.cardBorderWidth || 0) * 2 + (config.cardGlowWidth || 0);
+                : effBorder * 2 + effGlow;
             const c2dPad = halfPad > 0 ? halfPad * 2 + 10 : 0;
             const c2dPhysPad = c2dPad * scale;
+            _c2dPhysPad = c2dPhysPad;
             const needW = fullW + c2dPhysPad * 2;
             const needH = fullH + c2dPhysPad * 2;
             if (offscreen.width !== needW || offscreen.height !== needH) {
@@ -1264,9 +1485,9 @@
 
             // Card border and glow (Canvas 2D, matching card-3d approach)
             // Split into two calls: glow first (offset outside border), then border on top
-            if (!config.cardBgTransparent && (config.cardBorderWidth > 0 || config.cardGlowWidth > 0)) {
-                const bw = config.cardBorderWidth || 0;
-                const gw = config.cardGlowWidth || 0;
+            if (!config.cardBgTransparent && (effBorder > 0 || effGlow > 0)) {
+                const bw = effBorder;
+                const gw = effGlow;
                 const baseCard = {x: 0, y: 0, w, h};
 
                 // Glow: offset card rect to border's outer edge so glow starts outside border
@@ -1314,7 +1535,13 @@
                 rx: _currentRx,
                 ry: _currentRy,
                 perspective: 900,
-                elevation: config.elevation,
+                shadow: {
+                    enabled: config.shadowEnabled,
+                    angle: config.shadowAngle,
+                    distance: config.shadowDistance,
+                    blur: config.shadowBlur,
+                    opacity: config.shadowOpacity,
+                },
                 cardScale: baseCardScale,
                 scaleX: c2dPad > 0 ? baseCardScale * offscreen.width / fullW : undefined,
                 scaleY: c2dPad > 0 ? baseCardScale * offscreen.height / fullH : undefined,

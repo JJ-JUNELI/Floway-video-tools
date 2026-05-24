@@ -59,7 +59,7 @@ index.html 精选区使用 iframe 嵌入效果的实时动画预览。通过 URL
 - [ ] **大量重复面板未抽共享**：入场动画面板在 4 个效果里完全一样（14 个控件×4），标题设置在 3 个图表效果里几乎一样，卡片漂浮同理。应像"场景背景"和"导出"一样提取到 controls.js 的 injectPanels()
 
 ### ID 命名与标题规范（中优先）
-- [ ] **ID 命名规则不统一**：slider 有的用 `XxxInput` 后缀（SizeInput、SpeedInput），有的不加（TitleSize、AnimDuration）。建议统一为 `Xxx` 做控件 ID、`XxxVal` 做显示值
+- [x] **ID 命名规则不统一**：~~slider 有的用 `XxxInput` 后缀（SizeInput、SpeedInput），有的不加（TitleSize、AnimDuration）。建议统一为 `Xxx` 做控件 ID、`XxxVal` 做显示值~~ **已完成**：8 个效果统一为 `Xxx`（控件）+ `XxxVal`（显示）。例外：`MainFontInput`/`BgFontInput` 是 `setupFontSelector` 的契约参数，保留。
 - [ ] **分组标题中英混用**：有的纯中文（"粒子参数"），有的中英混合（"核心素材 (Logo)"）。建议统一用中文
 - [ ] **分组顺序无统一逻辑**：建议统一为 模式/内容 → 样式 → 排版位置 → 动画 → 共享面板（背景+导出）
 

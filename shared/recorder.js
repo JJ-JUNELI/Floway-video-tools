@@ -62,24 +62,30 @@ export class Recorder {
     }
 
     _loadLibs() {
+        if (typeof VideoEncoder === 'undefined') {
+            const mp4Opt = this.exportSelect.querySelector('option[value="mp4"]');
+            if (mp4Opt) { mp4Opt.disabled = true; mp4Opt.text += ' (需要 Chrome/Edge)'; }
+            if (this.exportSelect.value === 'mp4') this.exportSelect.value = 'webm';
+        }
+
         setTimeout(() => {
             if (window.Mp4Muxer && window.Mp4Muxer.Muxer) {
                 window.Mp4MuxerLib = { Muxer: window.Mp4Muxer.Muxer, ArrayBufferTarget: window.Mp4Muxer.ArrayBufferTarget };
                 this._libsLoaded = true;
-                this.status.innerHTML = "<span class='status-dot status-ready'></span>组件就绪";
+                if (this.status) this.status.innerHTML = "<span class='status-dot status-ready'></span>组件就绪";
                 this.btn.disabled = false;
-                this.btn.innerHTML = "🔴 开始录制";
+                this.btn.innerHTML = "⬤ 录制";
             } else {
                 console.warn('mp4-muxer.js not loaded');
                 this._libsLoaded = false;
-                this.status.innerHTML = "<span class='status-dot status-offline'></span>离线模式 (仅WebM/PNG)";
+                if (this.status) this.status.innerHTML = "<span class='status-dot status-offline'></span>离线模式 (仅WebM/PNG)";
                 const mp4Opt = this.exportSelect.querySelector('option[value="mp4"]');
                 if (mp4Opt) {
                     mp4Opt.disabled = true;
                     mp4Opt.text += ' [加载失败]';
                 }
                 this.btn.disabled = false;
-                this.btn.innerHTML = "🔴 开始录制";
+                this.btn.innerHTML = "⬤ 录制";
             }
         }, 300);
     }
@@ -301,7 +307,7 @@ export class Recorder {
     }
 
     _resetBtn() {
-        this.btn.innerHTML = "🔴 开始录制";
+        this.btn.innerHTML = "⬤ 录制";
         this.btn.disabled = false;
         if (this.onStateChange) this.onStateChange(false);
     }

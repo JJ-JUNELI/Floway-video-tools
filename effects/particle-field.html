@@ -3,7 +3,7 @@
 <head>
     <script>if(location.search.includes("preview")){document.documentElement.classList.add("preview-mode");var s=document.createElement("style");s.textContent=".preview-mode,.preview-mode body{overflow:hidden!important;background:transparent!important;background-image:none!important}.preview-mode .sidebar,.preview-mode .sidebar-resize-handle,.preview-mode #RecIndicator,.preview-mode #DebugLog{display:none!important}";document.head.appendChild(s)}</script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>粒子场</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -19,10 +19,9 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <a href="../index.html" class="btn-icon" title="返回首页" style="text-decoration:none; margin-right:8px; font-size:15px;">←</a>
-            <div class="app-title">✨ 粒子场 <span style="font-size:9px; color:var(--text-sub)">v1.0</span></div>
+            <div class="app-title"><svg class="app-icon" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg><span>粒子场</span><span style="font-size:9px; color:var(--text-sub)">v1.0</span></div>
             <div style="display:flex; align-items:center; gap:10px;">
-                <button id="themeToggle" class="btn-icon" title="切换主题 (暗色/亮色)" style="font-size:13px;">☀</button>
-                <div class="version-badge">NEW</div>
+                <button id="themeToggle" class="btn-theme" title="切换主题"></button>
             </div>
         </div>
 
@@ -32,31 +31,31 @@
                 <div class="group-title">🔧 粒子参数</div>
                 <div class="row stack">
                     <div class="label-line"><span>粒子数量</span><span id="CountVal">200</span></div>
-                    <input type="range" id="CountInput" min="10" max="1000" step="10" value="200">
+                    <input type="range" id="Count" min="10" max="1000" step="10" value="200">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>粒子大小</span><span id="SizeVal">3</span></div>
-                    <input type="range" id="SizeInput" min="1" max="20" step="0.5" value="3">
+                    <input type="range" id="Size" min="1" max="20" step="0.5" value="3">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>运动速度</span><span id="SpeedVal">1.0</span></div>
-                    <input type="range" id="SpeedInput" min="0.1" max="5" step="0.1" value="1.0">
+                    <input type="range" id="Speed" min="0.1" max="5" step="0.1" value="1.0">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>连线距离</span><span id="LinkDistVal">120</span></div>
-                    <input type="range" id="LinkDistInput" min="0" max="300" step="10" value="120">
+                    <input type="range" id="LinkDist" min="0" max="300" step="10" value="120">
                 </div>
             </div>
 
             <div class="control-group">
                 <div class="group-title">🎨 颜色设置</div>
-                <div class="row">
-                    <span style="font-size:12px; color:var(--text-sub, #888);">粒子颜色</span>
-                    <input type="color" id="ColorInput" value="#00ffaa">
+                <div class="row stack">
+                    <div class="label-line"><span>粒子颜色</span></div>
+                    <input type="color" id="Color" value="#00ffaa">
                 </div>
                 <div class="row stack">
                     <div class="label-line"><span>连线透明度</span><span id="LinkOpVal">0.3</span></div>
-                    <input type="range" id="LinkOpInput" min="0" max="1" step="0.05" value="0.3">
+                    <input type="range" id="LinkOp" min="0" max="1" step="0.05" value="0.3">
                 </div>
             </div>
 
@@ -66,14 +65,14 @@
         </div>
     </div>
 
-    <div class="preview-area">
+    <div class="preview-area" id="previewArea">
         <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
-        <canvas id="mainCanvas" class="effect-canvas"></canvas>
+        <canvas id="mainCanvas"></canvas>
     </div>
 
     <script type="module">
         import { initEffect } from '../shared/controls.js';
-        import { getTheme, toggleTheme } from '../shared/themes.js';
+        import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
 
         const { ctx, canvas, baseWidth, baseHeight, clearFrame, drawBg, startPreviewLoop, lerp, hexToRgba, bindUI } = initEffect({
             canvasId: 'mainCanvas',
@@ -155,20 +154,16 @@
         startPreviewLoop(drawFrame);
 
         // 主题切换
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            toggleTheme();
-            document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
-        });
-        document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+        initThemeToggle();
 
         // === UI 绑定（bindUI 批量） ===
         bindUI(config, [
-            ['CountInput',    'count',       'int',   'CountVal'],
-            ['SizeInput',     'size',        'float', 'SizeVal'],
-            ['SpeedInput',    'speed',       'float', 'SpeedVal'],
-            ['LinkDistInput', 'linkDist',    'int',   'LinkDistVal'],
-            ['ColorInput',    'color'],
-            ['LinkOpInput',   'linkOpacity', 'float', 'LinkOpVal'],
+            ['Count',    'count',       'int',   'CountVal'],
+            ['Size',     'size',        'float', 'SizeVal'],
+            ['Speed',    'speed',       'float', 'SpeedVal'],
+            ['LinkDist', 'linkDist',    'int',   'LinkDistVal'],
+            ['Color',    'color'],
+            ['LinkOp',   'linkOpacity', 'float', 'LinkOpVal'],
         ], {
             onChange: (_, key) => {
                 if (key === 'count') initParticles();

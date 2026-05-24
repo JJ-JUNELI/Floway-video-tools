@@ -79,8 +79,8 @@ floway-tools-v2/
 
     // UI 绑定
     bindUI(config, [
-        ['SizeInput', 'size', 'int', 'SizeVal'],
-        ['ColorInput', 'color'],
+        ['Size', 'size', 'int', 'SizeVal'],
+        ['Color', 'color'],
     ], { onChange: () => { /* reRender() 由框架管理 */ } });
 
     // 字体选择器（一行搞定）
@@ -138,13 +138,13 @@ floway-tools-v2/
                 <!-- 示例：滑块 -->
                 <div class="row stack">
                     <div class="label-line"><span>大小</span><span id="SizeVal">50</span></div>
-                    <input type="range" id="SizeInput" min="0" max="100" step="1" value="50">
+                    <input type="range" id="Size" min="0" max="100" step="1" value="50">
                 </div>
 
                 <!-- 示例：颜色 -->
                 <div class="row">
                     <span style="font-size:12px; color:#aaa;">主颜色</span>
-                    <input type="color" id="ColorInput" value="#00ffaa">
+                    <input type="color" id="Color" value="#00ffaa">
                 </div>
 
                 <!-- 示例：开关 -->
@@ -209,8 +209,8 @@ floway-tools-v2/
 
         // ====== UI 绑定（批量）======
         bindUI(config, [
-            ['SizeInput',     'size',        'int',   'SizeVal'],
-            ['ColorInput',    'color'],
+            ['Size',          'size',        'int',   'SizeVal'],
+            ['Color',         'color'],
             ['GlowToggle',    'glowEnabled',  'checked'],
         ], {
             onChange: () => {
@@ -385,7 +385,7 @@ function drawFrame(timeMs) {
 ```html
 <div class="row stack">
     <div class="label-line"><span>参数名</span><span id="ParamVal">50</span></div>
-    <input type="range" id="ParamInput" min="0" max="100" step="1" value="50">
+    <input type="range" id="Param" min="0" max="100" step="1" value="50">
 </div>
 ```
 
@@ -393,14 +393,14 @@ function drawFrame(timeMs) {
 ```html
 <div class="row">
     <span style="font-size:12px; color:#aaa;">颜色名</span>
-    <input type="color" id="ColorInput" value="#00ffaa">
+    <input type="color" id="Color" value="#00ffaa">
 </div>
 ```
 
 ### 下拉选择
 ```html
 <div class="row">
-    <select id="StyleInput" style="flex:1">
+    <select id="Style" style="flex:1">
         <option value="style1">样式一</option>
         <option value="style2">样式二</option>
     </select>
@@ -411,7 +411,7 @@ function drawFrame(timeMs) {
 ```html
 <div class="sub-title">
     <span>功能名</span>
-    <input type="checkbox" id="ToggleInput" checked>
+    <input type="checkbox" id="Toggle" checked>
 </div>
 ```
 
@@ -441,7 +441,7 @@ const { readAll } = bindUI(config, rules, options);
 
 | 位置 | 名称 | 说明 | 示例 |
 |---|---|---|---|
-| 0 | `elemId` | 控件 DOM 元素 ID | `'SpeedInput'` |
+| 0 | `elemId` | 控件 DOM 元素 ID | `'Speed'` |
 | 1 | `configKey` | config 对应的属性名 | `'speed'` |
 | 2 | `transform` | 值转换类型（可选） | 见下方列表 |
 | 3 | `displayId` | 数值显示元素的 ID（可选） | `'SpeedVal'` |
@@ -463,15 +463,15 @@ const { readAll } = bindUI(config, rules, options);
 ```javascript
 bindUI(config, [
     // 滑块 → int + 实时显示数值
-    ['FontSizeInput', 'fontSize', 'int', 'FontSizeVal'],
+    ['FontSize', 'fontSize', 'int', 'FontSizeVal'],
     // 颜色选择器 → 直接存字符串
     ['GradColor1', 'gradColor1'],
     // 百分比滑块 → 转为小数 + 显示带 % 后缀
-    ['OpacityInput', 'opacity', '%', 'OpacityVal', '%'],
+    ['Opacity', 'opacity', '%', 'OpacityVal', '%'],
     // 开关 → 读取 checked 状态
     ['GlowToggle', 'glowEnabled', 'checked'],
     // 浮点数 + 带 s 后缀显示
-    ['DurationInput', 'duration', 'float', 'DurVal', 's'],
+    ['Duration', 'duration', 'float', 'DurVal', 's'],
     // 下拉菜单 → 直接存字符串
     ['EasingSelect', 'easingType'],
 ], {
@@ -520,7 +520,7 @@ setupFontSelector({
     selectId: 'FontSelect',          // select 元素 ID
     configKey: 'fontFamily',         // config 中存储字体值的属性名
     fileInputId: 'FontSelectUpload', // 隐藏的 file input ID（自动生成）
-    weightInputId: 'WeightInput',    // 可选：字重 input ID，上传自定义字体时自动禁用
+    weightInputId: 'Weight',         // 可选：字重 input ID，上传自定义字体时自动禁用
     config,                          // 你的参数对象
 });
 ```

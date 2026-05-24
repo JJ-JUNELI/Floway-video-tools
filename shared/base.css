@@ -36,14 +36,21 @@
    Body + Layout
    ======================================== */
 
+html {
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
 body {
     margin: 0;
-    height: 100vh;
+    height: 100dvh;
     display: flex;
     background-color: var(--bg-dark);
     font-family: "Noto Sans SC", -apple-system, sans-serif;
     color: var(--text-main);
     overflow: hidden;
+    max-width: 100vw;
+    overflow-x: hidden;
     user-select: none;
     -webkit-font-smoothing: antialiased;
     background-image:
@@ -59,18 +66,17 @@ body.is-recording .sidebar { opacity: 0.95; }
    ======================================== */
 
 .sidebar {
-    width: 340px;
-    min-width: 260px;
-    max-width: 560px;
-    background: var(--panel-bg);
+    width: clamp(240px, var(--sidebar-w, 360px), min(560px, 40vw));
+    margin: 12px 0 12px 12px;
     border-radius: 14px;
+    background: var(--panel-bg);
     display: flex;
     flex-direction: column;
     z-index: 100;
     flex-shrink: 0;
     overflow: hidden;
+    outline: none;
     position: relative;
-    margin: 12px 0 12px 12px;
     border: 1px solid var(--border);
     box-shadow:
         0 4px 24px rgba(0,0,0,0.25),
@@ -97,13 +103,16 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 
 /* Sidebar Header */
 .sidebar-header {
-    padding: 20px 20px 16px;
+    flex-shrink: 0;
+    margin: 12px 12px 0;
+    padding: 16px 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* 微妙的底部分割 */
-    border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(129,140,248,0.03) 0%, transparent 100%);
+    /* 与参数组同款卡片 */
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
 }
 .sidebar-header .btn-icon {
     width: 32px;
@@ -124,12 +133,55 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     color: var(--accent);
 }
 
+.sidebar-header .btn-theme {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-sub);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: border-color 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+.sidebar-header .btn-theme svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.sidebar-header .btn-theme:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 .app-title {
     font-family: 'Orbitron', sans-serif;
     font-weight: 700;
     color: var(--text-main);
     letter-spacing: 0.5px;
     font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.app-title .app-icon {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    color: var(--accent);
+    flex-shrink: 0;
 }
 
 .version-badge {
@@ -147,11 +199,14 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 .controls-container {
     padding: 16px 16px 24px;
     overflow-y: auto;
+    outline: none;
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 10px;
     -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 60px, black calc(100% - 60px), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0px, black 60px, black calc(100% - 60px), transparent 100%);
 }
 .controls-container::-webkit-scrollbar { width: 6px; }
 .controls-container::-webkit-scrollbar-track { background: transparent; }
@@ -161,6 +216,67 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 }
 .controls-container::-webkit-scrollbar-thumb:hover {
     background: rgba(255,255,255,0.15);
+}
+
+/* ========================================
+   Sidebar Footer — 常驻底部（背景 + 导出）
+   ======================================== */
+
+.sidebar-footer {
+    flex-shrink: 0;
+    margin: 0 12px 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* 与参数组同款卡片 */
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+/* 第一行：背景 + 格式并排 */
+.sidebar-footer .sf-row {
+    display: flex;
+    gap: 8px;
+}
+.sidebar-footer .sf-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+.sidebar-footer .sf-cell > .sf-label {
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: var(--text-sub, #888);
+    white-space: nowrap;
+}
+/* 增强页：enhanceSelect 自己给原生 select 设 inline display:none；
+   未增强页（stack-scan）：原生 select 需正常显示并撑满 */
+.sidebar-footer .sf-cell > select,
+.sidebar-footer .sf-cell > .floway-select { flex: 1; width: auto; min-width: 0; }
+
+/* 第二行：播放 + 录制胶囊按钮 */
+.sidebar-footer .sf-actions {
+    display: flex;
+    gap: 8px;
+}
+.sidebar-footer .sf-actions > button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: auto;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ========================================
@@ -186,15 +302,14 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     text-transform: uppercase;
     margin-bottom: 14px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    /* 无底部 border，用间距分隔 */
+    gap: 6px;
     padding-bottom: 0;
     letter-spacing: 0.8px;
     padding-left: 10px;
-    /* 左侧彩色竖条 */
     border-left: 3px solid var(--accent);
 }
+.group-title > span:first-child { flex: 1; }
 
 .sub-title {
     font-size: 11px;
@@ -381,6 +496,17 @@ select option:checked {
     transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s 0s;
     border-color: var(--border);
 }
+.fs-dropdown::-webkit-scrollbar { width: 6px; }
+.fs-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 8px 0;
+}
+.fs-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15);
+    border-radius: 3px;
+}
+.fs-dropdown::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+.fs-dropdown { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
 
 /* 选项 */
 .fs-option {
@@ -528,6 +654,30 @@ input[type="color"]::-webkit-color-swatch {
     border-radius: var(--radius-sm);
 }
 
+/* 颜色选择器 + hex 输入框组合 */
+.color-input-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.color-input-group .hex-input {
+    width: 70px;
+    min-width: 0;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-family: 'SF Mono', Consolas, monospace;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--card-bg);
+    color: var(--text-main);
+    text-transform: uppercase;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.color-input-group .hex-input:focus {
+    border-color: var(--accent);
+}
+
 /* ========================================
    Checkbox — 精致 toggle
    ======================================== */
@@ -667,8 +817,8 @@ input:checked + .slider:before {
     color: #ffffff;
     font-weight: 600;
     border: none;
-    padding: 7px 16px;
-    border-radius: var(--radius-sm);
+    padding: 7px 18px;
+    border-radius: 20px;
     cursor: pointer;
     font-size: 11px;
     transition: all 0.2s;
@@ -705,36 +855,39 @@ input:checked + .slider:before {
     overflow: hidden;
     border: none;
     border-radius: 0;
+    background-color: transparent;
 }
 
 canvas {
-    background: transparent;
-    width: 100%;
+    background: #0e1117;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     max-width: 100%;
-    aspect-ratio: 4/3;
+    max-height: 100%;
+    width: auto;
+    height: auto;
     display: block;
-    border-radius: 4px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+}
+
+/* WebGL 合成 canvas（Template C 效果）：透明底、无阴影圆角 */
+canvas.webgl-canvas {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
 }
 
 #mainSvg {
-    background: transparent;
-    width: 100%;
-    max-width: 1440px;
-    aspect-ratio: 4/3;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     display: block;
-    border-radius: 4px;
+    background: #0e1117;
 }
 
-/* Canvas 棋盘格 (logo-matrix) */
 body.logo canvas {
-    background-image:
-        linear-gradient(45deg, #0a0e14 25%, transparent 25%),
-        linear-gradient(-45deg, #0a0e14 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #0a0e14 75%),
-        linear-gradient(-45deg, transparent 75%, #0a0e14 75%);
-    background-size: 20px 20px;
-    background-color: #0e1117;
     box-shadow: none;
 }
 
@@ -799,12 +952,6 @@ body.logo canvas {
    Status & Tips
    ======================================== */
 
-#LibStatus {
-    font-size: 10px;
-    color: var(--text-sub);
-    margin-top: 6px;
-    text-align: center;
-}
 .status-dot {
     display: inline-block;
     width: 6px;
@@ -850,17 +997,6 @@ body.logo canvas {
     margin-top: 5px;
 }
 
-.effect-canvas {
-    border: 1px solid var(--border);
-    background: var(--bg-dark);
-    width: 100%;
-    max-width: 1440px;
-    aspect-ratio: 4/3;
-    display: block;
-    border-radius: 4px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
-}
-
 /* ========================================
    Collapsible Panels (CSS-only)
    ======================================== */
@@ -873,6 +1009,72 @@ body.logo canvas {
 }
 .control-group.collapsed .group-content { display: none; }
 .control-group.collapsed .collapse-arrow { transform: rotate(-90deg); }
+
+/* ========================================
+   Advanced Params — 每个板块内的高级参数折叠
+   ======================================== */
+
+.advanced-params {
+    display: none;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+    padding-top: 8px;
+}
+.advanced-params.open { display: block; }
+
+.btn-advanced-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 2px;
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    font-size: 11px;
+    cursor: pointer;
+    text-align: left;
+    transition: color 0.15s;
+    margin-top: 4px;
+}
+.btn-advanced-toggle:hover { color: var(--accent); }
+.btn-advanced-toggle .adv-arrow {
+    font-size: 9px;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+.btn-advanced-toggle.open .adv-arrow { transform: rotate(90deg); }
+
+/* ========================================
+   Preset Panel
+   ======================================== */
+
+.preset-panel .group-content { padding-top: 4px; }
+.preset-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.btn-preset {
+    flex: 1 1 auto;
+    min-width: 60px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text-sub);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+.btn-preset:hover { border-color: var(--accent); color: var(--accent); }
+.btn-preset.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+}
 
 /* ========================================
    Keyframes
@@ -890,32 +1092,61 @@ body.logo canvas {
    Mobile Responsive
    ======================================== */
 
-@media (max-width: 900px) {
-    body { flex-direction: column; overflow: auto; }
+/* 竖屏：上下列布局 */
+@media (max-width: 1100px) and (orientation: portrait) {
+    body { flex-direction: column; overflow-y: auto; overflow-x: hidden; height: auto; min-height: 100dvh; }
     .sidebar {
-        width: 100%;
+        width: calc(100% - 20px);
         min-width: 0;
-        height: 50%;
+        max-width: none;
+        height: auto;
+        max-height: 55vh;
         margin: 10px 10px 0 10px;
         border-radius: 12px;
         order: 2;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .controls-container {
+        padding: 10px;
+        flex: 1;
+        overflow-y: auto;
+        max-height: none;
     }
     .preview-area {
         width: 100%;
-        height: 42%;
+        height: 40vh;
+        max-height: 40vh;
         padding: 8px;
         margin: 0;
         border-radius: 0;
         order: 1;
+        flex-shrink: 0;
+        overflow: hidden;
     }
-    canvas, #mainSvg {
-        max-width: 100%;
-        max-height: 100%;
-        width: auto;
-        height: auto;
+    .sidebar-header {
+        padding: 12px 14px;
+        flex-shrink: 0;
     }
-    .sidebar-header { padding: 14px 16px; }
-    .controls-container { padding: 12px; }
+    .group-title { min-height: 36px; }
+    .btn-record, .btn-play { min-height: 40px; }
+    .data-table { font-size: 10px; }
+    .data-table th, .data-table td { padding: 3px 2px; }
+    .sidebar-resize-handle { display: none; }
+}
+
+/* 横屏：恢复左右布局，侧边栏 280px */
+@media (max-width: 1100px) and (orientation: landscape) {
+    body { flex-direction: row; height: 100dvh; overflow: hidden; overflow-x: hidden; }
+    .sidebar { order: 1; }
+    .sidebar-resize-handle { display: block; }
+    .controls-container { padding: 8px; }
+    .preview-area { flex: 1; padding: 4px; margin: 0; order: 2; }
+    .sidebar-header { padding: 10px 12px; flex-shrink: 0; }
+    .group-title { min-height: 32px; font-size: 11px; }
+    .data-table { font-size: 10px; }
+    .data-table th, .data-table td { padding: 3px 2px; }
 }
 
 /* ========================================
@@ -945,9 +1176,10 @@ body.logo canvas {
         0 2px 8px rgba(0,0,0,0.04),
         0 8px 24px rgba(0,0,0,0.06);
 }
-[data-theme="light"] .sidebar-header {
-    background: linear-gradient(180deg, rgba(99,102,241,0.03) 0%, transparent 100%);
-    border-bottom-color: rgba(0,0,0,0.04);
+[data-theme="light"] .sidebar-header,
+[data-theme="light"] .sidebar-footer {
+    background: rgba(0,0,0,0.02);
+    border-color: rgba(0,0,0,0.08);
 }
 [data-theme="light"] .sidebar-header .btn-icon:hover {
     background: var(--accent-dim);
@@ -1112,26 +1344,15 @@ body.logo canvas {
         linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
 }
-[data-theme="light"] canvas {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+[data-theme="light"] .preview-area {
+    background-color: transparent;
 }
-[data-theme="light"] .effect-canvas {
-    border-color: rgba(0,0,0,0.06);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-}
+[data-theme="light"] canvas,
 [data-theme="light"] #mainSvg {
-    border: 1px solid rgba(0,0,0,0.06);
+    background: #f1f5f9;
 }
 
-/* Logo checkerboard (亮色浅棋盘) */
 [data-theme="light"].logo canvas {
-    background-image:
-        linear-gradient(45deg, #e8ecf0 25%, transparent 25%),
-        linear-gradient(-45deg, #e8ecf0 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #e8ecf0 75%),
-        linear-gradient(-45deg, transparent 75%, #e8ecf0 75%);
-    background-size: 20px 20px;
-    background-color: #f1f5f9;
     box-shadow: none;
 }
 
@@ -1167,12 +1388,6 @@ body.logo canvas {
 }
 
 /* Mobile */
-@media (max-width: 900px) {
-    [data-theme="light"] .sidebar {
-        border-top-color: var(--accent);
-    }
-}
-
 /* ========================================
    Preview Mode — iframe 嵌入预览
    ======================================== */
@@ -1197,13 +1412,15 @@ body.logo canvas {
     border-radius: 0 !important;
     border: none !important;
     box-shadow: none !important;
-    object-fit: contain;
 }
 .preview-mode #mainSvg {
     position: absolute !important;
     inset: 0 !important;
+    transform: none !important;
 }
 .preview-mode .preview-area {
     overflow: hidden !important;
     position: relative !important;
+    background: transparent !important;
+    background-image: none !important;
 }

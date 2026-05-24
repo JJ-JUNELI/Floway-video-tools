@@ -7,7 +7,7 @@ import { Recorder } from './recorder.js';
 import { Background } from './background.js';
 import { lerp, hexToRgba, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, getEasing, loadFont, setupFontSelector, initFontSelector, FONT_LIST, fontSelectHTML, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped, bindUI, applyVignetteMask, calcGradCoords } from './utils.js';
 import { getTheme } from './themes.js';
-import { enhanceAllSelects } from './custom-select.js';
+import { enhanceAllSelects, enhanceSelect } from './custom-select.js';
 
 // ========== 共享面板构建器 ==========
 
@@ -34,7 +34,7 @@ function buildEntryAnimationPanel(cfg = {}) {
     const [sMin, sMax] = cfg.scaleRange || [0, 200];
     const startY = cfg.startY != null ? cfg.startY : 300;
     const headerBtn = cfg.headerButton
-        ? `<button class="btn btn-primary" style="width:auto; padding:4px 10px;" id="${cfg.headerButton.id}">${cfg.headerButton.label}</button>`
+        ? `<button class="btn-play" id="${cfg.headerButton.id}">${cfg.headerButton.label}</button>`
         : '';
     const extras = (cfg.extras || []).map(name => EXTRA_BLOCKS[name] || '').join('');
 
@@ -151,53 +151,61 @@ export function injectPanels(opts = {}) {
     const defaultPatternColor = opts.defaultPatternColor || '#333333';
     const skipBg = opts.skipBgPanel === true;
 
-    const bgPanelHTML = skipBg ? '' : `
-        <div class="control-group">
-            <div class="group-title"><span>▩ 场景背景</span></div>
-            <div class="row">
-                <select id="BgMode">
-                    <option value="transparent" ${defaultBgMode === 'transparent' ? 'selected' : ''}>🏁 透明</option>
-                    <option value="#000000" ${defaultBgMode === '#000000' ? 'selected' : ''}>⬛ 纯黑</option>
-                    <option value="#00ff00">🟩 绿幕</option>
-                    <option value="#0000ff">🟦 蓝幕</option>
-                    <option value="grid">▦ 网格</option>
-                    <option value="dots">::: 点阵</option>
-                    <option value="paper">📄 纸张纹理</option>
-                    <option value="custom">📂 上传背景...</option>
-                </select>
-            </div>
-            <input type="file" id="BgUpload" accept="image/*,video/*" style="display:none">
-            <div class="row" id="PatternColorRow" style="display:none; justify-content:space-between; align-items:center;">
-                <div style="font-size:11px; color:var(--text-sub, #888);">纹理颜色</div>
-                <input type="color" id="PatternColor" value="${defaultPatternColor}">
-            </div>
-            <div class="row stack" id="PaperParamsRow" style="display:none;">
-                <div class="label-line"><span>暖色调 (Warmth)</span><span id="PaperWarmthVal">40</span></div>
-                <input type="range" id="PaperWarmth" min="0" max="100" step="1" value="40">
-            </div>
+    const bgCellHTML = skipBg ? '' : `
+        <div class="sf-cell">
+            <span class="sf-label">背景</span>
+            <select id="BgMode">
+                <option value="transparent" ${defaultBgMode === 'transparent' ? 'selected' : ''}>🏁 透明</option>
+                <option value="#000000" ${defaultBgMode === '#000000' ? 'selected' : ''}>⬛ 纯黑</option>
+                <option value="#00ff00">🟩 绿幕</option>
+                <option value="#0000ff">🟦 蓝幕</option>
+                <option value="grid">▦ 网格</option>
+                <option value="dots">::: 点阵</option>
+                <option value="paper">📄 纸张纹理</option>
+                <option value="custom">📂 上传背景...</option>
+            </select>
+        </div>`;
+
+    const bgExtrasHTML = skipBg ? '' : `
+        <input type="file" id="BgUpload" accept="image/*,video/*" style="display:none">
+        <div class="row" id="PatternColorRow" style="display:none; justify-content:space-between; align-items:center;">
+            <div style="font-size:11px; color:var(--text-sub, #888);">纹理颜色</div>
+            <input type="color" id="PatternColor" value="${defaultPatternColor}">
         </div>
-    `;
+        <div class="row stack" id="PaperParamsRow" style="display:none;">
+            <div class="label-line"><span>暖色调 (Warmth)</span><span id="PaperWarmthVal">40</span></div>
+            <input type="range" id="PaperWarmth" min="0" max="100" step="1" value="40">
+        </div>`;
 
-    placeholder.innerHTML = `
-        ${bgPanelHTML}
-
-        <div class="control-group" style="border-color:var(--danger)">
-            <div class="group-title">🎥 导出</div>
-            <div class="row">
+    placeholder.innerHTML = '';
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+    let footer = sidebar.querySelector('.sidebar-footer');
+    if (footer) footer.remove();
+    footer = document.createElement('div');
+    footer.className = 'sidebar-footer';
+    footer.innerHTML = `
+        <div class="sf-row">
+            ${bgCellHTML}
+            <div class="sf-cell">
+                <span class="sf-label">格式</span>
                 <select id="ExportFormat">
                     <option value="png_seq">📸 PNG 序列</option>
                     <option value="mp4">🎥 MP4</option>
                     <option value="webm">🌐 WebM</option>
                 </select>
             </div>
-            <div class="row" style="margin-top:10px;">
-                <button id="BtnRecord" class="btn btn-record" disabled>⌛ 连接组件...</button>
-            </div>
-            <div id="LibStatus" style="font-size:10px; color:#666; margin-top:5px; text-align:center;">
-                <span class='status-dot status-loading'></span>初始化...
-            </div>
+        </div>
+        ${bgExtrasHTML}
+        <div class="sf-actions">
+            <button id="FooterBtnPlay" class="btn btn-play" style="display:none">▶ 播放</button>
+            <button id="BtnRecord" class="btn btn-record" disabled>⌛ 连接...</button>
         </div>
     `;
+    sidebar.appendChild(footer);
+
+    // 统一 footer 下拉为自定义样式（enhanceSelect 幂等，已增强会自动跳过）
+    footer.querySelectorAll('select').forEach(el => enhanceSelect(el));
 }
 
 // ========== 主初始化函数 ==========
@@ -216,6 +224,10 @@ export function injectPanels(opts = {}) {
  * @param {boolean} [opts.useRafForFrames=false]
  * @param {boolean} [opts.useManualWebmFrames=false]
  * @param {number}  [opts.encodeQueueMax=2]
+ * @param {boolean} [opts.skipMainCanvas=false] - 跳过 getElementById(canvasId) 与尺寸设置（用于 WebGL/SVG 效果）
+ * @param {boolean} [opts.skipDrawContext=false] - 跳过 2D context 创建（与 skipMainCanvas 配合）
+ * @param {HTMLCanvasElement|string|Function} [opts.recorderCanvas] - Recorder 实际抓帧的 canvas；可传 DOM 元素、id、或 lazy getter
+ * @param {{bgRect, patternEl}} [opts.svgTargets] - 透传给 Background（仅 SVG 效果使用）
  * @returns {{ ctx, canvas, bg, recorder, baseWidth, baseHeight, scale, clearFrame, drawBg, startPreviewLoop, resetAnimStart }}
  */
 export function initEffect(opts) {
@@ -229,24 +241,41 @@ export function initEffect(opts) {
         injectPanels(opts);
     }
 
-    // 1.5 自定义下拉框增强
+    // 1.5 快速预设面板
+    if (!isPreview && opts.presets) injectPresetPanel(opts.presets);
+
+    // 1.6 自定义下拉框增强
     if (!isPreview) enhanceAllSelects();
 
-    // 1.6 侧边栏拖拽调节
+    // 1.7 侧边栏拖拽调节
     if (!isPreview) initSidebarResize();
 
-    // 1.7 可折叠分组
+    // 1.8 可折叠分组
     if (!isPreview) initCollapsibleGroups();
 
-    // 2. Canvas 初始化（预览模式降低分辨率）
+    // 1.9 简洁/完整模式切换
+    if (!isPreview) initAdvancedSections();
+
+    // 1.10 顶部播放按钮（若效果有 #BtnPlay）
+    if (!isPreview) initHeaderPlayButton();
+
+    // 1.11 颜色选择器旁注入 hex 输入框
+    if (!isPreview) initColorInputs();
+
+    // 2. Canvas 初始化（预览模式降低分辨率；可跳过供 WebGL/SVG 效果使用）
     const baseWidth = opts.baseWidth || 1440;
     const baseHeight = opts.baseHeight || 1080;
     const scale = isPreview ? 1 : (opts.scale || 2);
-    const canvas = document.getElementById(opts.canvasId || 'mainCanvas');
-    canvas.width = baseWidth * scale;
-    canvas.height = baseHeight * scale;
-    const ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
-    ctx.scale(scale, scale);
+    let canvas = null, ctx = null;
+    if (!opts.skipMainCanvas) {
+        canvas = document.getElementById(opts.canvasId || 'mainCanvas');
+        canvas.width = baseWidth * scale;
+        canvas.height = baseHeight * scale;
+        if (!opts.skipDrawContext) {
+            ctx = canvas.getContext('2d', { alpha: true, desynchronized: false });
+            ctx.scale(scale, scale);
+        }
+    }
 
     // 3. Background
     const bg = new Background({
@@ -259,13 +288,21 @@ export function initEffect(opts) {
         baseWidth,
         baseHeight,
         scaleFactor: scale,
+        svgTargets: opts.svgTargets,
     });
 
     // 4. Recorder（预览模式用空桩）
+    function resolveRecorderCanvas() {
+        const rc = opts.recorderCanvas;
+        if (!rc) return canvas;
+        if (typeof rc === 'string') return document.getElementById(rc);
+        if (typeof rc === 'function') return rc();
+        return rc;
+    }
     const recorder = isPreview
         ? { isRecording: false, format: 'png_seq' }
         : new Recorder({
-            canvas,
+            canvas: resolveRecorderCanvas(),
             onFrame: opts.onFrame,
             fileName: opts.fileName || 'Effect',
             width: baseWidth * scale,
@@ -282,8 +319,9 @@ export function initEffect(opts) {
         animStartTime = performance.now();
     }
 
-    // 6. 画布工具函数
+    // 6. 画布工具函数（skipDrawContext 模式下为 no-op）
     function clearFrame() {
+        if (!ctx) return;
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -291,6 +329,7 @@ export function initEffect(opts) {
     }
 
     function drawBg(timeMs) {
+        if (!ctx) return;
         if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
             ctx.fillStyle = getTheme().canvasBg;
             ctx.fillRect(0, 0, baseWidth, baseHeight);
@@ -460,20 +499,20 @@ export function initCollapsibleGroups(root = document) {
 // ========== 侧边栏可拖拽调节宽度 ==========
 
 const SIDEBAR_WIDTH_KEY = 'floway-sidebar-width';
-const SIDEBAR_DEFAULT = 440;
-const SIDEBAR_MIN = 280;
-const SIDEBAR_MAX = 700;
+const SIDEBAR_DEFAULT = 360;
+const SIDEBAR_MIN = 180;
+const SIDEBAR_MAX = 900;
 
 export function initSidebarResize() {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
 
-    // 恢复上次宽度
+    const portraitQuery = window.matchMedia('(max-width: 1100px) and (orientation: portrait)');
+
+    // 始终将偏好值写入 CSS 变量；CSS clamp() 负责响应式边界裁决
     const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
-    const initialW = (saved) ? parseInt(saved, 10) : SIDEBAR_DEFAULT;
-    if (initialW >= SIDEBAR_MIN && initialW <= SIDEBAR_MAX) {
-        sidebar.style.width = initialW + 'px';
-    }
+    const initialW = saved ? parseInt(saved, 10) : SIDEBAR_DEFAULT;
+    sidebar.style.setProperty('--sidebar-w', initialW + 'px');
 
     // 创建拖拽手柄
     let handle = sidebar.querySelector('.sidebar-resize-handle');
@@ -483,33 +522,148 @@ export function initSidebarResize() {
         sidebar.appendChild(handle);
     }
 
-    let startX = 0, startWidth = 0;
+    let startX = 0, startWidth = 0, lastW = initialW;
 
     handle.addEventListener('mousedown', (e) => {
+        if (portraitQuery.matches) return;
         e.preventDefault();
         e.stopPropagation();
         startX = e.clientX;
+        // 从实际显示宽度出发，避免和 clamp 上限打架
         startWidth = sidebar.getBoundingClientRect().width;
         document.body.classList.add('resizing');
 
         const onMove = (ev) => {
             ev.preventDefault();
             const delta = ev.clientX - startX;
-            let newW = Math.round(startWidth + delta);
-            newW = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, newW));
-            sidebar.style.width = newW + 'px';
+            lastW = Math.max(SIDEBAR_MIN, Math.round(startWidth + delta));
+            // 只写变量，CSS clamp 决定最终展示宽度
+            sidebar.style.setProperty('--sidebar-w', lastW + 'px');
         };
 
         const onUp = () => {
             document.body.classList.remove('resizing');
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onUp);
-            // 持久化
-            const finalW = Math.round(sidebar.getBoundingClientRect().width);
-            localStorage.setItem(SIDEBAR_WIDTH_KEY, String(finalW));
+            // 存原始拖拽意图，而非被 clamp 截断后的显示值
+            localStorage.setItem(SIDEBAR_WIDTH_KEY, String(lastW));
         };
 
         document.addEventListener('mousemove', onMove);
         document.addEventListener('mouseup', onUp);
+    });
+}
+
+// ========== 简洁 / 完整模式切换 ==========
+
+export function initAdvancedSections() {
+    document.querySelectorAll('.advanced-params').forEach(section => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-advanced-toggle';
+        btn.innerHTML = '<span class="adv-arrow">▶</span> 高级参数';
+        btn.addEventListener('click', () => {
+            const open = section.classList.toggle('open');
+            btn.classList.toggle('open', open);
+        });
+        section.before(btn);
+    });
+}
+
+// ========== 颜色选择器 + hex 可编辑输入框 ==========
+
+export function initColorInputs() {
+    document.querySelectorAll('input[type="color"]').forEach(colorInput => {
+        if (colorInput.parentElement?.classList.contains('color-input-group')) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'color-input-group';
+
+        const hexInput = document.createElement('input');
+        hexInput.type = 'text';
+        hexInput.className = 'hex-input';
+        hexInput.name = (colorInput.id || 'color') + 'Hex';
+        hexInput.value = colorInput.value.toUpperCase();
+        hexInput.maxLength = 7;
+        hexInput.spellcheck = false;
+
+        colorInput.parentNode.insertBefore(wrapper, colorInput);
+        wrapper.appendChild(colorInput);
+        wrapper.appendChild(hexInput);
+
+        // 色块 → 输入框
+        colorInput.addEventListener('input', () => {
+            hexInput.value = colorInput.value.toUpperCase();
+        });
+
+        // 输入框 → 色块
+        hexInput.addEventListener('input', () => {
+            let v = hexInput.value.trim();
+            if (v && !v.startsWith('#')) v = '#' + v;
+            if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+                colorInput.value = v;
+                colorInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        });
+
+        // 失焦时规范化
+        hexInput.addEventListener('blur', () => {
+            let v = hexInput.value.trim();
+            if (v && !v.startsWith('#')) v = '#' + v;
+            if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+                hexInput.value = v.toUpperCase();
+            } else {
+                hexInput.value = colorInput.value.toUpperCase();
+            }
+        });
+    });
+}
+
+// ========== 顶部播放按钮（替换 sidebar-header 中的徽章） ==========
+
+export function initHeaderPlayButton() {
+    const realBtn = document.getElementById('BtnPlay');
+    if (!realBtn) return;
+    const footerBtn = document.getElementById('FooterBtnPlay');
+    if (footerBtn) {
+        footerBtn.style.display = '';
+        footerBtn.addEventListener('click', () => realBtn.click());
+    }
+    realBtn.style.display = 'none';
+}
+
+// ========== 快速预设面板 ==========
+
+/**
+ * 在 .controls-container 顶部注入预设按钮面板。
+ * @param {Array<{label:string, id:string, apply:Function}>} presets
+ */
+export function injectPresetPanel(presets) {
+    if (!presets || !presets.length) return;
+    const container = document.querySelector('.controls-container');
+    if (!container) return;
+
+    const btns = presets.map(p =>
+        `<button class="btn-preset" data-preset="${p.id}">${p.label}</button>`
+    ).join('');
+
+    const html = `
+        <div class="control-group preset-panel" data-basic>
+            <div class="group-title"><span>🎨 快速预设</span></div>
+            <div class="group-content">
+                <div class="preset-buttons">${btns}</div>
+            </div>
+        </div>`;
+
+    container.insertAdjacentHTML('afterbegin', html);
+
+    const panel = container.querySelector('.preset-panel');
+    panel.querySelectorAll('.btn-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const preset = presets.find(p => p.id === btn.dataset.preset);
+            if (!preset) return;
+            preset.apply();
+            panel.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
     });
 }

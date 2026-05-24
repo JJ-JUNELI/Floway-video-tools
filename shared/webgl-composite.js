@@ -7,7 +7,8 @@
  *   const gl = new WebGLComposite(glCanvas, 1440, 1080);
  *   gl.render({
  *       bgCanvas, cardCanvas, rx, ry, perspective,
- *       elevation, cardScale, cardRadius,
+ *       cardScale, cardRadius,
+ *       shadow: { enabled, angle, distance, blur, opacity },
  *       borderWidth, borderColor, glowWidth, glowColor, glowIntensity,
  *   });
  */
@@ -313,7 +314,6 @@ export class WebGLComposite {
         const bh = this.baseHeight;
         const cardScale = opts.cardScale || 0.8;
         const perspective = opts.perspective || 900;
-        const elevation = opts.elevation || 0.5;
         const cardRadius = opts.cardRadius ?? 16;
 
         const cb = opts.cardBounds || { x: 0, y: 0, w: bw, h: bh };
@@ -415,42 +415,65 @@ export class WebGLComposite {
             opts.rx, opts.ry, perspective, effectiveScale, offsetX, offsetY, opts.scaleX, opts.scaleY
         ));
 
-        // === Pass 2: 阴影（Canvas shadowBlur，用原始 normBounds 和原始 scale）===
-        if (!opts.skipSDF) {
-            const sc = this._shadowCache;
+        // === Pass 2: 投影（Canvas shadowBlur，用原始 normBounds 和原始 scale）===
+        // 角度/距离/模糊/不透明度 由调用方控制，独立于描边辉光（不受 skipSDF 影响）
+        const shadow = opts.shadow || {};
+        if (shadow.enabled) {
+            const ang = (shadow.angle ?? 90) * Math.PI / 180;
+            const dist = shadow.distance ?? 10;
+            const blur = shadow.blur ?? 20;
+            const opacity = Math.max(0, Math.min(1, (shadow.opacity ?? 25) / 100));
+            // 屏幕坐标 Y 向下：角度 90° = 正下方（光源在上），0° = 正右方
+            const offX = Math.cos(ang) * dist;
+            const offY = Math.sin(ang) * dist;
+
+            // 可视卡片始终是 cb.w×cb.h 居中、按 cardScale 缩放。投影画在带
+            // padding 的专用画布上，留出 模糊+偏移 的余量，避免被画布边缘裁掉。
+            const sf = this.canvas.width / bw;             // 设备缩放系数
             const rCompensated = cardRadius / cardScale;
+            const padPx = Math.ceil(blur * 2.5 + dist + 8); // 余量（基准像素）
+            const padWb = cb.w + padPx * 2;
+            const padHb = cb.h + padPx * 2;
+
+            const sc = this._shadowCache;
             const keys = [
-                ['rx', opts.rx], ['ry', opts.ry], ['perspective', perspective],
-                ['cardScale', cardScale], ['elevation', elevation], ['cardRadius', cardRadius],
-                ['_cbx', cb.x], ['_cby', cb.y], ['_cbw', cb.w], ['_cbh', cb.h],
+                ['cardRadius', cardRadius], ['cardScale', cardScale],
+                ['_cbw', cb.w], ['_cbh', cb.h],
+                ['offX', offX], ['offY', offY], ['blur', blur],
+                ['opacity', opacity], ['pad', padPx], ['sf', sf],
             ];
-            if (this._cacheChanged(sc, keys)) {
-                const c = this._getOffscreenCanvas('_shadowCanvas');
+            if (!this._shadowCanvas) this._shadowCanvas = document.createElement('canvas');
+            const c = this._shadowCanvas;
+            const SW = Math.round(padWb * sf);
+            const SH = Math.round(padHb * sf);
+            if (this._cacheChanged(sc, keys) || c.width !== SW || c.height !== SH) {
+                if (c.width !== SW) c.width = SW;
+                if (c.height !== SH) c.height = SH;
                 const ctx = c.getContext('2d');
-                ctx.clearRect(0, 0, c.width, c.height);
-                const sy = 4 + elevation * 36;
-                const sb = 12 + elevation * 44;
-                ctx.save();
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.scale(c.width / bw, c.height / bh);
-                ctx.shadowOffsetX = 0;
-                ctx.shadowOffsetY = sy * 0.6;
-                ctx.shadowBlur = sb * 0.5;
-                ctx.shadowColor = 'rgba(0,0,0,' + (0.05 + elevation * 0.10) + ')';
-                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.clearRect(0, 0, SW, SH);
+                ctx.scale(sf, sf);
+                // 实体矩形画在 padding 内居中（被 Pass 3 卡片覆盖），仅其投影偏移可见
+                // 阴影偏移/模糊属设备像素空间，不受 ctx.scale 影响，需乘设备缩放系数
+                ctx.shadowOffsetX = offX * sf;
+                ctx.shadowOffsetY = offY * sf;
+                ctx.shadowBlur = blur * sf;
+                ctx.shadowColor = 'rgba(0,0,0,' + opacity + ')';
+                ctx.fillStyle = 'rgba(0,0,0,' + opacity + ')';
                 ctx.beginPath();
-                this._roundRect(ctx, cb.x, cb.y, cb.w, cb.h, rCompensated);
+                this._roundRect(ctx, padPx, padPx, cb.w, cb.h, rCompensated);
                 ctx.fill();
-                ctx.restore();
                 this._cacheUpdate(sc, keys);
             }
 
-            // 阴影用原始 MVP + 原始 normBounds（阴影 canvas 没有 padding）
+            // 放大 quad 使纹理内 cb 区域与卡片对齐，padding 部分溢出到卡片之外
+            const shScaleX = cardScale * padWb / cb.w;
+            const shScaleY = cardScale * padHb / cb.h;
             const shadowMVP = new Float32Array(this._buildCardMVP(
-                opts.rx, opts.ry, perspective, cardScale, offsetX, offsetY, opts.scaleX, opts.scaleY
+                opts.rx, opts.ry, perspective, cardScale, offsetX, offsetY, shScaleX, shScaleY
             ));
-            this._uploadTexture(this._getOffscreenCanvas('_shadowCanvas'));
-            this._drawQuad(shadowMVP, normBounds, 0, 0, 0.6 * cardAlpha);
+            this._uploadTexture(this._shadowCanvas);
+            this._drawQuad(shadowMVP, normBounds, 0, 0, cardAlpha);
         }
 
         // === Pass 3: 卡片内容（SDF 裁剪 + 描边 + 辉光）===

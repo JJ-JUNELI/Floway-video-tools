@@ -3,8 +3,8 @@
 <head>
     <script>if(location.search.includes("preview")){document.documentElement.classList.add("preview-mode");var s=document.createElement("style");s.textContent=".preview-mode,.preview-mode body{overflow:hidden!important;background:transparent!important;background-image:none!important}.preview-mode .sidebar,.preview-mode .sidebar-resize-handle,.preview-mode #RecIndicator,.preview-mode #DebugLog{display:none!important}";document.head.appendChild(s)}</script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>图表效果</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>折线图</title>
 
     <!-- 固定加载顺序，不要改 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -37,21 +37,12 @@
         .btn-icon:hover { color: var(--text-main, #333); border-color: var(--accent, #555); background: #eee; }
         .btn-icon.del:hover { color: var(--danger, #cc3333); border-color: var(--danger, #cc3333); }
         .op-cell { white-space: nowrap; text-align: center; }
-        .btn-play {
-            background: var(--accent); color: #000; font-weight: bold;
-            border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer;
-            font-size: 11px; transition: 0.2s;
-        }
-        .btn-play:hover { filter: brightness(1.1); }
         .btn-add {
             background: var(--accent); color: #000; font-weight: bold;
             border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;
             font-size: 11px; width: 100%; margin-top: 10px; transition: 0.2s;
         }
         .btn-add:hover { filter: brightness(1.1); }
-
-        /* WebGL 合成 canvas */
-        #glCanvas { width: 100%; max-width: 1440px; aspect-ratio: 4 / 3; box-shadow: none; border-radius: 0; }
 
         /* 模式切换显示控制 */
         body.mode-cyber .paper-only { display: none !important; }
@@ -66,10 +57,40 @@
         }
         .sub-section:first-of-type { margin-top: 6px; }
         .sub-section-label {
-            font-size: 10px;
-            color: var(--text-sub, #888);
-            letter-spacing: 0.5px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
             margin-bottom: 6px;
+        }
+        /* 分组标题：提升为明确的一级标题 */
+        .controls-container .group-title {
+            font-size: 13px;
+            color: var(--text-main);
+            border-left-width: 4px;
+        }
+        /* 紧凑型滑杆行：标签 + 滑杆 + 数值 */
+        .ctrl-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 7px;
+        }
+        .ctrl-row:last-child { margin-bottom: 0; }
+        .ctrl-row > span:first-child {
+            flex: 0 0 auto;
+            min-width: 52px;
+            font-size: 12px;
+            color: var(--text-sub);
+            white-space: nowrap;
+        }
+        .ctrl-row > input[type=range] { flex: 1; min-width: 0; }
+        .ctrl-row > span:last-child {
+            flex: 0 0 30px;
+            text-align: right;
+            font-size: 11px;
+            color: var(--accent);
         }
         .ss-blue   { border-left: 2px solid rgba(59,130,246,0.35); }
         .ss-green  { border-left: 2px solid rgba(34,197,94,0.35); }
@@ -77,6 +98,9 @@
         .ss-purple { border-left: 2px solid rgba(168,85,247,0.35); }
         .ss-rose   { border-left: 2px solid rgba(244,63,94,0.35); }
         .ss-teal   { border-left: 2px solid rgba(20,184,166,0.35); }
+        .ctrl-row > span[id] { flex: 0 0 30px; text-align: right; font-size: 11px; color: var(--accent); }
+        .ctrl-row > span.clr { font-size: 11px; color: var(--text-sub); flex: 0 0 auto; white-space: nowrap; }
+        .ctrl-row > input[type=color] { flex: 0 0 28px; width: 28px; height: 22px; padding: 1px; border: 1px solid var(--border,#ddd); border-radius: 3px; cursor: pointer; }
     </style>
 </head>
 <body class="mode-paper">
@@ -85,10 +109,9 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <a href="../index.html" class="btn-icon" title="返回首页" style="text-decoration:none; margin-right:8px; font-size:15px;">←</a>
-            <div class="app-title">📈 图表效果 <span style="font-size:9px; color:var(--text-sub, #888)">v3.0</span></div>
+            <div class="app-title"><svg class="app-icon" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span>折线图</span><span style="font-size:9px; color:var(--text-sub, #888)">v3.0</span></div>
             <div style="display:flex; align-items:center; gap:10px;">
-                <button id="themeToggle" class="btn-icon" title="切换主题">☀</button>
-                <div class="version-badge">MERGE</div>
+                <button id="themeToggle" class="btn-theme" title="切换主题"></button>
             </div>
         </div>
 
@@ -112,150 +135,176 @@
                     <button class="btn-icon" onclick="resetData()" title="重置" style="width:28px;height:32px;font-size:13px;">↺</button>
                 </div>
                 <table class="data-table">
-                    <thead><tr><th style="width:32%">名称</th><th style="width:36%">数值</th><th style="width:32%">操作</th></tr></thead>
+                    <thead><tr><th style="width:28%">名称</th><th style="width:20%">折线值</th><th style="width:20%">柱状值</th><th style="width:32%">操作</th></tr></thead>
                     <tbody id="DataBody"></tbody>
                 </table>
                 <button class="btn-add" onclick="addRow()">+ 添加数据行</button>
             </div>
 
-            <!-- 标题设置 -->
+            <!-- 折线图 -->
             <div class="control-group">
-                <div class="group-title"><span>📝 标题设置</span></div>
-                <div class="sub-section ss-blue">
-                    <div class="sub-section-label">内容</div>
-                    <div class="row stack"><div class="label-line"><span>主标题</span></div>
-                        <input type="text" id="MainTitle" value="汽车零售销量新能源月度渗透率走势"></div>
-                    <div class="row stack"><div class="label-line"><span>副标题 (右侧文字)</span></div>
-                        <input type="text" id="SubTitle" value="新能源乘用车渗透率超 50%"></div>
-                    <div class="row stack"><div class="label-line"><span>标题字体</span></div>
-                        <div id="TitleFontMount" style="width:100%"></div></div>
-                </div>
-                <div class="sub-section ss-green">
-                    <div class="sub-section-label">样式</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题字号</span><span id="TitleSizeVal">26</span></div>
-                            <input type="range" id="TitleSize" min="12" max="72" step="2" value="26"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题字号</span><span id="SubTitleSizeVal">36</span></div>
-                            <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题字重</span><span id="MainTitleWeightVal">700</span></div>
-                            <input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题字重</span><span id="SubTitleWeightVal">400</span></div>
-                            <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
-                    </div>
-                    <div class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">主标题颜色</span>
-                        <input type="color" id="TitleColor" value="#333333"></div>
-                    <div class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">副标题颜色</span>
-                        <input type="color" id="SubTitleColor" value="#999999"></div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题 X</span><span id="MainTitleXVal">0</span></div>
-                            <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>主标题 Y</span><span id="MainTitleYVal">-490</span></div>
-                            <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题 X</span><span id="SubTitleXVal">630</span></div>
-                            <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>副标题 Y</span><span id="SubTitleYVal">0</span></div>
-                            <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
-                    </div>
-                    <div class="sub-title"><span>显示括号</span><input type="checkbox" id="ShowBrackets" checked></div>
-                    <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
-                </div>
-            </div>
-
-            <!-- 主题风格 -->
-            <div class="control-group">
-                <div class="group-title"><span>🖌️ 主题风格</span></div>
-                <div class="paper-only">
-                    <div class="sub-section ss-amber">
-                        <div class="sub-section-label">📄 纸张纹理</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
-                            <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div></div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
-                                <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
-                        </div>
-                    </div>
-                    <div class="sub-section ss-blue">
-                        <div class="sub-section-label">手绘线条</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>抖动幅度</span><span id="LineJitterVal">25</span></div>
-                            <input type="range" id="LineJitter" min="0" max="100" step="1" value="25"></div></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 折线样式 -->
-            <div class="control-group">
-                <div class="group-title"><span>📊 图表样式</span></div>
-                <div class="sub-title"><span>显示折线</span><input type="checkbox" id="ShowLine" checked></div>
-                <div id="LineOptions">
+                <div class="group-title"><span>📈 折线图</span></div>
                 <div class="sub-section ss-blue">
                     <div class="sub-section-label">线条</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>线条粗细</span><span id="LineWidthVal">1.2</span></div>
-                            <input type="range" id="LineWidth" min="0.5" max="15" step="0.5" value="1.2"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>线条颜色</span></div>
-                            <input type="color" id="LineColor" value="#555555"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>曲线张力</span><span id="TensionVal">0</span></div>
-                            <input type="range" id="Tension" min="0" max="1" step="0.1" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="GlowBlurVal">0</span></div>
-                            <input type="range" id="GlowBlur" min="0" max="80" step="5" value="0"></div>
-                    </div>
+                    <div class="stack"><div class="label-line"><span>线条粗细</span><span id="LineWidthVal">1.2</span></div>
+                        <input type="range" id="LineWidth" min="0.5" max="15" step="0.5" value="1.2"></div>
+                    <div class="row stack"><div class="label-line"><span>线条颜色</span></div>
+                        <input type="color" id="LineColor" value="#555555"></div>
+                    <div class="stack"><div class="label-line"><span>曲线张力</span><span id="TensionVal">0</span></div>
+                        <input type="range" id="Tension" min="0" max="1" step="0.1" value="0"></div>
+                    <div class="stack"><div class="label-line"><span>线条辉光</span><span id="GlowBlurVal">0</span></div>
+                        <input type="range" id="GlowBlur" min="0" max="80" step="5" value="0"></div>
+                    <div class="stack"><div class="label-line"><span>手绘抖动</span><span id="LineJitterVal">25</span></div>
+                        <input type="range" id="LineJitter" min="0" max="100" step="1" value="25"></div>
+                </div>
+                <div class="sub-section ss-teal">
+                    <div class="sub-section-label">面积填充</div>
                     <div class="sub-title"><span>渐变填充</span><input type="checkbox" id="ShowArea" checked></div>
                     <div class="sub-title"><span>跟随线条颜色</span><input type="checkbox" id="AreaFollowLine"></div>
-                    <div class="row" id="AreaColorRow" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">自定义填充色</span>
-                        <input type="color" id="AreaColor" value="#b4a58c"></div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>填充透明度</span><span id="FillOpacityVal">20%</span></div>
-                            <input type="range" id="FillOpacity" min="0" max="100" step="5" value="20"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>垂线透明度</span><span id="DropLineOpacityVal">20%</span></div>
-                            <input type="range" id="DropLineOpacity" min="0" max="100" step="5" value="20"></div>
+                    <div class="row stack" id="AreaColorRow">
+                        <div class="label-line"><span>自定义填充色</span></div>
+                        <input type="color" id="AreaColor" value="#b4a58c">
+                    </div>
+                    <div class="stack"><div class="label-line"><span>填充透明度</span><span id="FillOpacityVal">20%</span></div>
+                        <input type="range" id="FillOpacity" min="0" max="100" step="5" value="20"></div>
+                    <div class="stack"><div class="label-line"><span>垂线透明度</span><span id="DropLineOpacityVal">20%</span></div>
+                        <input type="range" id="DropLineOpacity" min="0" max="100" step="5" value="20"></div>
+                </div>
+                <div class="sub-section ss-green">
+                    <div class="sub-section-label">数据点</div>
+                    <div class="sub-title"><span>显示数据点</span><input type="checkbox" id="ShowPoints" checked></div>
+                    <div id="PointSizeOpts" style="margin-top:6px;">
+                        <div class="stack"><div class="label-line"><span>数据点大小</span><span id="PointSizeVal">4</span></div>
+                            <input type="range" id="PointSize" min="1" max="20" step="0.5" value="4"></div>
                     </div>
                 </div>
+                <div class="sub-section ss-rose">
+                    <div class="sub-section-label">数值标签</div>
+                    <div class="sub-title"><span>显示数值标签</span><input type="checkbox" id="ShowValues"></div>
+                    <div id="ValueLabelOpts" style="display:none; margin-top:6px;">
+                        <div class="stack"><div class="label-line"><span>数值字号</span><span id="ValueSizeVal">11</span></div>
+                            <input type="range" id="ValueSize" min="8" max="30" step="1" value="11"></div>
+                        <div class="row stack"><div class="label-line"><span>数值颜色</span></div>
+                            <input type="color" id="ValueColor" value="#555555"></div>
+                        <div class="stack"><div class="label-line"><span>Y轴偏移</span><span id="ValueYOffsetVal">-20</span></div>
+                            <input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-20"></div>
+                        <div class="row stack"><div class="label-line"><span>背景色</span></div>
+                            <input type="color" id="ValueBgColor" value="#555555"></div>
+                        <div class="sub-title"><span>显示背景</span><input type="checkbox" id="ValueBgEnabled" checked></div>
+                    </div>
                 </div>
-                <div class="sub-title"><span>显示柱状图</span><input type="checkbox" id="ShowBars"></div>
-                <div id="BarOptions" style="display:none;">
-                <div class="sub-section ss-orange">
+            </div>
+
+            <!-- 柱状图 -->
+            <div class="control-group">
+                <div class="group-title"><span>📊 柱状图</span></div>
+                <div class="sub-title"><span>显示柱状图</span><input type="checkbox" id="ShowBars" checked></div>
+                <div id="BarOptions">
+                <div class="sub-section ss-amber">
                     <div class="sub-section-label">柱子样式</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>柱宽比例</span><span id="BarWidthVal">60%</span></div>
-                            <input type="range" id="BarWidth" min="10" max="100" step="5" value="60"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>顶部圆角</span><span id="BarRadiusVal">4</span></div>
-                            <input type="range" id="BarRadius" min="0" max="20" step="1" value="4"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>填充透明度</span><span id="BarOpacityVal">70%</span></div>
-                            <input type="range" id="BarOpacity" min="0" max="100" step="5" value="70"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>柱子颜色</span></div>
-                            <input type="color" id="BarColor" value="#888888"></div>
-                    </div>
+                    <div class="stack"><div class="label-line"><span>柱宽比例</span><span id="BarWidthVal">60%</span></div>
+                        <input type="range" id="BarWidth" min="10" max="100" step="5" value="60"></div>
+                    <div class="stack"><div class="label-line"><span>顶部圆角</span><span id="BarRadiusVal">4</span></div>
+                        <input type="range" id="BarRadius" min="0" max="20" step="1" value="4"></div>
+                    <div class="stack"><div class="label-line"><span>填充透明度</span><span id="BarOpacityVal">70%</span></div>
+                        <input type="range" id="BarOpacity" min="0" max="100" step="5" value="70"></div>
+                    <div class="row stack"><div class="label-line"><span>填充颜色</span></div>
+                        <input type="color" id="BarColor" value="#a8c5da"></div>
                     <div class="sub-title"><span>渐变填充</span><input type="checkbox" id="BarGradient"></div>
-                    <div class="row" id="BarGradientEndRow" style="display:none; justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">渐变终止色</span>
-                        <input type="color" id="BarGradientEnd" value="#cccccc">
+                    <div class="row stack" id="BarGradientEndRow" style="display:none;">
+                        <div class="label-line"><span>渐变终止色</span></div>
+                        <input type="color" id="BarGradientEnd" value="#c5d9e6">
                     </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="BarStrokeWidthVal">0</span></div>
-                            <input type="range" id="BarStrokeWidth" min="0" max="6" step="0.5" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>描边颜色</span></div>
-                            <input type="color" id="BarStrokeColor" value="#555555"></div>
-                    </div>
+                    <div class="stack"><div class="label-line"><span>描边宽度</span><span id="BarStrokeWidthVal">0</span></div>
+                        <input type="range" id="BarStrokeWidth" min="0" max="6" step="0.5" value="0"></div>
+                    <div class="row stack"><div class="label-line"><span>描边颜色</span></div>
+                        <input type="color" id="BarStrokeColor" value="#7a9aac"></div>
+                    <div class="stack"><div class="label-line"><span>手绘抖动</span><span id="BarJitterVal">0</span></div>
+                        <input type="range" id="BarJitter" min="0" max="100" step="1" value="0"></div>
                 </div>
                 </div>
-                <!-- 动画设置 -->
+            </div>
+
+            <!-- 标题与图例 -->
+            <div class="control-group">
+                <div class="group-title"><span>📝 标题与图例</span></div>
+                <div class="row stack"><div class="label-line"><span>标题字体</span></div>
+                    <div id="TitleFontMount" style="width:100%"></div></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">主标题</div>
+                    <div class="sub-title"><span>启用主标题</span><input type="checkbox" id="ShowMainTitle" checked></div>
+                    <div id="MainTitleOpts">
+                        <div class="row stack">
+                            <div class="label-line"><span>文字</span></div>
+                            <input type="text" id="MainTitle" value="汽车零售销量新能源月度渗透率走势">
+                        </div>
+                        <div class="advanced-params">
+                            <div class="stack"><div class="label-line"><span>字号</span><span id="TitleSizeVal">26</span></div>
+                                <input type="range" id="TitleSize" min="12" max="72" step="2" value="26"></div>
+                            <div class="stack"><div class="label-line"><span>字重</span><span id="MainTitleWeightVal">700</span></div>
+                                <input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"></div>
+                            <div class="row stack"><div class="label-line"><span>颜色</span></div>
+                                <input type="color" id="TitleColor" value="#333333"></div>
+                            <div class="stack"><div class="label-line"><span>X</span><span id="MainTitleXVal">0</span></div>
+                                <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
+                            <div class="stack"><div class="label-line"><span>Y</span><span id="MainTitleYVal">-490</span></div>
+                                <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
+                            <div class="sub-title"><span>显示括号</span><input type="checkbox" id="ShowBrackets" checked></div>
+                        </div>
+                    </div>
+                </div>
                 <div class="sub-section ss-purple">
+                    <div class="sub-section-label">副标题</div>
+                    <div class="sub-title"><span>启用副标题</span><input type="checkbox" id="ShowSubTitle" checked></div>
+                    <div id="SubTitleOpts">
+                        <div class="row stack">
+                            <div class="label-line"><span>文字</span></div>
+                            <input type="text" id="SubTitle" value="新能源乘用车渗透率超 50%">
+                        </div>
+                        <div class="advanced-params">
+                            <div class="stack"><div class="label-line"><span>字号</span><span id="SubTitleSizeVal">36</span></div>
+                                <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
+                            <div class="stack"><div class="label-line"><span>字重</span><span id="SubTitleWeightVal">400</span></div>
+                                <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
+                            <div class="row stack"><div class="label-line"><span>颜色</span></div>
+                                <input type="color" id="SubTitleColor" value="#999999"></div>
+                            <div class="stack"><div class="label-line"><span>X</span><span id="SubTitleXVal">630</span></div>
+                                <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
+                            <div class="stack"><div class="label-line"><span>Y</span><span id="SubTitleYVal">0</span></div>
+                                <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
+                            <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sub-section ss-teal">
+                    <div class="sub-section-label">图例</div>
+                    <div class="sub-title"><span>显示图例</span><input type="checkbox" id="ShowLegend" checked></div>
+                    <div id="LegendOpts">
+                        <div class="ctrl-row">
+                            <span>折线图</span>
+                            <input type="text" id="LineLegend" value="渗透率（%）" style="flex:1; height:28px; padding:4px 8px;">
+                        </div>
+                        <div class="ctrl-row" style="margin-top:4px;">
+                            <span>柱状图</span>
+                            <input type="text" id="BarLegend" value="月度销量" style="flex:1; height:28px; padding:4px 8px;">
+                        </div>
+                        <div class="stack"><div class="label-line"><span>字号</span><span id="LegendSizeVal">11</span></div>
+                            <input type="range" id="LegendSize" min="8" max="24" step="1" value="11"></div>
+                        <div class="stack"><div class="label-line"><span>上下位置</span><span id="LegendOffYVal">0</span></div>
+                            <input type="range" id="LegendOffY" min="-30" max="30" step="1" value="0"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 动画 -->
+            <div class="control-group">
+                <div class="group-title"><span>🎬 动画</span></div>
+                <div class="sub-section ss-rose">
                     <div class="sub-section-label" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>动画</span>
+                        <span>动画设置</span>
                         <button id="BtnPlay" class="btn-play">▶ 播放</button>
                     </div>
-                    <div class="row stack"><div class="label-line"><span>动画时长 (秒)</span><span id="AnimDurationVal">3.5s</span></div>
+                    <div class="stack"><div class="label-line"><span>动画时长</span><span id="AnimDurationVal">3.5s</span></div>
                         <input type="range" id="AnimDuration" min="0.5" max="5" step="0.1" value="3.5"></div>
                     <div class="row stack"><div class="label-line"><span>动画曲线</span></div>
                         <select id="AnimEasing">
@@ -267,41 +316,11 @@
                 </div>
             </div>
 
-            <!-- 数据点 & 标签 -->
-            <div class="control-group">
-                <div class="group-title"><span>🔵 数据点 & 标签</span></div>
-                <div class="sub-section ss-green">
-                    <div class="sub-title"><span>显示数据点</span><input type="checkbox" id="ShowPoints" checked></div>
-                    <div id="PointSizeOpts" style="margin-top:6px;">
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>数据点大小</span><span id="PointSizeVal">4</span></div>
-                                <input type="range" id="PointSize" min="1" max="20" step="0.5" value="4"></div>
-                        </div>
-                    </div>
-                    <div class="sub-title"><span>显示数值标签</span><input type="checkbox" id="ShowValues"></div>
-                    <div id="ValueLabelOpts" style="display:none; margin-top:6px;">
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>数值字号</span><span id="ValueSizeVal">11</span></div>
-                                <input type="range" id="ValueSize" min="8" max="30" step="1" value="11"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>数值颜色</span></div>
-                                <input type="color" id="ValueColor" value="#ffffff"></div>
-                        </div>
-                        <div class="row">
-                            <div style="flex:1" class="stack"><div class="label-line"><span>Y轴偏移</span><span id="ValueYOffsetVal">-20</span></div>
-                                <input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-20"></div>
-                            <div style="flex:1" class="stack"><div class="label-line"><span>背景颜色</span></div>
-                                <input type="color" id="ValueBgColor" value="#555555"></div>
-                        </div>
-                        <div class="sub-title"><span>显示背景</span><input type="checkbox" id="ValueBgEnabled" checked></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 网格与坐标（公用 + 颜色） -->
+            <!-- 坐标轴与网格 -->
             <div class="control-group collapsible" data-default-collapsed>
-                <div class="group-title"><span>▦ 网格与坐标</span></div>
+                <div class="group-title"><span>▦ 坐标轴与网格</span></div>
                 <div class="sub-section ss-teal">
-                    <div class="sub-section-label">Y 轴</div>
+                    <div class="sub-section-label">左轴（折线图）</div>
                     <div class="row stack"><div class="label-line"><span>Y轴模式</span></div>
                         <select id="YAxisMode">
                             <option value="zero" selected>从零开始</option>
@@ -318,19 +337,39 @@
                     <div class="row">
                         <div style="flex:1" class="stack"><div class="label-line"><span>Y轴刻度数</span><span id="GridYVal">4</span></div>
                             <input type="range" id="GridY" min="2" max="15" step="1" value="4"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>横纵轴字体字号</span><span id="AxisLabelSizeVal">11</span></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>坐标轴字号</span><span id="AxisLabelSizeVal">11</span></div>
                             <input type="range" id="AxisLabelSize" min="6" max="40" step="1" value="11"></div>
                     </div>
-                    <div class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">标签颜色</span>
-                        <input type="color" id="AxisLabelColor" value="#999999"></div>
+                    <div class="row stack">
+                        <div class="label-line"><span>颜色</span></div>
+                        <input type="color" id="AxisLabelColor" value="#999999">
+                    </div>
+                </div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">右轴（柱状图）</div>
+                    <div class="row stack"><div class="label-line"><span>Y轴模式</span></div>
+                        <select id="YAxisMode2">
+                            <option value="zero">从零开始</option>
+                            <option value="auto" selected>自动取整</option>
+                            <option value="percent">百分比 (0-100)</option>
+                            <option value="custom">自定义范围</option>
+                        </select></div>
+                    <div id="YAxisCustomPanel2" style="display:none; margin-top:8px; padding-top:6px; border-top: 1px dashed var(--border);">
+                        <div class="row">
+                            <div class="stack" style="flex:1"><div class="label-line"><span>最小值</span></div><input type="number" id="YMin2" value="0"></div>
+                            <div class="stack" style="flex:1"><div class="label-line"><span>最大值</span></div><input type="number" id="YMax2" value="100"></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="sub-section ss-purple">
                     <div class="sub-section-label">图表区域</div>
+                    <div class="stack"><div class="label-line"><span>点间距</span><span id="PointSpacingVal">全宽</span></div>
+                        <input type="range" id="PointSpacing" min="20" max="100" step="5" value="100"></div>
+                    <div class="advanced-params">
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X 偏移</span><span id="ChartOffXVal">0</span></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X</span><span id="ChartOffXVal">0</span></div>
                             <input type="range" id="ChartOffX" min="-300" max="300" step="5" value="0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y 偏移</span><span id="ChartOffYVal">0</span></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y</span><span id="ChartOffYVal">0</span></div>
                             <input type="range" id="ChartOffY" min="-300" max="300" step="5" value="0"></div>
                     </div>
                     <div class="row">
@@ -339,21 +378,74 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>纵轴长度</span><span id="ChartExtraHVal">0</span></div>
                             <input type="range" id="ChartExtraH" min="-500" max="500" step="10" value="0"></div>
                     </div>
+                    </div>
                 </div>
                 <div class="sub-section ss-amber">
                     <div class="sub-section-label">网格线</div>
                     <div class="sub-title"><span>显示网格线</span><input type="checkbox" id="ShowGrid" checked></div>
                     <div class="sub-title"><span>虚线网格</span><input type="checkbox" id="DashedGrid"></div>
+                    <div class="stack"><div class="label-line"><span>网格透明度</span><span id="GridOpacityVal">30%</span></div>
+                        <input type="range" id="GridOpacity" min="0" max="100" step="5" value="30"></div>
+                    <div class="row stack"><div class="label-line"><span>网格颜色</span></div>
+                        <input type="color" id="GridColor" value="#c3bcaf"></div>
+                    <div class="stack"><div class="label-line"><span>轴线超出</span><span id="AxisOverflowVal">20</span></div>
+                        <input type="range" id="AxisOverflow" min="0" max="60" step="2" value="20"></div>
+                </div>
+            </div>
+
+            <!-- 卡片外观 -->
+            <div class="control-group">
+                <div class="group-title"><span>🖼️ 卡片外观</span></div>
+                <div class="sub-section ss-amber paper-only">
+                    <div class="sub-section-label">纸张纹理</div>
+                    <div class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
+                        <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div>
+                    <div class="stack"><div class="label-line"><span>暗角</span><span id="VignetteVal">15</span></div>
+                        <input type="range" id="Vignette" min="0" max="100" step="1" value="15"></div>
+                </div>
+                <div class="sub-section ss-green">
+                    <div class="sub-section-label">形态</div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>网格透明度</span><span id="GridOpacityVal">30%</span></div>
-                            <input type="range" id="GridOpacity" min="0" max="100" step="5" value="30"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>网格颜色</span></div>
-                            <input type="color" id="GridColor" value="#c3bcaf"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角</span><span id="CardRadiusVal">16</span></div>
+                            <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>内边距</span><span id="CardPadVal">32</span></div>
+                            <input type="range" id="CardPad" min="10" max="100" step="2" value="32"></div>
+                    </div>
+                    <div class="row stack">
+                        <div class="label-line"><span>卡片底色</span></div>
+                        <input type="color" id="CardBg" value="#faf8f3">
+                    </div>
+                    <div class="sub-title"><span>启用描边</span><input type="checkbox" id="CardBorderEnabled"></div>
+                    <div id="CardBorderOpts" style="display:none">
+                        <div class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
+                            <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
+                        <div class="row stack"><div class="label-line"><span>描边颜色</span></div>
+                            <input type="color" id="CardBorderColor" value="#ffffff"></div>
+                    </div>
+                    <div class="sub-title"><span>启用辉光</span><input type="checkbox" id="CardGlowEnabled"></div>
+                    <div id="CardGlowOpts" style="display:none">
+                        <div class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
+                            <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
+                        <div class="row stack"><div class="label-line"><span>辉光颜色</span></div>
+                            <input type="color" id="CardGlowColor" value="#3b82f6"></div>
+                        <div class="stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
+                            <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
+                    </div>
+                    <div class="sub-title"><span>启用投影</span><input type="checkbox" id="ShadowEnabled" checked></div>
+                    <div id="ShadowOpts">
+                        <div class="stack"><div class="label-line"><span>角度</span><span id="ShadowAngleVal">90°</span></div>
+                            <input type="range" id="ShadowAngle" min="0" max="360" step="1" value="90"></div>
+                        <div class="stack"><div class="label-line"><span>距离</span><span id="ShadowDistanceVal">10</span></div>
+                            <input type="range" id="ShadowDistance" min="0" max="60" step="1" value="10"></div>
+                        <div class="stack"><div class="label-line"><span>模糊</span><span id="ShadowBlurVal">20</span></div>
+                            <input type="range" id="ShadowBlur" min="0" max="80" step="1" value="20"></div>
+                        <div class="stack"><div class="label-line"><span>不透明度</span><span id="ShadowOpacityVal">25%</span></div>
+                            <input type="range" id="ShadowOpacity" min="0" max="100" step="1" value="25"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- 卡片漂浮（公用 + 赛博颜色） -->
+            <!-- 卡片漂浮 -->
             <div class="control-group collapsible" data-default-collapsed>
                 <div class="group-title"><span>🃏 卡片漂浮</span></div>
                 <div class="sub-section ss-blue">
@@ -364,38 +456,8 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
                             <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
                     </div>
-                    <div class="row stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
+                    <div class="stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
                         <input type="range" id="CardScale" min="40" max="100" step="1" value="80"></div>
-                </div>
-                <div class="sub-section ss-green">
-                    <div class="sub-section-label">尺寸 & 外观</div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>悬浮高度</span><span id="ElevationVal">50</span></div>
-                            <input type="range" id="Elevation" min="0" max="100" step="1" value="50"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
-                            <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
-                    </div>
-                    <div class="row stack"><div class="label-line"><span>内边距</span><span id="CardPadVal">32</span></div>
-                        <input type="range" id="CardPad" min="10" max="100" step="2" value="32"></div>
-                    <div class="row" style="justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; color:var(--text-sub, #888);">卡片底色</span>
-                        <input type="color" id="CardBg" value="#faf8f3"></div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="CardBorderWidthVal">0</span></div>
-                            <input type="range" id="CardBorderWidth" min="0" max="25" value="0"></div>
-                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>描边颜色</span></div>
-                            <input type="color" id="CardBorderColor" value="#ffffff"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="CardGlowWidthVal">0</span></div>
-                            <input type="range" id="CardGlowWidth" min="0" max="80" value="0"></div>
-                        <div class="stack" style="width:60px;flex:none"><div class="label-line"><span>辉光颜色</span></div>
-                            <input type="color" id="CardGlowColor" value="#3b82f6"></div>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="CardGlowIntensityVal">70%</span></div>
-                            <input type="range" id="CardGlowIntensity" min="0" max="100" step="5" value="70"></div>
-                    </div>
                 </div>
                 <div class="sub-section ss-purple">
                     <div class="sub-section-label">漂浮动画</div>
@@ -407,7 +469,7 @@
                             <input type="range" id="FloatRotateY" min="0" max="8" step="0.5" value="1.5"></div>
                     </div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>周期 (秒)</span><span id="FloatDurationVal">4s</span></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>周期</span><span id="FloatDurationVal">4s</span></div>
                             <input type="range" id="FloatDuration" min="1" max="10" step="0.5" value="4"></div>
                         <div style="flex:1" class="stack"><div class="label-line"><span>相位差</span><span id="FloatPhaseVal">25%</span></div>
                             <input type="range" id="FloatPhase" min="0" max="100" step="5" value="25"></div>
@@ -426,13 +488,13 @@
     <!-- ====== 画布 ====== -->
     <div class="preview-area" id="previewArea">
         <div id="RecIndicator"><div class="rec-dot"></div> RECORDING</div>
-        <canvas id="glCanvas"></canvas>
+        <canvas id="glCanvas" class="webgl-canvas"></canvas>
     </div>
 
     <script type="module">
         import { initEffect } from '../shared/controls.js';
         import { drawSolidGlow } from '../shared/border-effects.js';
-        import { getTheme, toggleTheme } from '../shared/themes.js';
+        import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=sdf-pad';
 
         // ====== Canvas 初始化 ======
@@ -456,15 +518,12 @@
         const bgCtx = bgOffscreen.getContext('2d', { alpha: true });
         bgCtx.scale(scale, scale);
 
-        // initEffect（dummy canvas 给 recorder 初始化，后续重定向到 glCanvas）
-        const dummyCanvas = document.createElement('canvas');
-        dummyCanvas.id = 'initDummy'; dummyCanvas.style.display = 'none';
-        document.body.appendChild(dummyCanvas);
-
         const { bg, recorder, resetAnimStart,
                 clamp, hexToRgba, getEasing, bindUI,
                 createLinearGradient, fontSelectHTML, setupFontSelector } = initEffect({
-            canvasId: 'initDummy',
+            skipMainCanvas: true,
+            skipDrawContext: true,
+            recorderCanvas: glCanvas,
             fileName: 'ChartFX',
             baseWidth, baseHeight, scale,
             defaultBgMode: 'transparent',
@@ -473,16 +532,21 @@
                 entryAnimation: { extras: ['lineDelay'] },
             },
         });
-        recorder.canvas = glCanvas;
 
         // ====== 数据点 ======
         const INITIAL_DATA = [
-            { label: '1月', value: 41 },  { label: '2月', value: 49 },
-            { label: '3月', value: 51.5 }, { label: '4月', value: 52.5 },
-            { label: '5月', value: 53.5 }, { label: '6月', value: 52 },
-            { label: '7月', value: 52 },   { label: '8月', value: 55.5 },
-            { label: '9月', value: 58.5 }, { label: '10月', value: 57.5 },
-            { label: '11月', value: 59 },  { label: '12月', value: 58 }
+            { label: '1月',  barValue: 420,  lineValue: 41   },
+            { label: '2月',  barValue: 510,  lineValue: 49   },
+            { label: '3月',  barValue: 580,  lineValue: 51.5 },
+            { label: '4月',  barValue: 620,  lineValue: 52.5 },
+            { label: '5月',  barValue: 655,  lineValue: 53.5 },
+            { label: '6月',  barValue: 640,  lineValue: 52   },
+            { label: '7月',  barValue: 650,  lineValue: 52   },
+            { label: '8月',  barValue: 700,  lineValue: 55.5 },
+            { label: '9月',  barValue: 760,  lineValue: 58.5 },
+            { label: '10月', barValue: 740,  lineValue: 57.5 },
+            { label: '11月', barValue: 780,  lineValue: 59   },
+            { label: '12月', barValue: 770,  lineValue: 58   },
         ];
         let dataPoints = INITIAL_DATA.map(d => ({...d}));
 
@@ -506,7 +570,6 @@
             subTitleY: 0,
             showBrackets: true,
             // 折线
-            showLine: true,
             lineWidth: 1.2,
             lineColor: '#555555',
             showPoints: true,
@@ -515,29 +578,46 @@
             valueBgEnabled: true,
             valueBgColor: '#555555',
             pointSize: 4,
+            // 图例
+            showLegend: true,
+            barLegend: '月度销量',
+            lineLegend: '渗透率（%）',
+            legendSize: 11,
+            legendOffY: 0,
             // 柱状图
-            showBars: false,
+            showBars: true,
             barWidth: 0.6,
-            barColor: '',
+            barColor: '#a8c5da',
             barOpacity: 0.7,
             barRadius: 4,
             barGradient: false,
-            barGradientEnd: '',
+            barGradientEnd: '#c5d9e6',
             barStrokeWidth: 0,
-            barStrokeColor: '',
+            barStrokeColor: '#7a9aac',
+            barJitter: 0,
             // 网格与坐标
             gridY: 4,
             yAxisMode: 'zero',
             yMin: 0, yMax: 100,
+            yAxisMode2: 'auto',
+            yMin2: 0, yMax2: 100,
             dashedGrid: false,
+            axisOverflow: 20,
+            pointSpacing: 100,
             axisLabelSize: 11,
             axisLabelColor: '#999999',
             // 卡片漂浮 (WebGL)
             rotateX: 1.5, rotateY: -1,
-            elevation: 0.5,
+            shadowEnabled: true,
+            shadowAngle: 90,
+            shadowDistance: 10,
+            shadowBlur: 20,
+            shadowOpacity: 25,
             cardRadius: 16,
+            cardBorderEnabled: false,
             cardBorderWidth: 0,
             cardBorderColor: '#ffffff',
+            cardGlowEnabled: false,
             cardGlowWidth: 0,
             cardGlowColor: '#3b82f6',
             cardGlowIntensity: 70,
@@ -582,10 +662,12 @@
             cardBg: '#faf8f3',
             showArea: true,
             valueSize: 11,
-            valueColor: '#ffffff',
+            valueColor: '#555555',
             showGrid: true,
             gridColor: '#c3bcaf',
             subTitleGlow: false,
+            showMainTitle: true,
+            showSubTitle: true,
         };
 
         // ====== 模式预设（切换主题时同步的参数） ======
@@ -594,32 +676,47 @@
                 mainTitleColor: '#333333',
                 subTitleColor: '#999999',
                 lineColor: '#555555',
+                barColor: '#a8c5da',
+                barGradientEnd: '#c5d9e6',
+                barStrokeColor: '#7a9aac',
                 axisLabelColor: '#999999',
                 valueColor: '#555555',
                 gridColor: '#c3bcaf',
                 cardBg: '#faf8f3',
+                cardBorderEnabled: false,
                 cardBorderWidth: 0,
+                cardBorderColor: '#ffffff',
+                cardGlowEnabled: false,
                 cardGlowWidth: 0,
+                cardGlowColor: '#3b82f6',
+                cardGlowIntensity: 70,
                 glowBlur: 0,
                 subTitleGlow: false,
                 areaFollowLine: false,
+                barJitter: 25,
             },
             cyber: {
                 mainTitleColor: '#ffffff',
                 subTitleColor: '#ffffff',
-                lineColor: '#00f2ff',
+                lineColor: '#ffae00',
+                barColor: '#00c8ff',
+                barGradientEnd: '#80e4ff',
+                barStrokeColor: '#00e4ff',
                 axisLabelColor: '#888888',
                 valueColor: '#ffffff',
                 gridColor: '#333333',
                 cardBg: '#1a1a2e',
+                cardBorderEnabled: true,
                 cardBorderWidth: 2,
                 cardBorderColor: '#00f2ff',
+                cardGlowEnabled: true,
                 cardGlowWidth: 20,
                 cardGlowColor: '#00f2ff',
                 cardGlowIntensity: 50,
                 glowBlur: 30,
                 subTitleGlow: true,
                 areaFollowLine: true,
+                barJitter: 0,
             },
         };
 
@@ -636,23 +733,38 @@
             updateUI('TitleColor', config.mainTitleColor);
             updateUI('SubTitleColor', config.subTitleColor);
             updateUI('LineColor', config.lineColor);
+            updateUI('BarColor', config.barColor);
+            updateUI('BarGradientEnd', config.barGradientEnd);
+            updateUI('BarStrokeColor', config.barStrokeColor);
             updateUI('AxisLabelColor', config.axisLabelColor);
             updateUI('ValueColor', config.valueColor);
             updateUI('GridColor', config.gridColor);
             updateUI('CardBg', config.cardBg);
+            updateUI('CardBorderEnabled', config.cardBorderEnabled, null, true);
+            document.getElementById('CardBorderOpts').style.display = config.cardBorderEnabled ? '' : 'none';
             updateUI('CardBorderWidth', config.cardBorderWidth, 'CardBorderWidthVal');
             updateUI('CardBorderColor', config.cardBorderColor);
+            updateUI('CardGlowEnabled', config.cardGlowEnabled, null, true);
+            document.getElementById('CardGlowOpts').style.display = config.cardGlowEnabled ? '' : 'none';
             updateUI('CardGlowWidth', config.cardGlowWidth, 'CardGlowWidthVal');
             updateUI('CardGlowColor', config.cardGlowColor);
             updateUI('CardGlowIntensity', config.cardGlowIntensity, 'CardGlowIntensityVal');
+            updateUI('ShadowEnabled', config.shadowEnabled, null, true);
+            document.getElementById('ShadowOpts').style.display = config.shadowEnabled ? '' : 'none';
+            updateUI('ShadowAngle', config.shadowAngle);
+            updateUI('ShadowDistance', config.shadowDistance);
+            updateUI('ShadowBlur', config.shadowBlur);
+            updateUI('ShadowOpacity', config.shadowOpacity);
             updateUI('GlowBlur', config.glowBlur, 'GlowBlurVal');
             updateUI('SubTitleGlow', config.subTitleGlow, null, true);
             updateUI('AreaFollowLine', config.areaFollowLine, null, true);
             document.getElementById('AreaColorRow').style.display = config.areaFollowLine ? 'none' : '';
+            updateUI('BarJitter', config.barJitter, 'BarJitterVal');
 
             _paperTexCache = null;
             _staticBgCache = null;
             _pathPtsCache = null;
+            _colorCache = null;
             myResetAnimStart();
         }
 
@@ -694,11 +806,15 @@
             // 主题风格
             ['ShowBrackets',    'showBrackets',   'checked'],
             ['SubTitleGlow',    'subTitleGlow',   'checked'],
+            ['ShowMainTitle',   'showMainTitle',  'checked'],
+            ['ShowSubTitle',    'showSubTitle',   'checked'],
             ['NoiseGrain',      'noiseGrain',     'int',   'NoiseGrainVal'],
             ['Vignette',        'vignette',       'int',   'VignetteVal'],
             ['LineJitter',      'lineJitter',     'int',   'LineJitterVal'],
+            ['CardBorderEnabled','cardBorderEnabled','checked'],
             ['CardBorderWidth', 'cardBorderWidth', 'int',   'CardBorderWidthVal'],
             ['CardBorderColor', 'cardBorderColor'],
+            ['CardGlowEnabled', 'cardGlowEnabled', 'checked'],
             ['CardGlowWidth',   'cardGlowWidth',   'int',   'CardGlowWidthVal'],
             ['CardGlowColor',   'cardGlowColor'],
             ['CardGlowIntensity','cardGlowIntensity','int', 'CardGlowIntensityVal', '%'],
@@ -715,7 +831,6 @@
             ['FillOpacity',     'fillOpacity',    '%',     'FillOpacityVal', '%'],
             ['DropLineOpacity', 'dropLineOpacity', '%',    'DropLineOpacityVal', '%'],
             ['ShowPoints',      'showPoints',     'checked'],
-            ['ShowLine',        'showLine',       'checked'],
             ['ShowBars',        'showBars',       'checked'],
             ['BarWidth',        'barWidth',       '%',     'BarWidthVal',    '%'],
             ['BarRadius',       'barRadius',      'int',   'BarRadiusVal'],
@@ -725,6 +840,7 @@
             ['BarGradientEnd',  'barGradientEnd'],
             ['BarStrokeWidth',  'barStrokeWidth', 'float', 'BarStrokeWidthVal'],
             ['BarStrokeColor',  'barStrokeColor'],
+            ['BarJitter',       'barJitter',       'int',   'BarJitterVal'],
             ['PointSize',       'pointSize',      'float', 'PointSizeVal'],
             ['ShowValues',      'showValues',     'checked'],
             ['ValueSize',       'valueSize',      'int',   'ValueSizeVal'],
@@ -732,12 +848,23 @@
             ['ValueYOffset',    'valueYOffset',   'int',   'ValueYOffsetVal'],
             ['ValueBgEnabled',  'valueBgEnabled', 'checked'],
             ['ValueBgColor',    'valueBgColor'],
+            // 图例
+            ['ShowLegend',      'showLegend',     'checked'],
+            ['BarLegend',       'barLegend'],
+            ['LineLegend',      'lineLegend'],
+            ['LegendSize',      'legendSize',     'int',   'LegendSizeVal'],
+            ['LegendOffY',      'legendOffY',     'int',   'LegendOffYVal'],
             // 网格与坐标
             ['GridY',           'gridY',          'int',   'GridYVal'],
             ['YAxisMode',       'yAxisMode'],
             ['YMin',            'yMin',           'float'],
             ['YMax',            'yMax',           'float'],
+            ['YAxisMode2',      'yAxisMode2'],
+            ['YMin2',           'yMin2',          'float'],
+            ['YMax2',           'yMax2',          'float'],
             ['DashedGrid',      'dashedGrid',     'checked'],
+            ['AxisOverflow',    'axisOverflow',   'int',   'AxisOverflowVal'],
+            ['PointSpacing',    'pointSpacing',   'int'],
             ['AxisLabelSize',   'axisLabelSize',  'int',   'AxisLabelSizeVal'],
             ['AxisLabelColor',  'axisLabelColor'],
             ['GridColor',       'gridColor'],
@@ -749,11 +876,14 @@
             ['RotateX',         'rotateX',        'float', 'RotateXVal',   '°'],
             ['RotateY',         'rotateY',        'float', 'RotateYVal',   '°'],
             ['CardScale',       'cardScale',      '%',     'CardScaleVal', '%'],
-            ['Elevation',       'elevation',      '%',     'ElevationVal'],
+            ['ShadowEnabled',   'shadowEnabled',  'checked'],
+            ['ShadowAngle',     'shadowAngle',    'int',   'ShadowAngleVal',    '°'],
+            ['ShadowDistance',  'shadowDistance', 'int',   'ShadowDistanceVal'],
+            ['ShadowBlur',      'shadowBlur',     'int',   'ShadowBlurVal'],
+            ['ShadowOpacity',   'shadowOpacity',  'int',   'ShadowOpacityVal',  '%'],
             ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal'],
             ['CardPad',         'cardPad',        'int',   'CardPadVal'],
             ['CardBg',          'cardBg'],
-            ['CardBorderColor', 'cardBorderColor'],
             ['FloatEnabled',    'floatEnabled',   'checked'],
             ['FloatRotateX',    'floatRotateX',   'float', 'FloatRotateXVal', '°'],
             ['FloatRotateY',    'floatRotateY',   'float', 'FloatRotateYVal', '°'],
@@ -781,6 +911,33 @@
                     document.getElementById('YAxisCustomPanel').style.display =
                         config.yAxisMode === 'custom' ? 'block' : 'none';
                 }
+                if (key === 'yAxisMode2') {
+                    document.getElementById('YAxisCustomPanel2').style.display =
+                        config.yAxisMode2 === 'custom' ? 'block' : 'none';
+                }
+                if (key === 'showLegend') {
+                    document.getElementById('LegendOpts').style.display = config.showLegend ? '' : 'none';
+                }
+                if (key === 'pointSpacing') {
+                    document.getElementById('PointSpacingVal').textContent =
+                        config.pointSpacing >= 100 ? '全宽' : config.pointSpacing + '%';
+                    _pathPtsCache = null;
+                }
+                if (key === 'cardBorderEnabled') {
+                    document.getElementById('CardBorderOpts').style.display = config.cardBorderEnabled ? '' : 'none';
+                }
+                if (key === 'cardGlowEnabled') {
+                    document.getElementById('CardGlowOpts').style.display = config.cardGlowEnabled ? '' : 'none';
+                }
+                if (key === 'shadowEnabled') {
+                    document.getElementById('ShadowOpts').style.display = config.shadowEnabled ? '' : 'none';
+                }
+                if (key === 'showMainTitle') {
+                    document.getElementById('MainTitleOpts').style.display = config.showMainTitle ? '' : 'none';
+                }
+                if (key === 'showSubTitle') {
+                    document.getElementById('SubTitleOpts').style.display = config.showSubTitle ? '' : 'none';
+                }
                 if (key === 'entranceEnabled') {
                     const show = config.entranceEnabled;
                     document.getElementById('EntranceOpts').style.display = show ? '' : 'none';
@@ -792,6 +949,13 @@
                 startLoop();
             }
         });
+
+        // 初始化条件显示
+        document.getElementById('CardBorderOpts').style.display = config.cardBorderEnabled ? '' : 'none';
+        document.getElementById('CardGlowOpts').style.display = config.cardGlowEnabled ? '' : 'none';
+        document.getElementById('ShadowOpts').style.display = config.shadowEnabled ? '' : 'none';
+        document.getElementById('MainTitleOpts').style.display = config.showMainTitle ? '' : 'none';
+        document.getElementById('SubTitleOpts').style.display = config.showSubTitle ? '' : 'none';
 
         // ====== 漂浮动画（合并到主循环）======
         let _currentRx = config.rotateX * Math.PI / 180;
@@ -857,34 +1021,29 @@
         // ====== 数据表格 ======
         function renderTable() {
             const tbody = document.getElementById('DataBody');
-            tbody.innerHTML = '';
-            dataPoints.forEach((item, i) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
+            tbody.innerHTML = dataPoints.map((item, i) => `
+                <tr>
                     <td><input type="text" value="${item.label}" oninput="updateData(${i}, 'label', this.value)"></td>
-                    <td><input type="number" value="${item.value}" oninput="updateData(${i}, 'value', this.value)"></td>
+                    <td><input type="number" value="${item.lineValue}" oninput="updateData(${i}, 'lineValue', this.value)"></td>
+                    <td><input type="number" value="${item.barValue}" oninput="updateData(${i}, 'barValue', this.value)"></td>
                     <td class="op-cell">
                         <button class="btn-icon" onclick="moveRow(${i}, -1)" title="上移">↑</button>
                         <button class="btn-icon" onclick="moveRow(${i}, 1)" title="下移">↓</button>
                         <button class="btn-icon del" onclick="removeRow(${i})" title="删除">×</button>
-                    </td>`;
-                tbody.appendChild(tr);
-            });
+                    </td>
+                </tr>`).join('');
         }
-        window.updateData = (i, k, v) => { dataPoints[i][k] = k === 'value' ? (parseFloat(v) || 0) : v; _pathPtsCache = null; startLoop(); };
-        window.addRow = () => { dataPoints.push({ label: '新项', value: 0 }); renderTable(); _pathPtsCache = null; startLoop(); };
+        window.updateData = (i, k, v) => {
+            dataPoints[i][k] = k === 'label' ? v : (parseFloat(v) || 0);
+            _pathPtsCache = null; _labelMeasureCache = null; startLoop();
+        };
+        window.addRow = () => { dataPoints.push({ label: '新项', barValue: 0, lineValue: 0 }); renderTable(); _pathPtsCache = null; startLoop(); };
         window.removeRow = (i) => { if (dataPoints.length <= 2) { alert('至少保留两个数据点'); return; } dataPoints.splice(i, 1); renderTable(); _pathPtsCache = null; startLoop(); };
         window.moveRow = (i, dir) => { if (i+dir < 0 || i+dir >= dataPoints.length) return; const t = dataPoints[i]; dataPoints[i] = dataPoints[i+dir]; dataPoints[i+dir] = t; renderTable(); _pathPtsCache = null; startLoop(); };
         window.resetData = () => { dataPoints = INITIAL_DATA.map(d => ({...d})); renderTable(); _pathPtsCache = null; startLoop(); };
 
         document.getElementById('BtnPlay').addEventListener('click', () => myResetAnimStart());
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            toggleTheme();
-            document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
-            _paperTexCache = null; _staticBgCache = null;
-            startLoop();
-        });
-        document.getElementById('themeToggle').textContent = getTheme().id === 'dark' ? '☀' : '🌙';
+        initThemeToggle();
 
         // 条件显示：数值标签选项
         const valueOptsEl = document.getElementById('ValueLabelOpts');
@@ -907,19 +1066,14 @@
         });
         if (config.areaFollowLine) areaColorRow.style.display = 'none';
 
-        // 条件显示：折线选项（关闭折线时折叠）
-        const lineOptsEl = document.getElementById('LineOptions');
-        document.getElementById('ShowLine').addEventListener('change', () => {
-            lineOptsEl.style.display = config.showLine ? '' : 'none';
-        });
-        if (!config.showLine) lineOptsEl.style.display = 'none';
 
-        // 条件显示：柱状图选项
+        // 条件显示：柱状图样式面板
         const barOptsEl = document.getElementById('BarOptions');
-        document.getElementById('ShowBars').addEventListener('change', () => {
+        function updateBarVisibility() {
             barOptsEl.style.display = config.showBars ? '' : 'none';
-        });
-        if (config.showBars) barOptsEl.style.display = '';
+        }
+        document.getElementById('ShowBars').addEventListener('change', updateBarVisibility);
+        updateBarVisibility();
 
         // 条件显示：渐变终止色
         const barGradEndRow = document.getElementById('BarGradientEndRow');
@@ -937,13 +1091,12 @@
             return nice * mag;
         }
 
-        function getYRange() {
-            const values = dataPoints.map(d => d.value);
+        function getYRange(values, mode, cfgMin, cfgMax) {
             if (!values.length) return { yMin: 0, yMax: 100 };
 
-            if (config.yAxisMode === 'percent') return { yMin: 0, yMax: 100 };
-            if (config.yAxisMode === 'custom') {
-                let yMin = config.yMin, yMax = config.yMax;
+            if (mode === 'percent') return { yMin: 0, yMax: 100 };
+            if (mode === 'custom') {
+                let yMin = cfgMin, yMax = cfgMax;
                 if (yMax <= yMin) yMax = yMin + 1;
                 return { yMin, yMax };
             }
@@ -951,7 +1104,7 @@
             const dataMin = Math.min(...values), dataMax = Math.max(...values);
             const span = dataMax - dataMin || 10;
 
-            if (config.yAxisMode === 'auto') {
+            if (mode === 'auto') {
                 const step = getYStep(span);
                 let yMin = Math.floor(dataMin / step) * step;
                 let yMax = Math.ceil(dataMax / step) * step;
@@ -1073,13 +1226,14 @@
         let _labelMeasureCache = null; // 数值标签文字宽度缓存
 
         function getLabelMeasures() {
-            const key = `${dataPoints.map(d=>d.value).join(',')}|${config.valueSize}|${config.titleFont}`;
+            const vals = dataPoints.map(d=>d.lineValue);
+            const key = `${vals.join(',')}|${config.valueSize}|${config.titleFont}`;
             if (!_labelMeasureCache || _labelMeasureCache.key !== key) {
                 const mCtx = offscreen.getContext('2d');
                 mCtx.font = `bold ${config.valueSize}px ${config.titleFont}`;
                 _labelMeasureCache = {
                     key,
-                    widths: dataPoints.map(d => mCtx.measureText(String(d.value)).width),
+                    widths: vals.map(v => mCtx.measureText(String(v)).width),
                     th: config.valueSize + 6,
                 };
             }
@@ -1087,10 +1241,10 @@
         }
 
         function getColorCache() {
-            const key = `${config.lineColor}|${config.barColor||''}|${config.barGradientEnd||''}|${config.barOpacity}|${config.valueBgColor}|${config.valueColor}|${config.gridColor}|${config.areaColor}|${config.fillOpacity}`;
+            const key = `${config.lineColor}|${config.barColor||''}|${config.barGradientEnd||''}|${config.barOpacity}|${config.valueBgColor}|${config.valueColor}|${config.gridColor}|${config.gridOpacity}|${config.areaColor}|${config.fillOpacity}`;
             if (!_colorCache || _colorCache.key !== key) {
                 const bc = config.barColor || config.lineColor;
-                const gEnd = config.barGradientEnd || lightenColor(bc, 40);
+                const gEnd = config.barGradientEnd || bc;
                 _colorCache = {
                     key,
                     lineRgba: config.lineColor,
@@ -1098,7 +1252,7 @@
                     barGradEnd: hexToRgba(gEnd, config.barOpacity),
                     valueBgFill: hexToRgba(config.valueBgColor, 0.15),
                     valueBgStroke: hexToRgba(config.valueBgColor, 0.3),
-                    gridRgba: hexToRgba(config.gridColor, 0.5),
+                    gridRgba: hexToRgba(config.gridColor, config.gridOpacity),
                     gridAxisRgba: hexToRgba(config.gridColor, 0.5),
                     areaFill: config.areaFollowLine ? null : hexToRgba(config.areaColor, config.fillOpacity),
                 };
@@ -1115,13 +1269,27 @@
             // 布局计算
             const _pad = config.cardPad;
             const padL = _pad + 98 + config.chartOffX - config.chartExtraW / 2;
-            const padT = _pad + 50 + config.chartOffY - config.chartExtraH / 2;
+            const padT = _pad + 70 + config.chartOffY - config.chartExtraH / 2;
             const cw = (w - (_pad + 98) * 2) + config.chartExtraW;
-            const ch = (h - (_pad + 50) - (_pad + 55)) + config.chartExtraH;
-            const { yMin, yMax } = getYRange();
-            // 图表内容整体右移半个柱宽，避开Y轴标签区（Y轴标签位置不变）
+            const ch = (h - (_pad + 70) - (_pad + 55)) + config.chartExtraH;
+            const { yMin: lineYMin, yMax: lineYMax } = getYRange(dataPoints.map(d=>d.lineValue), config.yAxisMode, config.yMin, config.yMax);
+            const { yMin: barYMin, yMax: barYMax } = getYRange(dataPoints.map(d=>d.barValue), config.yAxisMode2, config.yMin2, config.yMax2);
+            // 数据点两侧各内缩半个柱宽 + 小间距，避免首/尾柱压住左右 Y 轴标签
             const barHalfW = (cw / Math.max(dataPoints.length, 1)) * config.barWidth / 2;
-            const chartX = padL + barHalfW; // 图表内容实际起始x（整体右移半个柱宽）
+            const sideInset = barHalfW + 6;
+            const chartX = padL + sideInset;        // 可用绘图区左起点
+            const plotW = Math.max(cw - sideInset * 2, 1); // 可用绘图区宽度
+
+            // 点间距：100=全宽撑满，<100=按比例压缩并居中
+            const _n = dataPoints.length;
+            const _spacingRatio = Math.min(config.pointSpacing, 100) / 100;
+            const dataSpan = plotW * _spacingRatio;
+            const centerOff = (plotW - dataSpan) / 2;
+            const getPointX = i => chartX + centerOff + (_n > 1 ? i / (_n - 1) * dataSpan : dataSpan / 2);
+            const actualSlotW = _n > 1 ? dataSpan / (_n - 1) : dataSpan;
+            const actualBarHalfW = actualSlotW * config.barWidth / 2;
+            const plotRight = getPointX(_n - 1);   // 最后一个数据点 x
+            const ov = config.axisOverflow;         // 轴线向外超出量
 
             // 裁剪圆角
             ctx.save();
@@ -1140,21 +1308,23 @@
 
             // === 网格 ===
             if (config.showGrid && config.gridOpacity > 0) {
-                const gv = config.gridOpacity;
                 ctx.save();
                 ctx.strokeStyle = cc.gridRgba;
                 ctx.lineWidth = 0.5;
                 if (config.dashedGrid) ctx.setLineDash([3, 6]);
-                // 竖线（每个数据点）
+                // 竖线（每个数据点）；不向外超出
                 for (let i = 0; i < dataPoints.length; i++) {
-                    const x = chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw;
+                    const x = getPointX(i);
                     ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ch); ctx.stroke();
                 }
-                // 横线（Y轴刻度，从图表区开始到结束）
+                // 横线（Y轴刻度）；顶/底线向外超出
                 for (let i = 0; i <= config.gridY; i++) {
                     const ratio = i / config.gridY;
                     const y = padT + ch - ratio * ch;
-                    ctx.beginPath(); ctx.moveTo(chartX, y); ctx.lineTo(chartX + cw, y); ctx.stroke();
+                    const isOuter = (i === 0 || i === config.gridY);
+                    const x0 = isOuter ? chartX - ov : chartX;
+                    const x1 = isOuter ? chartX + plotW + ov : chartX + plotW;
+                    ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
                 }
                 ctx.restore();
             }
@@ -1165,46 +1335,100 @@
                 const axisAlpha = isHold ? 1 : clamp(rawProgress * 1.5, 0, 0.35);
                 ctx.strokeStyle = cc.gridAxisRgba;
                 ctx.lineWidth = 1;
-                // X轴基线：左边不动（padL），右边延伸到图表区末尾
+                // X轴基线（与底部网格线共享 overflow 超出）
                 ctx.beginPath();
-                ctx.moveTo(padL, padT + ch);
-                ctx.lineTo(chartX + cw, padT + ch);
+                ctx.moveTo(chartX - ov, padT + ch);
+                ctx.lineTo(chartX + plotW + ov, padT + ch);
                 ctx.stroke();
                 ctx.restore();
             }
 
-            // === Y 轴标签 ===
+            // === Y 轴标签（左轴 = 折线图）===
             ctx.save();
             ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
             ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-            const yStep = (yMax - yMin) / config.gridY;
+            const yStep = (lineYMax - lineYMin) / config.gridY;
             const yDec = yStep >= 1 ? 0 : (yStep >= 0.1 ? 1 : 2);
+            const leftLabelX = padL - 14;
             for (let i = 0; i <= config.gridY; i++) {
                 const ratio = i / config.gridY;
-                ctx.fillText((yMin + ratio * (yMax - yMin)).toFixed(yDec), padL - 14, padT + ch - ratio * ch);
+                ctx.fillText((lineYMin + ratio * (lineYMax - lineYMin)).toFixed(yDec), leftLabelX, padT + ch - ratio * ch);
             }
             ctx.restore();
+
+            // === Y 轴标签（右轴 = 柱状图）===
+            if (config.showBars) {
+                ctx.save();
+                ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
+                ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+                const yStep2 = (barYMax - barYMin) / config.gridY;
+                const yDec2 = yStep2 >= 1 ? 0 : (yStep2 >= 0.1 ? 1 : 2);
+                const rightLabelX = chartX + plotW + barHalfW + 14;
+                for (let i = 0; i <= config.gridY; i++) {
+                    const ratio = i / config.gridY;
+                    ctx.fillText((barYMin + ratio * (barYMax - barYMin)).toFixed(yDec2), rightLabelX, padT + ch - ratio * ch);
+                }
+                ctx.restore();
+            }
 
             // === X 轴标签 ===
             ctx.save();
             ctx.font = `${config.axisLabelSize}px ${config.titleFont}`;
             ctx.fillStyle = config.axisLabelColor; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
             dataPoints.forEach((d, i) => {
-                ctx.fillText(d.label, chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw, padT + ch + 22);
+                ctx.fillText(d.label, getPointX(i), padT + ch + 22);
             });
             ctx.restore();
 
             // === 标题 ===
             const titleAlpha = isHold ? 1 : clamp(rawProgress * 2.5, 0, 1);
             const subTitleAlpha = isHold ? 1 : clamp((rawProgress - 0.3) * 2, 0, 1);
-            ctx.save();
-            ctx.font = `${config.mainTitleWeight} ${config.mainTitleSize}px ${config.titleFont}`;
-            ctx.fillStyle = config.mainTitleColor;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.globalAlpha = titleAlpha;
-            let titleText = config.mainTitle;
-            if (config.showBrackets) titleText = `\u300C ${config.mainTitle} \u300D`;
-            ctx.fillText(titleText, 720 + config.mainTitleX, 540 + config.mainTitleY);
-            ctx.restore();
+            if (config.showMainTitle) {
+                ctx.save();
+                ctx.font = `${config.mainTitleWeight} ${config.mainTitleSize}px ${config.titleFont}`;
+                ctx.fillStyle = config.mainTitleColor;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.globalAlpha = titleAlpha;
+                let titleText = config.mainTitle;
+                if (config.showBrackets) titleText = `\u300C ${config.mainTitle} \u300D`;
+                ctx.fillText(titleText, 720 + config.mainTitleX, 540 + config.mainTitleY);
+                ctx.restore();
+            }
+
+            // === 图例（分置两侧：左=折线图/左轴，右=柱状图/右轴）===
+            if (config.showLegend) {
+                const ly = padT - 22 + config.legendOffY;
+                const fs = config.legendSize || Math.max(10, config.axisLabelSize);
+                ctx.save();
+                ctx.font = `${fs}px ${config.titleFont}`;
+                ctx.textBaseline = 'middle';
+                ctx.globalAlpha = titleAlpha;
+                // 左侧：折线图（对应左轴）
+                {
+                    let lx = chartX;
+                    ctx.save();
+                    ctx.strokeStyle = config.lineColor;
+                    ctx.lineWidth = Math.min(Math.max(1.5, config.lineWidth), 4);
+                    ctx.lineCap = 'round';
+                    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 24, ly); ctx.stroke();
+                    ctx.restore();
+                    lx += 28;
+                    ctx.fillStyle = config.axisLabelColor;
+                    ctx.textAlign = 'left';
+                    ctx.fillText(config.lineLegend, lx, ly);
+                }
+                // 右侧：柱状图（对应右轴）
+                if (config.showBars) {
+                    const rightEdge = chartX + plotW;
+                    const bc = config.barColor || config.lineColor;
+                    ctx.fillStyle = config.axisLabelColor;
+                    ctx.textAlign = 'right';
+                    ctx.fillText(config.barLegend, rightEdge, ly);
+                    const swatchLeft = rightEdge - ctx.measureText(config.barLegend).width - 18;
+                    ctx.fillStyle = hexToRgba(bc, config.barOpacity);
+                    ctx.fillRect(swatchLeft - 11, ly - 5, 11, 11);
+                }
+                ctx.restore();
+            }
 
             // 副标题已移至最顶层绘制
 
@@ -1220,11 +1444,11 @@
             // === 路径点（张力平滑 + 可选抖动） ===
             const jitter = isPaper ? config.lineJitter / 100 : 0;
             const tens = config.tension;
-            const ptsKey = `${dataPoints.map(d=>d.value).join(',')}|${jitter}|${tens}|${config.cardPad}|${config.chartOffX}|${config.chartOffY}|${config.chartExtraW}|${config.chartExtraH}|${w}|${yMin}-${yMax}`;
+            const ptsKey = `${dataPoints.map(d=>d.lineValue).join(',')}|${jitter}|${tens}|${config.cardPad}|${config.chartOffX}|${config.chartOffY}|${config.chartExtraW}|${config.chartExtraH}|${config.barWidth}|${config.pointSpacing}|${w}|${lineYMin}-${lineYMax}`;
             if (!_pathPtsCache || _pathPtsCache.key !== ptsKey) {
                 const pts = dataPoints.map((d, i) => ({
-                    x: chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw,
-                    y: padT + ch - ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch
+                    x: getPointX(i),
+                    y: padT + ch - ((clamp(d.lineValue, lineYMin, lineYMax) - lineYMin) / (lineYMax - lineYMin)) * ch
                 }));
                 _lineSeed = 54321;
                 const pp = [{ x: pts[0].x, y: pts[0].y }];
@@ -1298,8 +1522,7 @@
             // === 柱状图 ===
             if (config.showBars) {
                 const barCount = dataPoints.length;
-                const slotW = cw / Math.max(barCount, 1);
-                const bw = slotW * config.barWidth;
+                const bw = actualSlotW * config.barWidth;
                 const bColor = config.barColor || config.lineColor;
                 const sColor = config.barStrokeColor || bColor;
                 const barProgress = isHold ? 1 : clamp(progress, 0, 1);
@@ -1310,11 +1533,29 @@
                 const gradEndRgba = useGrad ? cc.barGradEnd : null;
                 const sw = config.barStrokeWidth;
 
+                // 手绘抖动（仅纸张主题）
+                const barJitter = isPaper ? config.barJitter / 100 : 0;
+                let _bjSeed = 12345;
+                const jitRnd = () => { _bjSeed = (_bjSeed * 1664525 + 1013904223) & 0xffffffff; return ((_bjSeed >>> 0) % 10000) / 10000; };
+                const jitLine = (x1, y1, x2, y2, n) => {
+                    const dx = x2 - x1, dy = y2 - y1;
+                    const len = Math.sqrt(dx*dx + dy*dy) || 1;
+                    const px = -dy / len, py = dx / len;
+                    const amp = barJitter * 10, jN = 6, jC = [];
+                    for (let k = 0; k <= jN; k++) jC.push((jitRnd() - 0.5) * amp);
+                    for (let j = 1; j <= n; j++) {
+                        const t = j / n, jF = t * jN, jI = Math.min(Math.floor(jF), jN - 1);
+                        const jT = (1 - Math.cos((jF - jI) * Math.PI)) / 2;
+                        const noise = (jC[jI] + (jC[jI + 1] - jC[jI]) * jT) * Math.sin(t * Math.PI);
+                        ctx.lineTo(x1 + dx * t + px * noise, y1 + dy * t + py * noise);
+                    }
+                };
+
                 ctx.save();
                 dataPoints.forEach((d, i) => {
-                    const barCx = chartX + (i / Math.max(barCount - 1, 1)) * cw;
+                    const barCx = getPointX(i);
                     const bx = barCx - bw / 2;
-                    const valH = ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch * barProgress;
+                    const valH = ((clamp(d.barValue, barYMin, barYMax) - barYMin) / (barYMax - barYMin)) * ch * barProgress;
                     const bh = valH;
                     const by = baseY - valH;
 
@@ -1342,18 +1583,27 @@
                     ctx.closePath();
                     ctx.fill();
 
-                    // 三边描边
+                    // 三边描边（纸张主题可手绘抖动）
                     if (sw > 0) {
+                        _bjSeed = 12345; // 每根柱重置种子，保持抖动稳定
                         ctx.strokeStyle = sColor;
                         ctx.lineWidth = sw;
                         ctx.beginPath();
-                        ctx.moveTo(bx + r, by);
-                        ctx.lineTo(bx + bw - r, by);
-                        ctx.arcTo(bx + bw, by, bx + bw, by + r, r);
-                        ctx.lineTo(bx + bw, by + bh);
-                        ctx.moveTo(bx, by + bh);
-                        ctx.lineTo(bx, by + r);
-                        ctx.arcTo(bx, by, bx + r, by, r);
+                        if (barJitter > 0) {
+                            ctx.moveTo(bx, by + bh);
+                            jitLine(bx, by + bh, bx, by + r, 16);
+                            ctx.arcTo(bx, by, bx + r, by, r);
+                            jitLine(bx + r, by, bx + bw - r, by, 16);
+                            ctx.arcTo(bx + bw, by, bx + bw, by + r, r);
+                            jitLine(bx + bw, by + r, bx + bw, by + bh, 16);
+                        } else {
+                            ctx.moveTo(bx, by + bh);
+                            ctx.lineTo(bx, by + r);
+                            ctx.arcTo(bx, by, bx + r, by, r);
+                            ctx.lineTo(bx + bw - r, by);
+                            ctx.arcTo(bx + bw, by, bx + bw, by + r, r);
+                            ctx.lineTo(bx + bw, by + bh);
+                        }
                         ctx.stroke();
                     }
                 });
@@ -1361,7 +1611,6 @@
             }
 
             // === 折线相关 ===
-            if (config.showLine) {
             // === 填充 ===
             if (config.showArea && lineDrawn >= 2) {
                 const bottomY = padT + ch;
@@ -1425,7 +1674,6 @@
                 });
                 ctx.restore();
             }
-            } // end if (config.showLine)
 
             // === 数据点 ===
             if (config.showPoints) {
@@ -1500,14 +1748,14 @@
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.globalAlpha = labelAlpha;
                 points.forEach((p, i) => {
-                    const txt = String(dataPoints[i].value);
+                    const txt = String(dataPoints[i].lineValue);
                     ctx.fillText(txt, p.x, p.y + yOffset - th / 2);
                 });
                 ctx.restore();
             }
 
             // === 副标题（最顶层）===
-            {
+            if (config.showSubTitle) {
                 const subTitleAlpha = isHold ? 1 : clamp((rawProgress - 0.3) * 2, 0, 1);
                 ctx.save();
                 ctx.font = `${config.subTitleWeight} ${config.subTitleSize}px ${config.titleFont}`;
@@ -1524,7 +1772,7 @@
         // ====== 主渲染函数 ======
         function drawFrame(timeMs) {
             // Canvas padding for border/glow overflow
-            const halfPad = (config.cardBorderWidth || 0) * 2 + (config.cardGlowWidth || 0);
+            const halfPad = (config.cardBorderEnabled ? (config.cardBorderWidth || 0) : 0) * 2 + (config.cardGlowEnabled ? (config.cardGlowWidth || 0) : 0);
             const c2dPad = halfPad > 0 ? halfPad * 2 + 10 : 0;
             const c2dPhysPad = c2dPad * scale;
             const needW = fullW + c2dPhysPad * 2;
@@ -1582,8 +1830,8 @@
             drawContent(w, h, lineProgress, lineRaw, isHold);
 
             // 描边 + 辉光（drawContent 之后，clip 已恢复）
-            const bw = config.cardBorderWidth || 0;
-            const gw = config.cardGlowWidth || 0;
+            const bw = config.cardBorderEnabled ? (config.cardBorderWidth || 0) : 0;
+            const gw = config.cardGlowEnabled ? (config.cardGlowWidth || 0) : 0;
             if (bw > 0 || gw > 0) {
                 const baseCard = {x: 0, y: 0, w, h};
 
@@ -1630,7 +1878,13 @@
                 rx: _currentRx,
                 ry: _currentRy,
                 perspective: 900,
-                elevation: config.elevation,
+                shadow: {
+                    enabled: config.shadowEnabled,
+                    angle: config.shadowAngle,
+                    distance: config.shadowDistance,
+                    blur: config.shadowBlur,
+                    opacity: config.shadowOpacity,
+                },
                 cardScale: baseCardScale,
                 scaleX: c2dPad > 0 ? baseCardScale * offscreen.width / fullW : undefined,
                 scaleY: c2dPad > 0 ? baseCardScale * offscreen.height / fullH : undefined,
