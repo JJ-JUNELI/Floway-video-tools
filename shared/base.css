@@ -877,12 +877,16 @@ input:checked + .slider:before {
     justify-content: center;
     align-items: center;
     position: relative;
-    margin: 0;
+    margin: 12px;
     padding: 0;
     overflow: hidden;
-    border: none;
-    border-radius: 0;
-    background-color: transparent;
+    /* 浮起玻璃卡片，与侧栏呼应 */
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-md);
+    background: var(--panel-bg);
+    -webkit-backdrop-filter: blur(8px) saturate(1.1);
+    backdrop-filter: blur(8px) saturate(1.1);
+    box-shadow: var(--glass-shadow), var(--glass-highlight);
 }
 
 canvas {
@@ -1376,9 +1380,10 @@ body.logo canvas {
 [data-theme="light"] .preview-area {
     background-color: transparent;
 }
+/* 预览"屏幕底"两主题统一深色，保证浅色内容(如扫描白字)始终可见 */
 [data-theme="light"] canvas,
 [data-theme="light"] #mainSvg {
-    background: #f1f5f9;
+    background: #0e1117;
 }
 
 [data-theme="light"].logo canvas {
@@ -1452,4 +1457,11 @@ body.logo canvas {
     position: relative !important;
     background: transparent !important;
     background-image: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }
