@@ -1,5 +1,11 @@
 # CLAUDE.md — 项目上下文
 
+## 协作工作流（默认行为）
+- **改完即自动提交并推送**：完成一组改动后，自动 `git commit` 并 `git push` 到工作分支 `claude/dev`，无需每次征求确认，方便用户远程审查。
+- **分支策略**：日常改动一律在 `claude/dev` 上进行并推送；**不直接推 main**。需要正式发布时，由用户确认后再将 `claude/dev` 合入 `main`。
+- **提交署名**：`JJ-JUNELI <ljj9259225@gmail.com>`（已全局配置）。
+- 例外：destructive 操作（reset --hard、force push、删分支等）仍需用户明确授权。
+
 ## 项目概述
 Floway Tools：浏览器端视频效果生成工具集，纯前端无框架依赖，Canvas 2D + WebGL 渲染，支持 MP4/WebM/PNG 序列导出。
 
