@@ -17,15 +17,15 @@
     --bg-dark: #0e1117;
     --panel-bg: #161b22;
     --card-bg: #1c2333;
-    --accent: #818cf8;
+    --accent: #f97316;
     --danger: #f87171;
     --text-main: #e5e7eb;
     --text-sub: #6b7280;
     --border: rgba(255,255,255,0.06);
 
     /* 辅助 */
-    --accent-dim: rgba(129,140,248,0.1);
-    --accent-glow: rgba(129,140,248,0.15);
+    --accent-dim: rgba(249,115,22,0.1);
+    --accent-glow: rgba(249,115,22,0.15);
     --success: #34d399;
     --warning: #fbbf24;
     --radius-sm: 8px;
@@ -95,7 +95,7 @@ body.is-recording .sidebar { opacity: 0.95; }
     transition: background 0.2s;
 }
 .sidebar-resize-handle:hover {
-    background: rgba(129,140,248,0.06);
+    background: rgba(249,115,22,0.06);
 }
 body.resizing { user-select: none !important; cursor: col-resize !important; }
 body.resizing * { pointer-events: none !important; }
@@ -333,6 +333,15 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     gap: 4px;
 }
 .row:last-child { margin-bottom: 0; }
+/* 独立 stack（无 .row 父级）：竖排，与 .row.stack 节奏一致 */
+.stack {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+.stack:last-child { margin-bottom: 0; }
 
 .label-line {
     display: flex;
@@ -398,7 +407,7 @@ select:hover, .file-btn-wrapper:hover {
 select:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-dim);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 7.5L6 4.5L9 7.5' stroke='%23818cf8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 7.5L6 4.5L9 7.5' stroke='%23f97316' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
 }
 /* Option 面板样式（Webkit/Chrome 专属） */
 select option {
@@ -936,7 +945,7 @@ body.logo canvas {
 }
 .anim-panel.end {
     border-color: var(--accent);
-    background: linear-gradient(90deg, rgba(129,140,248,0.04), transparent);
+    background: linear-gradient(90deg, rgba(249,115,22,0.04), transparent);
     border-radius: 0 6px 6px 0;
 }
 .anim-header {
@@ -1159,13 +1168,13 @@ body.logo canvas {
     --bg-dark: #f8fafc;
     --panel-bg: #ffffff;
     --card-bg: #f1f5f9;
-    --accent: #6366f1;
+    --accent: #ea580c;
     --danger: #ef4444;
     --text-main: #1e293b;
     --text-sub: #94a3b8;
     --border: rgba(0,0,0,0.06);
-    --accent-dim: rgba(99,102,241,0.08);
-    --accent-glow: rgba(99,102,241,0.12);
+    --accent-dim: rgba(234,88,12,0.08);
+    --accent-glow: rgba(234,88,12,0.12);
 }
 
 /* Sidebar */
@@ -1241,7 +1250,7 @@ body.logo canvas {
 [data-theme="light"] select:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-dim);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 7.5L6 4.5L9 7.5' stroke='%236366f1' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 7.5L6 4.5L9 7.5' stroke='%23ea580c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
 }
 [data-theme="light"] select option {
     background: #ffffff;
@@ -1365,7 +1374,7 @@ body.logo canvas {
 
 /* Tips */
 [data-theme="light"] .tip-box {
-    background: rgba(99,102,241,0.04);
+    background: rgba(234,88,12,0.04);
     border-left-color: var(--accent);
     color: #64748b;
 }
@@ -1379,7 +1388,7 @@ body.logo canvas {
     background: linear-gradient(90deg, rgba(239,68,68,0.03), transparent);
 }
 [data-theme="light"] .anim-panel.end {
-    background: linear-gradient(90deg, rgba(99,102,241,0.03), transparent);
+    background: linear-gradient(90deg, rgba(234,88,12,0.03), transparent);
 }
 
 /* Status */
