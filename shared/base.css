@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800;900&family=Noto+Serif+SC:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 
 /**
  * Floway Tools — 共享 CSS 框架
- * 设计语言：「纸感编辑室 / Warm Editorial Paper」
- * 暖纸 + 墨色 + 编辑杂志排版；发丝分隔线、衬线大标题、暖纸颗粒背景
+ * 设计语言：「深空霍玉玻璃 / Neon Glass」
+ * 深空底 + 极光光晕 + 磨砂玻璃面板 + 电光青点缀 + 现代无衬线(Sora)
  *
  * 差异变体通过 body class 切换:
  *   默认:    text-animator 风格
@@ -16,32 +16,37 @@
    ======================================== */
 
 :root {
-    /* 暖墨夜纸（暗色默认） */
-    --bg-dark: #1A1714;
-    --panel-bg: #221E19;
-    --card-bg: #2A251F;
-    --surface-2: #2A251F;
-    --accent: #D98A63;
-    --accent-strong: #BD6E48;
-    --danger: #e0786a;
-    --text-main: #E9E1D3;
-    --text-sub: #9A9082;
-    --ink-soft: #B8AE9E;
-    --ink-muted: #8A8073;
-    --border: rgba(233,225,211,0.12);
-    --hairline: rgba(233,225,211,0.12);
-    --hairline-strong: rgba(233,225,211,0.22);
+    /* 深空霍玉玻璃（暗色默认） */
+    --bg-dark: #0A0C12;
+    --panel-bg: rgba(22,27,38,0.55);
+    --card-bg: rgba(255,255,255,0.05);
+    --surface-2: rgba(255,255,255,0.07);
+    --accent: #22D3EE;
+    --accent-strong: #0E9FB8;
+    --danger: #f87171;
+    --text-main: #E7ECF3;
+    --text-sub: #8A93A3;
+    --ink-soft: #AEB7C4;
+    --ink-muted: #6B7480;
+    --border: rgba(255,255,255,0.10);
+    --hairline: rgba(255,255,255,0.10);
+    --hairline-strong: rgba(255,255,255,0.18);
 
     /* 辅助 */
-    --accent-dim: rgba(217,138,99,0.12);
-    --accent-glow: rgba(217,138,99,0.15);
-    --success: #7faf7a;
-    --warning: #d9a94e;
-    --radius-sm: 5px;
-    --radius-md: 8px;
+    --accent-dim: rgba(34,211,238,0.12);
+    --accent-glow: rgba(34,211,238,0.22);
+    --success: #34d399;
+    --warning: #fbbf24;
+    --radius-sm: 10px;
+    --radius-md: 14px;
+
+    /* 玻璃 */
+    --glass-blur: 18px;
+    --glass-shadow: 0 8px 32px rgba(0,0,0,0.40);
+    --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.08);
 
     /* 字体 */
-    --font-display: 'Playfair Display', 'Noto Serif SC', Georgia, serif;
+    --font-display: 'Sora', 'Noto Sans SC', sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
@@ -66,9 +71,11 @@ body {
     overflow-x: hidden;
     user-select: none;
     -webkit-font-smoothing: antialiased;
-    /* 暖纸颗粒纹理 */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.15'/%3E%3C/svg%3E");
-    background-repeat: repeat;
+    /* 深空极光光晕 */
+    background-image:
+        radial-gradient(50% 40% at 18% 12%, rgba(45,212,191,0.10), transparent 70%),
+        radial-gradient(48% 46% at 86% 84%, rgba(56,128,255,0.10), transparent 72%);
+    background-attachment: fixed;
 }
 
 body.is-recording .sidebar { opacity: 0.95; }
@@ -80,8 +87,10 @@ body.is-recording .sidebar { opacity: 0.95; }
 .sidebar {
     width: clamp(240px, var(--sidebar-w, 360px), min(560px, 40vw));
     margin: 12px 0 12px 12px;
-    border-radius: 14px;
+    border-radius: var(--radius-md);
     background: var(--panel-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
     display: flex;
     flex-direction: column;
     z-index: 100;
@@ -89,10 +98,8 @@ body.is-recording .sidebar { opacity: 0.95; }
     overflow: hidden;
     outline: none;
     position: relative;
-    border: 1px solid var(--border);
-    box-shadow:
-        0 4px 24px rgba(0,0,0,0.25),
-        0 12px 48px rgba(0,0,0,0.15);
+    border: 1px solid var(--hairline);
+    box-shadow: var(--glass-shadow), var(--glass-highlight);
 }
 
 /* 侧边栏拖拽调节手柄 */
@@ -121,9 +128,9 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* 与参数组同款卡片 */
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border);
+    /* 磨砂玻璃内层卡片 */
+    background: var(--surface-2);
+    border: 1px solid var(--hairline);
     border-radius: var(--radius-md);
 }
 .sidebar-header .btn-icon {
@@ -241,9 +248,9 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     display: flex;
     flex-direction: column;
     gap: 8px;
-    /* 与参数组同款卡片 */
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border);
+    /* 磨砂玻璃内层卡片 */
+    background: var(--surface-2);
+    border: 1px solid var(--hairline);
     border-radius: var(--radius-md);
 }
 
@@ -296,15 +303,14 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
    ======================================== */
 
 .control-group {
-    background: rgba(255,255,255,0.03);
+    background: var(--surface-2);
     border-radius: var(--radius-md);
     padding: 16px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--hairline);
     transition: all 0.2s ease;
 }
 .control-group:hover {
-    background: rgba(255,255,255,0.04);
-    border-color: rgba(255,255,255,0.09);
+    border-color: var(--hairline-strong);
 }
 
 .group-title {
@@ -1177,37 +1183,36 @@ body.logo canvas {
    ======================================== */
 
 [data-theme="light"] {
-    /* 纸（亮色主调） */
-    --bg-dark: #F2ECE0;
-    --panel-bg: #FBF7EF;
-    --card-bg: #FBF7EF;
-    --surface-2: #E9E1D2;
-    --accent: #B5532E;
-    --accent-strong: #913E20;
-    --danger: #c0492f;
-    --text-main: #2A2521;
-    --text-sub: #9A8F82;
-    --ink-soft: #6E645A;
-    --ink-muted: #9A8F82;
-    --border: rgba(42,37,33,0.14);
-    --hairline: rgba(42,37,33,0.14);
-    --hairline-strong: rgba(42,37,33,0.26);
-    --accent-dim: rgba(181,83,46,0.10);
-    --accent-glow: rgba(181,83,46,0.14);
+    /* 冷雾磨砂玻璃（亮色变体） */
+    --bg-dark: #ECF0F5;
+    --panel-bg: rgba(255,255,255,0.60);
+    --card-bg: rgba(255,255,255,0.70);
+    --surface-2: rgba(15,23,42,0.04);
+    --accent: #0891B2;
+    --accent-strong: #0E7490;
+    --danger: #dc2626;
+    --text-main: #16202E;
+    --text-sub: #6B7587;
+    --ink-soft: #485261;
+    --ink-muted: #8A93A3;
+    --border: rgba(15,23,42,0.10);
+    --hairline: rgba(15,23,42,0.10);
+    --hairline-strong: rgba(15,23,42,0.18);
+    --accent-dim: rgba(8,145,178,0.10);
+    --accent-glow: rgba(8,145,178,0.16);
+    --glass-shadow: 0 8px 30px rgba(15,23,42,0.10);
+    --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.7);
 }
 
 /* Sidebar */
 [data-theme="light"] .sidebar {
-    border-color: rgba(0,0,0,0.06);
-    background: #ffffff;
-    box-shadow:
-        0 2px 8px rgba(0,0,0,0.04),
-        0 8px 24px rgba(0,0,0,0.06);
+    /* 玻璃由 base .sidebar 规则 + 亮色令牌(--panel-bg/--glass-shadow)处理 */
+    border-color: var(--hairline);
 }
 [data-theme="light"] .sidebar-header,
 [data-theme="light"] .sidebar-footer {
-    background: rgba(0,0,0,0.02);
-    border-color: rgba(0,0,0,0.08);
+    background: var(--surface-2);
+    border-color: var(--hairline);
 }
 [data-theme="light"] .sidebar-header .btn-icon:hover {
     background: var(--accent-dim);
@@ -1217,20 +1222,19 @@ body.logo canvas {
     color: var(--accent);
 }
 [data-theme="light"] .controls-container::-webkit-scrollbar-thumb {
-    background: rgba(0,0,0,0.1);
+    background: rgba(15,23,42,0.12);
 }
 [data-theme="light"] .controls-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(0,0,0,0.18);
+    background: rgba(15,23,42,0.20);
 }
 
 /* Control Groups */
 [data-theme="light"] .control-group {
-    background: rgba(0,0,0,0.02);
-    border-color: rgba(0,0,0,0.05);
+    background: var(--surface-2);
+    border-color: var(--hairline);
 }
 [data-theme="light"] .control-group:hover {
-    background: rgba(0,0,0,0.03);
-    border-color: rgba(0,0,0,0.08);
+    border-color: var(--hairline-strong);
 }
 [data-theme="light"] .group-title {
     color: var(--text-sub);
@@ -1365,9 +1369,9 @@ body.logo canvas {
     color: #ffffff;
 }
 
-/* Body theme backgrounds — 纸底色，颗粒纹理沿用 body 通用 SVG */
+/* Body theme backgrounds — 冷雾底，极光沿用 body 通用 radial */
 [data-theme="light"] {
-    background-color: #F2ECE0;
+    background-color: #ECF0F5;
 }
 [data-theme="light"] .preview-area {
     background-color: transparent;
