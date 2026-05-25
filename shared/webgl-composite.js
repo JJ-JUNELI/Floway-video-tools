@@ -435,12 +435,23 @@ export class WebGLComposite {
             const padWb = cb.w + padPx * 2;
             const padHb = cb.h + padPx * 2;
 
+            // 投影矩形 = 可见卡片矩形。默认填满整个 cb；若调用方提供 shadow.bounds
+            // （与 cb 同坐标系的可见卡片矩形，如卡片效果按图片比例收缩后的子区域），
+            // 则只在 cb 内对应子位置画投影，避免投影大于卡片、露出多余的灰色区域。
+            const sb = shadow.bounds;
+            const rOffX = sb ? (sb.x - cb.x) : 0;   // 可见卡片相对 cb 的偏移（基准像素）
+            const rOffY = sb ? (sb.y - cb.y) : 0;
+            const rW = sb ? sb.w : cb.w;
+            const rH = sb ? sb.h : cb.h;
+            const rR = sb ? (sb.radius ?? 0) : rCompensated;
+
             const sc = this._shadowCache;
             const keys = [
                 ['cardRadius', cardRadius], ['cardScale', cardScale],
                 ['_cbw', cb.w], ['_cbh', cb.h],
                 ['offX', offX], ['offY', offY], ['blur', blur],
                 ['opacity', opacity], ['pad', padPx], ['sf', sf],
+                ['rOffX', rOffX], ['rOffY', rOffY], ['rW', rW], ['rH', rH], ['rR', rR],
             ];
             if (!this._shadowCanvas) this._shadowCanvas = document.createElement('canvas');
             const c = this._shadowCanvas;
@@ -464,7 +475,7 @@ export class WebGLComposite {
                 ctx.shadowColor = 'rgba(0,0,0,' + opacity + ')';
                 ctx.fillStyle = 'rgba(0,0,0,1)';   // 本体在画布外，颜色不影响最终画面
                 ctx.beginPath();
-                this._roundRect(ctx, padPx - PUSH, padPx, cb.w, cb.h, rCompensated);
+                this._roundRect(ctx, padPx + rOffX - PUSH, padPx + rOffY, rW, rH, rR);
                 ctx.fill();
                 this._cacheUpdate(sc, keys);
             }
