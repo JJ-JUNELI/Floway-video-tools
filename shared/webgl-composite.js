@@ -416,43 +416,47 @@ export class WebGLComposite {
         ));
 
         // === Pass 2: 投影 = 卡片轮廓的「模糊 + 染黑 + 偏移」副本 ===
-        // 直接拿卡片纹理本身做轮廓，用与卡片完全相同的 MVP / 几何 / 纹理坐标绘制，
-        // 只整体平移 (offX,offY)。这样投影形状必然与可见卡片一致（任意比例/圆角），
-        // 无需任何 bounds 坐标推算。角度/距离/模糊/不透明度 由调用方控制。
+        // 直接拿卡片纹理本身做轮廓，与卡片同 MVP/几何/纹理坐标绘制，仅整体平移 (offX,offY)。
+        // 投影形状必然与可见卡片一致（任意比例/圆角），无需 bounds 坐标推算。
+        // 画布四周额外留 M 余量容纳模糊外扩，再把 quad 放大同等比例，避免投影边缘被裁。
         const shadow = opts.shadow || {};
         if (shadow.enabled && cardTexture) {
             const ang = (shadow.angle ?? 90) * Math.PI / 180;
             const dist = shadow.distance ?? 10;
             const blur = shadow.blur ?? 20;
             const opacity = Math.max(0, Math.min(1, (shadow.opacity ?? 25) / 100));
-            // 屏幕坐标 Y 向下：角度 90° = 正下方（光源在上），0° = 正右方
-            const offX = Math.cos(ang) * dist;            // 基准像素
+            const offX = Math.cos(ang) * dist;            // 基准像素：90°=正下，0°=正右
             const offY = Math.sin(ang) * dist;
             const sf = this.canvas.width / bw;            // 设备缩放系数（≈ scale）
 
+            const tw = cardTexture.width, th = cardTexture.height;
+            const M = Math.ceil(blur * sf * 3) + 4;       // 模糊外扩余量（设备像素）
+            const SW = tw + M * 2, SH = th + M * 2;
+
             if (!this._shadowCanvas) this._shadowCanvas = document.createElement('canvas');
             const c = this._shadowCanvas;
-            if (c.width !== cardTexture.width || c.height !== cardTexture.height) {
-                c.width = cardTexture.width;
-                c.height = cardTexture.height;
-            }
+            if (c.width !== SW || c.height !== SH) { c.width = SW; c.height = SH; }
             const sctx = c.getContext('2d');
             sctx.setTransform(1, 0, 0, 1, 0, 0);
-            sctx.clearRect(0, 0, c.width, c.height);
-            // 1) 把卡片纹理模糊后画进来（模糊半径换算到设备像素）
+            sctx.clearRect(0, 0, SW, SH);
+            // 1) 卡片纹理居中（四周留 M 白边给模糊外扩）、模糊
             sctx.filter = blur > 0 ? `blur(${blur * sf}px)` : 'none';
-            sctx.drawImage(cardTexture, 0, 0);
+            sctx.drawImage(cardTexture, M, M);
             sctx.filter = 'none';
             // 2) source-in 染黑：保留模糊后的 alpha 轮廓，颜色全部变黑
             sctx.globalCompositeOperation = 'source-in';
             sctx.fillStyle = '#000';
-            sctx.fillRect(0, 0, c.width, c.height);
+            sctx.fillRect(0, 0, SW, SH);
             sctx.globalCompositeOperation = 'source-over';
 
-            // 与卡片完全相同的 MVP，仅加投影偏移（基准像素，_buildCardMVP 内转 NDC）
+            // quad 放大 SW/tw 倍：纹理中央「卡片区」与卡片精确对齐，M 余量溢出到卡片外。
+            // 仅在卡片 MVP 上叠加投影偏移 (offX,offY)。
+            const cardSX = (opts.scaleX !== undefined) ? opts.scaleX : effectiveScale;
+            const cardSY = (opts.scaleY !== undefined) ? opts.scaleY : effectiveScale;
             const shadowMVP = new Float32Array(this._buildCardMVP(
                 opts.rx, opts.ry, perspective, effectiveScale,
-                offsetX + offX, offsetY + offY, opts.scaleX, opts.scaleY
+                offsetX + offX, offsetY + offY,
+                cardSX * SW / tw, cardSY * SH / th
             ));
             this._uploadTexture(this._shadowCanvas);
             this._drawQuad(shadowMVP, cardNormBounds, 0, 0, opacity * cardAlpha);
