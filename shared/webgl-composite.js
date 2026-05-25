@@ -453,15 +453,18 @@ export class WebGLComposite {
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
                 ctx.clearRect(0, 0, SW, SH);
                 ctx.scale(sf, sf);
-                // 实体矩形画在 padding 内居中（被 Pass 3 卡片覆盖），仅其投影偏移可见
+                // 只渲染偏移虚影，不渲染实体本体：把实体矩形推到画布左侧外（PUSH），
+                // 再用等量的 shadowOffsetX 补偿，使其投影落回正确位置。这样即使卡片
+                // 没盖满 cb 区域（如上传图片后按比例收缩），也不会露出灰色实体矩形。
                 // 阴影偏移/模糊属设备像素空间，不受 ctx.scale 影响，需乘设备缩放系数
-                ctx.shadowOffsetX = offX * sf;
+                const PUSH = padWb + cb.w;     // 基准像素，足以让本体完全移出画布左缘
+                ctx.shadowOffsetX = (offX + PUSH) * sf;
                 ctx.shadowOffsetY = offY * sf;
                 ctx.shadowBlur = blur * sf;
                 ctx.shadowColor = 'rgba(0,0,0,' + opacity + ')';
-                ctx.fillStyle = 'rgba(0,0,0,' + opacity + ')';
+                ctx.fillStyle = 'rgba(0,0,0,1)';   // 本体在画布外，颜色不影响最终画面
                 ctx.beginPath();
-                this._roundRect(ctx, padPx, padPx, cb.w, cb.h, rCompensated);
+                this._roundRect(ctx, padPx - PUSH, padPx, cb.w, cb.h, rCompensated);
                 ctx.fill();
                 this._cacheUpdate(sc, keys);
             }
