@@ -25,6 +25,7 @@ import { enhanceAllSelects, enhanceSelect } from './custom-select.js';
  */
 const SHARED_PANELS = {
     entryAnimation: buildEntryAnimationPanel,
+    chartTitle: buildChartTitlePanel,
 };
 
 function buildEntryAnimationPanel(cfg = {}) {
@@ -118,6 +119,74 @@ const EXTRA_BLOCKS = {
         </div>
     `,
 };
+
+/**
+ * 共享「标题」面板：主标题 + 副标题（字体/字号/字重/颜色/位置/括号/发光）。
+ * chart-fx / bar-chart / pie-chart 三个图表通用，控件 ID 与各自的 bindUI/渲染契约一致。
+ * cfg:
+ *   groupTitle  分组标题文案（默认 '📝 标题'）
+ *   mainTitle   主标题默认文字
+ *   subTitle    副标题默认文字
+ */
+function buildChartTitlePanel(cfg = {}) {
+    const groupTitle = cfg.groupTitle || '📝 标题';
+    const mainTitle = cfg.mainTitle != null ? cfg.mainTitle : '主标题';
+    const subTitle = cfg.subTitle != null ? cfg.subTitle : '副标题';
+
+    return `
+        <div class="control-group">
+            <div class="group-title"><span>${groupTitle}</span></div>
+            <div class="row stack"><div class="label-line"><span>标题字体</span></div>
+                <div id="TitleFontMount" style="width:100%"></div></div>
+            <div class="sub-section ss-blue">
+                <div class="sub-section-label">主标题</div>
+                <div class="sub-title"><span>启用主标题</span><input type="checkbox" id="ShowMainTitle" checked></div>
+                <div id="MainTitleOpts">
+                    <div class="row stack">
+                        <div class="label-line"><span>文字</span></div>
+                        <input type="text" id="MainTitle" value="${mainTitle}">
+                    </div>
+                    <div class="advanced-params">
+                        <div class="stack"><div class="label-line"><span>字号</span><span id="TitleSizeVal">26</span></div>
+                            <input type="range" id="TitleSize" min="12" max="72" step="2" value="26"></div>
+                        <div class="stack"><div class="label-line"><span>字重</span><span id="MainTitleWeightVal">700</span></div>
+                            <input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"></div>
+                        <div class="row stack"><div class="label-line"><span>颜色</span></div>
+                            <input type="color" id="TitleColor" value="#333333"></div>
+                        <div class="stack"><div class="label-line"><span>X</span><span id="MainTitleXVal">0</span></div>
+                            <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
+                        <div class="stack"><div class="label-line"><span>Y</span><span id="MainTitleYVal">-490</span></div>
+                            <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
+                        <div class="sub-title"><span>显示括号</span><input type="checkbox" id="ShowBrackets" checked></div>
+                    </div>
+                </div>
+            </div>
+            <div class="sub-section ss-purple">
+                <div class="sub-section-label">副标题</div>
+                <div class="sub-title"><span>启用副标题</span><input type="checkbox" id="ShowSubTitle" checked></div>
+                <div id="SubTitleOpts">
+                    <div class="row stack">
+                        <div class="label-line"><span>文字</span></div>
+                        <input type="text" id="SubTitle" value="${subTitle}">
+                    </div>
+                    <div class="advanced-params">
+                        <div class="stack"><div class="label-line"><span>字号</span><span id="SubTitleSizeVal">36</span></div>
+                            <input type="range" id="SubTitleSize" min="16" max="100" step="2" value="36"></div>
+                        <div class="stack"><div class="label-line"><span>字重</span><span id="SubTitleWeightVal">400</span></div>
+                            <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
+                        <div class="row stack"><div class="label-line"><span>颜色</span></div>
+                            <input type="color" id="SubTitleColor" value="#999999"></div>
+                        <div class="stack"><div class="label-line"><span>X</span><span id="SubTitleXVal">630</span></div>
+                            <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
+                        <div class="stack"><div class="label-line"><span>Y</span><span id="SubTitleYVal">0</span></div>
+                            <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
+                        <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
 
 /**
  * 扫描 `[data-shared-panel]` 占位符，按 opts.sharedPanels[name] 配置注入面板 HTML。
