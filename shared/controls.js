@@ -45,7 +45,7 @@ function buildEntryAnimationPanel(cfg = {}) {
 
     return `
         <div class="${classes.join(' ')}"${attrs}>
-            <div class="group-title"><span>🎬 入场动画</span>${headerBtn}</div>
+            <div class="group-title"><span>入场动画</span>${headerBtn}</div>
             <div class="sub-section ss-teal">
                 <div class="sub-section-label">预设 & 曲线</div>
                 <div class="sub-title"><span>启用入场动画</span><input type="checkbox" id="EntranceEnabled" checked></div>
@@ -124,12 +124,12 @@ const EXTRA_BLOCKS = {
  * 共享「标题」面板：主标题 + 副标题（字体/字号/字重/颜色/位置/括号/发光）。
  * chart-fx / bar-chart / pie-chart 三个图表通用，控件 ID 与各自的 bindUI/渲染契约一致。
  * cfg:
- *   groupTitle  分组标题文案（默认 '📝 标题'）
+ *   groupTitle  分组标题文案（默认 '标题'）
  *   mainTitle   主标题默认文字
  *   subTitle    副标题默认文字
  */
 function buildChartTitlePanel(cfg = {}) {
-    const groupTitle = cfg.groupTitle || '📝 标题';
+    const groupTitle = cfg.groupTitle || '标题';
     const mainTitle = cfg.mainTitle != null ? cfg.mainTitle : '主标题';
     const subTitle = cfg.subTitle != null ? cfg.subTitle : '副标题';
 
@@ -717,7 +717,7 @@ export function injectPresetPanel(presets) {
 
     const html = `
         <div class="control-group preset-panel" data-basic>
-            <div class="group-title"><span>🎨 快速预设</span></div>
+            <div class="group-title"><span>快速预设</span></div>
             <div class="group-content">
                 <div class="preset-buttons">${btns}</div>
             </div>

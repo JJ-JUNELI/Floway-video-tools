@@ -18,7 +18,7 @@
 :root {
     /* 深空霍玉玻璃（暗色默认） */
     --bg-dark: #0A0C12;
-    --panel-bg: rgba(22,27,38,0.55);
+    --panel-bg: rgba(22,27,38,0.38);
     --card-bg: rgba(255,255,255,0.05);
     --surface-2: rgba(255,255,255,0.07);
     --accent: #22D3EE;
@@ -41,7 +41,8 @@
     --radius-md: 14px;
 
     /* 玻璃 */
-    --glass-blur: 18px;
+    --glass-blur: 30px;
+    --grid-line: rgba(255,255,255,0.035);
     --glass-shadow: 0 8px 32px rgba(0,0,0,0.40);
     --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.08);
 
@@ -64,6 +65,12 @@ body {
     height: 100dvh;
     display: flex;
     background-color: var(--bg-dark);
+    /* 全页网格底纹（预览区与侧栏背后通用） */
+    background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
     font-family: "Noto Sans SC", -apple-system, sans-serif;
     color: var(--text-main);
     overflow: hidden;
@@ -335,10 +342,13 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     gap: 6px;
     padding-bottom: 0;
     letter-spacing: 0.8px;
-    padding-left: 10px;
-    border-left: 3px solid var(--accent);
+    padding-left: 0;
+    border-left: none;
 }
 .group-title > span:first-child { flex: 1; }
+
+/* 去掉子板块的彩色左边条（ss-* 内联色条）；.sidebar .sub-section 特异性高于内联 .ss-* */
+.sidebar .sub-section { border-left: none; }
 
 .sub-title {
     font-size: 11px;
@@ -892,13 +902,8 @@ input:checked + .slider:before {
     margin: 12px;
     padding: 0;
     overflow: hidden;
-    /* 浮起玻璃卡片，与侧栏呼应 */
-    border: 1px solid var(--hairline);
-    border-radius: var(--radius-md);
-    background: var(--panel-bg);
-    -webkit-backdrop-filter: blur(8px) saturate(1.8);
-    backdrop-filter: blur(8px) saturate(1.8);
-    box-shadow: var(--glass-shadow), var(--glass-highlight);
+    /* 无框无缝：直接露出全页网格底纹 */
+    background: transparent;
 }
 
 canvas {
@@ -1201,7 +1206,8 @@ body.logo canvas {
 [data-theme="light"] {
     /* 冷雾磨砂玻璃（亮色变体） */
     --bg-dark: #ECF0F5;
-    --panel-bg: rgba(255,255,255,0.60);
+    --panel-bg: rgba(255,255,255,0.45);
+    --grid-line: rgba(15,23,42,0.05);
     --card-bg: rgba(255,255,255,0.70);
     --surface-2: rgba(15,23,42,0.04);
     --accent: #0891B2;
