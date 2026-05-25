@@ -501,6 +501,13 @@ export function initEffect(opts) {
  */
 const COLLAPSE_STATE_KEY = 'floway-collapsed-groups';
 
+// 默认折叠的「高级/不常调」分组（按标题关键词匹配），减少初始滚动；用户展开后状态会被持久化
+const DEFAULT_COLLAPSED_GROUPS = [
+    '入场动画', '卡片外观', '卡片漂浮', '坐标轴与网格', '图例',
+    '透视旋转', '漂浮动画', '旋转光效', '边框样式', '数值标签',
+    '纹理叠加', '智能辉光', '投影', '遮罩与底图', '标签设置', '背景水印',
+];
+
 function readCollapseState() {
     try { return JSON.parse(localStorage.getItem(COLLAPSE_STATE_KEY) || '{}'); }
     catch { return {}; }
@@ -548,7 +555,8 @@ export function initCollapsibleGroups(root = document) {
         }
 
         const persisted = state[key];
-        const defaultCollapsed = group.hasAttribute('data-default-collapsed');
+        const defaultCollapsed = group.hasAttribute('data-default-collapsed')
+            || DEFAULT_COLLAPSED_GROUPS.some(k => key.includes(k));
         if (persisted === true || (persisted === undefined && defaultCollapsed)) {
             group.classList.add('collapsed');
         }
