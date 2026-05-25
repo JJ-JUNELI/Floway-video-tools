@@ -345,7 +345,7 @@
     <script type="module">
         import { initEffect } from '../shared/controls.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
-        import { WebGLComposite } from '../shared/webgl-composite.js?v=shadow-fix2';
+        import { WebGLComposite } from '../shared/webgl-composite.js?v=shadow-fix3';
         import { drawRotatingBlobs, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=2';
 
         // ====== Canvas 初始化 ======
@@ -933,15 +933,6 @@
                     distance: config.shadowDistance,
                     blur: config.shadowBlur,
                     opacity: config.shadowOpacity,
-                    // 可见卡片矩形（cardBounds 同坐标系）：卡片按图片比例收缩为
-                    // baseBounds 子区域，投影需匹配它而非整块基准画布
-                    bounds: {
-                        x: c2dPad + baseBounds.x,
-                        y: c2dPad + baseBounds.y,
-                        w: baseBounds.w,
-                        h: baseBounds.h,
-                        radius: config.cardRadius,
-                    },
                 },
                 cardScale: baseCardScale,
                 scaleX: baseCardScale * offscreen.width / fullW,

@@ -415,79 +415,47 @@ export class WebGLComposite {
             opts.rx, opts.ry, perspective, effectiveScale, offsetX, offsetY, opts.scaleX, opts.scaleY
         ));
 
-        // === Pass 2: 投影（Canvas shadowBlur，用原始 normBounds 和原始 scale）===
-        // 角度/距离/模糊/不透明度 由调用方控制，独立于描边辉光（不受 skipSDF 影响）
+        // === Pass 2: 投影 = 卡片轮廓的「模糊 + 染黑 + 偏移」副本 ===
+        // 直接拿卡片纹理本身做轮廓，用与卡片完全相同的 MVP / 几何 / 纹理坐标绘制，
+        // 只整体平移 (offX,offY)。这样投影形状必然与可见卡片一致（任意比例/圆角），
+        // 无需任何 bounds 坐标推算。角度/距离/模糊/不透明度 由调用方控制。
         const shadow = opts.shadow || {};
-        if (shadow.enabled) {
+        if (shadow.enabled && cardTexture) {
             const ang = (shadow.angle ?? 90) * Math.PI / 180;
             const dist = shadow.distance ?? 10;
             const blur = shadow.blur ?? 20;
             const opacity = Math.max(0, Math.min(1, (shadow.opacity ?? 25) / 100));
             // 屏幕坐标 Y 向下：角度 90° = 正下方（光源在上），0° = 正右方
-            const offX = Math.cos(ang) * dist;
+            const offX = Math.cos(ang) * dist;            // 基准像素
             const offY = Math.sin(ang) * dist;
+            const sf = this.canvas.width / bw;            // 设备缩放系数（≈ scale）
 
-            // 可视卡片始终是 cb.w×cb.h 居中、按 cardScale 缩放。投影画在带
-            // padding 的专用画布上，留出 模糊+偏移 的余量，避免被画布边缘裁掉。
-            const sf = this.canvas.width / bw;             // 设备缩放系数
-            const rCompensated = cardRadius / cardScale;
-            const padPx = Math.ceil(blur * 2.5 + dist + 8); // 余量（基准像素）
-            const padWb = cb.w + padPx * 2;
-            const padHb = cb.h + padPx * 2;
-
-            // 投影矩形 = 可见卡片矩形。默认填满整个 cb；若调用方提供 shadow.bounds
-            // （与 cb 同坐标系的可见卡片矩形，如卡片效果按图片比例收缩后的子区域），
-            // 则只在 cb 内对应子位置画投影，避免投影大于卡片、露出多余的灰色区域。
-            const sb = shadow.bounds;
-            const rOffX = sb ? (sb.x - cb.x) : 0;   // 可见卡片相对 cb 的偏移（基准像素）
-            const rOffY = sb ? (sb.y - cb.y) : 0;
-            const rW = sb ? sb.w : cb.w;
-            const rH = sb ? sb.h : cb.h;
-            const rR = sb ? (sb.radius ?? 0) : rCompensated;
-
-            const sc = this._shadowCache;
-            const keys = [
-                ['cardRadius', cardRadius], ['cardScale', cardScale],
-                ['_cbw', cb.w], ['_cbh', cb.h],
-                ['offX', offX], ['offY', offY], ['blur', blur],
-                ['opacity', opacity], ['pad', padPx], ['sf', sf],
-                ['rOffX', rOffX], ['rOffY', rOffY], ['rW', rW], ['rH', rH], ['rR', rR],
-            ];
             if (!this._shadowCanvas) this._shadowCanvas = document.createElement('canvas');
             const c = this._shadowCanvas;
-            const SW = Math.round(padWb * sf);
-            const SH = Math.round(padHb * sf);
-            if (this._cacheChanged(sc, keys) || c.width !== SW || c.height !== SH) {
-                if (c.width !== SW) c.width = SW;
-                if (c.height !== SH) c.height = SH;
-                const ctx = c.getContext('2d');
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.clearRect(0, 0, SW, SH);
-                ctx.scale(sf, sf);
-                // 只渲染偏移虚影，不渲染实体本体：把实体矩形推到画布左侧外（PUSH），
-                // 再用等量的 shadowOffsetX 补偿，使其投影落回正确位置。这样即使卡片
-                // 没盖满 cb 区域（如上传图片后按比例收缩），也不会露出灰色实体矩形。
-                // 阴影偏移/模糊属设备像素空间，不受 ctx.scale 影响，需乘设备缩放系数
-                const PUSH = padWb + cb.w;     // 基准像素，足以让本体完全移出画布左缘
-                ctx.shadowOffsetX = (offX + PUSH) * sf;
-                ctx.shadowOffsetY = offY * sf;
-                ctx.shadowBlur = blur * sf;
-                ctx.shadowColor = 'rgba(0,0,0,' + opacity + ')';
-                ctx.fillStyle = 'rgba(0,0,0,1)';   // 本体在画布外，颜色不影响最终画面
-                ctx.beginPath();
-                this._roundRect(ctx, padPx + rOffX - PUSH, padPx + rOffY, rW, rH, rR);
-                ctx.fill();
-                this._cacheUpdate(sc, keys);
+            if (c.width !== cardTexture.width || c.height !== cardTexture.height) {
+                c.width = cardTexture.width;
+                c.height = cardTexture.height;
             }
+            const sctx = c.getContext('2d');
+            sctx.setTransform(1, 0, 0, 1, 0, 0);
+            sctx.clearRect(0, 0, c.width, c.height);
+            // 1) 把卡片纹理模糊后画进来（模糊半径换算到设备像素）
+            sctx.filter = blur > 0 ? `blur(${blur * sf}px)` : 'none';
+            sctx.drawImage(cardTexture, 0, 0);
+            sctx.filter = 'none';
+            // 2) source-in 染黑：保留模糊后的 alpha 轮廓，颜色全部变黑
+            sctx.globalCompositeOperation = 'source-in';
+            sctx.fillStyle = '#000';
+            sctx.fillRect(0, 0, c.width, c.height);
+            sctx.globalCompositeOperation = 'source-over';
 
-            // 放大 quad 使纹理内 cb 区域与卡片对齐，padding 部分溢出到卡片之外
-            const shScaleX = cardScale * padWb / cb.w;
-            const shScaleY = cardScale * padHb / cb.h;
+            // 与卡片完全相同的 MVP，仅加投影偏移（基准像素，_buildCardMVP 内转 NDC）
             const shadowMVP = new Float32Array(this._buildCardMVP(
-                opts.rx, opts.ry, perspective, cardScale, offsetX, offsetY, shScaleX, shScaleY
+                opts.rx, opts.ry, perspective, effectiveScale,
+                offsetX + offX, offsetY + offY, opts.scaleX, opts.scaleY
             ));
             this._uploadTexture(this._shadowCanvas);
-            this._drawQuad(shadowMVP, normBounds, 0, 0, cardAlpha);
+            this._drawQuad(shadowMVP, cardNormBounds, 0, 0, opacity * cardAlpha);
         }
 
         // === Pass 3: 卡片内容（SDF 裁剪 + 描边 + 辉光）===
