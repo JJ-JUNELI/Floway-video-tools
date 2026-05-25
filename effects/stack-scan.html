@@ -112,8 +112,8 @@
                         <input type="range" id="StartSpacing" min="-100" max="200" value="55">
                     </div>
                     <div class="row stack">
-                        <div class="label-line"><span>初始透明度</span><span id="StartOpacityVal">0.0</span></div>
-                        <input type="range" id="StartOpacity" min="0" max="1" step="0.1" value="0.0">
+                        <div class="label-line"><span>初始透明度</span><span id="StartOpacityVal">0%</span></div>
+                        <input type="range" id="StartOpacity" min="0" max="100" step="5" value="0">
                     </div>
                 </div>
 
@@ -124,8 +124,8 @@
                         <input type="range" id="EndSpacing" min="-100" max="200" value="0">
                     </div>
                     <div class="row stack">
-                        <div class="label-line"><span>结束透明度</span><span id="EndOpacityVal">1.0</span></div>
-                        <input type="range" id="EndOpacity" min="0" max="1" step="0.1" value="1.0">
+                        <div class="label-line"><span>结束透明度</span><span id="EndOpacityVal">100%</span></div>
+                        <input type="range" id="EndOpacity" min="0" max="100" step="5" value="100">
                     </div>
                 </div>
 
@@ -586,8 +586,8 @@
             ['EndSpacing', 'endSpacing', 'int', 'EndSpacingVal'],
             ['SpacingDuration', 'spacingDuration', 'float', 'SpacingDurationVal', 's'],
             ['ScanDelay', 'scanDelay', 'float', 'ScanDelayVal', 's'],
-            ['StartOpacity', 'startOpacity', 'float', 'StartOpacityVal'],
-            ['EndOpacity', 'endOpacity', 'float', 'EndOpacityVal'],
+            ['StartOpacity', 'startOpacity', '%', 'StartOpacityVal', '%'],
+            ['EndOpacity', 'endOpacity', '%', 'EndOpacityVal', '%'],
             ['OpacityDuration', 'opacityDuration', 'float', 'OpacityDurationVal', 's'],
             ['OpacityDelay', 'opacityDelay', 'float', 'OpacityDelayVal', 's'],
             ['StrokeAlign', 'strokeAlign'],
