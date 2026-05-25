@@ -19,7 +19,7 @@
     /* 深空霍玉玻璃（暗色默认） */
     --bg-dark: #0A0C12;
     --panel-bg: rgba(22,27,38,0.38);
-    --sidebar-bg: rgba(22,27,38,0.24);
+    --sidebar-bg: rgba(22,27,38,0.18);
     --card-bg: rgba(255,255,255,0.05);
     --surface-2: rgba(255,255,255,0.07);
     --accent: #22D3EE;
@@ -42,8 +42,8 @@
     --radius-md: 14px;
 
     /* 玻璃 */
-    --glass-blur: 16px;
-    --grid-line: rgba(255,255,255,0.05);
+    --glass-blur: 9px;
+    --grid-line: rgba(255,255,255,0.09);
     --glass-shadow: 0 8px 32px rgba(0,0,0,0.40);
     --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.08);
 
@@ -68,9 +68,9 @@ body {
     background-color: var(--bg-dark);
     /* 全页网格底纹（预览区与侧栏背后通用） */
     background-image:
-        linear-gradient(var(--grid-line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 24px 24px;
+        linear-gradient(var(--grid-line) 1.5px, transparent 1.5px),
+        linear-gradient(90deg, var(--grid-line) 1.5px, transparent 1.5px);
+    background-size: 28px 28px;
     background-position: -1px -1px;
     font-family: "Noto Sans SC", -apple-system, sans-serif;
     color: var(--text-main);
@@ -1192,8 +1192,8 @@ body.logo canvas {
     /* 冷雾磨砂玻璃（亮色变体） */
     --bg-dark: #ECF0F5;
     --panel-bg: rgba(255,255,255,0.45);
-    --sidebar-bg: rgba(255,255,255,0.42);
-    --grid-line: rgba(15,23,42,0.06);
+    --sidebar-bg: rgba(255,255,255,0.38);
+    --grid-line: rgba(15,23,42,0.09);
     --card-bg: rgba(255,255,255,0.70);
     --surface-2: rgba(15,23,42,0.04);
     --accent: #0891B2;
