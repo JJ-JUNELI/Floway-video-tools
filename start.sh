@@ -33,6 +33,9 @@ if kill -0 $SERVER_PID 2>/dev/null; then
     if command -v cmd.exe &>/dev/null; then
         # WSL 环境 → 调用 Windows 浏览器
         cmd.exe /c start "http://localhost:$PORT" 2>/dev/null
+    elif command -v open &>/dev/null; then
+        # macOS → 系统默认浏览器
+        open "http://localhost:$PORT" 2>/dev/null
     elif command -v xdg-open &>/dev/null; then
         xdg-open "http://localhost:$PORT" 2>/dev/null
     fi
