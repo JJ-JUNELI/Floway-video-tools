@@ -71,11 +71,22 @@ body {
     overflow-x: hidden;
     user-select: none;
     -webkit-font-smoothing: antialiased;
-    /* 深空极光光晕 */
-    background-image:
-        radial-gradient(50% 40% at 18% 12%, rgba(45,212,191,0.10), transparent 70%),
-        radial-gradient(48% 46% at 86% 84%, rgba(56,128,255,0.10), transparent 72%);
-    background-attachment: fixed;
+}
+
+/* 深空极光光晕 — 独立模糊层：给玻璃面提供可折射的彩色背景。
+   多团离心径向光晕 + filter:blur，玻璃的 backdrop-filter 把它糊开后才显出冷暖色。 */
+body::before {
+    content: "";
+    position: fixed;
+    inset: -10%;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(55% 45% at 16% 14%, rgba(34,211,238,0.22), transparent 64%),
+        radial-gradient(60% 50% at 88% 86%, rgba(56,128,255,0.18), transparent 66%),
+        radial-gradient(48% 42% at 82% 16%, rgba(167,139,250,0.14), transparent 60%),
+        radial-gradient(46% 40% at 16% 84%, rgba(45,212,191,0.10), transparent 62%);
+    filter: blur(60px);
 }
 
 body.is-recording .sidebar { opacity: 0.95; }
@@ -89,8 +100,8 @@ body.is-recording .sidebar { opacity: 0.95; }
     margin: 12px 0 12px 12px;
     border-radius: var(--radius-md);
     background: var(--panel-bg);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
-    backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
     display: flex;
     flex-direction: column;
     z-index: 100;
@@ -885,8 +896,8 @@ input:checked + .slider:before {
     border: 1px solid var(--hairline);
     border-radius: var(--radius-md);
     background: var(--panel-bg);
-    -webkit-backdrop-filter: blur(8px) saturate(1.1);
-    backdrop-filter: blur(8px) saturate(1.1);
+    -webkit-backdrop-filter: blur(8px) saturate(1.8);
+    backdrop-filter: blur(8px) saturate(1.8);
     box-shadow: var(--glass-shadow), var(--glass-highlight);
 }
 
