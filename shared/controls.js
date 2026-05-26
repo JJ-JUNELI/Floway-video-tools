@@ -623,33 +623,6 @@ function readGroupTitle(group) {
 
 const CAT_TAB_KEY = 'floway-cat-tab';
 
-// 真折射（凸面镜）：仅 Chromium 桌面/安卓支持 backdrop-filter: url() 的 SVG 置换滤镜；
-// iOS WebKit(Safari/各端) 不支持 → 回退仿真玻璃。
-function lensSupported() {
-    const ua = navigator.userAgent;
-    if (/iP(hone|ad|od)|CriOS|FxiOS|EdgiOS|OPiOS/.test(ua)) return false;
-    return /Chrome|Chromium|Edg/.test(ua)
-        && typeof CSS !== 'undefined' && CSS.supports('backdrop-filter', 'blur(1px)');
-}
-
-// 注入一次置换贴图滤镜：R 通道=水平渐变、G 通道=垂直渐变（screen 混合），
-// 中心中性(无位移)、四周向外位移 → 背后内容被「放大鼓起」形成凸透镜折射。
-function ensureLensFilter() {
-    if (document.getElementById('cat-lens-svg')) return;
-    const map = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='48'>"
-        + "<rect width='120' height='48' fill='url(%23clh)'/>"
-        + "<rect width='120' height='48' fill='url(%23clv)' style='mix-blend-mode:screen'/>"
-        + "<defs><linearGradient id='clh' x1='0' y1='0' x2='1' y2='0'>"
-        + "<stop offset='0' stop-color='%23000'/><stop offset='1' stop-color='%23f00'/></linearGradient>"
-        + "<linearGradient id='clv' x1='0' y1='0' x2='0' y2='1'>"
-        + "<stop offset='0' stop-color='%23000'/><stop offset='1' stop-color='%2300ff00'/></linearGradient></defs></svg>";
-    const wrap = document.createElement('div');
-    wrap.setAttribute('aria-hidden', 'true');
-    wrap.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
-    wrap.innerHTML = `<svg id="cat-lens-svg" width="0" height="0"><filter id="cat-lens-filter" x="-35%" y="-35%" width="170%" height="170%" color-interpolation-filters="sRGB"><feImage href="${map}" preserveAspectRatio="none" result="m"/><feDisplacementMap in="SourceGraphic" in2="m" scale="22" xChannelSelector="R" yChannelSelector="G"/></filter></svg>`;
-    document.body.appendChild(wrap);
-}
-
 export function initCategoryTabs(root = document) {
     const sidebar = root.querySelector('.sidebar');
     const container = root.querySelector('.controls-container');
@@ -690,10 +663,6 @@ export function initCategoryTabs(root = document) {
         bar.appendChild(btn);
     });
     sidebar.insertBefore(bar, container);
-
-    // 真折射凸面镜（渐进增强）：支持的浏览器开启，其余回退仿真玻璃
-    ensureLensFilter();
-    if (lensSupported()) bar.classList.add('cat-lens');
 
     const key = CAT_TAB_KEY + ':' + (location.pathname.split('/').pop() || 'effect');
     let active = localStorage.getItem(key);
