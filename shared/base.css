@@ -162,25 +162,23 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 /* Sidebar Header */
 .sidebar-header {
     flex-shrink: 0;
-    margin: 12px 12px 0;
-    padding: 16px 18px;
+    padding: 14px 16px 12px;
     display: flex;
     align-items: center;
+    gap: 8px;
     justify-content: space-between;
-    /* 磨砂玻璃内层卡片 */
-    background: var(--surface-2);
-    border: 1px solid var(--hairline);
-    border-radius: var(--radius-md);
+    /* 平接顶部 + 底部分隔线（对齐设计稿，非内嵌卡片） */
+    border-bottom: 1px solid var(--hairline);
 }
 .sidebar-header .btn-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
+    width: 28px;
+    height: 28px;
+    font-size: 15px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: none;
-    border: none;
+    background: var(--card-bg);
+    border: 1px solid var(--hairline);
     color: var(--text-sub);
     cursor: pointer;
     border-radius: var(--radius-sm);
@@ -189,14 +187,15 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 .sidebar-header .btn-icon:hover {
     background: var(--accent-dim);
     color: var(--accent);
+    border-color: var(--accent);
 }
 
 .sidebar-header .btn-theme {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    border: 1px solid var(--border);
-    background: transparent;
+    border: 1px solid var(--hairline);
+    background: var(--card-bg);
     color: var(--text-sub);
     cursor: pointer;
     display: inline-flex;
@@ -207,8 +206,8 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     flex-shrink: 0;
 }
 .sidebar-header .btn-theme svg {
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
@@ -1258,7 +1257,9 @@ body.logo canvas {
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
     backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
 }
-[data-theme="light"] .sidebar-header,
+[data-theme="light"] .sidebar-header {
+    border-bottom-color: var(--hairline);
+}
 [data-theme="light"] .sidebar-footer {
     background: var(--surface-2);
     border-color: var(--hairline);
