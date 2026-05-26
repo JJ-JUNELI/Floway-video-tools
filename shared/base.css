@@ -946,12 +946,10 @@ canvas {
     box-shadow: var(--shadow-canvas);
 }
 
-/* WebGL 合成 canvas（Template C 效果）：透明底、无边框阴影圆角 */
+/* WebGL 合成 canvas（Template C：图表/卡片类）：WebGL 自绘背景，CSS 底透明；
+   背景 pass 铺满整块画布，所以边框/圆角/投影沿用 base canvas，与其它效果预览一致 */
 canvas.webgl-canvas {
     background: transparent;
-    box-shadow: none;
-    border: none;
-    border-radius: 0;
 }
 
 #mainSvg {
