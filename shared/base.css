@@ -17,13 +17,13 @@
 
 :root {
     /* 深空霍玉玻璃（暗色默认） */
-    --bg-dark: #0A0C12;
+    --bg-dark: #0e1117;
     --panel-bg: rgba(22,27,38,0.38);
     --sidebar-bg: rgba(255,255,255,0.04);
     --card-bg: rgba(255,255,255,0.05);
     --surface-2: rgba(255,255,255,0.07);
-    --accent: #22D3EE;
-    --accent-strong: #0E9FB8;
+    --accent: #6CA8D9;
+    --accent-strong: #4A82B8;
     --danger: #f87171;
     --text-main: #E7ECF3;
     --text-sub: #8A93A3;
@@ -34,8 +34,8 @@
     --hairline-strong: rgba(255,255,255,0.18);
 
     /* 辅助 */
-    --accent-dim: rgba(34,211,238,0.12);
-    --accent-glow: rgba(34,211,238,0.22);
+    --accent-dim: rgba(108,168,217,0.12);
+    --accent-glow: rgba(108,168,217,0.15);
     --success: #34d399;
     --warning: #fbbf24;
     --radius-sm: 10px;
@@ -94,6 +94,13 @@ body::before {
         radial-gradient(50% 45% at 78% 20%, rgba(167,139,250,0.12) 0%, transparent 60%),
         radial-gradient(50% 45% at 22% 78%, rgba(34,211,238,0.08) 0%, transparent 60%);
     filter: blur(60px);
+}
+/* 亮色：同强度光晕会把浅底糊脏，整体收回（设计稿配方） */
+[data-theme="light"] body::before {
+    background:
+        radial-gradient(60% 50% at 15% 18%, color-mix(in srgb, var(--accent) 10%, transparent) 0%, transparent 62%),
+        radial-gradient(65% 55% at 85% 88%, color-mix(in srgb, var(--accent-strong) 8%, transparent) 0%, transparent 65%),
+        radial-gradient(50% 45% at 78% 20%, rgba(99,102,241,0.05) 0%, transparent 60%);
 }
 
 body.is-recording .sidebar { opacity: 0.95; }
@@ -1221,14 +1228,14 @@ body.logo canvas {
 
 [data-theme="light"] {
     /* 冷雾磨砂玻璃（亮色变体） */
-    --bg-dark: #ECF0F5;
+    --bg-dark: #f4f5f8;
     --panel-bg: rgba(255,255,255,0.45);
     --sidebar-bg: rgba(255,255,255,0.55);
     --grid-line: rgba(15,23,42,0.035);
     --card-bg: rgba(255,255,255,0.70);
     --surface-2: rgba(15,23,42,0.04);
-    --accent: #0891B2;
-    --accent-strong: #0E7490;
+    --accent: #c15f3c;
+    --accent-strong: #a44d2e;
     --danger: #dc2626;
     --text-main: #16202E;
     --text-sub: #6B7587;
@@ -1237,8 +1244,8 @@ body.logo canvas {
     --border: rgba(15,23,42,0.10);
     --hairline: rgba(15,23,42,0.10);
     --hairline-strong: rgba(15,23,42,0.18);
-    --accent-dim: rgba(8,145,178,0.10);
-    --accent-glow: rgba(8,145,178,0.16);
+    --accent-dim: rgba(193,95,60,0.08);
+    --accent-glow: rgba(193,95,60,0.12);
     --glass-shadow: 0 8px 30px rgba(15,23,42,0.10);
     --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.7);
 }
@@ -1410,7 +1417,7 @@ body.logo canvas {
 
 /* Body theme backgrounds — 冷雾底，极光沿用 body 通用 radial */
 [data-theme="light"] {
-    background-color: #ECF0F5;
+    background-color: #f4f5f8;
 }
 [data-theme="light"] .preview-area {
     background-color: transparent;
