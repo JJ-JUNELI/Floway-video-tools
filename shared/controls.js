@@ -334,6 +334,12 @@ export function initEffect(opts) {
     // 1.12 参数分类标签（文字/数据 · 样式 · 动画）
     if (!isPreview) initCategoryTabs();
 
+    // 1.13 真折射凸面镜（渐进增强；仅 Chromium 开启，含分类滑块与下拉触发框）
+    if (!isPreview) {
+        ensureLensFilter();
+        if (lensSupported()) document.documentElement.classList.add('lens-ok');
+    }
+
     // 2. Canvas 初始化（预览模式降低分辨率；可跳过供 WebGL/SVG 效果使用）
     const baseWidth = opts.baseWidth || 1440;
     const baseHeight = opts.baseHeight || 1080;
@@ -646,7 +652,7 @@ function ensureLensFilter() {
     const wrap = document.createElement('div');
     wrap.setAttribute('aria-hidden', 'true');
     wrap.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
-    wrap.innerHTML = `<svg id="cat-lens-svg" width="0" height="0"><filter id="cat-lens-filter" x="-35%" y="-35%" width="170%" height="170%" color-interpolation-filters="sRGB"><feImage href="${map}" preserveAspectRatio="none" result="m"/><feDisplacementMap in="SourceGraphic" in2="m" scale="22" xChannelSelector="R" yChannelSelector="G"/></filter></svg>`;
+    wrap.innerHTML = `<svg id="cat-lens-svg" width="0" height="0"><filter id="cat-lens-filter" x="-35%" y="-35%" width="170%" height="170%" color-interpolation-filters="sRGB"><feImage href="${map}" preserveAspectRatio="none" result="m"/><feDisplacementMap in="SourceGraphic" in2="m" scale="26" xChannelSelector="R" yChannelSelector="G"/></filter></svg>`;
     document.body.appendChild(wrap);
 }
 
@@ -690,10 +696,6 @@ export function initCategoryTabs(root = document) {
         bar.appendChild(btn);
     });
     sidebar.insertBefore(bar, container);
-
-    // 真折射凸面镜（渐进增强）：支持的浏览器开启，其余回退仿真玻璃
-    ensureLensFilter();
-    if (lensSupported()) bar.classList.add('cat-lens');
 
     const key = CAT_TAB_KEY + ':' + (location.pathname.split('/').pop() || 'effect');
     let active = localStorage.getItem(key);

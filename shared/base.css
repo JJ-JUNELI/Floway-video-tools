@@ -397,16 +397,30 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
         0 6px 16px rgba(0,0,0,0.10);
 }
 
-/* 真折射凸面镜（仅 .cat-lens：支持 backdrop-filter url() 的浏览器）：
-   滑块填充调透，用 SVG 置换贴图扭曲背后内容形成放大折射；保留亮边/投影做凸起边缘。
-   不支持的浏览器无 .cat-lens，沿用上面的仿真玻璃。 */
-.cat-tabs.cat-lens .cat-thumb {
-    background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05));
-    -webkit-backdrop-filter: url(#cat-lens-filter) blur(2px) saturate(1.5) brightness(1.06);
-    backdrop-filter: url(#cat-lens-filter) blur(2px) saturate(1.5) brightness(1.06);
+/* 真折射凸面镜（仅 html.lens-ok：支持 backdrop-filter url() 的浏览器）：
+   把元素填充调透，用 SVG 置换贴图扭曲背后内容形成放大折射；保留亮边/投影做凸起边缘。
+   不支持的浏览器无 .lens-ok，沿用上面的仿真玻璃。 */
+.lens-ok .cat-thumb {
+    background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+    -webkit-backdrop-filter: url(#cat-lens-filter) blur(0.5px) saturate(1.6) brightness(1.08);
+    backdrop-filter: url(#cat-lens-filter) blur(0.5px) saturate(1.6) brightness(1.08);
 }
-[data-theme="light"] .cat-tabs.cat-lens .cat-thumb {
-    background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.3));
+.lens-ok[data-theme="light"] .cat-thumb {
+    background: linear-gradient(180deg, rgba(255,255,255,0.42), rgba(255,255,255,0.22));
+}
+/* 折射模式下减弱标签栏底的模糊，让滑块背后有更多细节可折射 */
+.lens-ok .cat-tabs {
+    -webkit-backdrop-filter: blur(10px) saturate(170%);
+    backdrop-filter: blur(10px) saturate(170%);
+}
+/* 参数下拉触发框折射 */
+.lens-ok .fs-trigger {
+    background: rgba(255,255,255,0.05);
+    -webkit-backdrop-filter: url(#cat-lens-filter) blur(1px) saturate(1.4);
+    backdrop-filter: url(#cat-lens-filter) blur(1px) saturate(1.4);
+}
+.lens-ok[data-theme="light"] .fs-trigger {
+    background: rgba(255,255,255,0.4);
 }
 
 /* ========================================
