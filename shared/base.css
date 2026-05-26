@@ -95,12 +95,12 @@ body::before {
         radial-gradient(50% 45% at 22% 78%, rgba(34,211,238,0.08) 0%, transparent 60%);
     filter: blur(60px);
 }
-/* 亮色：同强度光晕会把浅底糊脏，整体收回（设计稿配方） */
+/* 亮色：赤陶色暖光晕经磨砂玻璃放大会糊成粉色，几乎收没（对齐设计稿的中性浅底） */
 [data-theme="light"] body::before {
     background:
-        radial-gradient(60% 50% at 15% 18%, color-mix(in srgb, var(--accent) 10%, transparent) 0%, transparent 62%),
-        radial-gradient(65% 55% at 85% 88%, color-mix(in srgb, var(--accent-strong) 8%, transparent) 0%, transparent 65%),
-        radial-gradient(50% 45% at 78% 20%, rgba(99,102,241,0.05) 0%, transparent 60%);
+        radial-gradient(60% 50% at 15% 18%, color-mix(in srgb, var(--accent) 5%, transparent) 0%, transparent 62%),
+        radial-gradient(65% 55% at 85% 88%, color-mix(in srgb, var(--accent-strong) 4%, transparent) 0%, transparent 65%),
+        radial-gradient(50% 45% at 78% 20%, rgba(99,102,241,0.04) 0%, transparent 60%);
 }
 
 body.is-recording .sidebar { opacity: 0.95; }
@@ -1254,6 +1254,9 @@ body.logo canvas {
 [data-theme="light"] .sidebar {
     /* 玻璃由 base .sidebar 规则 + 亮色令牌(--panel-bg/--glass-shadow)处理 */
     border-color: var(--hairline);
+    /* 暗色用 saturate(2) 提亮玻璃；亮色下会把暖色光晕过饱和成粉，回落到接近中性 */
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
 }
 [data-theme="light"] .sidebar-header,
 [data-theme="light"] .sidebar-footer {
