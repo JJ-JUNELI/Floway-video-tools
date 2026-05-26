@@ -114,7 +114,9 @@ export function getTheme() {
 export function setTheme(name) {
   currentTheme = themes[name] || themes.dark;
 
-  // 设置 DOM 属性（触发 CSS 变量切换）
+  // 设置 DOM 属性（触发 CSS 变量切换）。放在 <html> 上与首屏内联脚本同源，
+  // 避免主题闪烁；同时保留 body 以兼容任何历史用法。
+  document.documentElement.setAttribute('data-theme', currentTheme.id);
   document.body.setAttribute('data-theme', currentTheme.id);
 
   // 全局引用（供非模块化代码读取）
