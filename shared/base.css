@@ -46,6 +46,7 @@
     --grid-line: rgba(255,255,255,0.02);
     --glass-shadow: 0 12px 40px rgba(0,0,0,0.22), 0 32px 80px rgba(0,0,0,0.16);
     --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.14);
+    --shadow-canvas: 0 4px 24px rgba(0,0,0,0.3);
 
     /* 字体 */
     --font-display: 'Sora', 'Noto Sans SC', sans-serif;
@@ -254,16 +255,16 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 
 /* Controls Container */
 .controls-container {
-    padding: 16px 16px 24px;
+    padding: 16px 12px 28px;
     overflow-y: auto;
     outline: none;
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     -webkit-overflow-scrolling: touch;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 60px, black calc(100% - 60px), transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0px, black 60px, black calc(100% - 60px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 16px, black calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, black 16px, black calc(100% - 24px), transparent 100%);
 }
 .controls-container::-webkit-scrollbar { width: 6px; }
 .controls-container::-webkit-scrollbar-track { background: transparent; }
@@ -343,27 +344,27 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 .control-group {
     background: rgba(255,255,255,0.04);
     border-radius: var(--radius-md);
-    padding: 16px;
+    padding: 14px;
     border: 1px solid rgba(255,255,255,0.06);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     transition: all 0.2s ease;
 }
 .control-group:hover {
-    border-color: var(--hairline-strong);
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.09);
 }
 
 .group-title {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
-    color: var(--text-sub);
-    text-transform: uppercase;
-    margin-bottom: 14px;
+    color: var(--text-main);
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
     gap: 6px;
     padding-bottom: 0;
-    letter-spacing: 0.8px;
+    /* 左色条按用户偏好保留移除：不大写、主文本色、平齐左缘 */
     padding-left: 0;
     border-left: none;
 }
@@ -712,7 +713,7 @@ input[type="color"] {
     -webkit-appearance: none;
     border: none;
     width: 34px;
-    height: 34px;
+    height: 28px;
     padding: 0;
     background: none;
     cursor: pointer;
@@ -939,12 +940,17 @@ canvas {
     width: auto;
     height: auto;
     display: block;
+    /* 设计稿：预览画布为带描边+圆角+柔和投影的卡片 */
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-canvas);
 }
 
-/* WebGL 合成 canvas（Template C 效果）：透明底、无阴影圆角 */
+/* WebGL 合成 canvas（Template C 效果）：透明底、无边框阴影圆角 */
 canvas.webgl-canvas {
     background: transparent;
     box-shadow: none;
+    border: none;
     border-radius: 0;
 }
 
@@ -955,6 +961,9 @@ canvas.webgl-canvas {
     transform: translate(-50%, -50%);
     display: block;
     background: #0e1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-canvas);
 }
 
 body.logo canvas {
@@ -1247,6 +1256,7 @@ body.logo canvas {
     --accent-glow: rgba(193,95,60,0.12);
     --glass-shadow: 0 8px 30px rgba(15,23,42,0.10);
     --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.7);
+    --shadow-canvas: 0 4px 16px rgba(0,0,0,0.08);
 }
 
 /* Sidebar */
@@ -1284,11 +1294,11 @@ body.logo canvas {
     border-color: var(--hairline);
 }
 [data-theme="light"] .control-group:hover {
-    border-color: var(--hairline-strong);
+    background: rgba(15,23,42,0.05);
+    border-color: rgba(15,23,42,0.11);
 }
 [data-theme="light"] .group-title {
-    color: var(--text-sub);
-    border-left-color: var(--accent);
+    color: var(--text-main);
 }
 
 /* Labels */
