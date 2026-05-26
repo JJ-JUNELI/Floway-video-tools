@@ -602,6 +602,18 @@ function categorizeByTitle(title) {
     return 'style';
 }
 
+// 读取分组标题文本：优先取非折叠箭头的 label span；标题为直接文本时，
+// 排除 initCollapsibleGroups 追加的 ▼ 箭头与按钮后再取文本（否则会误读成 "▼"）。
+function readGroupTitle(group) {
+    const titleEl = group.querySelector(':scope > .group-title');
+    if (!titleEl) return '';
+    const labelSpan = titleEl.querySelector('span:not(.collapse-arrow)');
+    if (labelSpan) return labelSpan.textContent.trim();
+    const clone = titleEl.cloneNode(true);
+    clone.querySelectorAll('.collapse-arrow, button, input, select').forEach(n => n.remove());
+    return clone.textContent.trim();
+}
+
 const CAT_TAB_KEY = 'floway-cat-tab';
 
 export function initCategoryTabs(root = document) {
@@ -619,10 +631,7 @@ export function initCategoryTabs(root = document) {
     groups.forEach(g => {
         let cat = g.dataset.cat;
         if (!cat) {
-            const titleEl = g.querySelector(':scope > .group-title');
-            const span = titleEl && titleEl.querySelector('span');
-            const title = ((span ? span.textContent : titleEl ? titleEl.textContent : '') || '').trim();
-            cat = categorizeByTitle(title);
+            cat = categorizeByTitle(readGroupTitle(g));
             g.dataset.cat = cat;
         }
         present.add(cat);
