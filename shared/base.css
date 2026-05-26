@@ -19,7 +19,7 @@
     /* 深空霍玉玻璃（暗色默认） */
     --bg-dark: #0A0C12;
     --panel-bg: rgba(22,27,38,0.38);
-    --sidebar-bg: rgba(22,27,38,0.10);
+    --sidebar-bg: rgba(255,255,255,0.04);
     --card-bg: rgba(255,255,255,0.05);
     --surface-2: rgba(255,255,255,0.07);
     --accent: #22D3EE;
@@ -41,11 +41,11 @@
     --radius-sm: 10px;
     --radius-md: 14px;
 
-    /* 玻璃 */
-    --glass-blur: 14px;
-    --grid-line: rgba(255,255,255,0.08);
-    --glass-shadow: 0 8px 32px rgba(0,0,0,0.40);
-    --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.08);
+    /* 玻璃（设计稿配方：白膜 + 重磨砂 + 叠层投影） */
+    --glass-blur: 50px;
+    --grid-line: rgba(255,255,255,0.02);
+    --glass-shadow: 0 12px 40px rgba(0,0,0,0.22), 0 32px 80px rgba(0,0,0,0.16);
+    --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.14);
 
     /* 字体 */
     --font-display: 'Sora', 'Noto Sans SC', sans-serif;
@@ -70,7 +70,7 @@ body {
     background-image:
         linear-gradient(var(--grid-line) 1px, transparent 1px),
         linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 36px 36px;
+    background-size: 24px 24px;
     background-position: -1px -1px;
     font-family: "Noto Sans SC", -apple-system, sans-serif;
     color: var(--text-main);
@@ -79,6 +79,21 @@ body {
     overflow-x: hidden;
     user-select: none;
     -webkit-font-smoothing: antialiased;
+}
+
+/* 彩色光晕底 — 给玻璃面提供可折射的色彩（设计稿配方） */
+body::before {
+    content: "";
+    position: fixed;
+    inset: -10%;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(60% 50% at 15% 18%, color-mix(in srgb, var(--accent) 24%, transparent) 0%, transparent 62%),
+        radial-gradient(65% 55% at 85% 88%, color-mix(in srgb, var(--accent-strong) 20%, transparent) 0%, transparent 65%),
+        radial-gradient(50% 45% at 78% 20%, rgba(167,139,250,0.12) 0%, transparent 60%),
+        radial-gradient(50% 45% at 22% 78%, rgba(34,211,238,0.08) 0%, transparent 60%);
+    filter: blur(60px);
 }
 
 body.is-recording .sidebar { opacity: 0.95; }
@@ -92,8 +107,8 @@ body.is-recording .sidebar { opacity: 0.95; }
     margin: 12px 0 12px 12px;
     border-radius: var(--radius-md);
     background: var(--sidebar-bg);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
-    backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(2);
+    backdrop-filter: blur(var(--glass-blur)) saturate(2);
     display: flex;
     flex-direction: column;
     z-index: 100;
@@ -102,8 +117,22 @@ body.is-recording .sidebar { opacity: 0.95; }
     outline: none;
     position: relative;
     border: 1px solid var(--hairline);
-    box-shadow: var(--glass-shadow), var(--glass-highlight);
+    box-shadow: var(--glass-highlight), var(--glass-shadow);
 }
+/* 磨砂噪点颗粒层（设计稿：冻玻璃质感） */
+.sidebar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.8 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 240px 240px;
+    mix-blend-mode: overlay;
+}
+.sidebar > *:not(.sidebar-resize-handle) { position: relative; z-index: 1; }
 
 /* 侧边栏拖拽调节手柄 */
 .sidebar-resize-handle {
@@ -306,10 +335,12 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
    ======================================== */
 
 .control-group {
-    background: var(--surface-2);
+    background: rgba(255,255,255,0.04);
     border-radius: var(--radius-md);
     padding: 16px;
-    border: 1px solid var(--hairline);
+    border: 1px solid rgba(255,255,255,0.06);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
     transition: all 0.2s ease;
 }
 .control-group:hover {
@@ -1192,8 +1223,8 @@ body.logo canvas {
     /* 冷雾磨砂玻璃（亮色变体） */
     --bg-dark: #ECF0F5;
     --panel-bg: rgba(255,255,255,0.45);
-    --sidebar-bg: rgba(255,255,255,0.28);
-    --grid-line: rgba(15,23,42,0.08);
+    --sidebar-bg: rgba(255,255,255,0.55);
+    --grid-line: rgba(15,23,42,0.035);
     --card-bg: rgba(255,255,255,0.70);
     --surface-2: rgba(15,23,42,0.04);
     --accent: #0891B2;
