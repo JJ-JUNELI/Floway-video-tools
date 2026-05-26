@@ -331,6 +331,9 @@ export function initEffect(opts) {
     // 1.11 颜色选择器旁注入 hex 输入框
     if (!isPreview) initColorInputs();
 
+    // 1.12 参数分类标签（文字/数据 · 样式 · 动画）
+    if (!isPreview) initCategoryTabs();
+
     // 2. Canvas 初始化（预览模式降低分辨率；可跳过供 WebGL/SVG 效果使用）
     const baseWidth = opts.baseWidth || 1440;
     const baseHeight = opts.baseHeight || 1080;
@@ -571,6 +574,88 @@ export function initCollapsibleGroups(root = document) {
             writeCollapseState(s);
         });
     });
+}
+
+// ========== 参数分类标签（文字/数据 · 样式 · 动画）==========
+
+/**
+ * 在 sidebar-header 与滚动参数区之间插入一条三按钮标签栏，把参数分组按类别过滤：
+ *  - data  文字/数据（数据表、标题、内容、素材）
+ *  - style 样式（外观/颜色/坐标/标签/模式…默认归类）
+ *  - anim  动画（动画/入场/漂浮/旋转/动态）
+ * 归类规则：分组若带 data-cat 属性优先用之；否则按标题关键词匹配（data→anim→默认 style）。
+ * 仅当某效果存在 ≥2 个类别时才显示标签栏；快速预设面板常驻、不参与过滤。
+ * 切换状态按页面路径持久化到 localStorage。
+ */
+const CATEGORY_DEFS = [
+    { id: 'data',  label: '文字 / 数据' },
+    { id: 'style', label: '样式' },
+    { id: 'anim',  label: '动画' },
+];
+
+const CATEGORY_KEYWORDS = {
+    data: ['数据管理', '标题', '核心内容', '内容编辑', '内容', '核心素材', '素材管理', '素材', '文字', '文本'],
+    anim: ['入场动画', '动画', '漂浮', '透视旋转', '旋转', '动态'],
+};
+
+function categorizeByTitle(title) {
+    for (const kw of CATEGORY_KEYWORDS.data) if (title.includes(kw)) return 'data';
+    for (const kw of CATEGORY_KEYWORDS.anim) if (title.includes(kw)) return 'anim';
+    return 'style';
+}
+
+const CAT_TAB_KEY = 'floway-cat-tab';
+
+export function initCategoryTabs(root = document) {
+    const sidebar = root.querySelector('.sidebar');
+    const container = root.querySelector('.controls-container');
+    if (!sidebar || !container) return;
+    if (sidebar.querySelector('.cat-tabs')) return; // 幂等
+
+    // 顶层分组（预设面板常驻，不参与分类过滤）
+    const groups = Array.from(container.querySelectorAll(':scope > .control-group'))
+        .filter(g => !g.classList.contains('preset-panel'));
+    if (!groups.length) return;
+
+    const present = new Set();
+    groups.forEach(g => {
+        let cat = g.dataset.cat;
+        if (!cat) {
+            const titleEl = g.querySelector(':scope > .group-title');
+            const span = titleEl && titleEl.querySelector('span');
+            const title = ((span ? span.textContent : titleEl ? titleEl.textContent : '') || '').trim();
+            cat = categorizeByTitle(title);
+            g.dataset.cat = cat;
+        }
+        present.add(cat);
+    });
+
+    const cats = CATEGORY_DEFS.filter(c => present.has(c.id));
+    if (cats.length < 2) return; // 只有一类时无需标签
+
+    const bar = document.createElement('div');
+    bar.className = 'cat-tabs';
+    cats.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'cat-tab';
+        btn.dataset.cat = c.id;
+        btn.textContent = c.label;
+        bar.appendChild(btn);
+    });
+    sidebar.insertBefore(bar, container);
+
+    const key = CAT_TAB_KEY + ':' + (location.pathname.split('/').pop() || 'effect');
+    let active = localStorage.getItem(key);
+    if (!active || !present.has(active)) active = cats[0].id;
+
+    function setActive(cat) {
+        active = cat;
+        bar.querySelectorAll('.cat-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+        groups.forEach(g => { g.style.display = (g.dataset.cat === cat) ? '' : 'none'; });
+        try { localStorage.setItem(key, cat); } catch {}
+    }
+    bar.querySelectorAll('.cat-tab').forEach(b => b.addEventListener('click', () => setActive(b.dataset.cat)));
+    setActive(active);
 }
 
 // ========== 侧边栏可拖拽调节宽度 ==========
