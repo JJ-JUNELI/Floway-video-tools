@@ -668,13 +668,11 @@ export function initCategoryTabs(root = document) {
     let active = localStorage.getItem(key);
     if (!active || !present.has(active)) active = cats[0].id;
 
-    // 把滑块对齐到指定标签（offset* 相对 bar；扣除 bar 边框宽度）
+    // 把滑块对齐到指定标签：仅设宽度 + 横移（垂直由 CSS top/bottom:4px 居中）
     function moveThumb(tab) {
         if (!tab || !tab.offsetWidth) return;
         thumb.style.width = tab.offsetWidth + 'px';
-        thumb.style.height = tab.offsetHeight + 'px';
-        thumb.style.transform =
-            `translate(${tab.offsetLeft - bar.clientLeft}px, ${tab.offsetTop - bar.clientTop}px)`;
+        thumb.style.transform = `translateX(${tab.offsetLeft - bar.clientLeft}px)`;
     }
 
     function setActive(cat) {

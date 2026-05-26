@@ -295,16 +295,17 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     position: relative;
     display: flex;
     align-items: stretch;
-    margin: 10px 12px 4px;
+    margin: 12px 12px 6px;
     padding: 4px;
     border-radius: 100px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--hairline);
-    -webkit-backdrop-filter: blur(20px) saturate(1.6);
-    backdrop-filter: blur(20px) saturate(1.6);
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.10);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
     box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.12),
-        0 4px 16px rgba(0,0,0,0.18);
+        inset 0 1px 0 rgba(255,255,255,0.22),
+        inset 0 -1px 0 rgba(0,0,0,0.18),
+        0 8px 24px rgba(0,0,0,0.28);
 }
 .cat-tab {
     position: relative;
@@ -315,7 +316,7 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     align-items: center;
     justify-content: center;
     gap: 5px;
-    padding: 7px 4px;
+    padding: 8px 4px;
     border: none;
     background: transparent;
     border-radius: 100px;
@@ -323,7 +324,7 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     font-weight: 600;
     color: var(--text-sub);
     cursor: pointer;
-    transition: color 0.2s, background 0.2s, box-shadow 0.2s;
+    transition: color 0.2s;
     white-space: nowrap;
     font-family: inherit;
 }
@@ -337,8 +338,10 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     stroke-linejoin: round;
 }
 .cat-tab:hover { color: var(--text-main); }
-/* 段间细分隔线；当前项两侧的分隔线淡出（iOS 分段控件行为） */
-.cat-tab:not(:first-child)::before {
+/* 段间细分隔线；当前项两侧的分隔线淡出。
+   注意：滑块 .cat-thumb 是容器首个子节点，故用 :first-of-type（按元素类型）排除首个标签，
+   否则首个标签会被误加左侧分隔线。 */
+.cat-tab:not(:first-of-type)::before {
     content: '';
     position: absolute;
     left: 0; top: 50%;
@@ -350,18 +353,19 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 .cat-tab.active::before,
 .cat-tab.active + .cat-tab::before { opacity: 0; }
 .cat-tab.active { color: var(--text-main); }
-/* 当前项 —— 浮起的玻璃滑块（绝对定位，JS 设宽度+位移，滑动过渡） */
+/* 当前项 —— 浮起的玻璃滑块；上下内嵌 4px 保证垂直居中，JS 只设宽度 + 横移 */
 .cat-thumb {
     position: absolute;
-    top: 0; left: 0;
+    top: 4px; bottom: 4px; left: 0;
     z-index: 0;
-    width: 0; height: 0;
+    width: 0;
     border-radius: 100px;
-    background: rgba(255,255,255,0.14);
+    background: linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.10));
+    border: 1px solid rgba(255,255,255,0.22);
     box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.22),
-        0 1px 1px rgba(0,0,0,0.12),
-        0 4px 10px rgba(0,0,0,0.18);
+        inset 0 1px 0 rgba(255,255,255,0.45),
+        0 2px 6px rgba(0,0,0,0.22),
+        0 6px 16px rgba(0,0,0,0.20);
     pointer-events: none;
 }
 .cat-tabs.cat-ready .cat-thumb {
@@ -372,19 +376,21 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 
 /* 亮色：白膜玻璃 + 近白滑块 */
 [data-theme="light"] .cat-tabs {
-    background: rgba(255,255,255,0.5);
+    background: linear-gradient(180deg, rgba(255,255,255,0.62), rgba(255,255,255,0.36));
     border-color: rgba(0,0,0,0.06);
     box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.7),
-        0 4px 16px rgba(0,0,0,0.08);
-}
-[data-theme="light"] .cat-tab:not(:first-child)::before { background: rgba(0,0,0,0.08); }
-[data-theme="light"] .cat-thumb {
-    background: rgba(255,255,255,0.95);
-    box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.9),
-        0 1px 2px rgba(0,0,0,0.08),
-        0 4px 10px rgba(0,0,0,0.10);
+        inset 0 -1px 0 rgba(0,0,0,0.04),
+        0 8px 24px rgba(0,0,0,0.10);
+}
+[data-theme="light"] .cat-tab:not(:first-of-type)::before { background: rgba(0,0,0,0.08); }
+[data-theme="light"] .cat-thumb {
+    background: linear-gradient(180deg, #ffffff, rgba(255,255,255,0.86));
+    border-color: rgba(255,255,255,0.9);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,1),
+        0 2px 6px rgba(0,0,0,0.10),
+        0 6px 16px rgba(0,0,0,0.10);
 }
 
 /* ========================================
