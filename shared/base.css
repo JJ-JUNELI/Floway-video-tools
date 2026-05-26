@@ -282,6 +282,7 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
    ======================================== */
 .cat-tabs {
     flex-shrink: 0;
+    position: relative;
     display: flex;
     align-items: stretch;
     margin: 10px 12px 4px;
@@ -297,6 +298,7 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 }
 .cat-tab {
     position: relative;
+    z-index: 1;
     flex: 1;
     min-width: 0;
     display: inline-flex;
@@ -337,14 +339,25 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 }
 .cat-tab.active::before,
 .cat-tab.active + .cat-tab::before { opacity: 0; }
-/* 当前项 —— 浮起的玻璃滑块 */
-.cat-tab.active {
-    color: var(--text-main);
+.cat-tab.active { color: var(--text-main); }
+/* 当前项 —— 浮起的玻璃滑块（绝对定位，JS 设宽度+位移，滑动过渡） */
+.cat-thumb {
+    position: absolute;
+    top: 0; left: 0;
+    z-index: 0;
+    width: 0; height: 0;
+    border-radius: 100px;
     background: rgba(255,255,255,0.14);
     box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.22),
         0 1px 1px rgba(0,0,0,0.12),
         0 4px 10px rgba(0,0,0,0.18);
+    pointer-events: none;
+}
+.cat-tabs.cat-ready .cat-thumb {
+    transition:
+        transform 0.34s cubic-bezier(0.34, 1.12, 0.5, 1),
+        width 0.34s cubic-bezier(0.34, 1.12, 0.5, 1);
 }
 
 /* 亮色：白膜玻璃 + 近白滑块 */
@@ -356,7 +369,7 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
         0 4px 16px rgba(0,0,0,0.08);
 }
 [data-theme="light"] .cat-tab:not(:first-child)::before { background: rgba(0,0,0,0.08); }
-[data-theme="light"] .cat-tab.active {
+[data-theme="light"] .cat-thumb {
     background: rgba(255,255,255,0.95);
     box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.9),

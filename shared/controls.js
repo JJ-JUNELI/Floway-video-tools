@@ -642,6 +642,12 @@ export function initCategoryTabs(root = document) {
 
     const bar = document.createElement('div');
     bar.className = 'cat-tabs';
+
+    // 滑块（当前项的浮起玻璃），置于按钮之下，由 JS 设宽度+位移
+    const thumb = document.createElement('div');
+    thumb.className = 'cat-thumb';
+    bar.appendChild(thumb);
+
     cats.forEach(c => {
         const btn = document.createElement('button');
         btn.className = 'cat-tab';
@@ -655,14 +661,45 @@ export function initCategoryTabs(root = document) {
     let active = localStorage.getItem(key);
     if (!active || !present.has(active)) active = cats[0].id;
 
+    // 把滑块对齐到指定标签（offset* 相对 bar；扣除 bar 边框宽度）
+    function moveThumb(tab) {
+        if (!tab || !tab.offsetWidth) return;
+        thumb.style.width = tab.offsetWidth + 'px';
+        thumb.style.height = tab.offsetHeight + 'px';
+        thumb.style.transform =
+            `translate(${tab.offsetLeft - bar.clientLeft}px, ${tab.offsetTop - bar.clientTop}px)`;
+    }
+
     function setActive(cat) {
         active = cat;
-        bar.querySelectorAll('.cat-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+        let activeTab = null;
+        bar.querySelectorAll('.cat-tab').forEach(b => {
+            const on = b.dataset.cat === cat;
+            b.classList.toggle('active', on);
+            if (on) activeTab = b;
+        });
         groups.forEach(g => { g.style.display = (g.dataset.cat === cat) ? '' : 'none'; });
+        moveThumb(activeTab);
         try { localStorage.setItem(key, cat); } catch {}
     }
+
     bar.querySelectorAll('.cat-tab').forEach(b => b.addEventListener('click', () => setActive(b.dataset.cat)));
     setActive(active);
+    // 首帧定位完成后再开启过渡，避免初次从原点滑入；并兜底重定位
+    requestAnimationFrame(() => {
+        moveThumb(bar.querySelector('.cat-tab.active'));
+        bar.classList.add('cat-ready');
+    });
+    // 侧栏可拖拽改宽 → 分段宽度变化，即时（无过渡）跟随，避免滑块拖拽时滞后
+    if (window.ResizeObserver) {
+        let first = true;
+        new ResizeObserver(() => {
+            if (first) { first = false; return; }
+            bar.classList.remove('cat-ready');
+            moveThumb(bar.querySelector('.cat-tab.active'));
+            requestAnimationFrame(() => bar.classList.add('cat-ready'));
+        }).observe(bar);
+    }
 }
 
 // ========== 侧边栏可拖拽调节宽度 ==========
