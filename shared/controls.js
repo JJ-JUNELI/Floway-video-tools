@@ -439,6 +439,13 @@ export function initEffect(opts) {
         requestAnimationFrame(loop);
     }
 
+    // 启动期遮罩解除：setup 完成 + 首帧后移除 editor-booting，让侧栏/画布淡入
+    if (!isPreview) {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            document.documentElement.classList.remove('editor-booting');
+        }));
+    }
+
     // 8. onRender 自动模式（可选）
     // 如果提供 onRender 回调，自动完成 clearFrame → drawBg → 业务逻辑 → startPreviewLoop
     if (opts.onRender && typeof opts.onRender === 'function') {

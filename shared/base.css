@@ -106,6 +106,16 @@ body::before {
 
 body.is-recording .sidebar { opacity: 0.95; }
 
+/* 启动期遮罩：画布与侧栏动态部分由 JS 构建，加载时先隐藏，只露出已对色的网格底，
+   避免看到黑画布+半成品空壳；initEffect 完成首帧后移除 .editor-booting 淡入。
+   内联脚本带 3s 兜底，JS 失败也会强制显示。 */
+.sidebar,
+.preview-area canvas,
+.preview-area #mainSvg { transition: opacity 0.3s ease; }
+html.editor-booting .sidebar,
+html.editor-booting .preview-area canvas,
+html.editor-booting .preview-area #mainSvg { opacity: 0 !important; }
+
 /* ========================================
    Sidebar — 浮动圆角卡片
    ======================================== */
