@@ -128,9 +128,25 @@ export function setTheme(name) {
   return currentTheme;
 }
 
+/**
+ * 强制重绘：移动端切换主题后，fixed 背景层（body::before 色晕）与
+ * backdrop-filter 玻璃层常不自动重新采样（需滚动才刷新）。瞬时把 body
+ * 透明度改成 0.9999（肉眼无感）逼整棵子树重新合成，下一帧还原。
+ */
+function forceMobileRepaint() {
+  const b = document.body;
+  if (!b) return;
+  b.style.opacity = '0.9999';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { b.style.opacity = ''; });
+  });
+}
+
 /** 切换到另一个主题（dark ↔ light 双态） */
 export function toggleTheme() {
-  return setTheme(currentTheme.id === 'dark' ? 'light' : 'dark');
+  const t = setTheme(currentTheme.id === 'dark' ? 'light' : 'dark');
+  forceMobileRepaint();
+  return t;
 }
 
 /** 获取当前是否为亮色 */
