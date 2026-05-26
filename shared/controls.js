@@ -581,10 +581,10 @@ export function initCollapsibleGroups(root = document) {
  * 切换状态按页面路径持久化到 localStorage。
  */
 const CATEGORY_DEFS = [
-    { id: 'data',  label: '内容' },
-    { id: 'style', label: '样式' },
-    { id: 'card',  label: '卡片' },
-    { id: 'anim',  label: '动画' },
+    { id: 'data',  label: '内容', icon: '<path d="M5 6h14M5 12h14M5 18h9"/>' },
+    { id: 'style', label: '样式', icon: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>' },
+    { id: 'card',  label: '卡片', icon: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10.5h18"/>' },
+    { id: 'anim',  label: '动画', icon: '<path d="M8 5l11 7-11 7z"/>' },
 ];
 
 // 归类关键词：按 内容 → 卡片 → 动画 顺序命中，否则默认样式。
@@ -646,7 +646,7 @@ export function initCategoryTabs(root = document) {
         const btn = document.createElement('button');
         btn.className = 'cat-tab';
         btn.dataset.cat = c.id;
-        btn.textContent = c.label;
+        btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${c.icon || ''}</svg><span>${c.label}</span>`;
         bar.appendChild(btn);
     });
     sidebar.insertBefore(bar, container);
