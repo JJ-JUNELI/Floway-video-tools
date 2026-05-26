@@ -1413,9 +1413,12 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0
    ============================================================ */
 .nav-logo-icon-box { width:32px; height:32px; border-radius:10px; background:#1a1a1a; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .nav-logo-icon-box img { height:18px; width:auto; }
-/* logo 方块底色恒为深色(#1a1a1a)，两种主题都用白色 logo */
+/* 深色主题：深底 + 白 logo；亮色主题：白底 + 黑 logo */
+[data-theme="light"] .nav-logo-icon-box { background:#ffffff; }
 .logo-light { display:inline-block; }
 .logo-dark { display:none; }
+[data-theme="light"] .logo-light { display:none; }
+[data-theme="light"] .logo-dark { display:inline-block; }
 .hero-icon { width: var(--size, 72px); height: var(--size, 72px); }
 .ext-card.dev { opacity:.5; pointer-events:none; }
 .extensions-section { margin-bottom: 40px; }
