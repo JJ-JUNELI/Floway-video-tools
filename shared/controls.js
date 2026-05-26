@@ -571,27 +571,33 @@ export function initCollapsibleGroups(root = document) {
 // ========== 参数分类标签（文字/数据 · 样式 · 动画）==========
 
 /**
- * 在 sidebar-header 与滚动参数区之间插入一条三按钮标签栏，把参数分组按类别过滤：
- *  - data  文字/数据（数据表、标题、内容、素材）
- *  - style 样式（外观/颜色/坐标/标签/模式…默认归类）
- *  - anim  动画（动画/入场/漂浮/旋转/动态）
- * 归类规则：分组若带 data-cat 属性优先用之；否则按标题关键词匹配（data→anim→默认 style）。
- * 仅当某效果存在 ≥2 个类别时才显示标签栏；快速预设面板常驻、不参与过滤。
+ * 在 sidebar-header 与滚动参数区之间插入标签栏，把参数分组按类别过滤：
+ *  - data  内容（数据表、标题、文字内容、上传素材）
+ *  - style 样式（图表/文字本体外观、颜色、坐标、标签、模式…默认归类）
+ *  - card  卡片（卡片外观/边框、透视旋转、旋转光效、卡片漂浮等三维相关）
+ *  - anim  动画（画线/入场/扫描序列/动态等时间线动效）
+ * 归类规则：分组若带 data-cat 属性优先用之；否则按标题关键词匹配（data→card→anim→默认 style）。
+ * 仅显示该效果实际存在的类别，且 ≥2 类才显示标签栏；快速预设面板常驻、不参与过滤。
  * 切换状态按页面路径持久化到 localStorage。
  */
 const CATEGORY_DEFS = [
-    { id: 'data',  label: '文字 / 数据' },
+    { id: 'data',  label: '内容' },
     { id: 'style', label: '样式' },
+    { id: 'card',  label: '卡片' },
     { id: 'anim',  label: '动画' },
 ];
 
+// 归类关键词：按 内容 → 卡片 → 动画 顺序命中，否则默认样式。
+// 卡片：卡片外观/样式/边框、透视旋转(静态3D倾角)、旋转光效、卡片漂浮/漂浮动画 等三维相关。
 const CATEGORY_KEYWORDS = {
     data: ['数据管理', '标题', '核心内容', '内容编辑', '内容', '核心素材', '素材管理', '素材', '文字', '文本'],
-    anim: ['入场动画', '动画', '漂浮', '透视旋转', '旋转', '动态'],
+    card: ['卡片', '透视旋转', '旋转', '漂浮', '边框'],
+    anim: ['入场动画', '动画', '动态'],
 };
 
 function categorizeByTitle(title) {
     for (const kw of CATEGORY_KEYWORDS.data) if (title.includes(kw)) return 'data';
+    for (const kw of CATEGORY_KEYWORDS.card) if (title.includes(kw)) return 'card';
     for (const kw of CATEGORY_KEYWORDS.anim) if (title.includes(kw)) return 'anim';
     return 'style';
 }
