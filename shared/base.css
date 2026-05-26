@@ -324,7 +324,11 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     font-weight: 600;
     color: var(--text-sub);
     cursor: pointer;
-    transition: color 0.2s;
+    outline: none;
+    /* 去掉移动端点按灰/暗高亮 + 文字色过渡：点击即时高亮，滑块滑动作为唯一动效 */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
     white-space: nowrap;
     font-family: inherit;
 }
