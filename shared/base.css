@@ -368,10 +368,11 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     z-index: 0;
     width: 0;
     border-radius: 100px;
-    background: rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.15);
     -webkit-backdrop-filter: blur(14px) saturate(1.4);
     backdrop-filter: blur(14px) saturate(1.4);
     box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.4),
         0 4px 2px rgba(0,0,0,0.25),
         0 8px 40px rgba(0,0,0,0.12);
     pointer-events: none;
@@ -394,8 +395,9 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 [data-theme="light"] .cat-tab:not(:first-of-type)::before { background: rgba(0,0,0,0.08); }
 /* 亮色：纯白不透明滑块 + 柔投影浮在浅色轨道上（Apple 浅色分段控件） */
 [data-theme="light"] .cat-thumb {
-    background: rgba(255,255,255,0.42);
+    background: rgba(255,255,255,0.32);
     box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.85),
         0 2px 3px rgba(0,0,0,0.12),
         0 6px 20px rgba(0,0,0,0.10);
 }
