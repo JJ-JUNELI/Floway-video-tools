@@ -608,14 +608,12 @@ input { font-family: inherit; outline: none; }
     align-items: stretch;
     padding: 4px;
     border-radius: 100px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-    border: 1px solid rgba(255,255,255,0.10);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    backdrop-filter: blur(28px) saturate(180%);
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.22),
-        inset 0 -1px 0 rgba(0,0,0,0.18),
-        0 8px 24px rgba(0,0,0,0.28);
+    /* 与卡片/按钮同一套玻璃令牌：轻磨砂 + 1px 描边 + 顶部高光 */
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border);
+    -webkit-backdrop-filter: var(--blur);
+    backdrop-filter: var(--blur);
+    box-shadow: var(--glass-highlight);
 }
 .cat-tab {
     position: relative;
@@ -662,13 +660,10 @@ input { font-family: inherit; outline: none; }
     z-index: 0;
     width: 0;
     border-radius: 100px;
-    background: rgba(255,255,255,0.15);
-    -webkit-backdrop-filter: blur(14px) saturate(1.4);
-    backdrop-filter: blur(14px) saturate(1.4);
-    box-shadow:
-        inset 0 0 0 0.5px rgba(255,255,255,0.4),
-        0 4px 2px rgba(0,0,0,0.25),
-        0 8px 40px rgba(0,0,0,0.12);
+    /* 选中滑块 = 与卡片/按钮同款玻璃 + 投影抬起(选中态像浮起的玻璃按钮) */
+    background: var(--glass-fill-strong);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-highlight), 0 2px 10px rgba(0,0,0,0.30);
     pointer-events: none;
 }
 .cat-tabs.cat-ready .cat-thumb {
@@ -677,22 +672,8 @@ input { font-family: inherit; outline: none; }
         width 0.34s cubic-bezier(0.34, 1.12, 0.5, 1);
 }
 
-[data-theme="light"] .cat-tabs {
-    background: linear-gradient(180deg, rgba(255,255,255,0.62), rgba(255,255,255,0.36));
-    border-color: rgba(0,0,0,0.06);
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.9),
-        inset 0 -1px 0 rgba(0,0,0,0.04),
-        0 8px 24px rgba(0,0,0,0.10);
-}
+/* cat-tabs / thumb 现走 --glass-* 令牌(明暗自动)，仅保留分隔线亮色取色 */
 [data-theme="light"] .cat-tab:not(:first-of-type)::before { background: rgba(0,0,0,0.08); }
-[data-theme="light"] .cat-thumb {
-    background: rgba(255,255,255,0.32);
-    box-shadow:
-        inset 0 0 0 0.5px rgba(255,255,255,0.85),
-        0 2px 3px rgba(0,0,0,0.12),
-        0 6px 20px rgba(0,0,0,0.10);
-}
 /* 移动端：分段控件撑满一行、等分宽度，避免 inline 宽度溢出屏幕 */
 @media (max-width: 600px) {
     .cat-tabs { display: flex; width: 100%; }
