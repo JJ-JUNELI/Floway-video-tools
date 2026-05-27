@@ -406,8 +406,8 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     backdrop-filter: blur(10px) saturate(1.2);
 }
 .fs-dropdown {
-    -webkit-backdrop-filter: blur(20px) saturate(1.4);
-    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(10px) saturate(1.4);
+    backdrop-filter: blur(10px) saturate(1.4);
 }
 .sidebar-header .btn-icon,
 .sidebar-header .btn-theme {
