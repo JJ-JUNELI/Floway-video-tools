@@ -316,7 +316,9 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     align-items: center;
     justify-content: center;
     gap: 5px;
-    padding: 8px 4px;
+    /* 左小右大：图标在左会让文字显得偏右，居中区域整体左移做视觉居中。
+       左右总和仍 8px，不改标签内宽，滑块对齐不受影响。 */
+    padding: 8px 6px 8px 2px;
     border: none;
     background: transparent;
     border-radius: 100px;
