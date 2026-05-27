@@ -120,8 +120,9 @@
     /* 与下拉框一致的 1px 描边（原来是 transparent、靠内描边定义边，去掉内描边后卡片就没边了） */
     --glass-border:         rgba(255,255,255,0.10);
     --glass-border-strong:  rgba(255,255,255,0.10);
-    /* 内描边已去掉；边缘由 1px border(--glass-border)定义，对齐下拉框。仅留极淡顶部高光 */
-    --glass-highlight:      inset 0 1px 0 rgba(255,255,255,0.14);
+    /* 边缘由 1px border 定义；顶部极淡高光 + 左上角柔光(光源在左上，组件左上更亮) */
+    --glass-highlight:      inset 0 1px 0 rgba(255,255,255,0.12),
+                            inset 2px 2px 12px rgba(255,255,255,0.08);
 
     /* Grid pattern (body bg) */
     --grid-line:        rgba(255,255,255,0.02);
@@ -204,7 +205,8 @@
     --glass-fill-strong:    rgba(255,255,255,0.10);
     --glass-border:         rgba(15,23,42,0.10);
     --glass-border-strong:  rgba(0,0,0,0.12);
-    --glass-highlight:      inset 0 1px 0 rgba(255,255,255,0.6);
+    --glass-highlight:      inset 0 1px 0 rgba(255,255,255,0.55),
+                            inset 2px 2px 12px rgba(255,255,255,0.45);
 }
 
 /* ============================================================
@@ -574,7 +576,7 @@ input { font-family: inherit; outline: none; }
     -webkit-backdrop-filter: var(--blur-strong);
     position: relative;
     overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    box-shadow: var(--glass-highlight), 0 8px 32px rgba(0,0,0,0.18);
 }
 .featured-card::before {
     content: ''; position: absolute; inset: 0;
@@ -696,7 +698,7 @@ input { font-family: inherit; outline: none; }
     -webkit-backdrop-filter: var(--blur-strong);
     position: relative;
     color: inherit;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    box-shadow: var(--glass-highlight), 0 4px 24px rgba(0,0,0,0.12);
 }
 .ext-card::before {
     content: ''; position: absolute; inset: 0;
