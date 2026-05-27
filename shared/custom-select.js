@@ -99,9 +99,15 @@ export function enhanceSelect(selectEl) {
         // 关闭其他已打开的下拉
         document.dispatchEvent(new CustomEvent('fs-close-all', { detail: { except: uid } }));
         isOpen = true;
+        // Portal 到 <body>：侧栏自身有 backdrop-filter，嵌在里面的下拉框 blur 会被 Chromium 失效；
+        // 移出侧栏后下拉框的 backdrop-filter 才能真正模糊背后页面内容。
+        document.body.appendChild(dropdown);
         dropdown.classList.add('fs-open');
         trigger.classList.add('fs-active');
         positionDropdown();
+        // 下拉框 fixed 定位，需随侧栏滚动/窗口缩放跟随触发器
+        window.addEventListener('scroll', positionDropdown, true);
+        window.addEventListener('resize', positionDropdown);
     }
 
     function close() {
@@ -109,22 +115,27 @@ export function enhanceSelect(selectEl) {
         isOpen = false;
         dropdown.classList.remove('fs-open');
         trigger.classList.remove('fs-active');
+        window.removeEventListener('scroll', positionDropdown, true);
+        window.removeEventListener('resize', positionDropdown);
     }
 
     function positionDropdown() {
+        // 已 portal 到 body，用 fixed + 视口坐标贴住触发器
         const rect = trigger.getBoundingClientRect();
+        dropdown.style.position = 'fixed';
+        dropdown.style.left = rect.left + 'px';
+        dropdown.style.width = rect.width + 'px';
+        dropdown.style.right = 'auto';
+        const dh = dropdown.offsetHeight || 200;
         const spaceBelow = window.innerHeight - rect.bottom;
         const spaceAbove = rect.top;
-        if (spaceBelow < 200 && spaceAbove > spaceBelow) {
-            dropdown.style.bottom = '100%';
+        if (spaceBelow < Math.min(dh + 8, 280) && spaceAbove > spaceBelow) {
+            // 上方空间更大 → 向上展开
             dropdown.style.top = 'auto';
-            dropdown.style.marginBottom = '4px';
-            dropdown.style.marginTop = '0';
+            dropdown.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
         } else {
-            dropdown.style.top = '100%';
             dropdown.style.bottom = 'auto';
-            dropdown.style.marginTop = '4px';
-            dropdown.style.marginBottom = '0';
+            dropdown.style.top = (rect.bottom + 4) + 'px';
         }
     }
 
@@ -150,7 +161,8 @@ export function enhanceSelect(selectEl) {
     });
 
     document.addEventListener('click', (e) => {
-        if (!wrapper.contains(e.target)) close();
+        // 下拉框已 portal 到 body，不再是 wrapper 子节点，需单独判断
+        if (!wrapper.contains(e.target) && !dropdown.contains(e.target)) close();
     });
     document.addEventListener('fs-close-all', (e) => {
         if (e.detail.except !== uid) close();
