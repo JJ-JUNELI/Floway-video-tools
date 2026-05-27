@@ -486,12 +486,13 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     border-radius: var(--radius-md);
     padding: 14px;
     border: 1px solid rgba(255,255,255,0.06);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
     transition: all 0.2s ease;
 }
-/* 组自身的 backdrop-filter 会建立独立层叠上下文，把内部下拉框的 z-index 困住，
-   导致展开的下拉框被后一个组盖住。打开下拉框时把所在组整体抬到兄弟组之上。 */
+/* 注意：这里**不要**给组加 backdrop-filter。组自身的 backdrop-filter 既会建立
+   独立层叠上下文（困住内部下拉框 z-index、被后一组盖住），又会把下拉框的
+   backdrop 范围限制在组内——导致下拉框的 blur 抓不到兄弟组的文字，背后文字
+   依旧锐利。去掉后下拉框的 blur 才能真正模糊背后内容。组玻璃本就压在已模糊的
+   侧栏上、4% 白膜，8px 重模糊几乎不可见，去掉无损观感。 */
 .control-group:has(.fs-dropdown.fs-open) {
     z-index: 50;
 }
@@ -694,7 +695,7 @@ select option:checked {
     z-index: 9999;
     max-height: 280px;
     overflow-y: auto;
-    background: rgba(20,25,36,0.62);
+    background: rgba(20,25,36,0.45);
     border: 1px solid transparent;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.2);
@@ -1492,7 +1493,7 @@ body.logo canvas {
     background: color-mix(in srgb, var(--accent) 6%, #ffffff);
 }
 [data-theme="light"] .fs-dropdown {
-    background: rgba(255,255,255,0.72);
+    background: rgba(255,255,255,0.58);
     border-color: rgba(0,0,0,0.06);
     box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
 }
