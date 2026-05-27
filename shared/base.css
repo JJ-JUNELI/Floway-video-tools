@@ -690,7 +690,7 @@ select option:checked {
     z-index: 9999;
     max-height: 280px;
     overflow-y: auto;
-    background: rgba(22,27,38,0.10);
+    background: rgba(22,27,38,0.15);
     border: 1px solid transparent;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.2);
@@ -1488,7 +1488,7 @@ body.logo canvas {
     background: color-mix(in srgb, var(--accent) 6%, #ffffff);
 }
 [data-theme="light"] .fs-dropdown {
-    background: rgba(255,255,255,0.42);
+    background: rgba(255,255,255,0.15);
     border-color: rgba(0,0,0,0.06);
     box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
 }
