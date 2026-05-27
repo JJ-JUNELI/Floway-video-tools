@@ -110,9 +110,9 @@
     --s-11:             56px;
     --s-12:             80px;
 
-    /* Backdrop blur (used on glass surfaces) */
-    --blur:             blur(30px) saturate(160%);
-    --blur-strong:      blur(40px) saturate(180%);
+    /* Backdrop blur (used on glass surfaces) —— 参考效果页下拉框：轻磨砂、透背景 */
+    --blur:             blur(6px) saturate(1.4);
+    --blur-strong:      blur(10px) saturate(1.5);
 
     /* Glass tokens — the Frozen-Glass material */
     --glass-fill:           rgba(255,255,255,0.05);
@@ -1259,6 +1259,15 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0
     .featured-grid { grid-template-columns: repeat(2, 1fr); }
     .ext-grid { grid-template-columns: 1fr; }
 }
+/* 窄屏（手机 / 浏览器缩窄）：hero 图标位置是百分比、尺寸是固定 px，
+   窄了会互相挤。用 --hero-k 同比缩小整簇图标，并收紧 hero 内边距。 */
+@media (max-width: 640px) {
+    .hero { padding: 60px 20px 44px; }
+    .hero-icons { --hero-k: 0.74; height: 232px; margin-bottom: 32px; }
+}
+@media (max-width: 420px) {
+    .hero-icons { --hero-k: 0.6; height: 200px; }
+}
 
 
 /* ===================================================================
@@ -1506,7 +1515,9 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0
 .logo-dark { display:none; }
 [data-theme="light"] .logo-light { display:none; }
 [data-theme="light"] .logo-dark { display:inline-block; }
-.hero-icon { width: var(--size, 72px); height: var(--size, 72px); }
+.hero-icon { width: calc(var(--size, 72px) * var(--hero-k, 1)); height: calc(var(--size, 72px) * var(--hero-k, 1)); }
+/* svg 始终为瓷砖的一半（与桌面现状一致），缩小瓷砖时图标同比缩小、不溢出 */
+.hero-icon svg { width: 50%; height: 50%; }
 .ext-card.dev { opacity:.5; pointer-events:none; }
 .extensions-section { margin-bottom: 40px; }
 .no-results { display:none; text-align:center; padding:60px 20px; color:var(--fg-muted); }
