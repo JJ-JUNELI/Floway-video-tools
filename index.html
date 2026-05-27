@@ -112,11 +112,11 @@
 
     /* Backdrop blur (used on glass surfaces) —— 与效果页下拉框一致的轻磨砂 */
     --blur:             blur(5.5px) saturate(1.4);
-    --blur-strong:      blur(8px) saturate(1.4);
+    --blur-strong:      blur(5.5px) saturate(1.4);
 
     /* Glass tokens —— 与效果页下拉框统一：深色微染 0.18(不是白膜)，使其透出背景而非浮在其上 */
     --glass-fill:           rgba(22,27,38,0.18);
-    --glass-fill-strong:    rgba(22,27,38,0.32);
+    --glass-fill-strong:    rgba(22,27,38,0.18);
     --glass-border:         transparent;
     --glass-border-strong:  rgba(255,255,255,0.10);
     /* 0.5px 内描边(玻璃镶边) + 顶部高光，与编辑器液态玻璃一致 */
@@ -201,7 +201,7 @@
     /* Glass tokens — light variant. White-on-white needs a subtle dark
        edge for definition; full transparency leaves the slab invisible. */
     --glass-fill:           rgba(255,255,255,0.18);
-    --glass-fill-strong:    rgba(255,255,255,0.32);
+    --glass-fill-strong:    rgba(255,255,255,0.18);
     --glass-border:         rgba(0,0,0,0.06);
     --glass-border-strong:  rgba(0,0,0,0.12);
     /* 亮色：白内描边在浅底上偏隐(边界主要靠 --glass-border 深线)，保留作玻璃高光 */
@@ -576,7 +576,7 @@ input { font-family: inherit; outline: none; }
     -webkit-backdrop-filter: var(--blur-strong);
     position: relative;
     overflow: hidden;
-    box-shadow: var(--glass-highlight), 0 8px 32px rgba(0,0,0,0.18);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
 }
 .featured-card::before {
     content: ''; position: absolute; inset: 0;
@@ -717,7 +717,7 @@ input { font-family: inherit; outline: none; }
     -webkit-backdrop-filter: var(--blur-strong);
     position: relative;
     color: inherit;
-    box-shadow: var(--glass-highlight), 0 4px 24px rgba(0,0,0,0.12);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
 }
 .ext-card::before {
     content: ''; position: absolute; inset: 0;
