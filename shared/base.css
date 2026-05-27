@@ -397,28 +397,30 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
         0 6px 16px rgba(0,0,0,0.10);
 }
 
-/* 全光谱虹彩描边：沿滑块圆角跑一圈彩虹（conic 渐变 + 遮罩成环）。
-   纯 CSS、不依赖背后内容、所有浏览器(含 iOS)可用。 */
-.cat-thumb::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1.5px;
-    background: conic-gradient(from 140deg,
-        #ff3b6b, #ff9f0a, #ffd60a, #32d74b, #40c8e0,
-        #0a84ff, #5e5ce6, #bf5af2, #ff3b6b);
-    -webkit-mask:
-        linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask:
-        linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    opacity: 0.9;
-    filter: blur(0.3px) saturate(1.2);
-    pointer-events: none;
+/* 色散凸面镜（仅 html.lens-ok：支持 backdrop-filter url() 的浏览器）。
+   把填充调透、几乎去掉正后方多余模糊，让 SVG 三通道色散滤镜有细节可分光；
+   不支持的浏览器无 .lens-ok，沿用上面的仿真玻璃。 */
+.lens-ok .cat-thumb {
+    background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+    -webkit-backdrop-filter: url(#cat-lens-filter) saturate(1.5) brightness(1.06);
+    backdrop-filter: url(#cat-lens-filter) saturate(1.5) brightness(1.06);
+}
+.lens-ok[data-theme="light"] .cat-thumb {
+    background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0.2));
+}
+/* 折射模式下把标签栏底模糊压到最低，让滑块背后保留细节/颗粒可供色散 */
+.lens-ok .cat-tabs {
+    -webkit-backdrop-filter: blur(3px) saturate(150%);
+    backdrop-filter: blur(3px) saturate(150%);
+}
+/* 参数下拉触发框色散 */
+.lens-ok .fs-trigger {
+    background: rgba(255,255,255,0.05);
+    -webkit-backdrop-filter: url(#cat-lens-filter) saturate(1.4);
+    backdrop-filter: url(#cat-lens-filter) saturate(1.4);
+}
+.lens-ok[data-theme="light"] .fs-trigger {
+    background: rgba(255,255,255,0.4);
 }
 
 /* ========================================
