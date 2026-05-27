@@ -601,26 +601,101 @@ input { font-family: inherit; outline: none; }
 .card-tags { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 
 /* =============================================================
-   FILTER BAR
+   FILTER BAR — 液态玻璃分段控件（与效果页侧栏标签一致，当前项为滑动玻璃滑块）
    ============================================================= */
 .filter-bar { display: flex; align-items: center; margin-bottom: 24px; }
-.filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-.filter-pill {
-    padding: 7px 16px; border-radius: 100px;
-    font-size: 13px; font-weight: 500;
-    color: var(--fg-secondary);
-    background: var(--glass-fill);
-    backdrop-filter: var(--blur);
-    -webkit-backdrop-filter: var(--blur);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-highlight);
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
+.cat-tabs {
+    position: relative;
+    display: inline-flex;       /* 自适应宽度：首页较宽，不撑满，紧贴左侧 */
+    align-items: stretch;
+    padding: 4px;
+    border-radius: 100px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.10);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.22),
+        inset 0 -1px 0 rgba(0,0,0,0.18),
+        0 8px 24px rgba(0,0,0,0.28);
 }
-.filter-pill:hover { color: var(--fg); border-color: var(--border-strong); }
-.filter-pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.cat-tab {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 8px 18px;
+    border: none;
+    background: transparent;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+    white-space: nowrap;
+    font-family: inherit;
+    transition: color 0.2s;
+}
+.cat-tab:hover { color: var(--fg); }
+/* 段间细分隔线；滑块 .cat-thumb 是首个子节点(span)，故 :first-of-type 按
+   button 类型排除首个标签，当前项两侧分隔线淡出。 */
+.cat-tab:not(:first-of-type)::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 1px; height: 16px;
+    background: var(--border);
+    transition: opacity 0.2s;
+}
+.cat-tab.active::before,
+.cat-tab.active + .cat-tab::before { opacity: 0; }
+/* 选中=主色字 --fg(随主题明暗)，未选=次级字 --fg-secondary；不依赖滑块亮度 */
+.cat-tab.active { color: var(--fg); }
+.cat-thumb {
+    position: absolute;
+    top: 4px; bottom: 4px; left: 0;
+    z-index: 0;
+    width: 0;
+    border-radius: 100px;
+    background: rgba(255,255,255,0.15);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    box-shadow:
+        inset 0 0 0 0.5px rgba(255,255,255,0.4),
+        0 4px 2px rgba(0,0,0,0.25),
+        0 8px 40px rgba(0,0,0,0.12);
+    pointer-events: none;
+}
+.cat-tabs.cat-ready .cat-thumb {
+    transition:
+        transform 0.34s cubic-bezier(0.34, 1.12, 0.5, 1),
+        width 0.34s cubic-bezier(0.34, 1.12, 0.5, 1);
+}
 .filter-pill-count { opacity: 0.55; margin-left: 4px; }
+
+[data-theme="light"] .cat-tabs {
+    background: linear-gradient(180deg, rgba(255,255,255,0.62), rgba(255,255,255,0.36));
+    border-color: rgba(0,0,0,0.06);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.9),
+        inset 0 -1px 0 rgba(0,0,0,0.04),
+        0 8px 24px rgba(0,0,0,0.10);
+}
+[data-theme="light"] .cat-tab:not(:first-of-type)::before { background: rgba(0,0,0,0.08); }
+[data-theme="light"] .cat-thumb {
+    background: rgba(255,255,255,0.32);
+    box-shadow:
+        inset 0 0 0 0.5px rgba(255,255,255,0.85),
+        0 2px 3px rgba(0,0,0,0.12),
+        0 6px 20px rgba(0,0,0,0.10);
+}
 
 /* =============================================================
    TOOL GRID — horizontal cards
@@ -1580,12 +1655,13 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0
 
         <!-- Filter Bar -->
         <div class="filter-bar" id="FilterTabs">
-            <div class="filter-pills">
-                <button class="filter-pill active" data-filter="all">全部<span class="filter-pill-count" id="ToolCount">9</span></button>
-                <button class="filter-pill" data-filter="text">文字类</button>
-                <button class="filter-pill" data-filter="visual">视觉类</button>
-                <button class="filter-pill" data-filter="chart">图表类</button>
-                <button class="filter-pill" data-filter="particle">粒子类</button>
+            <div class="cat-tabs">
+                <span class="cat-thumb"></span>
+                <button class="cat-tab active" data-filter="all">全部<span class="filter-pill-count" id="ToolCount">9</span></button>
+                <button class="cat-tab" data-filter="text">文字类</button>
+                <button class="cat-tab" data-filter="visual">视觉类</button>
+                <button class="cat-tab" data-filter="chart">图表类</button>
+                <button class="cat-tab" data-filter="particle">粒子类</button>
             </div>
         </div>
 
@@ -1830,7 +1906,7 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0
         }
 
         heroSearch.addEventListener('input', (e) => {
-            const activeTab = document.querySelector('.filter-pill.active');
+            const activeTab = document.querySelector('.cat-tab.active');
             filterCards(e.target.value, activeTab?.dataset.filter || 'all');
         });
 
@@ -1842,16 +1918,38 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0
             }
         });
 
-        // Category Pills
+        // Category tabs — 滑动玻璃滑块（同效果页）
         const filterTabs = document.getElementById('FilterTabs');
+        const catBar = filterTabs.querySelector('.cat-tabs');
+        const catThumb = filterTabs.querySelector('.cat-thumb');
+
+        function moveThumb(tab) {
+            if (!tab) return;
+            // 滑块 left:0 处于轨道 padding 边；减去边框宽 clientLeft 对齐到标签
+            catThumb.style.width = tab.offsetWidth + 'px';
+            catThumb.style.transform = `translateX(${tab.offsetLeft - catBar.clientLeft}px)`;
+        }
+
+        // 初始无动画定位到 active，下一帧再开启过渡（避免加载时从 0 滑出）
+        moveThumb(filterTabs.querySelector('.cat-tab.active'));
+        requestAnimationFrame(() => requestAnimationFrame(() => catBar.classList.add('cat-ready')));
+
+        // 字体加载/窗口变化导致标签宽度改变时重新对齐（跳过 observe 时的首次触发）
+        let catRoSkip = true;
+        new ResizeObserver(() => {
+            if (catRoSkip) { catRoSkip = false; return; }
+            moveThumb(filterTabs.querySelector('.cat-tab.active'));
+        }).observe(catBar);
+
         filterTabs.addEventListener('click', (e) => {
-            const pill = e.target.closest('.filter-pill');
-            if (!pill) return;
+            const tab = e.target.closest('.cat-tab');
+            if (!tab) return;
 
-            filterTabs.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
+            filterTabs.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            moveThumb(tab);
 
-            filterCards(heroSearch.value, pill.dataset.filter);
+            filterCards(heroSearch.value, tab.dataset.filter);
         });
     </script>
 </body>
