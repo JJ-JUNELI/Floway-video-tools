@@ -115,14 +115,13 @@
     --blur-strong:      blur(5.5px) saturate(1.4);
 
     /* Glass tokens —— 与效果页下拉框统一：深色微染 0.18(不是白膜)，使其透出背景而非浮在其上 */
-    --glass-fill:           rgba(22,27,38,0.18);
-    --glass-fill-strong:    rgba(22,27,38,0.18);
+    --glass-fill:           rgba(22,27,38,0.10);
+    --glass-fill-strong:    rgba(22,27,38,0.10);
     /* 与下拉框一致的 1px 描边（原来是 transparent、靠内描边定义边，去掉内描边后卡片就没边了） */
     --glass-border:         rgba(255,255,255,0.10);
     --glass-border-strong:  rgba(255,255,255,0.10);
-    /* 0.5px 内描边(玻璃镶边) + 顶部高光，与编辑器液态玻璃一致 */
-    --glass-highlight:      inset 0 0 0 0.5px rgba(255,255,255,0.20),
-                            inset 0 1px 0 rgba(255,255,255,0.14);
+    /* 内描边已去掉；边缘由 1px border(--glass-border)定义，对齐下拉框。仅留极淡顶部高光 */
+    --glass-highlight:      inset 0 1px 0 rgba(255,255,255,0.14);
 
     /* Grid pattern (body bg) */
     --grid-line:        rgba(255,255,255,0.02);
@@ -201,13 +200,11 @@
 
     /* Glass tokens — light variant. White-on-white needs a subtle dark
        edge for definition; full transparency leaves the slab invisible. */
-    --glass-fill:           rgba(255,255,255,0.18);
-    --glass-fill-strong:    rgba(255,255,255,0.18);
+    --glass-fill:           rgba(255,255,255,0.10);
+    --glass-fill-strong:    rgba(255,255,255,0.10);
     --glass-border:         rgba(15,23,42,0.10);
     --glass-border-strong:  rgba(0,0,0,0.12);
-    /* 亮色：白内描边在浅底上偏隐(边界主要靠 --glass-border 深线)，保留作玻璃高光 */
-    --glass-highlight:      inset 0 0 0 0.5px rgba(255,255,255,0.95),
-                            inset 0 1px 0 rgba(255,255,255,0.6);
+    --glass-highlight:      inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
 /* ============================================================
