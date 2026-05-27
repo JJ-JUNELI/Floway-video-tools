@@ -384,12 +384,21 @@ body {
     line-height: var(--lh-normal);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    min-height: 100vh;
+    position: relative;
+}
+/* 网格背景：独立 fixed 层，滚动时固定在视口、不跟随内容移动
+   (与 body::before 氛围色光同为 fixed；放 -2 层、在色光 -1 之后) */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
     background-image:
         linear-gradient(var(--grid-line) 1px, transparent 1px),
         linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
     background-size: 24px 24px;
-    min-height: 100vh;
-    position: relative;
 }
 
 /* Ambient color washes — the Frozen-Glass needs something to refract. */
