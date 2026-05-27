@@ -120,12 +120,14 @@ export function enhanceSelect(selectEl) {
     }
 
     function positionDropdown() {
-        // 已 portal 到 body，用 fixed + 视口坐标贴住触发器
+        // 已 portal 到 body，用 fixed + 视口坐标贴住触发器。
+        // 同时钉住 left 和 right（而非设 width），与原来的 left:0;right:0 一致、
+        // 不受 box-sizing/padding 影响，两边尺寸严格对齐触发器。
         const rect = trigger.getBoundingClientRect();
         dropdown.style.position = 'fixed';
         dropdown.style.left = rect.left + 'px';
-        dropdown.style.width = rect.width + 'px';
-        dropdown.style.right = 'auto';
+        dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+        dropdown.style.width = 'auto';
         const dh = dropdown.offsetHeight || 200;
         const spaceBelow = window.innerHeight - rect.bottom;
         const spaceAbove = rect.top;
