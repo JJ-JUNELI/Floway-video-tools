@@ -110,13 +110,13 @@
     --s-11:             56px;
     --s-12:             80px;
 
-    /* Backdrop blur (used on glass surfaces) —— 参考效果页下拉框：轻磨砂、透背景 */
-    --blur:             blur(6px) saturate(1.4);
-    --blur-strong:      blur(10px) saturate(1.5);
+    /* Backdrop blur (used on glass surfaces) —— 与效果页下拉框一致的轻磨砂 */
+    --blur:             blur(5.5px) saturate(1.4);
+    --blur-strong:      blur(8px) saturate(1.4);
 
-    /* Glass tokens — the Frozen-Glass material */
-    --glass-fill:           rgba(255,255,255,0.05);
-    --glass-fill-strong:    rgba(255,255,255,0.07);
+    /* Glass tokens —— 与效果页下拉框统一：深色微染 0.18(不是白膜)，使其透出背景而非浮在其上 */
+    --glass-fill:           rgba(22,27,38,0.18);
+    --glass-fill-strong:    rgba(22,27,38,0.32);
     --glass-border:         transparent;
     --glass-border-strong:  rgba(255,255,255,0.10);
     /* 0.5px 内描边(玻璃镶边) + 顶部高光，与编辑器液态玻璃一致 */
@@ -200,8 +200,8 @@
 
     /* Glass tokens — light variant. White-on-white needs a subtle dark
        edge for definition; full transparency leaves the slab invisible. */
-    --glass-fill:           rgba(255,255,255,0.50);
-    --glass-fill-strong:    rgba(255,255,255,0.65);
+    --glass-fill:           rgba(255,255,255,0.18);
+    --glass-fill-strong:    rgba(255,255,255,0.32);
     --glass-border:         rgba(0,0,0,0.06);
     --glass-border-strong:  rgba(0,0,0,0.12);
     /* 亮色：白内描边在浅底上偏隐(边界主要靠 --glass-border 深线)，保留作玻璃高光 */
