@@ -437,7 +437,7 @@ input { font-family: inherit; outline: none; }
     display: flex; align-items: center; gap: 10px;
     padding: 6px 14px 6px 6px;
     border-radius: 16px;
-    border: 1px solid var(--glass-border);
+    border: 0.5px solid var(--glass-border);
     background: var(--glass-fill-strong);
     backdrop-filter: var(--blur);
     -webkit-backdrop-filter: var(--blur);
@@ -457,7 +457,7 @@ input { font-family: inherit; outline: none; }
 .btn-theme {
     width: 36px; height: 36px;
     border-radius: 50%;
-    border: 1px solid var(--glass-border);
+    border: 0.5px solid var(--glass-border);
     background: var(--glass-fill);
     backdrop-filter: var(--blur);
     -webkit-backdrop-filter: var(--blur);
@@ -508,12 +508,12 @@ input { font-family: inherit; outline: none; }
     to   { transform: translate(-50%, calc(-50% + 5px)); }
 }
 .hero-icon {
-    border-radius: 22px;
+    border-radius: calc(22px * var(--hero-k, 1));
     display: flex; align-items: center; justify-content: center;
     background: var(--glass-fill);
     backdrop-filter: var(--blur-strong);
     -webkit-backdrop-filter: var(--blur-strong);
-    border: 1px solid var(--glass-border);
+    border: 0.5px solid var(--glass-border);
     box-shadow: var(--glass-highlight), 0 8px 28px rgba(0,0,0,0.4);
 }
 .hero-wrap.d-center { z-index: 5; }
@@ -543,7 +543,7 @@ input { font-family: inherit; outline: none; }
     width: 100%; height: 48px;
     padding: 0 110px 0 20px;
     border-radius: var(--radius-xl);
-    border: 1px solid var(--glass-border);
+    border: 0.5px solid var(--glass-border);
     background: var(--glass-fill);
     backdrop-filter: var(--blur);
     -webkit-backdrop-filter: var(--blur);
@@ -576,7 +576,7 @@ input { font-family: inherit; outline: none; }
 .featured-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; }
 .featured-card {
     background: var(--glass-fill);
-    border: 1px solid var(--glass-border);
+    border: 0.5px solid var(--glass-border);
     border-radius: var(--radius-xl);
     transition: all 0.25s ease;
     cursor: pointer;
@@ -621,7 +621,7 @@ input { font-family: inherit; outline: none; }
     border-radius: 100px;
     /* 与卡片/按钮同一套玻璃令牌：轻磨砂 + 1px 描边 + 顶部高光 */
     background: var(--glass-fill);
-    border: 1px solid var(--glass-border);
+    border: 0.5px solid var(--glass-border);
     -webkit-backdrop-filter: var(--blur);
     backdrop-filter: var(--blur);
     box-shadow: var(--glass-highlight);
@@ -673,7 +673,7 @@ input { font-family: inherit; outline: none; }
     border-radius: 100px;
     /* 选中滑块 = 与卡片/按钮同款玻璃 + 投影抬起(选中态像浮起的玻璃按钮) */
     background: var(--glass-fill-strong);
-    border: 1px solid var(--glass-border);
+    border: 0.5px solid var(--glass-border);
     box-shadow: var(--glass-highlight), 0 2px 10px rgba(0,0,0,0.30);
     pointer-events: none;
 }
@@ -699,8 +699,8 @@ input { font-family: inherit; outline: none; }
     display: flex; align-items: center; gap: 11px;
     padding: 16px 18px;
     background: var(--glass-fill);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md);
+    border: 0.5px solid var(--glass-border);
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all 0.2s ease;
     backdrop-filter: var(--blur-strong);
@@ -815,7 +815,7 @@ input { font-family: inherit; outline: none; }
     display: inline-flex; align-items: center; gap: 6px;
     padding: 7px 18px;
     border-radius: 100px;
-    border: 1px solid var(--glass-border);
+    border: 0.5px solid var(--glass-border);
     background: var(--glass-fill);
     box-shadow: var(--glass-highlight);
     color: var(--fg);
@@ -851,7 +851,7 @@ input { font-family: inherit; outline: none; }
     overflow: hidden;
     position: relative;
     margin: 12px 0 12px 12px;
-    border: 1px solid var(--glass-border);
+    border: 0.5px solid var(--glass-border);
     box-shadow:
         var(--glass-highlight),
         0 12px 40px rgba(0,0,0,0.22),
@@ -880,7 +880,7 @@ input { font-family: inherit; outline: none; }
 .sidebar-header .btn-icon {
     width: 28px; height: 28px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--glass-border);
+    border: 0.5px solid var(--glass-border);
     background: var(--glass-fill);
     display: inline-flex; align-items: center; justify-content: center;
     color: var(--fg-secondary);
@@ -928,7 +928,7 @@ input { font-family: inherit; outline: none; }
 .btn-theme-mini {
     width: 28px; height: 28px;
     border-radius: 50%;
-    border: 1px solid var(--glass-border);
+    border: 0.5px solid var(--glass-border);
     background: var(--glass-fill);
     color: var(--fg-muted);
     display: inline-flex; align-items: center; justify-content: center;
@@ -1059,7 +1059,7 @@ input { font-family: inherit; outline: none; }
 .data-table td { padding: 4px 3px; vertical-align: middle; }
 .data-table tr + tr td { border-top: 1px solid rgba(255,255,255,0.04); }
 .data-table input {
-    background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); color: var(--fg);
+    background: rgba(255,255,255,0.04); border: 0.5px solid var(--glass-border); color: var(--fg);
     padding: 4px 6px; border-radius: 6px; font-size: 11px; width: 100%; outline: none;
     box-sizing: border-box; height: 28px; transition: border-color 0.2s;
     font-family: var(--font-ui);
@@ -1067,7 +1067,7 @@ input { font-family: inherit; outline: none; }
 .data-table input:focus { border-color: var(--accent); }
 .btn-row {
     width: 26px; height: 28px;
-    border: 1px solid var(--glass-border);
+    border: 0.5px solid var(--glass-border);
     background: rgba(255,255,255,0.04);
     color: var(--fg-muted);
     border-radius: 6px;
