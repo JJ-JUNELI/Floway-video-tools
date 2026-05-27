@@ -41,8 +41,8 @@
     --radius-sm: 10px;
     --radius-md: 14px;
 
-    /* 玻璃（设计稿配方：白膜 + 重磨砂 + 叠层投影） */
-    --glass-blur: 50px;
+    /* 玻璃：轻磨砂(更透出画布) + 深染 + 叠层投影 */
+    --glass-blur: 10px;
     --grid-line: rgba(255,255,255,0.02);
     --glass-shadow: 0 12px 40px rgba(0,0,0,0.22), 0 32px 80px rgba(0,0,0,0.16);
     --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.10),
