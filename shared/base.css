@@ -19,7 +19,7 @@
     /* 深空霍玉玻璃（暗色默认） */
     --bg-dark: #0e1117;
     --panel-bg: rgba(22,27,38,0.38);
-    --sidebar-bg: rgba(255,255,255,0.04);
+    --sidebar-bg: rgba(22,27,38,0.20);
     --card-bg: rgba(255,255,255,0.05);
     --surface-2: rgba(255,255,255,0.07);
     --accent: #6CA8D9;
@@ -45,7 +45,8 @@
     --glass-blur: 50px;
     --grid-line: rgba(255,255,255,0.02);
     --glass-shadow: 0 12px 40px rgba(0,0,0,0.22), 0 32px 80px rgba(0,0,0,0.16);
-    --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.14);
+    --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.10),
+                       inset 2px 2px 5px rgba(255,255,255,0.05);
     --shadow-canvas: 0 4px 24px rgba(0,0,0,0.3);
 
     /* 字体 */
@@ -134,7 +135,7 @@ html.editor-booting .preview-area #mainSvg { opacity: 0 !important; }
     overflow: hidden;
     outline: none;
     position: relative;
-    border: 1px solid var(--hairline);
+    border: 0.5px solid var(--hairline);
     box-shadow: var(--glass-highlight), var(--glass-shadow);
 }
 /* 磨砂噪点颗粒层（设计稿：冻玻璃质感） */
@@ -298,14 +299,12 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     margin: 12px 12px 6px;
     padding: 4px;
     border-radius: 100px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-    border: 1px solid rgba(255,255,255,0.10);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    backdrop-filter: blur(28px) saturate(180%);
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.22),
-        inset 0 -1px 0 rgba(0,0,0,0.18),
-        0 8px 24px rgba(0,0,0,0.28);
+    /* 与卡片同款玻璃：半透 + 0.5px 描边 + 顶部/左上高光（去掉原重磨砂渐变） */
+    background: var(--surface-2);
+    border: 0.5px solid var(--border);
+    -webkit-backdrop-filter: blur(1px) saturate(1.4);
+    backdrop-filter: blur(1px) saturate(1.4);
+    box-shadow: var(--glass-highlight);
 }
 .cat-tab {
     position: relative;
@@ -369,14 +368,12 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     top: 4px; bottom: 4px; left: 0;
     z-index: 0;
     width: 0;
+    box-sizing: border-box;
     border-radius: 100px;
-    background: rgba(255,255,255,0.15);
-    -webkit-backdrop-filter: blur(14px) saturate(1.4);
-    backdrop-filter: blur(14px) saturate(1.4);
-    box-shadow:
-        inset 0 0 0 0.5px rgba(255,255,255,0.4),
-        0 4px 2px rgba(0,0,0,0.25),
-        0 8px 40px rgba(0,0,0,0.12);
+    /* 选中滑块 = 同款玻璃 + 投影抬起，比轨道略亮以突出选中 */
+    background: rgba(255,255,255,0.14);
+    border: 0.5px solid var(--border);
+    box-shadow: var(--glass-highlight), 0 2px 10px rgba(0,0,0,0.28);
     pointer-events: none;
 }
 .cat-tabs.cat-ready .cat-thumb {
@@ -385,23 +382,11 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
         width 0.34s cubic-bezier(0.34, 1.12, 0.5, 1);
 }
 
-/* 亮色：白膜玻璃 + 近白滑块 */
-[data-theme="light"] .cat-tabs {
-    background: linear-gradient(180deg, rgba(255,255,255,0.62), rgba(255,255,255,0.36));
-    border-color: rgba(0,0,0,0.06);
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.9),
-        inset 0 -1px 0 rgba(0,0,0,0.04),
-        0 8px 24px rgba(0,0,0,0.10);
-}
+/* cat-tabs 现走主题令牌(surface-2 / border / glass-highlight)，无需亮色覆盖；仅分隔线取色 */
 [data-theme="light"] .cat-tab:not(:first-of-type)::before { background: rgba(0,0,0,0.08); }
-/* 亮色：纯白不透明滑块 + 柔投影浮在浅色轨道上（Apple 浅色分段控件） */
 [data-theme="light"] .cat-thumb {
-    background: rgba(255,255,255,0.32);
-    box-shadow:
-        inset 0 0 0 0.5px rgba(255,255,255,0.85),
-        0 2px 3px rgba(0,0,0,0.12),
-        0 6px 20px rgba(0,0,0,0.10);
+    background: rgba(255,255,255,0.7);
+    box-shadow: var(--glass-highlight), 0 2px 8px rgba(0,0,0,0.12);
 }
 
 /* 同款液态玻璃材质（磨砂模糊）应用到下拉与头部圆按钮；
@@ -490,7 +475,8 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     background: rgba(255,255,255,0.04);
     border-radius: var(--radius-md);
     padding: 14px;
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 0.5px solid var(--border);
+    box-shadow: var(--glass-highlight);
     transition: all 0.2s ease;
 }
 /* 注意：不要给组加 backdrop-filter。它会让组成为「滤镜祖先」，使内部下拉框自身的
@@ -1382,7 +1368,7 @@ body.logo canvas {
     /* 冷雾磨砂玻璃（亮色变体） */
     --bg-dark: #f4f5f8;
     --panel-bg: rgba(255,255,255,0.45);
-    --sidebar-bg: rgba(255,255,255,0.55);
+    --sidebar-bg: rgba(255,255,255,0.45);
     --grid-line: rgba(15,23,42,0.035);
     --card-bg: rgba(255,255,255,0.70);
     --surface-2: rgba(15,23,42,0.04);
@@ -1399,7 +1385,8 @@ body.logo canvas {
     --accent-dim: rgba(193,95,60,0.08);
     --accent-glow: rgba(193,95,60,0.12);
     --glass-shadow: 0 8px 30px rgba(15,23,42,0.10);
-    --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.7);
+    --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.6),
+                       inset 2px 2px 5px rgba(255,255,255,0.4);
     --shadow-canvas: 0 4px 16px rgba(0,0,0,0.08);
 }
 
