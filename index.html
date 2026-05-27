@@ -678,7 +678,6 @@ input { font-family: inherit; outline: none; }
         transform 0.34s cubic-bezier(0.34, 1.12, 0.5, 1),
         width 0.34s cubic-bezier(0.34, 1.12, 0.5, 1);
 }
-.filter-pill-count { opacity: 0.55; margin-left: 4px; }
 
 [data-theme="light"] .cat-tabs {
     background: linear-gradient(180deg, rgba(255,255,255,0.62), rgba(255,255,255,0.36));
@@ -695,6 +694,11 @@ input { font-family: inherit; outline: none; }
         inset 0 0 0 0.5px rgba(255,255,255,0.85),
         0 2px 3px rgba(0,0,0,0.12),
         0 6px 20px rgba(0,0,0,0.10);
+}
+/* 移动端：分段控件撑满一行、等分宽度，避免 inline 宽度溢出屏幕 */
+@media (max-width: 600px) {
+    .cat-tabs { display: flex; width: 100%; }
+    .cat-tab { flex: 1; min-width: 0; padding: 8px 6px; font-size: 12px; }
 }
 
 /* =============================================================
@@ -1657,7 +1661,7 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0
         <div class="filter-bar" id="FilterTabs">
             <div class="cat-tabs">
                 <span class="cat-thumb"></span>
-                <button class="cat-tab active" data-filter="all">全部<span class="filter-pill-count" id="ToolCount">9</span></button>
+                <button class="cat-tab active" data-filter="all">全部</button>
                 <button class="cat-tab" data-filter="text">文字类</button>
                 <button class="cat-tab" data-filter="visual">视觉类</button>
                 <button class="cat-tab" data-filter="chart">图表类</button>
@@ -1872,7 +1876,6 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0
         // ====== Search + Filter ======
         const heroSearch = document.getElementById('HeroSearchInput');
         const noResults = document.getElementById('NoResults');
-        const toolCount = document.getElementById('ToolCount');
 
         function filterCards(query, category) {
             const q = query.toLowerCase().trim();
@@ -1900,8 +1903,6 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0
             });
 
             const total = visibleActive + visibleDev;
-            toolCount.textContent = `${total}`;
-
             noResults.classList.toggle('show', total === 0);
         }
 
