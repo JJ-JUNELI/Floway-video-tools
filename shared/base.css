@@ -356,8 +356,9 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 }
 .cat-tab.active::before,
 .cat-tab.active + .cat-tab::before { opacity: 0; }
-/* 选中标签：白玻璃滑块上用深色字（仿 Apple 分段控件：选中=深字白底）*/
-.cat-tab.active { color: #1c2333; }
+/* 选中标签：用 --text-main（暗色主题=浅字、亮色主题=深字），不依赖滑块亮度，
+   故滑块可做得很透也不影响文字对比；选中=主色字、未选=次级字 --text-sub 作区分。 */
+.cat-tab.active { color: var(--text-main); }
 /* 当前项 —— 浮起的液态玻璃滑块（照 Figma「Liquid Glass / Regular / Small」节点 1:25）：
    白 65% 磨砂填充 + 背景模糊 + 两层投影(贴地接触影 + 柔和悬浮影)，全圆角。
    上下内嵌 4px 保证垂直居中，JS 只设宽度 + 横移。 */
@@ -367,7 +368,7 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     z-index: 0;
     width: 0;
     border-radius: 100px;
-    background: rgba(255,255,255,0.42);
+    background: rgba(255,255,255,0.25);
     -webkit-backdrop-filter: blur(14px) saturate(1.4);
     backdrop-filter: blur(14px) saturate(1.4);
     box-shadow:
@@ -393,7 +394,7 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 [data-theme="light"] .cat-tab:not(:first-of-type)::before { background: rgba(0,0,0,0.08); }
 /* 亮色：纯白不透明滑块 + 柔投影浮在浅色轨道上（Apple 浅色分段控件） */
 [data-theme="light"] .cat-thumb {
-    background: rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.42);
     box-shadow:
         0 2px 3px rgba(0,0,0,0.12),
         0 6px 20px rgba(0,0,0,0.10);
