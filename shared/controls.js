@@ -334,12 +334,6 @@ export function initEffect(opts) {
     // 1.12 参数分类标签（文字/数据 · 样式 · 动画）
     if (!isPreview) initCategoryTabs();
 
-    // 1.13 色散凸面镜（渐进增强；仅 Chromium 开启，含分类滑块与下拉触发框）
-    if (!isPreview) {
-        ensureLensFilter();
-        if (lensSupported()) document.documentElement.classList.add('lens-ok');
-    }
-
     // 2. Canvas 初始化（预览模式降低分辨率；可跳过供 WebGL/SVG 效果使用）
     const baseWidth = opts.baseWidth || 1440;
     const baseHeight = opts.baseHeight || 1080;
@@ -628,43 +622,6 @@ function readGroupTitle(group) {
 }
 
 const CAT_TAB_KEY = 'floway-cat-tab';
-
-// 色散凸面镜：仅 Chromium 桌面/安卓支持 backdrop-filter: url() 的 SVG 滤镜；
-// iOS WebKit 不支持 → 回退仿真玻璃。
-function lensSupported() {
-    const ua = navigator.userAgent;
-    if (/iP(hone|ad|od)|CriOS|FxiOS|EdgiOS|OPiOS/.test(ua)) return false;
-    return /Chrome|Chromium|Edg/.test(ua)
-        && typeof CSS !== 'undefined' && CSS.supports('backdrop-filter', 'blur(1px)');
-}
-
-// 注入一次「色散」置换滤镜：同一张位移贴图分别按不同强度位移 R/G/B 三通道再 screen 合并，
-// 在折射边缘产生红/绿/蓝分离的彩色镶边（chromatic aberration）+ 凸透镜扭曲。
-function ensureLensFilter() {
-    if (document.getElementById('cat-lens-svg')) return;
-    const map = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='48'>"
-        + "<rect width='120' height='48' fill='url(%23clh)'/>"
-        + "<rect width='120' height='48' fill='url(%23clv)' style='mix-blend-mode:screen'/>"
-        + "<defs><linearGradient id='clh' x1='0' y1='0' x2='1' y2='0'>"
-        + "<stop offset='0' stop-color='%23000'/><stop offset='1' stop-color='%23f00'/></linearGradient>"
-        + "<linearGradient id='clv' x1='0' y1='0' x2='0' y2='1'>"
-        + "<stop offset='0' stop-color='%23000'/><stop offset='1' stop-color='%2300ff00'/></linearGradient></defs></svg>";
-    const f = `<filter id="cat-lens-filter" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">`
-        + `<feImage href="${map}" preserveAspectRatio="none" result="m"/>`
-        + `<feDisplacementMap in="SourceGraphic" in2="m" scale="38" xChannelSelector="R" yChannelSelector="G" result="dr"/>`
-        + `<feColorMatrix in="dr" type="matrix" values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" result="cr"/>`
-        + `<feDisplacementMap in="SourceGraphic" in2="m" scale="26" xChannelSelector="R" yChannelSelector="G" result="dg"/>`
-        + `<feColorMatrix in="dg" type="matrix" values="0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0" result="cg"/>`
-        + `<feDisplacementMap in="SourceGraphic" in2="m" scale="14" xChannelSelector="R" yChannelSelector="G" result="db"/>`
-        + `<feColorMatrix in="db" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0" result="cb"/>`
-        + `<feBlend in="cr" in2="cg" mode="screen" result="crg"/>`
-        + `<feBlend in="crg" in2="cb" mode="screen"/></filter>`;
-    const wrap = document.createElement('div');
-    wrap.setAttribute('aria-hidden', 'true');
-    wrap.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
-    wrap.innerHTML = `<svg id="cat-lens-svg" width="0" height="0">${f}</svg>`;
-    document.body.appendChild(wrap);
-}
 
 export function initCategoryTabs(root = document) {
     const sidebar = root.querySelector('.sidebar');
