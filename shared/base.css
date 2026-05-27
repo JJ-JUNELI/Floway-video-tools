@@ -481,6 +481,7 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
    ======================================== */
 
 .control-group {
+    position: relative;
     background: rgba(255,255,255,0.04);
     border-radius: var(--radius-md);
     padding: 14px;
@@ -488,6 +489,11 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     transition: all 0.2s ease;
+}
+/* 组自身的 backdrop-filter 会建立独立层叠上下文，把内部下拉框的 z-index 困住，
+   导致展开的下拉框被后一个组盖住。打开下拉框时把所在组整体抬到兄弟组之上。 */
+.control-group:has(.fs-dropdown.fs-open) {
+    z-index: 50;
 }
 .control-group:hover {
     background: rgba(255,255,255,0.05);
