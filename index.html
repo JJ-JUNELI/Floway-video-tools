@@ -120,9 +120,9 @@
     /* 与下拉框一致的 1px 描边（原来是 transparent、靠内描边定义边，去掉内描边后卡片就没边了） */
     --glass-border:         rgba(255,255,255,0.10);
     --glass-border-strong:  rgba(255,255,255,0.10);
-    /* 边缘由 1px border 定义；顶部极淡高光 + 左上角柔光(光源在左上，组件左上更亮) */
-    --glass-highlight:      inset 0 1px 0 rgba(255,255,255,0.12),
-                            inset 2px 2px 12px rgba(255,255,255,0.08);
+    /* 顶部极淡高光 + 左上角柔光(小模糊使其只集中在左上、不外溢到右下) */
+    --glass-highlight:      inset 0 1px 0 rgba(255,255,255,0.10),
+                            inset 2px 2px 5px rgba(255,255,255,0.05);
 
     /* Grid pattern (body bg) */
     --grid-line:        rgba(255,255,255,0.02);
@@ -205,8 +205,8 @@
     --glass-fill-strong:    rgba(255,255,255,0.10);
     --glass-border:         rgba(15,23,42,0.10);
     --glass-border-strong:  rgba(0,0,0,0.12);
-    --glass-highlight:      inset 0 1px 0 rgba(255,255,255,0.55),
-                            inset 2px 2px 12px rgba(255,255,255,0.45);
+    --glass-highlight:      inset 0 1px 0 rgba(255,255,255,0.5),
+                            inset 2px 2px 5px rgba(255,255,255,0.3);
 }
 
 /* ============================================================
