@@ -399,6 +399,22 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
         0 6px 20px rgba(0,0,0,0.10);
 }
 
+/* 同款液态玻璃材质（磨砂模糊）应用到下拉与头部圆按钮；
+   强调色功能按钮(录制/播放/添加)保持原样不变玻璃。 */
+.fs-trigger {
+    -webkit-backdrop-filter: blur(10px) saturate(1.2);
+    backdrop-filter: blur(10px) saturate(1.2);
+}
+.fs-dropdown {
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    backdrop-filter: blur(24px) saturate(1.5);
+}
+.sidebar-header .btn-icon,
+.sidebar-header .btn-theme {
+    -webkit-backdrop-filter: blur(8px) saturate(1.2);
+    backdrop-filter: blur(8px) saturate(1.2);
+}
+
 /* ========================================
    Sidebar Footer — 常驻底部（背景 + 导出）
    ======================================== */
