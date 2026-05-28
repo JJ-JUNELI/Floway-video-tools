@@ -153,10 +153,12 @@ function buildChartTitlePanel(cfg = {}) {
                             <input type="range" id="MainTitleWeight" min="100" max="900" step="100" value="700"></div>
                         <div class="row stack"><div class="label-line"><span>颜色</span></div>
                             <input type="color" id="TitleColor" value="#333333"></div>
-                        <div class="stack"><div class="label-line"><span>X</span><span id="MainTitleXVal">0</span></div>
-                            <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
-                        <div class="stack"><div class="label-line"><span>Y</span><span id="MainTitleYVal">-490</span></div>
-                            <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
+                        <div class="row">
+                            <div class="stack" style="flex:1"><div class="label-line"><span>X</span><span id="MainTitleXVal">0</span></div>
+                                <input type="range" id="MainTitleX" min="-720" max="720" step="1" value="0"></div>
+                            <div class="stack" style="flex:1"><div class="label-line"><span>Y</span><span id="MainTitleYVal">-490</span></div>
+                                <input type="range" id="MainTitleY" min="-540" max="540" step="1" value="-490"></div>
+                        </div>
                         <div class="sub-title"><span>显示括号</span><input type="checkbox" id="ShowBrackets" checked></div>
                     </div>
                 </div>
@@ -176,10 +178,12 @@ function buildChartTitlePanel(cfg = {}) {
                             <input type="range" id="SubTitleWeight" min="100" max="900" step="100" value="400"></div>
                         <div class="row stack"><div class="label-line"><span>颜色</span></div>
                             <input type="color" id="SubTitleColor" value="#999999"></div>
-                        <div class="stack"><div class="label-line"><span>X</span><span id="SubTitleXVal">630</span></div>
-                            <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
-                        <div class="stack"><div class="label-line"><span>Y</span><span id="SubTitleYVal">0</span></div>
-                            <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
+                        <div class="row">
+                            <div class="stack" style="flex:1"><div class="label-line"><span>X</span><span id="SubTitleXVal">630</span></div>
+                                <input type="range" id="SubTitleX" min="-720" max="720" step="1" value="630"></div>
+                            <div class="stack" style="flex:1"><div class="label-line"><span>Y</span><span id="SubTitleYVal">0</span></div>
+                                <input type="range" id="SubTitleY" min="-540" max="540" step="1" value="0"></div>
+                        </div>
                         <div class="sub-title"><span>副标题发光</span><input type="checkbox" id="SubTitleGlow"></div>
                     </div>
                 </div>
