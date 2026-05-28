@@ -24,6 +24,27 @@ index.html 精选区使用 iframe 嵌入效果的实时动画预览。通过 URL
 - base.css 底部有 `.preview-mode` 样式块：隐藏 sidebar、居中 Canvas/SVG、去边框阴影
 - stack-scan 因为不走 initEffect，预览模式下仍会完整初始化（面板注入+Recorder），只是 sidebar 被 CSS 隐藏
 
+## 玻璃设计系统（液态玻璃）
+
+统一的玻璃质感。首页（index.html 内联 `<style>`）与效果页（`shared/base.css`）各维护一套**同名令牌**：
+- `--glass-fill` / `--glass-fill-strong`：半透膜（暗 `rgba(22,27,38,α)` 深染 / 亮 `rgba(255,255,255,α)`）
+- `--glass-border`：**0.5px** 描边色（暗 `rgba(255,255,255,0.10)` / 亮 `rgba(15,23,42,0.10)`）
+- `--glass-highlight`：顶部细高光 + **左上角柔光**（`inset` 组合，模拟左上光源）
+- `--blur` / `--blur-strong`（首页）、`--glass-blur`（效果页侧栏）：**轻磨砂**（约 1px，几乎全透出背景）
+
+**卡片材质** = 半透填充 + 0.5px 描边 + glass-highlight + 轻 blur + 投影 + 圆角（首页 18px）。统一用于：首页 卡片/按钮/搜索框/logo/主题开关；效果页 control-group/侧边栏/分类标签。调参时优先动「填充不透明度」和「blur」两个旋钮——在均匀深底上 blur 视觉影响很小，**填充才是控制通透感的主旋钮**。
+
+**下拉框** `.fs-dropdown` 是**独立材质**（深染 0.18 + blur 5.5），用户明确要求不跟随上面的整体调整。
+
+### ⚠️ 关键约束：backdrop-filter 嵌套失效 → 下拉框 portal 到 body
+Chromium 下，带 `backdrop-filter` 的元素若**嵌套在另一个 backdrop-filter 祖先**（如侧边栏整体玻璃）内，它自己的 blur 是 **no-op**（膜照常渲染、但背景不模糊，文字依旧锐利）。改 CSS（去中间层滤镜、调 blur 值）都救不了。所以自定义下拉框（`shared/custom-select.js`）**打开时 portal 到 `<body>`**：`position:fixed` + `getBoundingClientRect` 贴住触发器、随 `scroll`(capture)/`resize` 跟随；脱离侧栏滤镜后 blur 才真正生效，顺带根治「被后一组盖住」的层叠问题。**给侧栏内任何玻璃元素调 blur 前先想这条。**
+
+### 分类标签 cat-tabs
+液态玻璃分段控件 + 滑动玻璃滑块（`.cat-thumb`）：效果页侧栏由 `controls.js` 的 `initCategoryTabs` 构建；首页筛选分类是 `index.html` 内联的同款（JS 内联 `moveThumb`：`width` + `translateX(tab.offsetLeft - bar.clientLeft)`，加 `ResizeObserver` 在字体加载/缩放后重对齐）。选中=主色字 `--text-main`/`--fg`、未选=次级字；移动端 `flex:1` 撑满等分。
+
+### 两列参数布局
+`.row`（横向 flex）内放两个 `.stack` 列即左右排布。`base.css` 有 `.row > .stack { margin-bottom:0 }` 保证两列对齐——否则首列（非 `:last-child`）残留 `margin-bottom:10px` 比末列高，`align-items:center` 会把两列内容上下错位 ~5px。
+
 ## 已完成的修复（最近一次 review）
 
 ### 前端修复

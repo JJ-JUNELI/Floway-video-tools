@@ -415,6 +415,21 @@ function drawFrame(timeMs) {
 </div>
 ```
 
+### 两列并排（两个滑块/控件横排）
+```html
+<div class="row">
+    <div class="stack" style="flex:1">
+        <div class="label-line"><span>角度</span><span id="AngleVal">90°</span></div>
+        <input type="range" id="Angle" min="0" max="360" value="90">
+    </div>
+    <div class="stack" style="flex:1">
+        <div class="label-line"><span>距离</span><span id="DistVal">10px</span></div>
+        <input type="range" id="Dist" min="0" max="60" value="10">
+    </div>
+</div>
+```
+> 外层用 `.row`（横排），每列是 `.stack`（竖排 label+控件）+ `flex:1`。`base.css` 已用 `.row > .stack { margin-bottom:0 }` 保证两列竖向对齐，无需额外处理。
+
 ---
 
 ## `bindUI()` — 批量 UI 绑定
