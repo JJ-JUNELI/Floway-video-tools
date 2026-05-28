@@ -266,6 +266,9 @@
                 </div>
                 <div class="sub-section ss-purple">
                     <div class="sub-section-label">图表区域</div>
+                    <div class="row stack"><div class="label-line"><span>点间距</span><span id="PointSpacingVal">全宽</span></div>
+                        <input type="range" id="PointSpacing" min="20" max="100" step="5" value="100">
+                    </div>
                     <div class="row">
                         <div class="stack" style="flex:1"><div class="label-line"><span>X</span><span id="ChartOffXVal">0</span></div>
                             <input type="range" id="ChartOffX" min="-300" max="300" step="5" value="0"></div>
@@ -543,6 +546,7 @@
             entranceStartScale: 100,
             entranceEndScale: 100,
             // 图表区域
+            pointSpacing: 100,
             chartOffX: 0,
             chartOffY: 0,
             chartExtraW: 0,
@@ -726,6 +730,7 @@
             ['AxisLabelSize',   'axisLabelSize',  'int',   'AxisLabelSizeVal'],
             ['AxisLabelColor',  'axisLabelColor'],
             ['GridColor',       'gridColor'],
+            ['PointSpacing',    'pointSpacing',   'int'],
             ['ChartOffX',       'chartOffX',      'int',   'ChartOffXVal'],
             ['ChartOffY',       'chartOffY',      'int',   'ChartOffYVal'],
             ['ChartExtraW',     'chartExtraW',    'int',   'ChartExtraWVal'],
@@ -787,6 +792,10 @@
                     const show = config.entranceEnabled;
                     document.getElementById('EntranceOpts').style.display = show ? '' : 'none';
                     document.getElementById('EntranceDetailOpts').style.display = show ? '' : 'none';
+                }
+                if (key === 'pointSpacing') {
+                    document.getElementById('PointSpacingVal').textContent =
+                        config.pointSpacing >= 100 ? '全宽' : config.pointSpacing + '%';
                 }
                 _paperTexCache = null;
                 _staticBgCache = null;
@@ -1091,6 +1100,14 @@
                 chartY = padT;
             }
 
+            // === 点间距：<100 时各柱/标签沿主轴向中心压缩并居中（数值轴刻度不变） ===
+            const _spN = Math.max(dataPoints.length, 1);
+            const _spacing = Math.min(Math.max(config.pointSpacing, 20), 100) / 100;
+            const slotWsp = (cw * _spacing) / _spN;   // 纵向：压缩后格宽（柱宽用）
+            const slotHsp = (ch * _spacing) / _spN;   // 横向：压缩后格高
+            const catX = (i) => chartX + cw / 2 + (i / Math.max(_spN - 1, 1) - 0.5) * cw * _spacing;  // 纵向第 i 类中心 x
+            const catY = (i) => chartY + ch / 2 + ((i + 0.5) / _spN - 0.5) * ch * _spacing;           // 横向第 i 类中心 y
+
             // 裁剪圆角
             ctx.save();
             ctx.beginPath();
@@ -1117,7 +1134,7 @@
                     const barCount = dataPoints.length;
                     const slotH = ch / Math.max(barCount, 1);
                     for (let i = 0; i < barCount; i++) {
-                        const y = chartY + (i + 0.5) * slotH;
+                        const y = catY(i);
                         ctx.beginPath(); ctx.moveTo(chartX, y); ctx.lineTo(chartX + cw, y); ctx.stroke();
                     }
                     for (let i = 0; i <= config.gridY; i++) {
@@ -1128,7 +1145,7 @@
                 } else {
                     // 纵向：竖线（每个数据点），横线（Y轴刻度）
                     for (let i = 0; i < dataPoints.length; i++) {
-                        const x = chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw;
+                        const x = catX(i);
                         ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ch); ctx.stroke();
                     }
                     for (let i = 0; i <= config.gridY; i++) {
@@ -1173,7 +1190,7 @@
                 ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
                 const slotH = ch / Math.max(dataPoints.length, 1);
                 dataPoints.forEach((d, i) => {
-                    ctx.fillText(d.label, chartX - 14, chartY + (i + 0.5) * slotH);
+                    ctx.fillText(d.label, chartX - 14, catY(i));
                 });
                 ctx.textAlign = 'center'; ctx.textBaseline = 'top';
                 for (let i = 0; i <= config.gridY; i++) {
@@ -1189,7 +1206,7 @@
                 }
                 ctx.textAlign = 'center'; ctx.textBaseline = 'top';
                 dataPoints.forEach((d, i) => {
-                    ctx.fillText(d.label, chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw, padT + ch + 22);
+                    ctx.fillText(d.label, catX(i), padT + ch + 22);
                 });
             }
             ctx.restore();
@@ -1225,11 +1242,11 @@
                     const slotH = ch / Math.max(dataPoints.length, 1);
                     return {
                         x: chartX + ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * cw,
-                        y: chartY + (i + 0.5) * slotH
+                        y: catY(i)
                     };
                 })
                 : dataPoints.map((d, i) => ({
-                    x: chartX + (i / Math.max(dataPoints.length - 1, 1)) * cw,
+                    x: catX(i),
                     y: padT + ch - ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch
                 }));
 
@@ -1267,10 +1284,9 @@
 
                 ctx.save();
                 if (isHoriz) {
-                    const slotH = ch / Math.max(barCount, 1);
-                    const bh = slotH * config.barWidth;
+                    const bh = slotHsp * config.barWidth;
                     dataPoints.forEach((d, i) => {
-                        const barCy = chartY + (i + 0.5) * slotH;
+                        const barCy = catY(i);
                         const by = barCy - bh / 2;
                         const valW = ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * cw * barProgress;
                         const bWidth = valW;
@@ -1319,11 +1335,10 @@
                         }
                     });
                 } else {
-                    const slotW = cw / Math.max(barCount, 1);
-                    const bw = slotW * config.barWidth;
+                    const bw = slotWsp * config.barWidth;
                     const baseY = padT + ch;
                     dataPoints.forEach((d, i) => {
-                        const barCx = chartX + (i / Math.max(barCount - 1, 1)) * cw;
+                        const barCx = catX(i);
                         const bx = barCx - bw / 2;
                         const valH = ((clamp(d.value, yMin, yMax) - yMin) / (yMax - yMin)) * ch * barProgress;
                         const bh = valH;
