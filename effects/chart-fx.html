@@ -27,6 +27,7 @@
             box-sizing: border-box; height: 32px; transition: border-color 0.2s;
         }
         .data-table input:focus { border-color: var(--accent, #555); background: #fff; }
+        .data-table input:disabled { opacity: 0.35; cursor: not-allowed; }
 
         /* 行操作按钮 */
         .btn-icon {
@@ -199,7 +200,7 @@
             <!-- 柱状图 -->
             <div class="control-group">
                 <div class="group-title"><span>柱状图</span></div>
-                <div class="sub-title"><span>显示柱状图</span><input type="checkbox" id="ShowBars" checked></div>
+                <div class="sub-title"><span>显示柱状图</span><input type="checkbox" id="ShowBars"></div>
                 <div id="BarOptions">
                 <div class="sub-section ss-amber">
                     <div class="sub-section-label">柱子样式</div>
@@ -546,7 +547,7 @@
             legendSize: 11,
             legendOffY: 0,
             // 柱状图
-            showBars: true,
+            showBars: false,
             barWidth: 0.6,
             barColor: '#a8c5da',
             barOpacity: 0.7,
@@ -986,7 +987,7 @@
                 <tr>
                     <td><input type="text" value="${item.label}" oninput="updateData(${i}, 'label', this.value)"></td>
                     <td><input type="number" value="${item.lineValue}" oninput="updateData(${i}, 'lineValue', this.value)"></td>
-                    <td><input type="number" value="${item.barValue}" oninput="updateData(${i}, 'barValue', this.value)"></td>
+                    <td><input type="number" class="bar-val" value="${item.barValue}" oninput="updateData(${i}, 'barValue', this.value)" ${config.showBars ? '' : 'disabled'}></td>
                     <td class="op-cell">
                         <button class="btn-icon" onclick="moveRow(${i}, -1)" title="上移">↑</button>
                         <button class="btn-icon" onclick="moveRow(${i}, 1)" title="下移">↓</button>
@@ -1032,6 +1033,8 @@
         const barOptsEl = document.getElementById('BarOptions');
         function updateBarVisibility() {
             barOptsEl.style.display = config.showBars ? '' : 'none';
+            // 柱状图隐藏时，数据表的「柱状值」列灰掉、不可编辑
+            document.querySelectorAll('.bar-val').forEach(el => { el.disabled = !config.showBars; });
         }
         document.getElementById('ShowBars').addEventListener('change', updateBarVisibility);
         updateBarVisibility();
