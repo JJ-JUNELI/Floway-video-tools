@@ -563,6 +563,8 @@
 
         // ====== 模式预设（切换主题时同步的参数） ======
         const MODE_PRESETS = {
+            // ⚠️ paper / cyber 两套预设必须包含**完全相同的键**（对称），否则切到对方再切回时，
+            // 仅一方定义的键不会被重置、残留对方的值（如 barStrokeColor 残留赛博青）。
             paper: {
                 mainTitleColor: '#333333',
                 subTitleColor: '#999999',
@@ -575,9 +577,12 @@
                 cardBorderColor: '#c8c3b8',
                 cardGlowEnabled: false,
                 cardGlowWidth: 0,
+                cardGlowColor: '#3b82f6',
+                cardGlowIntensity: 70,
                 subTitleGlow: false,
                 barColor: '#888888',
                 barStrokeWidth: 1,
+                barStrokeColor: '#888888',
                 barJitter: 25,
             },
             cyber: {
@@ -598,6 +603,7 @@
                 barColor: '#00f2ff',
                 barStrokeWidth: 1,
                 barStrokeColor: '#00f2ff',
+                barJitter: 0,
             },
         };
 
