@@ -537,6 +537,9 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
     margin-bottom: 10px;
 }
 .stack:not(body):last-child { margin-bottom: 0; }
+/* 两列布局：.stack 作为 .row 的列时清掉竖向外边距。否则首列(非 :last-child)保留
+   margin-bottom:10px 比末列高，.row 的 align-items:center 会把两列内容上下错开~5px。 */
+.row > .stack:not(body) { margin-bottom: 0; }
 
 .label-line {
     display: flex;
