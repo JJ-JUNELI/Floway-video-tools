@@ -472,19 +472,19 @@ body.resizing .sidebar-resize-handle { pointer-events: auto !important; }
 
 .control-group {
     position: relative;
-    background: rgba(255,255,255,0.04);
-    border-radius: var(--radius-md);
+    background: rgba(255,255,255,0.05);
+    border-radius: 18px;
     padding: 14px;
     border: 0.5px solid var(--border);
-    box-shadow: var(--glass-highlight);
+    box-shadow: var(--glass-highlight), 0 4px 24px rgba(0,0,0,0.12);
     transition: all 0.2s ease;
 }
 /* 注意：不要给组加 backdrop-filter。它会让组成为「滤镜祖先」，使内部下拉框自身的
    backdrop-filter 失效（Chromium 不会让嵌套在 backdrop-filter 祖先里的 blur 生效）。
    下拉框打开时由 custom-select.js portal 到 <body>，脱离侧栏滤镜后 blur 才真正模糊背景。 */
 .control-group:hover {
-    background: rgba(255,255,255,0.05);
-    border-color: rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.16);
 }
 
 .group-title {
