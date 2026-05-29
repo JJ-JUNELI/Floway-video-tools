@@ -34,7 +34,7 @@ chart-fx / bar-chart 的 `MODE_PRESETS = definePresetPair(纸张, 赛博)`（`sh
 
 ## 玻璃设计系统（液态玻璃）
 
-统一的玻璃质感。首页（index.html 内联 `<style>`）与效果页（`shared/base.css`）各维护一套**同名令牌**：
+统一的玻璃质感。首页（index.html 内联 `<style>`）与效果页（`shared/base.css`）**各用各的令牌词表**，并非两套同名副本：首页用 `--glass-fill/-border/-blur` 完整令牌化；效果页侧栏用 `--sidebar-bg/--glass-blur/--glass-shadow`，control-group 直接写字面 `rgba()`。**唯一共名令牌是 `--glass-highlight`**（暗色两边相同；亮色已统一为首页的 `0.5/0.3`）——改它请两处同步（两边定义旁均有 ⚠️ 注释）。下面是首页的令牌：
 - `--glass-fill` / `--glass-fill-strong`：半透膜（暗 `rgba(22,27,38,α)` 深染 / 亮 `rgba(255,255,255,α)`）
 - `--glass-border`：**0.5px** 描边色（暗 `rgba(255,255,255,0.10)` / 亮 `rgba(15,23,42,0.10)`）
 - `--glass-highlight`：顶部细高光 + **左上角柔光**（`inset` 组合，模拟左上光源）

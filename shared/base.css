@@ -1390,8 +1390,9 @@ body.logo canvas {
     --accent-dim: rgba(193,95,60,0.08);
     --accent-glow: rgba(193,95,60,0.12);
     --glass-shadow: 0 8px 30px rgba(15,23,42,0.10);
-    --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.6),
-                       inset 2px 2px 5px rgba(255,255,255,0.4);
+    /* ⚠️ 与 index.html 的 --glass-highlight 保持一致(暗色两者本就相同；亮色统一为首页 0.5/0.3) */
+    --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.5),
+                       inset 2px 2px 5px rgba(255,255,255,0.3);
     --shadow-canvas: 0 4px 16px rgba(0,0,0,0.08);
 }
 

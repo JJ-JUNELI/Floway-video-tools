@@ -120,7 +120,8 @@
     /* 与下拉框一致的 1px 描边（原来是 transparent、靠内描边定义边，去掉内描边后卡片就没边了） */
     --glass-border:         rgba(255,255,255,0.10);
     --glass-border-strong:  rgba(255,255,255,0.10);
-    /* 顶部极淡高光 + 左上角柔光(小模糊使其只集中在左上、不外溢到右下) */
+    /* 顶部极淡高光 + 左上角柔光(小模糊使其只集中在左上、不外溢到右下)
+       ⚠️ --glass-highlight 是首页与效果页(shared/base.css)唯一共名令牌，改值请两处同步 */
     --glass-highlight:      inset 0 1px 0 rgba(255,255,255,0.10),
                             inset 2px 2px 5px rgba(255,255,255,0.05);
 
