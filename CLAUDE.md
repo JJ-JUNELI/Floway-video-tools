@@ -80,8 +80,8 @@ Chromium 下，带 `backdrop-filter` 的元素若**嵌套在另一个 backdrop-f
 - [ ] **预览橱窗 stack-scan 仍可能有滚动条**：SVG preserveAspectRatio="slice" 溢出问题可能还未完全解决，需实际测试
 
 ### 小问题
-- [ ] **精选区和全部工具区重复展示**：chart-fx、text-animator、stack-scan 同时出现在精选和全部工具区
-- [ ] **README 效果列表过时**：实际工具 **9 个**（index.html 列 9 张卡），README 仍是旧列表，待同步
+- [x] ~~**精选区和全部工具区重复展示**~~ **已解决**：首页精选推荐区(`featured-section`)已注释隐藏，只剩「探索」全部工具网格。
+- [x] ~~**README 效果列表过时**~~ **已是最新**：README 已列全 9 个效果、端口 8000。
 
 ### 无所谓
 - [ ] `drawMediaContain` 函数名叫反了（实际是 cover 行为），目前只内部使用
@@ -101,7 +101,7 @@ Chromium 下，带 `backdrop-filter` 的元素若**嵌套在另一个 backdrop-f
 ### 面板设计规范（中优先）
 - [x] ~~**透明度值域不统一**~~ **已修**：所有透明度 slider 统一 `min=0 max=100` + `%` 显示。stack-scan/text-animator 用 bindUI `'%'` transform(内部仍 0-1，渲染零改动)，pie SliceOpacity 直接 0-100。
 - [ ] **row/stack 布局混用**：同类控件在不同效果里方向不一致。建议 slider 统一 stack（标签上滑条下），select/color/checkbox 用 row（横排更紧凑）
-- [ ] **slider 数值没有单位**：用户不知道数字代表 px、%、° 还是 s。建议字号加 px，角度加 °，透明度加 %，时长加 s
+- [~] **slider 数值单位**：字号类已加 `px`（透明度 `%`、角度 `°`、时长 `s` 本就有）。借 Phase B：单位只需在 `bindUI` 规则第 5 个参数加 suffix，`applyConfigToUI` 会连初始显示一起带上。其余非字号的 px 量（点大小、距离等）按需再补。
 - [ ] **checkbox 无语义区分**：所有 checkbox 渲染为 toggle switch，chart-fx 有 14 个全长一样。建议功能开关用 toggle，模式选择改 select 或 segmented control
 
 ### 数据组件化（低优先）
