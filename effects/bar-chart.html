@@ -775,6 +775,7 @@
             ['EntranceStartScale',   'entranceStartScale',   'int', 'EntranceStartScaleVal', '%'],
             ['EntranceEndScale',     'entranceEndScale',     'int', 'EntranceEndScaleVal', '%'],
         ], {
+            syncFromConfig: true,   // config 为唯一真相：初始化回填所有控件/显示值
             onChange: (_, key) => {
                 if (key === 'yAxisMode') {
                     document.getElementById('YAxisCustomPanel').style.display =
@@ -817,10 +818,7 @@
         document.getElementById('MainTitleOpts').style.display = config.showMainTitle ? '' : 'none';
         document.getElementById('SubTitleOpts').style.display = config.showSubTitle ? '' : 'none';
 
-        // 共享标题面板默认值为 36/630（三图表通用）；柱状图副标题默认偏离，初始化时同步滑块
-        updateUI('SubTitleSize', config.subTitleSize, 'SubTitleSizeVal');
-        updateUI('SubTitleX', config.subTitleX, 'SubTitleXVal');
-        // 点间距显示（>=100 显示「全宽」否则百分比）
+        // 点间距显示特殊（>=100 显示「全宽」否则百分比，applyConfigToUI 不含此自定义逻辑）
         document.getElementById('PointSpacingVal').textContent =
             config.pointSpacing >= 100 ? '全宽' : config.pointSpacing + '%';
 

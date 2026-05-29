@@ -400,6 +400,9 @@ export function saveFile(blob, name) {
  */
 export function bindUI(config, rules, opts = {}) {
     const onChange = opts.onChange || (() => {});
+    // 以 config 为唯一真相：初始化时把 config 推回 UI（控件值 + 显示 span + select），
+    // 之后改默认值只需改 config，无需再手动同步 HTML value= / 显示 span。
+    if (opts.syncFromConfig) applyConfigToUI(config, rules);
     // 节流：连续输入（滑块、颜色选择器）最多每帧触发一次重绘
     let _throttleId = null;
     let _throttlePending = false;
@@ -464,6 +467,42 @@ export function bindUI(config, rules, opts = {}) {
     }
 
     return { readAll };
+}
+
+/**
+ * 把 config 推回 UI（与 bindUI 规则共用），使 config 成为「初始显示」的唯一真相。
+ * 反转 bindUI 的 transform：
+ *   '%'         → 控件值 = round(config*100)，显示 = 值 + suffix
+ *   'int/float' → 控件值 = config
+ *   'checked'   → checkbox.checked = config
+ *   函数/无     → 控件值 = config（函数 transform 无法反转，按原值写入）
+ * select 写值后调 `_fsRefresh()` 让自定义下拉框同步触发器文本。
+ * 不触发 onChange——config 本就是渲染真相，UI 只是回填。
+ *
+ * @param {Object} config
+ * @param {Array}  rules  与 bindUI 相同的规则数组 [elemId, configKey, transform?, displayId?, suffix?]
+ */
+export function applyConfigToUI(config, rules) {
+    for (const rule of rules) {
+        const [elemId, configKey, transform, displayId, suffix] = rule;
+        if (!configKey) continue;
+        const el = document.getElementById(elemId);
+        if (!el) continue;
+        const val = config[configKey];
+        if (val === undefined) continue;
+
+        if (transform === 'checked') {
+            el.checked = !!val;
+            continue;
+        }
+
+        el.value = (transform === '%') ? Math.round(val * 100) : val;
+        if (el.tagName === 'SELECT' && typeof el._fsRefresh === 'function') el._fsRefresh();
+        if (displayId) {
+            const disp = document.getElementById(displayId);
+            if (disp) disp.textContent = el.value + (suffix || '');
+        }
+    }
 }
 
 // ========== 10. 渲染辅助函数 ==========
