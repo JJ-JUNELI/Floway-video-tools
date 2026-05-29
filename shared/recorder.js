@@ -124,6 +124,13 @@ export class Recorder {
 
         try {
             if (this.format === 'png_seq') {
+                if (typeof JSZip === 'undefined') {
+                    alert("PNG 序列打包组件 (JSZip) 未加载，请检查网络或刷新");
+                    this.isRecording = false;
+                    document.body.classList.remove('is-recording');
+                    this.ind.style.display = 'none';
+                    return;
+                }
                 this.zip = new JSZip();
                 this.btn.innerHTML = "⏹ 停止录制 (PNG序列)";
                 this.btn.classList.add('recording');

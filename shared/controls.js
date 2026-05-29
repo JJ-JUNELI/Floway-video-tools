@@ -564,9 +564,10 @@ export function initCollapsibleGroups(root = document) {
             title.appendChild(arrow);
         }
 
-        // 不再默认折叠：仅恢复用户此前手动折叠过的分组
+        // 折叠初始态：用户手动折叠过的以记录为准（优先）；否则带 data-default-collapsed
+        // 的「不常调」分组首次默认折叠，减少长面板滚动。用户一旦手动操作即写入记录、覆盖默认。
         const persisted = state[key];
-        if (persisted === true) {
+        if (persisted === true || (persisted === undefined && group.hasAttribute('data-default-collapsed'))) {
             group.classList.add('collapsed');
         }
 
