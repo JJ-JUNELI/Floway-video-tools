@@ -7,3 +7,6 @@ node_modules/
 test-results/
 playwright-report/
 playwright/.cache/
+
+# 本地 Agent 状态
+.claude/

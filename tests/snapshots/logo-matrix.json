@@ -1,0 +1,21 @@
+{
+  "LogoUpload": "",
+  "Scale": "0.8",
+  "Cols": "7",
+  "Rows": "5",
+  "Speed": "2",
+  "RotSpeed": "1",
+  "MaskEnable": true,
+  "MaskAffectsBg": true,
+  "MaskBaseType": "match_bg",
+  "MaskBaseColor": "#000000",
+  "MaskBaseUpload": "",
+  "MaskSize": "0.85",
+  "MaskRound": "0.75",
+  "MaskFeather": "250",
+  "BgMode": "transparent",
+  "ExportFormat": "png_seq",
+  "BgUpload": "",
+  "PatternColor": "#222222",
+  "PaperWarmth": "40"
+}
