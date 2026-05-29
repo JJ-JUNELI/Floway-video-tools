@@ -153,11 +153,11 @@
                             <option value="horizontal">横向</option>
                         </select>
                     </div>
-                    <div class="row stack"><div class="label-line"><span>柱宽比例</span><span id="BarWidthVal">60%</span></div>
-                        <input type="range" id="BarWidth" min="10" max="100" step="5" value="60">
+                    <div class="row stack"><div class="label-line"><span>柱宽比例</span><span id="BarWidthVal">55%</span></div>
+                        <input type="range" id="BarWidth" min="10" max="100" step="5" value="55">
                     </div>
-                    <div class="row stack"><div class="label-line"><span>顶部圆角</span><span id="BarRadiusVal">4</span></div>
-                        <input type="range" id="BarRadius" min="0" max="20" step="1" value="4">
+                    <div class="row stack"><div class="label-line"><span>顶部圆角</span><span id="BarRadiusVal">0</span></div>
+                        <input type="range" id="BarRadius" min="0" max="20" step="1" value="0">
                     </div>
                     <div class="row stack"><div class="label-line"><span>填充透明度</span><span id="BarOpacityVal">70%</span></div>
                         <input type="range" id="BarOpacity" min="0" max="100" step="5" value="70">
@@ -166,20 +166,20 @@
                         <div class="label-line"><span>柱子颜色</span></div>
                         <input type="color" id="BarColor" value="#888888">
                     </div>
-                    <div class="sub-title"><span>渐变填充</span><input type="checkbox" id="BarGradient"></div>
+                    <div class="sub-title"><span>渐变填充</span><input type="checkbox" id="BarGradient" checked></div>
                     <div class="row stack" id="BarGradientEndRow" style="display:none;">
                         <div class="label-line"><span>渐变终止色</span></div>
                         <input type="color" id="BarGradientEnd" value="#cccccc">
                     </div>
-                    <div class="row stack"><div class="label-line"><span>描边宽度</span><span id="BarStrokeWidthVal">0</span></div>
-                        <input type="range" id="BarStrokeWidth" min="0" max="6" step="0.5" value="0">
+                    <div class="row stack"><div class="label-line"><span>描边宽度</span><span id="BarStrokeWidthVal">1</span></div>
+                        <input type="range" id="BarStrokeWidth" min="0" max="6" step="0.5" value="1">
                     </div>
                     <div class="row stack">
                         <div class="label-line"><span>描边颜色</span></div>
-                        <input type="color" id="BarStrokeColor" value="#555555">
+                        <input type="color" id="BarStrokeColor" value="#1A1A1A">
                     </div>
-                    <div class="row stack"><div class="label-line"><span>手绘抖动</span><span id="BarJitterVal">0</span></div>
-                        <input type="range" id="BarJitter" min="0" max="100" step="1" value="0">
+                    <div class="row stack"><div class="label-line"><span>手绘抖动</span><span id="BarJitterVal">25</span></div>
+                        <input type="range" id="BarJitter" min="0" max="100" step="1" value="25">
                     </div>
                 </div>
             </div>
@@ -188,23 +188,23 @@
             <div class="control-group">
                 <div class="group-title"><span>数值标签</span></div>
                 <div class="sub-section ss-green">
-                    <div class="sub-title"><span>显示数值标签</span><input type="checkbox" id="ShowValues"></div>
+                    <div class="sub-title"><span>显示数值标签</span><input type="checkbox" id="ShowValues" checked></div>
                     <div id="ValueLabelOpts" style="display:none; margin-top:6px;">
-                        <div class="row stack"><div class="label-line"><span>数值字号</span><span id="ValueSizeVal">11</span></div>
-                            <input type="range" id="ValueSize" min="8" max="30" step="1" value="11">
+                        <div class="row stack"><div class="label-line"><span>数值字号</span><span id="ValueSizeVal">13</span></div>
+                            <input type="range" id="ValueSize" min="8" max="30" step="1" value="13">
                         </div>
                         <div class="row stack">
                             <div class="label-line"><span>数值颜色</span></div>
-                            <input type="color" id="ValueColor" value="#ffffff">
+                            <input type="color" id="ValueColor" value="#3B3B3B">
                         </div>
-                        <div class="row stack"><div class="label-line"><span>标签偏移</span><span id="ValueYOffsetVal">-20</span></div>
-                            <input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-20">
+                        <div class="row stack"><div class="label-line"><span>标签偏移</span><span id="ValueYOffsetVal">-6</span></div>
+                            <input type="range" id="ValueYOffset" min="-60" max="20" step="2" value="-6">
                         </div>
                         <div class="row stack">
                             <div class="label-line"><span>背景颜色</span></div>
                             <input type="color" id="ValueBgColor" value="#555555">
                         </div>
-                        <div class="sub-title"><span>显示背景</span><input type="checkbox" id="ValueBgEnabled" checked></div>
+                        <div class="sub-title"><span>显示背景</span><input type="checkbox" id="ValueBgEnabled"></div>
                     </div>
                 </div>
             </div>
@@ -256,8 +256,8 @@
                     <div class="row stack"><div class="label-line"><span>Y轴刻度数</span><span id="GridYVal">4</span></div>
                         <input type="range" id="GridY" min="2" max="15" step="1" value="4">
                     </div>
-                    <div class="row stack"><div class="label-line"><span>坐标轴字号</span><span id="AxisLabelSizeVal">11</span></div>
-                        <input type="range" id="AxisLabelSize" min="6" max="40" step="1" value="11">
+                    <div class="row stack"><div class="label-line"><span>坐标轴字号</span><span id="AxisLabelSizeVal">14</span></div>
+                        <input type="range" id="AxisLabelSize" min="6" max="40" step="1" value="14">
                     </div>
                     <div class="row stack">
                         <div class="label-line"><span>颜色</span></div>
@@ -266,8 +266,8 @@
                 </div>
                 <div class="sub-section ss-purple">
                     <div class="sub-section-label">图表区域</div>
-                    <div class="row stack"><div class="label-line"><span>点间距</span><span id="PointSpacingVal">全宽</span></div>
-                        <input type="range" id="PointSpacing" min="20" max="100" step="5" value="100">
+                    <div class="row stack"><div class="label-line"><span>点间距</span><span id="PointSpacingVal">90%</span></div>
+                        <input type="range" id="PointSpacing" min="20" max="100" step="5" value="90">
                     </div>
                     <div class="row">
                         <div class="stack" style="flex:1"><div class="label-line"><span>X</span><span id="ChartOffXVal">0</span></div>
@@ -278,8 +278,8 @@
                     <div class="row stack"><div class="label-line"><span>横轴长度</span><span id="ChartExtraWVal">0</span></div>
                         <input type="range" id="ChartExtraW" min="-500" max="500" step="10" value="0">
                     </div>
-                    <div class="row stack"><div class="label-line"><span>纵轴长度</span><span id="ChartExtraHVal">0</span></div>
-                        <input type="range" id="ChartExtraH" min="-500" max="500" step="10" value="0">
+                    <div class="row stack"><div class="label-line"><span>纵轴长度</span><span id="ChartExtraHVal">-40</span></div>
+                        <input type="range" id="ChartExtraH" min="-500" max="500" step="10" value="-40">
                     </div>
                 </div>
                 <div class="sub-section ss-amber">
@@ -476,38 +476,38 @@
             subTitle: '新能源乘用车渗透率超 50%',
             titleFont: "'Noto Sans SC', sans-serif",
             mainTitleSize: 26,
-            subTitleSize: 36,
+            subTitleSize: 46,
             mainTitleWeight: 700,
             subTitleWeight: 400,
             mainTitleColor: '#333333',
             subTitleColor: '#999999',
             mainTitleX: 0,
             mainTitleY: -490,
-            subTitleX: 630,
+            subTitleX: 528,
             subTitleY: 0,
             showBrackets: true,
             // 数值标签
-            showValues: false,
-            valueYOffset: -20,
-            valueBgEnabled: true,
+            showValues: true,
+            valueYOffset: -6,
+            valueBgEnabled: false,
             valueBgColor: '#555555',
             // 柱状图
             barDirection: 'vertical',
-            barWidth: 0.6,
-            barColor: '',
-            barOpacity: 0.85,
-            barRadius: 4,
-            barGradient: false,
-            barGradientEnd: '',
-            barStrokeWidth: 0,
-            barStrokeColor: '',
-            barJitter: 0,
+            barWidth: 0.55,
+            barColor: '#888888',
+            barOpacity: 0.70,
+            barRadius: 0,
+            barGradient: true,
+            barGradientEnd: '#CCCCCC',
+            barStrokeWidth: 1,
+            barStrokeColor: '#1A1A1A',
+            barJitter: 25,
             // 网格与坐标
             gridY: 4,
             yAxisMode: 'zero',
             yMin: 0, yMax: 100,
             dashedGrid: false,
-            axisLabelSize: 11,
+            axisLabelSize: 14,
             axisLabelColor: '#999999',
             // 卡片漂浮 (WebGL)
             rotateX: 1.5, rotateY: -1,
@@ -546,18 +546,18 @@
             entranceStartScale: 100,
             entranceEndScale: 100,
             // 图表区域
-            pointSpacing: 100,
+            pointSpacing: 90,
             chartOffX: 0,
             chartOffY: 0,
             chartExtraW: 0,
-            chartExtraH: 0,
+            chartExtraH: -40,
             // 纸张纹理（主题风格）
             noiseGrain: 35, vignette: 15,
             // 公用
             gridOpacity: 0.30,
             cardBg: '#faf8f3',
-            valueSize: 11,
-            valueColor: '#ffffff',
+            valueSize: 13,
+            valueColor: '#3B3B3B',
             showGrid: true,
             gridColor: '#c3bcaf',
             subTitleGlow: false,
@@ -573,7 +573,7 @@
                 mainTitleColor: '#333333',
                 subTitleColor: '#999999',
                 axisLabelColor: '#999999',
-                valueColor: '#555555',
+                valueColor: '#3B3B3B',
                 gridColor: '#c3bcaf',
                 cardBg: '#faf8f3',
                 cardBorderEnabled: true,
@@ -586,7 +586,7 @@
                 subTitleGlow: false,
                 barColor: '#888888',
                 barStrokeWidth: 1,
-                barStrokeColor: '#888888',
+                barStrokeColor: '#1A1A1A',
                 barJitter: 25,
             },
             cyber: {
@@ -809,6 +809,13 @@
         document.getElementById('ShadowOpts').style.display = config.shadowEnabled ? '' : 'none';
         document.getElementById('MainTitleOpts').style.display = config.showMainTitle ? '' : 'none';
         document.getElementById('SubTitleOpts').style.display = config.showSubTitle ? '' : 'none';
+
+        // 共享标题面板默认值为 36/630（三图表通用）；柱状图副标题默认偏离，初始化时同步滑块
+        updateUI('SubTitleSize', config.subTitleSize, 'SubTitleSizeVal');
+        updateUI('SubTitleX', config.subTitleX, 'SubTitleXVal');
+        // 点间距显示（>=100 显示「全宽」否则百分比）
+        document.getElementById('PointSpacingVal').textContent =
+            config.pointSpacing >= 100 ? '全宽' : config.pointSpacing + '%';
 
         // ====== 漂浮动画（合并到主循环）======
         let _currentRx = config.rotateX * Math.PI / 180;
