@@ -1,3 +1,9 @@
 .screenshot/
 .sisyphus/
 dev/
+
+# Node / 冒烟测试
+node_modules/
+test-results/
+playwright-report/
+playwright/.cache/

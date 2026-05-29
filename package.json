@@ -1,0 +1,15 @@
+{
+  "name": "floway-video-tools",
+  "version": "0.0.0",
+  "private": true,
+  "description": "浏览器端视频效果生成工具集 — 冒烟测试用 devDependencies",
+  "scripts": {
+    "serve": "http-server -p 8000 -c-1 --silent",
+    "test": "playwright test",
+    "test:install": "playwright install --with-deps chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "http-server": "^14.1.1"
+  }
+}
