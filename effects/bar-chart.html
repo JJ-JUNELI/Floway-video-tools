@@ -588,6 +588,8 @@
                 barStrokeWidth: 1,
                 barStrokeColor: '#1A1A1A',
                 barJitter: 25,
+                barGradient: true,
+                barGradientEnd: '#CCCCCC',
             },
             cyber: {
                 mainTitleColor: '#ffffff',
@@ -608,6 +610,8 @@
                 barStrokeWidth: 1,
                 barStrokeColor: '#00f2ff',
                 barJitter: 0,
+                barGradient: true,
+                barGradientEnd: '#0066ff',
             },
         };
 
@@ -647,6 +651,9 @@
             updateUI('BarStrokeWidth', config.barStrokeWidth, 'BarStrokeWidthVal');
             updateUI('BarStrokeColor', config.barStrokeColor);
             updateUI('BarJitter', config.barJitter, 'BarJitterVal');
+            updateUI('BarGradient', config.barGradient, null, true);
+            updateUI('BarGradientEnd', config.barGradientEnd);
+            document.getElementById('BarGradientEndRow').style.display = config.barGradient ? '' : 'none';
 
             _paperTexCache = null;
             _staticBgCache = null;
