@@ -16,7 +16,14 @@ module.exports = defineConfig({
     baseURL: 'http://localhost:8000',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        // 图表用 WebGL；headless CI 无 GPU，允许软件渲染(swiftshader)避免取不到 context
+        launchOptions: { args: ['--enable-unsafe-swiftshader'] },
+      },
+    },
   ],
   webServer: {
     command: 'npm run serve',
