@@ -90,7 +90,7 @@ Chromium 下，带 `backdrop-filter` 的元素若**嵌套在另一个 backdrop-f
 ## 面板结构问题
 
 ### 参数组织（高优先）
-- [x] ~~**参数组太多且不可折叠**~~ **已修**：`initCollapsibleGroups()` 让每个 `.control-group` 点击标题即可折叠；带 `data-default-collapsed` 的「入场动画(共享面板)/卡片漂浮/坐标轴与网格」首次默认折叠，用户手动操作后以 localStorage 记录为准、覆盖默认。
+- [x] ~~**参数组太多且不可折叠**~~ **已修**：`initCollapsibleGroups()` 让每个 `.control-group` 点击标题即可折叠，并按 localStorage 记忆每组状态。**初始不默认折叠任何组**（用户明确要求全部展开）；`data-default-collapsed` 标记不生效。
 - [~] **大量重复面板未抽共享**：入场动画(`buildEntryAnimationPanel`)、标题(`buildChartTitlePanel`)已抽到 controls.js 的 `SHARED_PANELS`。剩 chart-fx/bar-chart/pie-chart 的 config 默认 + `MODE_PRESETS` + 数据表仍是复制粘贴 → 见路线图 Phase C「ChartCore」。
 
 ### ID 命名与标题规范（中优先）
