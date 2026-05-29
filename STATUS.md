@@ -1,6 +1,6 @@
 # Floway Video Tools v2 — 项目状态
 
-> 最后更新：2026-05-06
+> 最后更新：2026-05-29
 
 ---
 
@@ -44,11 +44,12 @@ floway-tools-v2/
 │   ├── custom-select.js         ← 自定义下拉选择器
 │   └── mp4-muxer.js             ← MP4 编码库
 │
-├── effects/                     ← 正式效果文件（8 个）
+├── effects/                     ← 正式效果文件（9 个）
 │   ├── chart-fx.html            ← ✅ 万能图表（折线/柱状，纸张/赛博双模式，WebGL 3D）
 │   ├── bar-chart.html           ← ✅ 柱状图（WebGL 3D 悬浮卡片）
 │   ├── pie-chart.html           ← ✅ 饼图/环形图（WebGL 3D）
 │   ├── card-3d.html             ← ✅ 3D 悬浮卡片（图片/视频展示）
+│   ├── xiaolin-card.html        ← ✅ 小lin说卡片（WebGL 3D 卡片）
 │   ├── text-animator.html       ← ✅ 科技文字动画（Canvas，渐变/纹理/辉光）
 │   ├── stack-scan.html          ← ✅ 堆叠扫光（SVG 渲染管线）
 │   ├── logo-matrix.html         ← ✅ Logo 矩阵（Canvas + 遮罩底图）
@@ -80,7 +81,7 @@ floway-tools-v2/
 |---|---|---|
 | **A: Canvas** | 大多数 2D 效果 | text-animator, logo-matrix, particle-field |
 | **B: SVG** | 需要 SVG 滤镜/文字渲染 | stack-scan |
-| **C: Canvas + WebGL** | 3D 光照/卡片合成 | chart-fx, bar-chart, pie-chart, card-3d |
+| **C: Canvas + WebGL** | 3D 光照/卡片合成 | chart-fx, bar-chart, pie-chart, card-3d, xiaolin-card |
 
 ### 共享模块依赖关系
 
@@ -105,7 +106,8 @@ WebGL 效果额外依赖：
 
 ## 四、规范合规状态
 
-> 全部 8 个正式效果已通过 GUIDE.md 规范审计（2026-05-06）
+> 原 8 个正式效果已通过 GUIDE.md 规范审计（2026-05-06）；现共 9 个（新增 xiaolin-card）。
+> 加载顺序中 jszip 已由 CDN 改为本地 `shared/jszip.min.js`（2026-05）。
 
 | 检查项 | 状态 |
 |---|---|
@@ -122,9 +124,10 @@ WebGL 效果额外依赖：
 ## 五、未来规划
 
 1. **主题切换自动化** — 将 themeToggle 按钮绑定收进 `initEffect()`，消除每个效果重复的 8 行样板代码
-2. **数据表格通用化** — 提取图表效果的表格 CRUD 逻辑为 `shared/table-utils.js`
-3. **Manifest 机制** — 效果数量增多后，用 `effects/manifest.json` 驱动 index.html 动态渲染卡片
-4. **模板库应用** — index.html 改造为支持 AI 聊天生成新效果的完整应用
+2. **ChartCore（进行中，见路线图 Phase C）** — 抽三图表共享的 config 默认 + `MODE_PRESETS` 预设引擎 + 数据表格 CRUD 到 `shared/chart-core.js`，根除「副本漂移」
+3. **bindUI 以 config 为唯一真相（路线图 Phase B）** — 初始化把 config 推回 UI，改默认值只需改一处
+4. **Manifest 机制** — 效果数量增多后，用 `effects/manifest.json` 驱动 index.html 动态渲染卡片
+5. **模板库应用** — index.html 改造为支持 AI 聊天生成新效果的完整应用
 
 ---
 
