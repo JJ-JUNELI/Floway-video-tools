@@ -190,8 +190,8 @@
                 <div class="sub-section ss-green">
                     <div class="sub-title"><span>显示数值标签</span><input type="checkbox" id="ShowValues" checked></div>
                     <div id="ValueLabelOpts" style="display:none; margin-top:6px;">
-                        <div class="row stack"><div class="label-line"><span>数值字号</span><span id="ValueSizeVal">13</span></div>
-                            <input type="range" id="ValueSize" min="8" max="30" step="1" value="13">
+                        <div class="row stack"><div class="label-line"><span>数值字号</span><span id="ValueSizeVal">17</span></div>
+                            <input type="range" id="ValueSize" min="8" max="30" step="1" value="17">
                         </div>
                         <div class="row stack">
                             <div class="label-line"><span>数值颜色</span></div>
@@ -241,8 +241,8 @@
                     <div class="sub-section-label">Y 轴</div>
                     <div class="row stack"><div class="label-line"><span>Y轴模式</span></div>
                         <select id="YAxisMode">
-                            <option value="zero" selected>从零开始</option>
-                            <option value="auto">自动取整</option>
+                            <option value="zero">从零开始</option>
+                            <option value="auto" selected>自动取整</option>
                             <option value="percent">百分比 (0-100)</option>
                             <option value="custom">自定义范围</option>
                         </select>
@@ -504,7 +504,7 @@
             barJitter: 25,
             // 网格与坐标
             gridY: 4,
-            yAxisMode: 'zero',
+            yAxisMode: 'auto',
             yMin: 0, yMax: 100,
             dashedGrid: false,
             axisLabelSize: 14,
@@ -556,7 +556,7 @@
             // 公用
             gridOpacity: 0.30,
             cardBg: '#faf8f3',
-            valueSize: 13,
+            valueSize: 17,
             valueColor: '#3B3B3B',
             showGrid: true,
             gridColor: '#c3bcaf',
