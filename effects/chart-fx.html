@@ -450,6 +450,7 @@
 
     <script type="module">
         import { initEffect } from '../shared/controls.js';
+        import { definePresetPair } from '../shared/utils.js';
         import { drawSolidGlow } from '../shared/border-effects.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=shadow-fix4';
@@ -633,8 +634,9 @@
         };
 
         // ====== 模式预设（切换主题时同步的参数） ======
-        const MODE_PRESETS = {
-            paper: {
+        // ⚠️ definePresetPair 开发期校验两套键对称：不对称切回会残留对方的值。
+        const MODE_PRESETS = definePresetPair(
+            {  // 纸张
                 mainTitleColor: '#333333',
                 subTitleColor: '#999999',
                 lineColor: '#555555',
@@ -657,7 +659,7 @@
                 areaFollowLine: false,
                 barJitter: 25,
             },
-            cyber: {
+            {  // 赛博
                 mainTitleColor: '#ffffff',
                 subTitleColor: '#ffffff',
                 lineColor: '#ffae00',
@@ -680,7 +682,7 @@
                 areaFollowLine: true,
                 barJitter: 0,
             },
-        };
+        );
 
         function switchMode(mode) {
             if (mode === currentMode) return;

@@ -511,3 +511,29 @@ export function calcGradCoords(w, h, angleDeg) {
         y2: h / 2 + vy * diag,
     };
 }
+
+// ========== 11. 主题预设对 ==========
+
+/**
+ * 校验纸张/赛博两套主题预设的键集完全一致，返回 { paper, cyber }。
+ *
+ * 图表的 switchMode 用 `Object.assign(config, preset)` 应用预设——若两套预设键不对称，
+ * 切到对方再切回时，仅一方定义的键不会被重置、会残留对方的值（如 barStrokeColor 残留赛博青、
+ * barGradientEnd 不随风格变）。此函数把「两套必须同键」从注释变成开发期代码约束：
+ * 不对称时 console.error（会被冒烟测试捕获），但仍返回原对象，不至于让页面崩溃。
+ *
+ * @param {Object} paper  纸张风格预设
+ * @param {Object} cyber  赛博风格预设
+ * @returns {{ paper: Object, cyber: Object }}
+ */
+export function definePresetPair(paper, cyber) {
+    const onlyPaper = Object.keys(paper).filter(k => !(k in cyber));
+    const onlyCyber = Object.keys(cyber).filter(k => !(k in paper));
+    if (onlyPaper.length || onlyCyber.length) {
+        console.error(
+            '[definePresetPair] 纸张/赛博预设键不对称，切换模式会残留参数：',
+            { 仅纸张有: onlyPaper, 仅赛博有: onlyCyber }
+        );
+    }
+    return { paper, cyber };
+}
