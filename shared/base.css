@@ -919,7 +919,7 @@ input[type="checkbox"]::after {
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 input[type="checkbox"]:checked {
-    background: var(--accent);
+    background: color-mix(in srgb, var(--accent) 60%, transparent);  /* 开启态也半透明玻璃 */
 }
 input[type="checkbox"]:checked::after {
     left: 21px;
@@ -999,7 +999,7 @@ input:checked + .slider:before {
 }
 
 .btn-record {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    background: linear-gradient(135deg, rgba(239,68,68,0.6) 0%, rgba(220,38,38,0.6) 100%);
     color: white;
     box-shadow: var(--glass-highlight), 0 4px 16px rgba(239,68,68,0.25);
 }
@@ -1022,7 +1022,7 @@ input:checked + .slider:before {
 }
 
 .btn-play {
-    background: var(--accent-strong);
+    background: color-mix(in srgb, var(--accent) 60%, transparent);
     color: #ffffff;
     font-weight: 600;
     border: none;
@@ -1040,7 +1040,7 @@ input:checked + .slider:before {
 }
 
 .btn-primary {
-    background: var(--accent-strong);
+    background: color-mix(in srgb, var(--accent) 60%, transparent);
     color: #ffffff;
     box-shadow: var(--glass-highlight), 0 4px 16px var(--accent-glow);
 }
@@ -1551,7 +1551,7 @@ body.logo canvas {
     background: rgba(0,0,0,0.3);
 }
 [data-theme="light"] input[type="checkbox"]:checked {
-    background: var(--accent);
+    background: color-mix(in srgb, var(--accent) 60%, transparent);  /* 开启态也半透明玻璃 */
 }
 [data-theme="light"] input[type="checkbox"]:checked::after {
     background: #ffffff;
@@ -1573,11 +1573,11 @@ body.logo canvas {
 
 /* Buttons */
 [data-theme="light"] .btn-play {
-    background: var(--accent-strong);
+    background: color-mix(in srgb, var(--accent) 60%, transparent);
     color: #ffffff;
 }
 [data-theme="light"] .btn-primary {
-    background: var(--accent-strong);
+    background: color-mix(in srgb, var(--accent) 60%, transparent);
     color: #ffffff;
 }
 
