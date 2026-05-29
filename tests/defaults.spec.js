@@ -41,10 +41,13 @@ for (const url of effectPages) {
       console.log(`[snapshot] 写入 ${name}.json`);
       return;
     }
+    // 归一化换行：git autocrlf 可能把快照文件检出成 CRLF，而 JSON.stringify 产出 LF，
+    // 不归一化会在 Windows 全新检出时误报不符。
+    const norm = (s) => s.replace(/\r\n/g, '\n');
     const expected = fs.readFileSync(snapFile, 'utf8');
     expect(
-      actual,
+      norm(actual),
       `控件默认值与快照 ${name}.json 不符。若为有意修改，运行 UPDATE_SNAPSHOTS=1 npm test 更新。`
-    ).toBe(expected);
+    ).toBe(norm(expected));
   });
 }
