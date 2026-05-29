@@ -166,6 +166,7 @@
             ['Color',    'color'],
             ['LinkOp',   'linkOpacity', 'float', 'LinkOpVal'],
         ], {
+            syncFromConfig: true,
             onChange: (_, key) => {
                 if (key === 'count') initParticles();
             }

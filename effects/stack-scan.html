@@ -601,6 +601,7 @@
             ['PreviewToggle', 'previewMode', 'checked'],
             ['BgLockRatio', 'bgLockRatio', 'checked'],
         ], {
+            syncFromConfig: true,
             onChange: (val, key) => {
                 if (key === 'bgScaleX' && config.bgLockRatio) {
                     config.bgScaleY = config.bgScaleX;

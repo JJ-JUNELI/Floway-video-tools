@@ -735,6 +735,7 @@
             ['RotatingBlobSize', 'rotatingBlobSize', 'int', 'RotatingBlobSizeVal'],
             ['RotatingBlobSpeed', 'rotatingBlobSpeed', 'int', 'RotatingBlobSpeedVal'],
         ], {
+            syncFromConfig: true,
             onChange: (_, key) => {
                 if (key === 'entranceEnabled') {
                     document.getElementById('EntranceOpts').style.display = config.entranceEnabled ? '' : 'none';

@@ -555,6 +555,7 @@
             ['AnimDuration', 'duration', 'float', 'DurVal', 's'],
             ['OpacityDuration', 'opacityDuration', 'float', 'OpDurVal', 's'],
         ], {
+            syncFromConfig: true,
             onChange: () => {
                 document.getElementById('GradientControls').style.display = config.fillMode === 'gradient' ? 'block' : 'none';
                 calculateLayout();

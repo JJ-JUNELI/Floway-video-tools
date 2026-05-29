@@ -182,6 +182,7 @@
             ['MaskBaseColor', 'maskBaseColor'],
             ['MaskEnable', 'maskEnabled', 'checked'],
         ], {
+            syncFromConfig: true,
             onChange: (val, key) => {
                 if (key === 'maskEnabled') {
                     document.getElementById('MaskControls').style.opacity = config.maskEnabled ? '1' : '0.4';
