@@ -406,13 +406,16 @@ export function initEffect(opts) {
 
     function drawBg(timeMs) {
         if (!ctx) return;
-        if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
-            ctx.fillStyle = getTheme().canvasBg;
-            ctx.fillRect(0, 0, baseWidth, baseHeight);
+        if (bg.mode === 'transparent') {
+            // 录制 mp4/webm 时视频不支持透明 → 填主题色作实底；
+            // 预览 & PNG 序列保持真透明（画布已 clearFrame），统一露出整页网格底纹
+            if (recorder.isRecording && recorder.format !== 'png_seq') {
+                ctx.fillStyle = getTheme().canvasBg;
+                ctx.fillRect(0, 0, baseWidth, baseHeight);
+            }
+            return;
         }
-        if (bg.mode !== 'transparent') {
-            bg.draw(ctx, timeMs, recorder.isRecording, recorder.format);
-        }
+        bg.draw(ctx, timeMs, recorder.isRecording, recorder.format);
     }
 
     // 7. 预览循环

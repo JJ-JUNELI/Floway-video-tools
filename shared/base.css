@@ -1065,7 +1065,9 @@ input:checked + .slider:before {
 }
 
 canvas {
-    background: #0e1117;
+    /* 透明背景模式下露出整页网格底纹（与图表 webgl-canvas 统一为「真透明」）；
+       非透明模式由效果/背景铺满像素，此 CSS 底色不可见 */
+    background: transparent;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -1093,7 +1095,7 @@ canvas.webgl-canvas {
     left: 50%;
     transform: translate(-50%, -50%);
     display: block;
-    background: #0e1117;
+    background: transparent;
     border: 1px solid var(--border);
     border-radius: 8px;
     box-shadow: var(--shadow-canvas);
@@ -1572,7 +1574,8 @@ body.logo canvas {
 }
 [data-theme="light"] canvas,
 [data-theme="light"] #mainSvg {
-    background: #f1f5f9;
+    /* 同上：亮色主题透明背景也露出整页网格底纹，保持各效果一致 */
+    background: transparent;
 }
 
 [data-theme="light"].logo canvas {
