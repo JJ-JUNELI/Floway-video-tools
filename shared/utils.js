@@ -402,7 +402,7 @@ export function bindUI(config, rules, opts = {}) {
     const onChange = opts.onChange || (() => {});
     // 以 config 为唯一真相：初始化时把 config 推回 UI（控件值 + 显示 span + select），
     // 之后改默认值只需改 config，无需再手动同步 HTML value= / 显示 span。
-    if (opts.syncFromConfig) applyConfigToUI(config, rules);
+    if (opts.syncFromConfig) applyConfigToUI(config, rules, opts.syncSkip);
     // 节流：连续输入（滑块、颜色选择器）最多每帧触发一次重绘
     let _throttleId = null;
     let _throttlePending = false;
@@ -479,13 +479,20 @@ export function bindUI(config, rules, opts = {}) {
  * select 写值后调 `_fsRefresh()` 让自定义下拉框同步触发器文本。
  * 不触发 onChange——config 本就是渲染真相，UI 只是回填。
  *
+ * 注意：对「语义反转」的控件（如 onChange 里做 `config.x = !checked` 的复选框），
+ * 用 skip 列出其 elemId 排除——这类控件的 HTML 默认态与 config 默认值本就一致，
+ * 直接回填会按字面 `checked=config` 反向勾选。
+ *
  * @param {Object} config
  * @param {Array}  rules  与 bindUI 相同的规则数组 [elemId, configKey, transform?, displayId?, suffix?]
+ * @param {string[]} [skip]  跳过回填的控件 elemId 列表
  */
-export function applyConfigToUI(config, rules) {
+export function applyConfigToUI(config, rules, skip) {
+    const skipSet = skip && skip.length ? new Set(skip) : null;
     for (const rule of rules) {
         const [elemId, configKey, transform, displayId, suffix] = rule;
         if (!configKey) continue;
+        if (skipSet && skipSet.has(elemId)) continue;
         const el = document.getElementById(elemId);
         if (!el) continue;
         const val = config[configKey];

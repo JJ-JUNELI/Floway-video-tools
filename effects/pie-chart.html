@@ -686,6 +686,9 @@
             ['EntranceStartScale',   'entranceStartScale',   'int', 'EntranceStartScaleVal', '%'],
             ['EntranceEndScale',     'entranceEndScale',     'int', 'EntranceEndScaleVal', '%'],
         ], {
+            syncFromConfig: true,   // config 为唯一真相：初始化回填所有控件/显示值
+            // CardBgTransparent 语义反转(启用背景=checked→transparent=false)，HTML 默认态已对，跳过回填
+            syncSkip: ['CardBgTransparent'],
             onChange: (_, key) => {
                 if (key === 'pieType') {
                     document.getElementById('DonutOpts').style.display =

@@ -870,6 +870,7 @@
             ['EntranceEndScale',     'entranceEndScale',     'int', 'EntranceEndScaleVal', '%'],
             ['LineDelay',       'lineDelay',      'float', 'LineDelayVal', 's'],
         ], {
+            syncFromConfig: true,   // config 为唯一真相：初始化回填所有控件/显示值
             onChange: (_, key) => {
                 if (key === 'yAxisMode') {
                     document.getElementById('YAxisCustomPanel').style.display =
