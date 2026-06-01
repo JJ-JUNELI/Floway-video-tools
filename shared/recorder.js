@@ -146,12 +146,12 @@ export class Recorder {
         if (!ff || N === 0) { this._resetBtn(); return; }
         const names = [];
         try {
-            this.btn.innerHTML = "⏳ 写入帧…";
             for (let i = 0; i < N; i++) {
                 const name = `f${String(i).padStart(5, '0')}.png`;
                 await ff.writeFile(name, frames[i]);
                 names.push(name);
                 frames[i] = null; // 边写边释放 JS 引用
+                if (i % 10 === 0) this.btn.innerHTML = `⏳ 写入帧 ${i + 1}/${N}`;
             }
 
             this._encoding = true;
@@ -252,6 +252,7 @@ export class Recorder {
                 this._processFrameLoop();
             } else if (this.format === 'prores') {
                 this.btn.innerHTML = "⏳ 加载编码器…";
+                this.btn.disabled = true;   // 加载期间禁用按钮，防止重复点击
                 try {
                     await this._loadFFmpeg();
                 } catch (err) {
@@ -264,6 +265,7 @@ export class Recorder {
                 }
                 if (!this.isRecording) return; // 加载期间被取消
                 this._initProres();
+                this.btn.disabled = false;  // 录制中恢复，允许点击停止
                 this.btn.innerHTML = "⏹ 停止录制 (ProRes)";
                 this.btn.classList.add('recording');
                 this._processFrameLoop();
@@ -315,6 +317,7 @@ export class Recorder {
         document.body.classList.remove('is-recording');
         this.ind.style.display = 'none';
         this.btn.classList.remove('recording');
+        this.btn.disabled = true;   // 收尾(打包/封装/编码)期间禁用，防止重复触发；各 finalize 完成调 _resetBtn() 恢复
         this._webmLoopRunning = false;
 
         if (this.onStateChange) this.onStateChange(false);
