@@ -161,6 +161,7 @@ export class Recorder {
             await ff.exec([
                 '-framerate', fps, '-start_number', '0',
                 '-i', 'f%05d.png',
+                '-vf', 'format=rgba',   // 显式保 alpha：绕过 wasm swscale 把 PNG 序列的 alpha 协商掉(导致黑底)
                 '-c:v', 'prores_ks', '-profile:v', '4444', ...qArgs, '-pix_fmt', 'yuva444p10le',
                 '-y', 'out.mov',
             ]);
