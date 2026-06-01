@@ -266,7 +266,7 @@ export function injectPanels(opts = {}) {
                     <option value="png_seq">📸 PNG 序列</option>
                     <option value="mp4">🎥 MP4</option>
                     <option value="webm">🌐 WebM</option>
-                    <option value="prores">🎬 ProRes 透明</option>
+                    <option value="prores">🎬 透明视频 (MOV)</option>
                 </select>
             </div>
         </div>
@@ -276,13 +276,6 @@ export function injectPanels(opts = {}) {
                 <select id="ProResFps">
                     <option value="30" selected>30 fps</option>
                     <option value="60">60 fps</option>
-                </select>
-            </div>
-            <div class="sf-cell">
-                <span class="sf-label">质量</span>
-                <select id="ProResQuality">
-                    <option value="standard" selected>标准</option>
-                    <option value="small">更小 (~30%↓)</option>
                 </select>
             </div>
         </div>

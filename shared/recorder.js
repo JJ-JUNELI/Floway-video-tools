@@ -137,7 +137,7 @@ export class Recorder {
         this._proresHitCap = false;
     }
 
-    /** ProRes 收尾：PNG 帧写入 ffmpeg FS → 解 PNG 序列编 ProRes 4444 → 下载 */
+    /** 透明视频收尾：PNG 帧写入 ffmpeg FS → 解 PNG 序列编 QTRLE → 下载 */
     async _finishProres() {
         const ff = this._ffmpeg;
         const frames = this._proresFrames;
@@ -155,14 +155,15 @@ export class Recorder {
             }
 
             this._encoding = true;
-            this.btn.innerHTML = "⏳ 编码 ProRes…";
+            this.btn.innerHTML = "⏳ 编码透明视频…";
             const fps = String(this._proresFps || 60);
-            const qArgs = this._proresQscale ? ['-qscale:v', String(this._proresQscale)] : [];
+            // QTRLE(QuickTime Animation/RLE)：剪映原生透明编码，Mac/Win 桌面剪映 + Premiere/AE/Resolve 都可靠读;
+            // 严格无损(RGB)。ProRes 4444 在剪映上跨平台/按文件大小转代理、丢 alpha，故弃用。
             await ff.exec([
                 '-framerate', fps, '-start_number', '0',
                 '-i', 'f%05d.png',
-                '-vf', 'format=rgba',   // 显式保 alpha：绕过 wasm swscale 把 PNG 序列的 alpha 协商掉(导致黑底)
-                '-c:v', 'prores_ks', '-profile:v', '4444', ...qArgs, '-pix_fmt', 'yuva444p10le',
+                '-vf', 'format=rgba',   // 显式保 alpha，兜底 wasm swscale
+                '-c:v', 'qtrle', '-pix_fmt', 'argb',
                 '-y', 'out.mov',
             ]);
             this._encoding = false;
@@ -176,11 +177,11 @@ export class Recorder {
 
             if (this._proresHitCap) {
                 this._proresHitCap = false;
-                alert(`已达 ProRes 内存上限，导出了前 ${N} 帧（约 ${(N / 60).toFixed(1)}s）。如需更长，请缩短时长。`);
+                alert(`已达内存上限，导出了前 ${N} 帧（约 ${(N / (this._proresFps || 60)).toFixed(1)}s）。如需更长，请缩短时长。`);
             }
         } catch (err) {
             this._encoding = false;
-            alert("ProRes 编码失败: " + (err && err.message ? err.message : err));
+            alert("透明视频编码失败: " + (err && err.message ? err.message : err));
             console.error(err);
         }
         this._resetBtn();
@@ -255,18 +256,16 @@ export class Recorder {
                 this.btn.classList.add('recording');
                 this._processFrameLoop();
             } else if (this.format === 'prores') {
-                // 读取 ProRes 专属选项（帧率 / 质量）
+                // 读取帧率选项（QTRLE 无损，无质量/码率档）
                 const fpsEl = document.getElementById('ProResFps');
-                const qualEl = document.getElementById('ProResQuality');
                 this._proresFps = fpsEl ? (parseInt(fpsEl.value, 10) || 30) : 30;
                 this._captureFps = this._proresFps;
-                this._proresQscale = (qualEl && qualEl.value === 'small') ? 11 : null;
                 this.btn.innerHTML = "⏳ 加载编码器…";
                 this.btn.disabled = true;   // 加载期间禁用按钮，防止重复点击
                 try {
                     await this._loadFFmpeg();
                 } catch (err) {
-                    alert("ProRes 编码器加载失败: " + (err && err.message ? err.message : err));
+                    alert("透明视频编码器加载失败: " + (err && err.message ? err.message : err));
                     this.isRecording = false;
                     document.body.classList.remove('is-recording');
                     this.ind.style.display = 'none';
@@ -276,7 +275,7 @@ export class Recorder {
                 if (!this.isRecording) return; // 加载期间被取消
                 this._initProres();
                 this.btn.disabled = false;  // 录制中恢复，允许点击停止
-                this.btn.innerHTML = "⏹ 停止录制 (ProRes)";
+                this.btn.innerHTML = "⏹ 停止录制 (透明MOV)";
                 this.btn.classList.add('recording');
                 this._processFrameLoop();
             } else {
