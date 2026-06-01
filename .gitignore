@@ -12,3 +12,4 @@ playwright/.cache/
 .claude/
 demo/*.mov
 demo/vendor/
+shared/vendor/

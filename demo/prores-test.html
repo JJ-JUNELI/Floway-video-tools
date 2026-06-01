@@ -36,7 +36,7 @@
   </div>
 
 <!-- 本地同源加载 ffmpeg.wasm UMD:worker(814.ffmpeg.js)同源加载,绕开跨域 Worker 限制 -->
-<script src="vendor/ffmpeg/ffmpeg.js"></script>
+<script src="../shared/vendor/ffmpeg/ffmpeg.js"></script>
 <script type="module">
 const { FFmpeg } = window.FFmpegWASM;
 
@@ -71,7 +71,7 @@ document.getElementById('load').onclick = async (e) => {
     log('加载 ffmpeg.wasm core 中…');
     ffmpeg = new FFmpeg();
     ffmpeg.on('log', ({ message }) => log('[ff] ' + message));
-    const vendor = new URL('vendor/ffmpeg/', location.href).href;
+    const vendor = new URL('../shared/vendor/ffmpeg/', location.href).href;
     await ffmpeg.load({
       coreURL: vendor + 'ffmpeg-core.js',
       wasmURL: vendor + 'ffmpeg-core.wasm',

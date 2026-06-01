@@ -55,6 +55,10 @@ export class Recorder {
         this.chunks = [];
         this.zip = null;
         this._webmLoopRunning = false;
+        this._ffmpeg = null;          // ffmpeg.wasm 实例(懒加载,仅 ProRes 用)
+        this._proresFrames = null;    // ProRes: 缓存的原始 RGBA 帧
+        this._grab = null;            // ProRes: 抓帧用临时 2d canvas
+        this._encoding = false;       // ProRes: 编码中(用于进度回调)
 
         this._libsLoaded = false;
         this._loadLibs();
@@ -97,6 +101,92 @@ export class Recorder {
             setTimeout(poll, POLL_INTERVAL);
         };
         poll();
+    }
+
+    // ====== ProRes (ffmpeg.wasm) ======
+
+    /** 懒加载 ffmpeg.wasm（仅在首次导出 ProRes 时触发，本地同源 UMD） */
+    async _loadFFmpeg() {
+        if (this._ffmpeg) return this._ffmpeg;
+        const vendor = new URL('vendor/ffmpeg/', import.meta.url).href;
+        if (!window.FFmpegWASM) {
+            await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = vendor + 'ffmpeg.js';
+                s.onload = resolve;
+                s.onerror = () => reject(new Error('ffmpeg.js 加载失败（检查 shared/vendor/ffmpeg/）'));
+                document.head.appendChild(s);
+            });
+        }
+        const ff = new window.FFmpegWASM.FFmpeg();
+        ff.on('progress', ({ progress }) => {
+            if (this._encoding) this.btn.innerHTML = `⏳ 编码 ${Math.min(99, Math.max(0, Math.round((progress || 0) * 100)))}%`;
+        });
+        await ff.load({
+            coreURL: vendor + 'ffmpeg-core.js',
+            wasmURL: vendor + 'ffmpeg-core.wasm',
+        });
+        this._ffmpeg = ff;
+        return ff;
+    }
+
+    /** ProRes 抓帧 canvas：临时 2d canvas（兼容 Canvas/WebGL/SVG 画布），
+        降采样到最长边 ≤ 1920 控制内存（未压缩帧极占内存） */
+    _initGrab() {
+        const MAX = 1920;
+        const cw = this.canvas.width, ch = this.canvas.height;
+        const f = Math.min(1, MAX / Math.max(cw, ch));
+        const gw = Math.round(cw * f), gh = Math.round(ch * f);
+        if (!this._grab) {
+            this._grab = document.createElement('canvas');
+            this._grabCtx = this._grab.getContext('2d', { willReadFrequently: true });
+        }
+        this._grab.width = gw;
+        this._grab.height = gh;
+        this._grabW = gw; this._grabH = gh;
+        this._grabBytes = gw * gh * 4;
+        this._proresMaxFrames = Math.max(30, Math.floor(1.2e9 / this._grabBytes)); // ~1.2GB 内存预算
+    }
+
+    /** ProRes 收尾：拼帧 → ffmpeg 编码 ProRes 4444 → 下载 */
+    async _finishProres() {
+        const ff = this._ffmpeg;
+        const frames = this._proresFrames;
+        this._proresFrames = null;
+        const N = frames ? frames.length : 0;
+        if (!ff || N === 0) { this._resetBtn(); return; }
+        try {
+            this.btn.innerHTML = "⏳ 合并帧…";
+            const buf = new Uint8Array(N * this._grabBytes);
+            for (let i = 0; i < N; i++) buf.set(frames[i], i * this._grabBytes);
+            frames.length = 0;
+            await ff.writeFile('in.raw', buf);
+
+            this._encoding = true;
+            this.btn.innerHTML = "⏳ 编码 ProRes…";
+            await ff.exec([
+                '-f', 'rawvideo', '-pix_fmt', 'rgba',
+                '-s', `${this._grabW}x${this._grabH}`, '-r', '60',
+                '-i', 'in.raw',
+                '-c:v', 'prores_ks', '-profile:v', '4444', '-pix_fmt', 'yuva444p10le',
+                '-y', 'out.mov',
+            ]);
+            this._encoding = false;
+
+            const data = await ff.readFile('out.mov');
+            saveFile(new Blob([data], { type: 'video/quicktime' }), `${this.fileName}_${Date.now()}.mov`);
+            try { await ff.deleteFile('in.raw'); await ff.deleteFile('out.mov'); } catch (_) {}
+
+            if (this._proresHitCap) {
+                this._proresHitCap = false;
+                alert(`已达 ProRes 内存上限，导出了前 ${N} 帧（约 ${(N / 60).toFixed(1)}s）。如需更长，请缩短时长。`);
+            }
+        } catch (err) {
+            this._encoding = false;
+            alert("ProRes 编码失败: " + (err && err.message ? err.message : err));
+            console.error(err);
+        }
+        this._resetBtn();
     }
 
     _bindButton() {
@@ -164,6 +254,25 @@ export class Recorder {
                 });
 
                 this.btn.innerHTML = "⏹ 停止录制 (MP4)";
+                this.btn.classList.add('recording');
+                this._processFrameLoop();
+            } else if (this.format === 'prores') {
+                this.btn.innerHTML = "⏳ 加载编码器…";
+                try {
+                    await this._loadFFmpeg();
+                } catch (err) {
+                    alert("ProRes 编码器加载失败: " + (err && err.message ? err.message : err));
+                    this.isRecording = false;
+                    document.body.classList.remove('is-recording');
+                    this.ind.style.display = 'none';
+                    this._resetBtn();
+                    return;
+                }
+                if (!this.isRecording) return; // 加载期间被取消
+                this._initGrab();
+                this._proresFrames = [];
+                this._proresHitCap = false;
+                this.btn.innerHTML = "⏹ 停止录制 (ProRes)";
                 this.btn.classList.add('recording');
                 this._processFrameLoop();
             } else {
@@ -239,6 +348,8 @@ export class Recorder {
             } else {
                 this._resetBtn();
             }
+        } else if (this.format === 'prores') {
+            this._finishProres();
         } else {
             if (this.recorder) this.recorder.stop();
             else this._resetBtn();
@@ -282,6 +393,17 @@ export class Recorder {
                     r();
                 }, 'image/png');
             });
+        } else if (this.format === 'prores') {
+            // 抓帧到临时 2d canvas（兼容所有画布类型），存原始 RGBA
+            this._grabCtx.clearRect(0, 0, this._grabW, this._grabH);
+            this._grabCtx.drawImage(this.canvas, 0, 0, this._grabW, this._grabH);
+            const d = this._grabCtx.getImageData(0, 0, this._grabW, this._grabH).data;
+            this._proresFrames.push(new Uint8Array(d.buffer));
+            if (this._proresFrames.length >= this._proresMaxFrames) {
+                this._proresHitCap = true;
+                this.stop();   // 达内存上限 → 收尾编码
+                return;
+            }
         } else if (this.format === 'mp4') {
             const frame = new VideoFrame(this.canvas, { timestamp: time * 1000 });
             if (this.videoEncoder.encodeQueueSize > this.encodeQueueMax + 3) {
