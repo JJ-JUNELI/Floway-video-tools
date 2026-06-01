@@ -35,9 +35,10 @@
     <div class="log" id="log">点①先加载 ffmpeg.wasm。加载完再点②。控制台若报错请把错误贴给我。</div>
   </div>
 
+<!-- 本地同源加载 ffmpeg.wasm UMD:worker(814.ffmpeg.js)同源加载,绕开跨域 Worker 限制 -->
+<script src="vendor/ffmpeg/ffmpeg.js"></script>
 <script type="module">
-import { FFmpeg } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js';
-import { toBlobURL } from 'https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js';
+const { FFmpeg } = window.FFmpegWASM;
 
 const W = 640, H = 360, N = 24, FPS = 30;
 const cv = document.getElementById('preview');
@@ -70,10 +71,10 @@ document.getElementById('load').onclick = async (e) => {
     log('加载 ffmpeg.wasm core 中…');
     ffmpeg = new FFmpeg();
     ffmpeg.on('log', ({ message }) => log('[ff] ' + message));
-    const base = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm';
+    const vendor = new URL('vendor/ffmpeg/', location.href).href;
     await ffmpeg.load({
-      coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
+      coreURL: vendor + 'ffmpeg-core.js',
+      wasmURL: vendor + 'ffmpeg-core.wasm',
     });
     log('✅ ffmpeg.wasm 已加载。点②编码。');
     document.getElementById('gen').disabled = false;
