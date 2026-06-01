@@ -112,6 +112,8 @@
   "LineDelay": "0.3",
   "BgMode": "transparent",
   "ExportFormat": "png_seq",
+  "ProResFps": "30",
+  "ProResQuality": "standard",
   "BgUpload": "",
   "PatternColor": "#333333",
   "PaperWarmth": "40"

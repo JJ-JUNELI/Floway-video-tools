@@ -270,6 +270,22 @@ export function injectPanels(opts = {}) {
                 </select>
             </div>
         </div>
+        <div class="sf-row" id="ProResOpts" style="display:none">
+            <div class="sf-cell">
+                <span class="sf-label">帧率</span>
+                <select id="ProResFps">
+                    <option value="30" selected>30 fps</option>
+                    <option value="60">60 fps</option>
+                </select>
+            </div>
+            <div class="sf-cell">
+                <span class="sf-label">质量</span>
+                <select id="ProResQuality">
+                    <option value="standard" selected>标准</option>
+                    <option value="small">更小 (~30%↓)</option>
+                </select>
+            </div>
+        </div>
         ${bgExtrasHTML}
         <div class="sf-actions">
             <button id="FooterBtnPlay" class="btn btn-play" style="display:none">▶ 播放</button>
@@ -280,6 +296,15 @@ export function injectPanels(opts = {}) {
 
     // 统一 footer 下拉为自定义样式（enhanceSelect 幂等，已增强会自动跳过）
     footer.querySelectorAll('select').forEach(el => enhanceSelect(el));
+
+    // ProRes 专属选项（帧率/质量）仅在选中 ProRes 时显示
+    const fmtSel = footer.querySelector('#ExportFormat');
+    const proresOpts = footer.querySelector('#ProResOpts');
+    if (fmtSel && proresOpts) {
+        const toggleProres = () => { proresOpts.style.display = fmtSel.value === 'prores' ? '' : 'none'; };
+        fmtSel.addEventListener('change', toggleProres);
+        toggleProres();
+    }
 }
 
 // ========== 主初始化函数 ==========

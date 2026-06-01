@@ -156,10 +156,12 @@ export class Recorder {
 
             this._encoding = true;
             this.btn.innerHTML = "⏳ 编码 ProRes…";
+            const fps = String(this._proresFps || 60);
+            const qArgs = this._proresQscale ? ['-qscale:v', String(this._proresQscale)] : [];
             await ff.exec([
-                '-framerate', '60', '-start_number', '0',
+                '-framerate', fps, '-start_number', '0',
                 '-i', 'f%05d.png',
-                '-c:v', 'prores_ks', '-profile:v', '4444', '-pix_fmt', 'yuva444p10le',
+                '-c:v', 'prores_ks', '-profile:v', '4444', ...qArgs, '-pix_fmt', 'yuva444p10le',
                 '-y', 'out.mov',
             ]);
             this._encoding = false;
@@ -198,6 +200,7 @@ export class Recorder {
     async start() {
         this.isRecording = true;
         this.frameCount = 0;
+        this._captureFps = 60;   // 默认 60；ProRes 可改 30（见下）
         document.body.classList.add('is-recording');
         this.ind.style.display = 'flex';
 
@@ -251,6 +254,12 @@ export class Recorder {
                 this.btn.classList.add('recording');
                 this._processFrameLoop();
             } else if (this.format === 'prores') {
+                // 读取 ProRes 专属选项（帧率 / 质量）
+                const fpsEl = document.getElementById('ProResFps');
+                const qualEl = document.getElementById('ProResQuality');
+                this._proresFps = fpsEl ? (parseInt(fpsEl.value, 10) || 30) : 30;
+                this._captureFps = this._proresFps;
+                this._proresQscale = (qualEl && qualEl.value === 'small') ? 11 : null;
                 this.btn.innerHTML = "⏳ 加载编码器…";
                 this.btn.disabled = true;   // 加载期间禁用按钮，防止重复点击
                 try {
@@ -376,7 +385,7 @@ export class Recorder {
             return;
         }
 
-        const time = this.frameCount * (1000 / 60);
+        const time = this.frameCount * (1000 / this._captureFps);
 
         // 调用效果的渲染函数 (可能是 async，比如 SVG rasterize)
         await this.onFrame(time);
