@@ -56,8 +56,7 @@ export class Recorder {
         this.zip = null;
         this._webmLoopRunning = false;
         this._ffmpeg = null;          // ffmpeg.wasm 实例(懒加载,仅 ProRes 用)
-        this._proresFrames = null;    // ProRes: 缓存的原始 RGBA 帧
-        this._grab = null;            // ProRes: 抓帧用临时 2d canvas
+        this._proresFrames = null;    // ProRes: 缓存的 PNG 帧(Uint8Array[])
         this._encoding = false;       // ProRes: 编码中(用于进度回调)
 
         this._libsLoaded = false;
@@ -130,44 +129,36 @@ export class Recorder {
         return ff;
     }
 
-    /** ProRes 抓帧 canvas：临时 2d canvas（兼容 Canvas/WebGL/SVG 画布），
-        降采样到最长边 ≤ 1920 控制内存（未压缩帧极占内存） */
-    _initGrab() {
-        const MAX = 1920;
-        const cw = this.canvas.width, ch = this.canvas.height;
-        const f = Math.min(1, MAX / Math.max(cw, ch));
-        const gw = Math.round(cw * f), gh = Math.round(ch * f);
-        if (!this._grab) {
-            this._grab = document.createElement('canvas');
-            this._grabCtx = this._grab.getContext('2d', { willReadFrequently: true });
-        }
-        this._grab.width = gw;
-        this._grab.height = gh;
-        this._grabW = gw; this._grabH = gh;
-        this._grabBytes = gw * gh * 4;
-        this._proresMaxFrames = Math.max(30, Math.floor(1.2e9 / this._grabBytes)); // ~1.2GB 内存预算
+    /** ProRes 初始化：抓帧走 PNG（与 PNG 序列同路径，直通 alpha 正确，无 drawImage 预乘来回） */
+    _initProres() {
+        this._proresFrames = [];
+        this._proresBytes = 0;
+        this._proresByteBudget = 1.5e9; // ~1.5GB 压缩 PNG 预算（远比未压缩 raw 装更多帧）
+        this._proresHitCap = false;
     }
 
-    /** ProRes 收尾：拼帧 → ffmpeg 编码 ProRes 4444 → 下载 */
+    /** ProRes 收尾：PNG 帧写入 ffmpeg FS → 解 PNG 序列编 ProRes 4444 → 下载 */
     async _finishProres() {
         const ff = this._ffmpeg;
         const frames = this._proresFrames;
         this._proresFrames = null;
         const N = frames ? frames.length : 0;
         if (!ff || N === 0) { this._resetBtn(); return; }
+        const names = [];
         try {
-            this.btn.innerHTML = "⏳ 合并帧…";
-            const buf = new Uint8Array(N * this._grabBytes);
-            for (let i = 0; i < N; i++) buf.set(frames[i], i * this._grabBytes);
-            frames.length = 0;
-            await ff.writeFile('in.raw', buf);
+            this.btn.innerHTML = "⏳ 写入帧…";
+            for (let i = 0; i < N; i++) {
+                const name = `f${String(i).padStart(5, '0')}.png`;
+                await ff.writeFile(name, frames[i]);
+                names.push(name);
+                frames[i] = null; // 边写边释放 JS 引用
+            }
 
             this._encoding = true;
             this.btn.innerHTML = "⏳ 编码 ProRes…";
             await ff.exec([
-                '-f', 'rawvideo', '-pix_fmt', 'rgba',
-                '-s', `${this._grabW}x${this._grabH}`, '-r', '60',
-                '-i', 'in.raw',
+                '-framerate', '60', '-start_number', '0',
+                '-i', 'f%05d.png',
                 '-c:v', 'prores_ks', '-profile:v', '4444', '-pix_fmt', 'yuva444p10le',
                 '-y', 'out.mov',
             ]);
@@ -175,7 +166,10 @@ export class Recorder {
 
             const data = await ff.readFile('out.mov');
             saveFile(new Blob([data], { type: 'video/quicktime' }), `${this.fileName}_${Date.now()}.mov`);
-            try { await ff.deleteFile('in.raw'); await ff.deleteFile('out.mov'); } catch (_) {}
+            try {
+                for (const n of names) await ff.deleteFile(n);
+                await ff.deleteFile('out.mov');
+            } catch (_) {}
 
             if (this._proresHitCap) {
                 this._proresHitCap = false;
@@ -269,9 +263,7 @@ export class Recorder {
                     return;
                 }
                 if (!this.isRecording) return; // 加载期间被取消
-                this._initGrab();
-                this._proresFrames = [];
-                this._proresHitCap = false;
+                this._initProres();
                 this.btn.innerHTML = "⏹ 停止录制 (ProRes)";
                 this.btn.classList.add('recording');
                 this._processFrameLoop();
@@ -394,12 +386,12 @@ export class Recorder {
                 }, 'image/png');
             });
         } else if (this.format === 'prores') {
-            // 抓帧到临时 2d canvas（兼容所有画布类型），存原始 RGBA
-            this._grabCtx.clearRect(0, 0, this._grabW, this._grabH);
-            this._grabCtx.drawImage(this.canvas, 0, 0, this._grabW, this._grabH);
-            const d = this._grabCtx.getImageData(0, 0, this._grabW, this._grabH).data;
-            this._proresFrames.push(new Uint8Array(d.buffer));
-            if (this._proresFrames.length >= this._proresMaxFrames) {
+            // 与 PNG 序列同款抓帧：直接对源画布 toBlob PNG（直通 alpha 正确，无 drawImage 预乘来回）
+            const png = await new Promise(r => this.canvas.toBlob(r, 'image/png'));
+            const bytes = new Uint8Array(await png.arrayBuffer());
+            this._proresFrames.push(bytes);
+            this._proresBytes += bytes.length;
+            if (this._proresBytes >= this._proresByteBudget) {
                 this._proresHitCap = true;
                 this.stop();   // 达内存上限 → 收尾编码
                 return;
