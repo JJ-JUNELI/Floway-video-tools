@@ -32,5 +32,6 @@ python3 -m http.server 8000
 
 - Canvas 2D (2x supersampling)
 - WebGL (3D 卡片合成)
-- MP4/WebM/PNG 序列录制导出
+- MP4/WebM/PNG 序列 + 透明视频(MOV, PNG-in-MOV) 录制导出
+- 透明视频用 ffmpeg.wasm 封装；高清/标准分辨率档；桌面剪映/安卓剪映/AE/Pr/Resolve 通用
 - 纯前端，无框架依赖

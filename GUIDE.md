@@ -29,7 +29,7 @@
 floway-tools-v2/
 ├── shared/              ← 共享模块，不需要修改
 │   ├── base.css         ← UI 样式框架
-│   ├── recorder.js      ← 录制引擎（MP4/WebM/PNG）
+│   ├── recorder.js      ← 录制引擎（MP4/WebM/PNG/透明视频 MOV）
 │   ├── background.js    ← 背景系统（支持 Canvas 和 SVG 两种输出目标）
 │   ├── controls.js      ← 一行初始化：Canvas/Background/Recorder/面板/预览循环
 │   ├── svg-renderer.js  ← SVG 渲染管线：SVG→Canvas 序列化（SVG 效果用）
@@ -374,6 +374,7 @@ function drawFrame(timeMs) {
 - `initEffect()` 仍然是统一入口，保证 Background/Recorder/UI 面板的一致性
 - 录制时 Recorder 从 `glCanvas` 读取帧，**不是** dummy canvas
 - 离屏 canvas 必须手动 `ctx.scale(scale, scale)`，因为不由 `initEffect` 管理
+- **透明背景填黑只在不保 alpha 的格式（mp4/webm）**：优先用 `bg.draw(bgCtx, …, recorder.format)`（已正确处理）。若你**自己**填黑底，判断必须用 `!recorder.keepsAlpha`，**不要**写 `recorder.format !== 'png_seq'`——后者漏掉透明视频(prores) 会让导出的透明视频变黑底（曾有 6 个效果踩坑，详见 CLAUDE.md「透明视频导出 › keepsAlpha」）
 - 背景绘制需手动调用 `bg.draw()` 而非 `drawBg()`（`drawBg` 绑定到 dummy canvas 的 ctx）
 - 已在 `chart-fx`、`pie-chart`、`bar-chart`、`paper-chart` 中验证使用
 
