@@ -177,6 +177,14 @@ export class Recorder {
             alert("透明视频封装失败: " + (err && err.message ? err.message : err));
             console.error(err);
         }
+        // 体积较大的导出后释放 ffmpeg.wasm（terminate worker）：wasm 线性内存只增不减，
+        // 抓帧时 MEMFS 涨到的几百 MB~GB 即使 deleteFile 也不归还系统，会让前台预览 rAF 循环
+        // 在高内存占用下持续 GC 抖动→整页卡（切后台 rAF 限流就不卡）。下次导出再懒加载。
+        // 小导出(<500MB)保留实例，连续导出免重复加载 31MB core。
+        if (this._ffmpeg && this._proresBytes > 5e8) {
+            try { this._ffmpeg.terminate(); } catch (_) {}
+            this._ffmpeg = null;
+        }
         this._resetBtn();
     }
 
