@@ -2,7 +2,7 @@
  * Floway Tools — 共享录制引擎
  * 从 tool-text-v4 / tool-stack-scan / tool-logo-v4 提取
  * 
- * 支持三种导出格式: PNG序列(ZIP) / MP4(H.264 Baseline 25Mbps) / WebM(VP9 25Mbps)
+ * 支持四种导出格式: PNG序列(ZIP) / MP4(H.264 Baseline 25Mbps) / WebM(VP9 25Mbps) / 透明视频(PNG-in-MOV 自封装)
  * 
  * 使用方式:
  *   const recorder = new Recorder({
@@ -24,6 +24,7 @@
  */
 
 import { saveFile } from './utils.js';
+import { PngMovMuxer } from './mov-muxer.js';
 export class Recorder {
     constructor(opts) {
         this.canvas = opts.canvas;
@@ -55,9 +56,8 @@ export class Recorder {
         this.chunks = [];
         this.zip = null;
         this._webmLoopRunning = false;
-        this._ffmpeg = null;          // ffmpeg.wasm 实例(懒加载,仅透明视频用)
-        this._proresN = 0;            // 透明视频: 已流式写入 wasm FS 的帧数
-        this._encoding = false;       // 透明视频: 封装中(用于进度回调)
+        this._movMux = null;          // 透明视频: PNG-in-MOV 自封装器(纯 JS, 无 ffmpeg)
+        this._proresN = 0;            // 透明视频: 已加入封装器的帧数
 
         this._libsLoaded = false;
         this._loadLibs();
@@ -102,88 +102,38 @@ export class Recorder {
         poll();
     }
 
-    // ====== ProRes (ffmpeg.wasm) ======
+    // ====== 透明视频 (PNG-in-MOV 自封装，纯 JS，无 ffmpeg) ======
 
-    /** 懒加载 ffmpeg.wasm（仅在首次导出 ProRes 时触发，本地同源 UMD） */
-    async _loadFFmpeg() {
-        if (this._ffmpeg) return this._ffmpeg;
-        const vendor = new URL('vendor/ffmpeg/', import.meta.url).href;
-        if (!window.FFmpegWASM) {
-            await new Promise((resolve, reject) => {
-                const s = document.createElement('script');
-                s.src = vendor + 'ffmpeg.js';
-                s.onload = resolve;
-                s.onerror = () => reject(new Error('ffmpeg.js 加载失败（检查 shared/vendor/ffmpeg/）'));
-                document.head.appendChild(s);
-            });
-        }
-        const ff = new window.FFmpegWASM.FFmpeg();
-        ff.on('progress', ({ progress }) => {
-            if (this._encoding) this.btn.innerHTML = `⏳ 编码 ${Math.min(99, Math.max(0, Math.round((progress || 0) * 100)))}%`;
-        });
-        await ff.load({
-            coreURL: vendor + 'ffmpeg-core.js',
-            wasmURL: vendor + 'ffmpeg-core.wasm',
-        });
-        this._ffmpeg = ff;
-        return ff;
-    }
-
-    /** ProRes 初始化：抓帧走 PNG（与 PNG 序列同路径，直通 alpha 正确，无 drawImage 预乘来回） */
+    /** 透明视频初始化：抓帧走 PNG（与 PNG 序列同路径，直通 alpha 正确，无 drawImage 预乘来回） */
     _initProres() {
-        this._proresN = 0;              // 已流式写入 wasm FS 的帧数
+        this._movMux = new PngMovMuxer({ fps: this._proresFps || 30 });
+        this._proresN = 0;
         this._proresBytes = 0;
-        // ~2.5GB PNG 预算。帧在抓帧阶段就直写 wasm FS、JS 不留引用 → 峰值≈此预算
-        //（旧版把帧缓存在 JS 数组、收尾再拷进 FS，峰值是两份≈预算×2）。wasm 上限 4GB，留足余量。
+        // ~2.5GB PNG 预算。帧持有在 JS 数组里（普通 JS 堆，下载完即 GC 回收，不像 wasm 只增不减）。
         this._proresByteBudget = 2.5e9;
         this._proresHitCap = false;
     }
 
-    /** 透明视频收尾：PNG 帧写入 ffmpeg FS → 解 PNG 序列编 QTRLE → 下载 */
-    async _finishProres() {
-        const ff = this._ffmpeg;
+    /** 透明视频收尾：把已加入的 PNG 帧自封装成 QuickTime MOV（纯字节拼装）→ 下载 */
+    _finishProres() {
+        const mux = this._movMux;
+        this._movMux = null;
         const N = this._proresN || 0;
-        if (!ff || N === 0) { this._resetBtn(); return; }
+        if (!mux || N === 0) { this._resetBtn(); return; }
         try {
-            this._encoding = true;
             this.btn.innerHTML = "⏳ 封装透明视频…";
-            const fps = String(this._proresFps || 60);
-            // 帧在抓帧阶段已是目标分辨率的 PNG、并流式写入 wasm FS(f%05d.png)，这里**始终** -c:v copy：
-            // 原样封进 QuickTime MOV，不解码不缩放不重编码、近乎瞬时，也绕开 swscale 的 alpha 协商。
-            // (标准 1x 的缩放在抓帧时用浏览器 drawImage 完成——见 _processFrameLoop——比 ffmpeg 逐帧转码快得多。)
-            // PNG-in-MOV：QuickTime/Apple 原生、无损带 alpha、比 QTRLE 小 ~6×（PNG DEFLATE 压渐变远胜 RLE）；
-            // AE/Pr/Resolve + 安卓剪映 + 苹果桌面剪映都认（苹果手机剪映只认 HEVC-alpha → 手机走绿幕）。
-            await ff.exec([
-                '-framerate', fps, '-start_number', '0',
-                '-i', 'f%05d.png',
-                '-c:v', 'copy',
-                '-y', 'out.mov',
-            ]);
-            this._encoding = false;
-
-            const data = await ff.readFile('out.mov');
-            saveFile(new Blob([data], { type: 'video/quicktime' }), `${this.fileName}_${Date.now()}.mov`);
-            try {
-                for (let i = 0; i < N; i++) await ff.deleteFile(`f${String(i).padStart(5, '0')}.png`);
-                await ff.deleteFile('out.mov');
-            } catch (_) {}
-
+            // PNG-in-MOV：把抓到的 PNG 帧原样封进 QuickTime MOV（mov-muxer.js，纯 JS）。
+            // 无损、带 alpha、QuickTime/Apple 原生：AE/Pr/Resolve + 安卓剪映 + 苹果桌面剪映都认
+            // （苹果手机剪映只认 HEVC-alpha、浏览器产不出 → 手机走绿幕）。不加载 ffmpeg、无 wasm 内存残留。
+            const blob = mux.finalize();
+            saveFile(blob, `${this.fileName}_${Date.now()}.mov`);
             if (this._proresHitCap) {
                 this._proresHitCap = false;
                 alert(`已达内存上限，导出了前 ${N} 帧（约 ${(N / (this._proresFps || 60)).toFixed(1)}s）。如需更长，请缩短时长。`);
             }
         } catch (err) {
-            this._encoding = false;
             alert("透明视频封装失败: " + (err && err.message ? err.message : err));
             console.error(err);
-        }
-        // 体积较大的导出后释放 ffmpeg.wasm（terminate worker）：wasm 线性内存只增不减，
-        // 抓帧时 MEMFS 涨到的几百 MB~GB 即使 deleteFile 也不归还系统，会让前台预览 rAF 循环
-        // 在高内存占用下持续 GC 抖动→整页卡（切后台 rAF 限流就不卡）。下次导出再懒加载。
-        // 小导出(<500MB)保留实例，连续导出免重复加载 31MB core。
-        if (this._ffmpeg && this._proresBytes > 5e8) {
-            try { this._ffmpeg.terminate(); } catch (_) {}
-            this._ffmpeg = null;
         }
         this._resetBtn();
     }
@@ -264,27 +214,13 @@ export class Recorder {
                 this.btn.classList.add('recording');
                 this._processFrameLoop();
             } else if (this.format === 'prores') {
-                // 读取帧率选项（QTRLE 无损，无质量/码率档）
+                // 透明视频(PNG-in-MOV 自封装)：无需加载任何编码器，直接开录
                 const fpsEl = document.getElementById('ProResFps');
                 this._proresFps = fpsEl ? (parseInt(fpsEl.value, 10) || 30) : 30;
                 this._captureFps = this._proresFps;
                 const resEl = document.getElementById('ProResRes');
                 this._proresHalf = resEl ? (resEl.value === 'half') : false;  // 标准 1x = 缩到一半
-                this.btn.innerHTML = "⏳ 加载编码器…";
-                this.btn.disabled = true;   // 加载期间禁用按钮，防止重复点击
-                try {
-                    await this._loadFFmpeg();
-                } catch (err) {
-                    alert("透明视频编码器加载失败: " + (err && err.message ? err.message : err));
-                    this.isRecording = false;
-                    document.body.classList.remove('is-recording');
-                    this.ind.style.display = 'none';
-                    this._resetBtn();
-                    return;
-                }
-                if (!this.isRecording) return; // 加载期间被取消
                 this._initProres();
-                this.btn.disabled = false;  // 录制中恢复，允许点击停止
                 this.btn.innerHTML = "⏹ 停止录制 (透明MOV)";
                 this.btn.classList.add('recording');
                 this._processFrameLoop();
@@ -408,12 +344,12 @@ export class Recorder {
                 }, 'image/png');
             });
         } else if (this.format === 'prores') {
-            // 抓帧 → toBlob PNG → 直接写进 wasm FS、不在 JS 堆累积（内存不随时长线性涨，收尾也无需再拷）。
+            // 抓帧 → toBlob PNG → 加入自封装器（mov-muxer.js）。帧持有在 JS 堆，下载完即 GC 回收。
             let src = this.canvas;
             if (this._proresHalf) {
                 // 标准 1x：抓帧时就用 drawImage 缩到一半（2x 渲染→1x 输出 = SSAA 超采样，边缘更锐）。
                 // 浏览器 drawImage 走预乘合成，透明软边不发黑（已实测 2D 与 premultipliedAlpha:false 的 WebGL 源）。
-                // 缩后 PNG 仅 1/4 大 → 时长上限随之放大约 4×；封装仍走 -c:v copy（瞬时，不再逐帧转码）。
+                // 缩后 PNG 仅 1/4 大 → 时长上限随之放大约 4×。
                 if (!this._proresScratch) this._proresScratch = document.createElement('canvas');
                 const sc = this._proresScratch;
                 const hw = Math.max(2, Math.round(this.canvas.width / 2));
@@ -427,7 +363,7 @@ export class Recorder {
             }
             const png = await new Promise(r => src.toBlob(r, 'image/png'));
             const bytes = new Uint8Array(await png.arrayBuffer());
-            await this._ffmpeg.writeFile(`f${String(this._proresN).padStart(5, '0')}.png`, bytes);
+            this._movMux.addFramePNG(bytes);
             this._proresN++;
             this._proresBytes += bytes.length;
             if (this._proresBytes >= this._proresByteBudget) {
