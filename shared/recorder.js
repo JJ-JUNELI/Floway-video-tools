@@ -155,15 +155,17 @@ export class Recorder {
             }
 
             this._encoding = true;
-            this.btn.innerHTML = "⏳ 编码透明视频…";
+            this.btn.innerHTML = "⏳ 封装透明视频…";
             const fps = String(this._proresFps || 60);
-            // QTRLE(QuickTime Animation/RLE)：剪映原生透明编码，Mac/Win 桌面剪映 + Premiere/AE/Resolve 都可靠读;
-            // 严格无损(RGB)。ProRes 4444 在剪映上跨平台/按文件大小转代理、丢 alpha，故弃用。
+            // PNG-in-MOV：把抓到的 PNG 帧直接流式封装进 QuickTime MOV（-c:v copy，不重新编码）。
+            // 无损、带 alpha、QuickTime/Apple 原生：AE/Pr/Resolve + 安卓剪映 + 苹果桌面剪映都认
+            // （苹果手机剪映只认 HEVC-alpha，浏览器产不出 → 手机走绿幕方案）。
+            // 比 QTRLE 小 ~6×（辉光 39MB→6MB）：PNG 的 DEFLATE 压渐变远胜 RLE；
+            // 且帧本就是 toBlob 出的 PNG，copy 省掉整个编码 pass、近乎瞬时，也绕开 swscale 的 alpha 协商。
             await ff.exec([
                 '-framerate', fps, '-start_number', '0',
                 '-i', 'f%05d.png',
-                '-vf', 'format=rgba',   // 显式保 alpha，兜底 wasm swscale
-                '-c:v', 'qtrle', '-pix_fmt', 'argb',
+                '-c:v', 'copy',
                 '-y', 'out.mov',
             ]);
             this._encoding = false;
