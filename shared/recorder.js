@@ -148,20 +148,17 @@ export class Recorder {
             this._encoding = true;
             this.btn.innerHTML = "⏳ 封装透明视频…";
             const fps = String(this._proresFps || 60);
-            // 帧在抓帧阶段已流式写入 wasm FS(f%05d.png)，这里直接封装，无需再写一遍。
+            // 帧在抓帧阶段已是目标分辨率的 PNG、并流式写入 wasm FS(f%05d.png)，这里**始终** -c:v copy：
+            // 原样封进 QuickTime MOV，不解码不缩放不重编码、近乎瞬时，也绕开 swscale 的 alpha 协商。
+            // (标准 1x 的缩放在抓帧时用浏览器 drawImage 完成——见 _processFrameLoop——比 ffmpeg 逐帧转码快得多。)
             // PNG-in-MOV：QuickTime/Apple 原生、无损带 alpha、比 QTRLE 小 ~6×（PNG DEFLATE 压渐变远胜 RLE）；
             // AE/Pr/Resolve + 安卓剪映 + 苹果桌面剪映都认（苹果手机剪映只认 HEVC-alpha → 手机走绿幕）。
-            //  · 高清(full)：-c:v copy 把 PNG 帧原样封进 MOV，不重新编码、近乎瞬时，也绕开 swscale 的 alpha 协商。
-            //  · 标准(half)：缩到一半分辨率。必须 premultiply→scale→unpremultiply，否则直通 alpha 下采样会把
-            //    透明边缘 RGB 拖暗(黑边)；再以 PNG 重新编码（此档放弃 copy 的瞬时性，换更小文件）。
-            const args = this._proresHalf
-                ? ['-framerate', fps, '-start_number', '0', '-i', 'f%05d.png',
-                   // area(像素面积平均)是 2:1 降采样最优：比 lanczos 快 ~3× + 文件更小 + 无振铃
-                   '-vf', 'format=rgba,premultiply=inplace=1,scale=iw/2:ih/2:flags=area,unpremultiply=inplace=1',
-                   '-c:v', 'png', '-y', 'out.mov']
-                : ['-framerate', fps, '-start_number', '0', '-i', 'f%05d.png',
-                   '-c:v', 'copy', '-y', 'out.mov'];
-            await ff.exec(args);
+            await ff.exec([
+                '-framerate', fps, '-start_number', '0',
+                '-i', 'f%05d.png',
+                '-c:v', 'copy',
+                '-y', 'out.mov',
+            ]);
             this._encoding = false;
 
             const data = await ff.readFile('out.mov');
@@ -403,9 +400,24 @@ export class Recorder {
                 }, 'image/png');
             });
         } else if (this.format === 'prores') {
-            // 与 PNG 序列同款抓帧：toBlob PNG（直通 alpha 正确，无 drawImage 预乘来回）；
-            // 抓到即直接写进 wasm FS、不在 JS 堆累积 → 内存不随时长线性涨，收尾也无需再拷一遍。
-            const png = await new Promise(r => this.canvas.toBlob(r, 'image/png'));
+            // 抓帧 → toBlob PNG → 直接写进 wasm FS、不在 JS 堆累积（内存不随时长线性涨，收尾也无需再拷）。
+            let src = this.canvas;
+            if (this._proresHalf) {
+                // 标准 1x：抓帧时就用 drawImage 缩到一半（2x 渲染→1x 输出 = SSAA 超采样，边缘更锐）。
+                // 浏览器 drawImage 走预乘合成，透明软边不发黑（已实测 2D 与 premultipliedAlpha:false 的 WebGL 源）。
+                // 缩后 PNG 仅 1/4 大 → 时长上限随之放大约 4×；封装仍走 -c:v copy（瞬时，不再逐帧转码）。
+                if (!this._proresScratch) this._proresScratch = document.createElement('canvas');
+                const sc = this._proresScratch;
+                const hw = Math.max(2, Math.round(this.canvas.width / 2));
+                const hh = Math.max(2, Math.round(this.canvas.height / 2));
+                if (sc.width !== hw || sc.height !== hh) { sc.width = hw; sc.height = hh; }
+                const sx = sc.getContext('2d');
+                sx.clearRect(0, 0, hw, hh);
+                sx.imageSmoothingEnabled = true; sx.imageSmoothingQuality = 'high';
+                sx.drawImage(this.canvas, 0, 0, hw, hh);
+                src = sc;
+            }
+            const png = await new Promise(r => src.toBlob(r, 'image/png'));
             const bytes = new Uint8Array(await png.arrayBuffer());
             await this._ffmpeg.writeFile(`f${String(this._proresN).padStart(5, '0')}.png`, bytes);
             this._proresN++;
