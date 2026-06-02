@@ -44,8 +44,9 @@ floway-tools-v2/
 │   ├── custom-select.js         ← 自定义下拉选择器
 │   └── mp4-muxer.js             ← MP4 编码库
 │
-├── effects/                     ← 正式效果文件（9 个）
+├── effects/                     ← 正式效果文件（10 个）
 │   ├── chart-fx.html            ← ✅ 万能图表（折线/柱状，纸张/赛博双模式，WebGL 3D）
+│   ├── multi-line.html          ← ✅ 多折线图（任意条折线对比，每条独立色/名+自动图例；由 chart-fx 派生、去柱状）
 │   ├── bar-chart.html           ← ✅ 柱状图（WebGL 3D 悬浮卡片）
 │   ├── pie-chart.html           ← ✅ 饼图/环形图（WebGL 3D）
 │   ├── card-3d.html             ← ✅ 3D 悬浮卡片（图片/视频展示）
@@ -81,7 +82,7 @@ floway-tools-v2/
 |---|---|---|
 | **A: Canvas** | 大多数 2D 效果 | text-animator, logo-matrix, particle-field |
 | **B: SVG** | 需要 SVG 滤镜/文字渲染 | stack-scan |
-| **C: Canvas + WebGL** | 3D 光照/卡片合成 | chart-fx, bar-chart, pie-chart, card-3d, xiaolin-card |
+| **C: Canvas + WebGL** | 3D 光照/卡片合成 | chart-fx, multi-line, bar-chart, pie-chart, card-3d, xiaolin-card |
 
 ### 共享模块依赖关系
 
