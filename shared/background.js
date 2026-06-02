@@ -242,12 +242,13 @@ export class Background {
      * @param {CanvasRenderingContext2D} ctx
      * @param {number} timestamp - 毫秒时间戳 (用于视频背景同步)
      * @param {boolean} isRecording - 是否正在录制 (影响透明背景处理)
-     * @param {string} exportFormat - 当前导出格式 ('png_seq' | 'mp4' | 'webm')
+     * @param {string} exportFormat - 当前导出格式 ('png_seq' | 'mp4' | 'webm' | 'prores')
      */
     draw(ctx, timestamp = 0, isRecording = false, exportFormat = '') {
         if (this.mode === 'transparent') {
-            // MP4/WebM + 透明 → 强制黑底; PNG + 透明 → 真透明
-            if (isRecording && exportFormat !== 'png_seq') {
+            // MP4/WebM + 透明 → 强制黑底; PNG 序列 / 透明视频(prores/QTRLE) + 透明 → 真透明
+            // 须与 recorder.keepsAlpha 保持一致(png_seq + prores)
+            if (isRecording && exportFormat !== 'png_seq' && exportFormat !== 'prores') {
                 ctx.save();
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
                 ctx.fillStyle = '#000000';

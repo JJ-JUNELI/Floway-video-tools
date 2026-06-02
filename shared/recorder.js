@@ -199,6 +199,13 @@ export class Recorder {
         return this.exportSelect.value;
     }
 
+    // 透明可保留的导出格式：PNG 序列 + 透明视频(QTRLE/MOV)。
+    // mp4/webm 不支持 alpha，录制时需填实底。各效果的"透明模式填黑"判断统一走这里，
+    // 避免每个效果各写 `format !== 'png_seq'`（漏掉 prores 会导致透明视频变黑底）。
+    get keepsAlpha() {
+        return this.format === 'png_seq' || this.format === 'prores';
+    }
+
     async start() {
         this.isRecording = true;
         this.frameCount = 0;

@@ -1761,7 +1761,7 @@
 
             // 背景绘制
             if (bg.mode === 'transparent') {
-                if (recorder.isRecording && recorder.format !== 'png_seq') {
+                if (recorder.isRecording && !recorder.keepsAlpha) {
                     bgCtx.fillStyle = '#000000';
                     bgCtx.fillRect(0, 0, baseWidth, baseHeight);
                 }

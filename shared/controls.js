@@ -427,9 +427,8 @@ export function initEffect(opts) {
         if (!ctx) return;
         if (bg.mode === 'transparent') {
             // 录制 mp4/webm 时视频不支持透明 → 一律填黑底（不随主题）；
-            // 预览 & PNG 序列 & ProRes(带 alpha) 保持真透明（画布已 clearFrame），露出整页网格底纹
-            const keepsAlpha = recorder.format === 'png_seq' || recorder.format === 'prores';
-            if (recorder.isRecording && !keepsAlpha) {
+            // 预览 & PNG 序列 & 透明视频(prores/QTRLE，带 alpha) 保持真透明（画布已 clearFrame），露出整页网格底纹
+            if (recorder.isRecording && !recorder.keepsAlpha) {
                 ctx.fillStyle = '#000000';
                 ctx.fillRect(0, 0, baseWidth, baseHeight);
             }

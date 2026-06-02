@@ -212,7 +212,7 @@
             const scroll = animTime * 0.1 * config.speed;
             const rot = animTime * 0.1 * config.rotSpeed;
             clearFrame();
-            if (recorder.format !== 'png_seq' && bg.mode === 'transparent') {
+            if (!recorder.keepsAlpha && bg.mode === 'transparent') {
                 ctx.fillStyle = getTheme().canvasBg;
                 ctx.fillRect(0,0,baseWidth, baseHeight);
             }
