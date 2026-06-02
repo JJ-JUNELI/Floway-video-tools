@@ -156,7 +156,8 @@ export class Recorder {
             //    透明边缘 RGB 拖暗(黑边)；再以 PNG 重新编码（此档放弃 copy 的瞬时性，换更小文件）。
             const args = this._proresHalf
                 ? ['-framerate', fps, '-start_number', '0', '-i', 'f%05d.png',
-                   '-vf', 'format=rgba,premultiply=inplace=1,scale=iw/2:ih/2:flags=lanczos,unpremultiply=inplace=1',
+                   // area(像素面积平均)是 2:1 降采样最优：比 lanczos 快 ~3× + 文件更小 + 无振铃
+                   '-vf', 'format=rgba,premultiply=inplace=1,scale=iw/2:ih/2:flags=area,unpremultiply=inplace=1',
                    '-c:v', 'png', '-y', 'out.mov']
                 : ['-framerate', fps, '-start_number', '0', '-i', 'f%05d.png',
                    '-c:v', 'copy', '-y', 'out.mov'];
