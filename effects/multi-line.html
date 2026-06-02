@@ -136,16 +136,19 @@
                     <span>数据管理</span>
                     <button class="btn-icon" onclick="resetData()" title="重置" style="width:28px;height:32px;font-size:13px;">↺</button>
                 </div>
+                <!-- 折线系列：每条一行，独立改名+配色（与下方数值表分离，避免表头拥挤）-->
+                <div class="sub-section-label" style="font-size:11px; color:var(--text-sub,#888); margin-bottom:4px;">折线系列（对比项）</div>
+                <div id="SeriesList"></div>
+                <button class="btn-add" onclick="addSeries()">+ 添加折线</button>
+                <!-- 数值表：行=类目，列=各系列（表头仅色点标识，名称在上方列表改）-->
+                <div class="sub-section-label" style="font-size:11px; color:var(--text-sub,#888); margin:10px 0 4px;">数值</div>
                 <div style="overflow-x:auto;">
                     <table class="data-table" id="DataTable">
                         <thead id="DataHead"></thead>
                         <tbody id="DataBody"></tbody>
                     </table>
                 </div>
-                <div style="display:flex; gap:6px; margin-top:6px;">
-                    <button class="btn-add" style="flex:1;" onclick="addRow()">+ 添加类目</button>
-                    <button class="btn-add" style="flex:1;" onclick="addSeries()">+ 添加折线</button>
-                </div>
+                <button class="btn-add" onclick="addRow()">+ 添加类目</button>
             </div>
 
             <!-- 折线图 -->
@@ -155,7 +158,7 @@
                     <div class="sub-section-label">线条</div>
                     <div class="stack"><div class="label-line"><span>线条粗细</span><span id="LineWidthVal">1.2</span></div>
                         <input type="range" id="LineWidth" min="0.5" max="15" step="0.5" value="1.2"></div>
-                    <div class="hint" style="font-size:11px; color:var(--text-sub,#888); margin:2px 0 6px;">每条线的颜色/名称在上方「数据管理」表头里改</div>
+                    <div class="hint" style="font-size:11px; color:var(--text-sub,#888); margin:2px 0 6px;">每条线的颜色/名称在「数据管理 › 折线系列」里改</div>
                     <div class="stack"><div class="label-line"><span>曲线张力</span><span id="TensionVal">0</span></div>
                         <input type="range" id="Tension" min="0" max="1" step="0.1" value="0"></div>
                     <div class="stack"><div class="label-line"><span>线条辉光</span><span id="GlowBlurVal">0</span></div>
@@ -441,17 +444,19 @@
                 entryAnimation: { extras: ['lineDelay'] },
                 chartTitle: {
                     groupTitle: '标题',
-                    mainTitle: '汽车零售销量新能源月度渗透率走势',
-                    subTitle: '新能源乘用车渗透率超 50%',
+                    mainTitle: '造车新势力月度交付量对比',
+                    subTitle: '2024 新势力月度交付（千辆）',
                 },
             },
         });
 
         // ====== 数据：类目 + 任意条折线系列 ======
         const INITIAL_LABELS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+        // 默认演示「对比」：同一指标(月度交付量)下不同品牌的对比
         const INITIAL_SERIES = [
-            { name: '渗透率（%）', color: '#555555', values: [41, 49, 51.5, 52.5, 53.5, 52, 52, 55.5, 58.5, 57.5, 59, 58] },
-            { name: '占有率（%）', color: '#a8c5da', values: [30, 33, 35, 38, 40, 42, 45, 47, 49, 51, 53, 55] },
+            { name: '理想', color: '#555555', values: [31, 33, 36, 25, 35, 38, 51, 48, 54, 50, 49, 58] },
+            { name: '问界', color: '#a8c5da', values: [33, 21, 24, 29, 37, 43, 42, 37, 36, 41, 37, 49] },
+            { name: '蔚来', color: '#c0a36e', values: [10, 8, 9, 15, 20, 21, 20, 19, 21, 16, 21, 31] },
         ];
         let labels = INITIAL_LABELS.slice();
         let lineSeries = INITIAL_SERIES.map(s => ({ ...s, values: s.values.slice() }));
@@ -463,8 +468,8 @@
 
         const config = {
             // 标题
-            mainTitle: '汽车零售销量新能源月度渗透率走势',
-            subTitle: '新能源乘用车渗透率超 50%',
+            mainTitle: '造车新势力月度交付量对比',
+            subTitle: '2024 新势力月度交付（千辆）',
             titleFont: "'Noto Sans SC', sans-serif",
             mainTitleSize: 26,
             subTitleSize: 36,
@@ -883,20 +888,26 @@
         // ====== 工具函数 ======
         function lerp(a, b, t) { return a + (b - a) * t; }
 
-        // ====== 数据表格（行=类目，列=折线系列；可增删行/列、每系列名+色）======
+        // ====== 数据表格 ======
+        // 系列「身份」(名称+颜色+增删) 在 SeriesList 竖排列表里管理；
+        // 数值表 (行=类目,列=系列) 表头只放色点标识，避免多系列时名称输入框挤成一团。
         function renderTable() {
+            // 1) 折线系列列表（每条一行，舒展）
+            const list = document.getElementById('SeriesList');
+            if (list) {
+                list.innerHTML = lineSeries.map((s, si) => `
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:5px;">
+                        <input type="color" value="${s.color}" title="颜色" style="width:24px;height:24px;padding:0;border:none;background:none;flex:none;cursor:pointer;" oninput="updateSeriesColor(${si}, this.value)">
+                        <input type="text" value="${s.name}" title="系列名（图例/对比项）" placeholder="对比项名称" style="flex:1; min-width:0; height:28px; padding:4px 8px;" oninput="updateSeriesName(${si}, this.value)">
+                        <button class="btn-icon del" title="删除此折线" style="flex:none;" ${lineSeries.length > 1 ? '' : 'disabled'} onclick="removeSeries(${si})">×</button>
+                    </div>`).join('');
+            }
+            // 2) 数值表：表头每系列只放一个色点（按列对应），名称在上面列表改
             const head = document.getElementById('DataHead');
             const tbody = document.getElementById('DataBody');
             head.innerHTML = `<tr>
                 <th style="min-width:54px;">名称</th>
-                ${lineSeries.map((s, si) => `
-                    <th style="min-width:96px;">
-                        <div style="display:flex; align-items:center; gap:3px;">
-                            <input type="color" value="${s.color}" title="颜色" style="width:20px;height:20px;padding:0;border:none;background:none;flex:none;cursor:pointer;" oninput="updateSeriesColor(${si}, this.value)">
-                            <input type="text" value="${s.name}" title="系列名" style="width:100%;min-width:36px;font-size:11px;padding:2px 4px;" oninput="updateSeriesName(${si}, this.value)">
-                            ${lineSeries.length > 1 ? `<button class="btn-icon del" title="删除此折线" style="flex:none;" onclick="removeSeries(${si})">×</button>` : ''}
-                        </div>
-                    </th>`).join('')}
+                ${lineSeries.map((s, si) => `<th title="${s.name}" style="width:52px;"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${s.color};vertical-align:middle;"></span></th>`).join('')}
                 <th style="width:78px;">操作</th>
             </tr>`;
             tbody.innerHTML = labels.map((label, i) => `
