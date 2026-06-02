@@ -16,6 +16,7 @@
   "BgMode": "transparent",
   "ExportFormat": "png_seq",
   "ProResFps": "30",
+  "ProResRes": "full",
   "BgUpload": "",
   "PatternColor": "#222222",
   "PaperWarmth": "40"

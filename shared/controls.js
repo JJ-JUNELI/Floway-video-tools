@@ -278,6 +278,13 @@ export function injectPanels(opts = {}) {
                     <option value="60">60 fps</option>
                 </select>
             </div>
+            <div class="sf-cell">
+                <span class="sf-label">分辨率</span>
+                <select id="ProResRes">
+                    <option value="full" selected>高清 2x</option>
+                    <option value="half">标准 1x</option>
+                </select>
+            </div>
         </div>
         ${bgExtrasHTML}
         <div class="sf-actions">

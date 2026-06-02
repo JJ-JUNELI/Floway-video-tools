@@ -55,9 +55,9 @@ export class Recorder {
         this.chunks = [];
         this.zip = null;
         this._webmLoopRunning = false;
-        this._ffmpeg = null;          // ffmpeg.wasm 实例(懒加载,仅 ProRes 用)
-        this._proresFrames = null;    // ProRes: 缓存的 PNG 帧(Uint8Array[])
-        this._encoding = false;       // ProRes: 编码中(用于进度回调)
+        this._ffmpeg = null;          // ffmpeg.wasm 实例(懒加载,仅透明视频用)
+        this._proresN = 0;            // 透明视频: 已流式写入 wasm FS 的帧数
+        this._encoding = false;       // 透明视频: 封装中(用于进度回调)
 
         this._libsLoaded = false;
         this._loadLibs();
@@ -131,49 +131,42 @@ export class Recorder {
 
     /** ProRes 初始化：抓帧走 PNG（与 PNG 序列同路径，直通 alpha 正确，无 drawImage 预乘来回） */
     _initProres() {
-        this._proresFrames = [];
+        this._proresN = 0;              // 已流式写入 wasm FS 的帧数
         this._proresBytes = 0;
-        this._proresByteBudget = 1.5e9; // ~1.5GB 压缩 PNG 预算（远比未压缩 raw 装更多帧）
+        // ~2.5GB PNG 预算。帧在抓帧阶段就直写 wasm FS、JS 不留引用 → 峰值≈此预算
+        //（旧版把帧缓存在 JS 数组、收尾再拷进 FS，峰值是两份≈预算×2）。wasm 上限 4GB，留足余量。
+        this._proresByteBudget = 2.5e9;
         this._proresHitCap = false;
     }
 
     /** 透明视频收尾：PNG 帧写入 ffmpeg FS → 解 PNG 序列编 QTRLE → 下载 */
     async _finishProres() {
         const ff = this._ffmpeg;
-        const frames = this._proresFrames;
-        this._proresFrames = null;
-        const N = frames ? frames.length : 0;
+        const N = this._proresN || 0;
         if (!ff || N === 0) { this._resetBtn(); return; }
-        const names = [];
         try {
-            for (let i = 0; i < N; i++) {
-                const name = `f${String(i).padStart(5, '0')}.png`;
-                await ff.writeFile(name, frames[i]);
-                names.push(name);
-                frames[i] = null; // 边写边释放 JS 引用
-                if (i % 10 === 0) this.btn.innerHTML = `⏳ 写入帧 ${i + 1}/${N}`;
-            }
-
             this._encoding = true;
             this.btn.innerHTML = "⏳ 封装透明视频…";
             const fps = String(this._proresFps || 60);
-            // PNG-in-MOV：把抓到的 PNG 帧直接流式封装进 QuickTime MOV（-c:v copy，不重新编码）。
-            // 无损、带 alpha、QuickTime/Apple 原生：AE/Pr/Resolve + 安卓剪映 + 苹果桌面剪映都认
-            // （苹果手机剪映只认 HEVC-alpha，浏览器产不出 → 手机走绿幕方案）。
-            // 比 QTRLE 小 ~6×（辉光 39MB→6MB）：PNG 的 DEFLATE 压渐变远胜 RLE；
-            // 且帧本就是 toBlob 出的 PNG，copy 省掉整个编码 pass、近乎瞬时，也绕开 swscale 的 alpha 协商。
-            await ff.exec([
-                '-framerate', fps, '-start_number', '0',
-                '-i', 'f%05d.png',
-                '-c:v', 'copy',
-                '-y', 'out.mov',
-            ]);
+            // 帧在抓帧阶段已流式写入 wasm FS(f%05d.png)，这里直接封装，无需再写一遍。
+            // PNG-in-MOV：QuickTime/Apple 原生、无损带 alpha、比 QTRLE 小 ~6×（PNG DEFLATE 压渐变远胜 RLE）；
+            // AE/Pr/Resolve + 安卓剪映 + 苹果桌面剪映都认（苹果手机剪映只认 HEVC-alpha → 手机走绿幕）。
+            //  · 高清(full)：-c:v copy 把 PNG 帧原样封进 MOV，不重新编码、近乎瞬时，也绕开 swscale 的 alpha 协商。
+            //  · 标准(half)：缩到一半分辨率。必须 premultiply→scale→unpremultiply，否则直通 alpha 下采样会把
+            //    透明边缘 RGB 拖暗(黑边)；再以 PNG 重新编码（此档放弃 copy 的瞬时性，换更小文件）。
+            const args = this._proresHalf
+                ? ['-framerate', fps, '-start_number', '0', '-i', 'f%05d.png',
+                   '-vf', 'format=rgba,premultiply=inplace=1,scale=iw/2:ih/2:flags=lanczos,unpremultiply=inplace=1',
+                   '-c:v', 'png', '-y', 'out.mov']
+                : ['-framerate', fps, '-start_number', '0', '-i', 'f%05d.png',
+                   '-c:v', 'copy', '-y', 'out.mov'];
+            await ff.exec(args);
             this._encoding = false;
 
             const data = await ff.readFile('out.mov');
             saveFile(new Blob([data], { type: 'video/quicktime' }), `${this.fileName}_${Date.now()}.mov`);
             try {
-                for (const n of names) await ff.deleteFile(n);
+                for (let i = 0; i < N; i++) await ff.deleteFile(`f${String(i).padStart(5, '0')}.png`);
                 await ff.deleteFile('out.mov');
             } catch (_) {}
 
@@ -183,7 +176,7 @@ export class Recorder {
             }
         } catch (err) {
             this._encoding = false;
-            alert("透明视频编码失败: " + (err && err.message ? err.message : err));
+            alert("透明视频封装失败: " + (err && err.message ? err.message : err));
             console.error(err);
         }
         this._resetBtn();
@@ -269,6 +262,8 @@ export class Recorder {
                 const fpsEl = document.getElementById('ProResFps');
                 this._proresFps = fpsEl ? (parseInt(fpsEl.value, 10) || 30) : 30;
                 this._captureFps = this._proresFps;
+                const resEl = document.getElementById('ProResRes');
+                this._proresHalf = resEl ? (resEl.value === 'half') : false;  // 标准 1x = 缩到一半
                 this.btn.innerHTML = "⏳ 加载编码器…";
                 this.btn.disabled = true;   // 加载期间禁用按钮，防止重复点击
                 try {
@@ -407,14 +402,16 @@ export class Recorder {
                 }, 'image/png');
             });
         } else if (this.format === 'prores') {
-            // 与 PNG 序列同款抓帧：直接对源画布 toBlob PNG（直通 alpha 正确，无 drawImage 预乘来回）
+            // 与 PNG 序列同款抓帧：toBlob PNG（直通 alpha 正确，无 drawImage 预乘来回）；
+            // 抓到即直接写进 wasm FS、不在 JS 堆累积 → 内存不随时长线性涨，收尾也无需再拷一遍。
             const png = await new Promise(r => this.canvas.toBlob(r, 'image/png'));
             const bytes = new Uint8Array(await png.arrayBuffer());
-            this._proresFrames.push(bytes);
+            await this._ffmpeg.writeFile(`f${String(this._proresN).padStart(5, '0')}.png`, bytes);
+            this._proresN++;
             this._proresBytes += bytes.length;
             if (this._proresBytes >= this._proresByteBudget) {
                 this._proresHitCap = true;
-                this.stop();   // 达内存上限 → 收尾编码
+                this.stop();   // 达内存上限 → 收尾封装
                 return;
             }
         } else if (this.format === 'mp4') {
