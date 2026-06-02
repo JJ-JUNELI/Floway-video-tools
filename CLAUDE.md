@@ -35,7 +35,7 @@ PNG 序列之外的「单文件透明视频」。导出格式下拉的 `🎬 透
 
 ### 编码：PNG-in-MOV（QuickTime PNG 视频轨）
 - **抓帧** = `canvas.toBlob('image/png')`（与 PNG 序列同路径，直通 alpha 正确）。**不要** drawImage→getImageData，那套预乘/直通来回会把柔光放大成白光晕（尤其 WebGL 画布）。
-- **封装** = ffmpeg.wasm `-c:v copy`：把抓到的 PNG 帧**原样**封进 QuickTime MOV，不解码不缩放不重编码、近乎瞬时，也绕开 swscale 的 alpha 协商。
+- **封装** = 纯 JS 自封装（`shared/mov-muxer.js` 的 `PngMovMuxer`，无 ffmpeg）：把抓到的 PNG 帧**原样**封进 QuickTime 'png ' 视频轨，不解码不缩放不重编码、近乎瞬时。
 - 无损、带真 alpha、QuickTime/Apple 原生。**比 QTRLE 小约 6×**（辉光 1080p 实测 QTRLE 39MB vs PNG-in-MOV 6MB——QTRLE 逐行 RLE 压不动渐变，PNG 的 DEFLATE 正擅长）。
 - **编码弯路（勿重走）**：曾先后用 ProRes 4444、QTRLE，都遇「剪映黑底」——后查实是**前端填黑 bug**（见 keepsAlpha），非编码/剪映问题；修掉后比体积才定下 PNG-in-MOV。教训：先排除自己的前端 bug，再怀疑编解码器。
 
@@ -47,29 +47,28 @@ PNG 序列之外的「单文件透明视频」。导出格式下拉的 `🎬 透
 | Premiere / AE / Resolve | ✓ |
 | **苹果手机剪映** | ✗ → 走**绿幕 + 色度键**（MP4+绿幕背景） |
 
-苹果手机剪映只认**带 alpha 的 HEVC**，那是 macOS VideoToolbox 的专有能力：**浏览器/WebCodecs/ffmpeg.wasm 都产不出**（WebCodecs 对 HEVC 无 alpha；`hevc_videotoolbox` 在 wasm 里是跑不起来的空壳；x265 产的是不透明 HEVC）。要 HEVC-alpha 只能上 **macOS 后端**转，故手机端维持绿幕，别再研究浏览器产 HEVC-alpha。
+苹果手机剪映只认**带 alpha 的 HEVC**，那是 macOS VideoToolbox 的专有能力：**浏览器/WebCodecs 都产不出**（WebCodecs 对 HEVC 无 alpha；`hevc_videotoolbox` 是 macOS 系统编码器，浏览器里没有；x265 产的是不透明 HEVC）。要 HEVC-alpha 只能上 **macOS 后端**转，故手机端维持绿幕，别再研究浏览器产 HEVC-alpha。
 
-### 引擎：ffmpeg.wasm（单线程 / 同源 vendored / 懒加载 / 大导出后释放）
-- `@ffmpeg/ffmpeg@0.12.10` + `@ffmpeg/core@0.12.10` 的 **UMD 单线程**版，本地同源 vendored 在 `shared/vendor/ffmpeg/`（`git add -f` 进仓库）。**必须同源**——0.12 ESM 从 CDN 跨域加载会卡在 worker。多线程版要 `SharedArrayBuffer`→COOP/COEP→**破坏飞书 iframe 嵌入**，故用单线程（`-c:v copy` 不编码，慢的问题已基本消解）。
-- **懒加载**：`_loadFFmpeg()` 仅首次导出透明视频时注入 `<script>`，其它格式完全不碰这 31MB。
-- **大导出后必须释放（否则整页卡）**：wasm 线性内存**只增不减**，抓帧时 MEMFS 涨到的几百 MB~GB 即使 `deleteFile` 也不还系统 → 前台预览 rAF 循环在高占用下持续 GC 抖动**整页卡**（切后台 rAF 限流反而不卡，是判据）。故 `_finishProres` 收尾若本次 `>500MB` 就 `terminate()`+置 `null`，下次再懒加载；小导出保留实例免重复加载。
-- **发布（腾讯 COS + Cloudflare + 飞书）**：整个项目含 vendor 传 COS 同源托管；给 `*.wasm` 设 `Content-Type: application/wasm` + 长缓存 immutable。别用公共 CDN（国内/飞书不稳）。
+### 引擎：纯 JS 自封装（`shared/mov-muxer.js` 的 `PngMovMuxer`，无 ffmpeg）
+- **不依赖 ffmpeg / 任何 wasm**。封 MOV 只是「PNG 字节装箱 + 写采样表（atom）」——PNG 编码浏览器 `toBlob` 已免费做完，MOV 只是个"信封+目录"，纯 JS 几 KB 即可。（曾用 ffmpeg.wasm `-c:v copy`，是 31MB 杀鸡用牛刀 + 一堆 wasm 内存问题，已整体移除。）
+- `PngMovMuxer`：`addFramePNG(uint8)` 逐帧持有（首帧从 PNG 的 IHDR 自动读宽高），`finalize()` 返回 `Blob(video/quicktime)`。结构 = `ftyp + wide + mdat(帧字节) + moov`（`stsd 'png ' depth24 / 变长 stsz / edts·elst / minf hdlr`），对齐 ffmpeg 的 PNG-in-MOV 输出，已在剪映/AE 实测通过、逐像素无损（PSNR=inf）。
+- **内存友好**：帧是普通 JS `Uint8Array`，`finalize` 用 `new Blob([...parts])` 分段拼装（不分配巨型连续缓冲、可落盘），下载完整组帧即可 GC 回收。**没有"wasm 内存只增不减 / 导出后整页卡 / 要 terminate 重载"那套问题**——那是 ffmpeg.wasm 时代的，已随移除一并消失。
 
 ### 抓帧 / 内存 / 时长上限
-- 抓帧**流式直写 wasm FS**（每帧 `ff.writeFile`、JS 不留引用），不是缓存在 JS 数组里收尾再拷 → 内存不随时长在 JS 堆累积，峰值≈预算（旧版数组+FS 双份≈预算×2）。
-- 预算 `_proresByteBudget = 2.5e9`（2.5GB，wasm 上限 4GB），超了**自动停录 + 封装已抓帧 + 弹窗**告知时长。mp4/webm 流式编码无限制；PNG 序列无显式上限但堆内存、极长可能 OOM。
+- 抓帧 = `canvas.toBlob('image/png')`，逐帧 `PngMovMuxer.addFramePNG`，帧持有在 JS 数组（普通 JS 堆，下载后 GC 回收）。
+- 预算 `_proresByteBudget = 2.5e9`（2.5GB）：累计 PNG 字节超了就**自动停录 + 封装已抓帧 + 弹窗**告知时长。mp4/webm 流式编码无限制；PNG 序列无显式上限但堆内存、极长可能 OOM。
 
 ### 档位（导出面板，选透明视频时显示）
 - **帧率**：30 / 60 fps（`#ProResFps`）。
-- **分辨率**：高清 2x（2880×2160，原样 copy）/ 标准 1x（1440×1080，`#ProResRes`）。标准档缩放在**抓帧时用浏览器 `drawImage` 缩到一半再 `toBlob`** 完成（不走 ffmpeg），两档封装都 `-c:v copy`。好处：① 速度=高清；② PNG 仅 1/4 大 → 时长上限再×4；③ 2x 渲染缩到 1x = SSAA 超采样、边缘比原生 1x 更锐。
+- **分辨率**：高清 2x（2880×2160，原样封装）/ 标准 1x（1440×1080，`#ProResRes`）。标准档缩放在**抓帧时用浏览器 `drawImage` 缩到一半再 `toBlob`** 完成，两档封装都是纯 JS 字节拼装（无重编码、瞬时）。好处：① 速度一致；② PNG 仅 1/4 大 → 时长上限再×4；③ 2x 渲染缩到 1x = SSAA 超采样、边缘比原生 1x 更锐。
 - **缩放为何不发黑**（实测）：Chromium `drawImage` 降采样走预乘合成，透明软边不被拖暗——"不透明白↔全透明"边界缩后是 `(255,255,255,128)` 而非直通缩放的 `(127,127,127,128)`；2D 源与 `premultipliedAlpha:false` 的 WebGL 源都正确。
 - 注：分辨率档**只对透明视频**生效（mp4/webm/png 仍 2880×2160）。未做"全局 render scale 切换"——各效果把 `scale=2` 写死在文件里、要动 5 个 WebGL 合成效果的 glCanvas/offscreen 尺寸，风险大；抓帧时缩用一处拿到同样的快+小+省内存且画质更好。
 
 ### ⚠️ keepsAlpha：保 alpha 格式的填黑判断（单一事实源）
 mp4/webm 不支持透明，透明背景录制时各效果会把背景填黑（固定 `#000000`）。**该判断必须排除所有保 alpha 的格式**，单一事实源是 `recorder.keepsAlpha`（getter，= `png_seq || prores`）。曾经各效果**内联**写死 `recorder.format !== 'png_seq'`，新增透明视频(prores)时只改了 controls.js、漏了 6 个效果（xiaolin-card/card-3d/bar-chart/chart-fx/pie-chart/logo-matrix）和 background.js → 导出透明视频被填黑底；**卡片/图表类（WebGL 合成）最严重**，因为黑底 bgCanvas 喂进 `webgl-composite` 背景 Pass1 铺满全屏 → 整片黑。PNG 序列因被排除而一直正常，曾误判成编码/剪映/wasm 问题。**以后再加保 alpha 的导出格式，只改 `recorder.keepsAlpha` 一处，所有效果与 background.js 都走它。**
 
-### 计划中（已验证、待编辑器确认后接入）：自封装 MOV、彻底去 ffmpeg
-`-c:v copy` 本质只是「PNG 字节装箱 + 写采样表」，用 31MB 的 ffmpeg 是杀鸡用牛刀（PNG 编码浏览器 `toBlob` 已免费做完，MOV 只是个"信封+目录"）。`shared/mov-muxer.js`（原为 Phase 0 的 raw RGBA 封装器）可改出 `png ` 编码轨版本，纯 JS 几 KB 直接产 MOV：**不加载 31MB、内存全是可 GC 的普通 JS、无导出后卡顿、更快**。已用真实 PNG 帧验证：atom 结构对齐 ffmpeg 输出（含 `ftyp/wide/edts·elst/minf hdlr/stsz 变长`）、逐像素无损（PSNR=inf）、alpha 在、体积与 ffmpeg 差 ~100 字节（差异仅"单 chunk vs 多 chunk"和名字串，均无关）。**待在剪映/AE 实测 `demo/sample_selfmux.mov` 通过后**接进 recorder.js 替换 ffmpeg 路径（届时可移除 vendor 的 31MB）。
+### 历史：从 ffmpeg.wasm 到纯 JS 自封装（已落地）
+透明视频最初用 ffmpeg.wasm（先试 ProRes 4444 / QTRLE 编码，后改 PNG-in-MOV `-c:v copy` 仅封装）。但 `copy` 本质只是装箱，31MB 的 ffmpeg 纯属多余，还带来 wasm 内存只增不减、导出后整页卡、要 terminate 重载等问题。故改为 `mov-muxer.js` 纯 JS 自封装（见上「引擎」），**已移除 `shared/vendor/ffmpeg/` 的 31MB 及 recorder 里所有 ffmpeg 代码路径**（连带删了 `demo/prores-test.html`、`demo/mov-test.html` 两个 spike）。回溯需要 ffmpeg 时可从 git 历史取回。
 
 ## 图表预设对称约束（definePresetPair）
 chart-fx / bar-chart 的 `MODE_PRESETS = definePresetPair(纸张, 赛博)`（`shared/utils.js`）。两套预设**必须键集完全相同**——`switchMode` 用 `Object.assign` 应用预设，键不对称会在切回时残留对方的值（曾出现 `barStrokeColor` 残留赛博青、`barGradientEnd` 不随风格）。`definePresetPair` 开发期 `console.error` 报不对称（冒烟测试可捕获）。pie-chart 无纸张/赛博预设，不涉及。
@@ -170,7 +169,7 @@ index.html          # 首页（精选预览 + 工具网格）
 effects/*.html      # 各效果页（独立单文件）
 shared/
   controls.js       # initEffect() 入口 + 面板注入（含导出面板：格式/帧率/分辨率档）
-  recorder.js       # 录制引擎：MP4(WebCodecs)/WebM(MediaRecorder)/PNG(JSZip)/透明视频(ffmpeg.wasm PNG-in-MOV)；recorder.keepsAlpha
+  recorder.js       # 录制引擎：MP4(WebCodecs)/WebM(MediaRecorder)/PNG(JSZip)/透明视频(PNG-in-MOV 自封装)；recorder.keepsAlpha
   background.js     # 背景系统（纯色/绿幕/网格/纸张/自定义）
   utils.js          # 工具函数（bindUI, drawText, easing 等）
   themes.js         # 暗色/亮色主题切换
@@ -182,8 +181,7 @@ shared/
   border-effects.js # 描边/发光等边框效果
   mp4-muxer.js      # 本地 MP4 封装库（含 fallback CDN 轮询）
   jszip.min.js      # 本地 JSZip（PNG 序列打包，原走 CDN，已本地化）
-  mov-muxer.js      # 最小 QuickTime MOV 封装器（Phase 0 raw RGBA；计划改 png 轨自封装、去 ffmpeg）
-  vendor/ffmpeg/    # vendored ffmpeg.wasm UMD 单线程 core（~31MB，git add -f；透明视频 PNG-in-MOV 用）
+  mov-muxer.js      # PngMovMuxer：透明视频导出引擎，纯 JS 把 PNG 帧自封装成 QuickTime png 轨 MOV（无 ffmpeg）
 tests/smoke.spec.js # Playwright 冒烟测试（逐页无错 + 图表模式往返）
 playwright.config.js / package.json / .github/workflows/smoke.yml  # 测试与 CI
 GUIDE.md            # AI 开发规范（模板结构、API 说明）
