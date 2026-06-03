@@ -100,13 +100,5 @@
   "ProResRes": "full",
   "BgUpload": "",
   "PatternColor": "#333333",
-  "PaperWarmth": "40",
-  "GlassColor": "light",
-  "GlassVeil": "12",
-  "GlassBorder": "50",
-  "GlassHighlight": "45",
-  "GlassRadius": "48",
-  "GlassShadow": "26",
-  "GlassSheen": "45",
-  "GlassGrain": true
+  "PaperWarmth": "40"
 }

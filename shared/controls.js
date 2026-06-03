@@ -235,7 +235,6 @@ export function injectPanels(opts = {}) {
                 <option value="grid">▦ 网格</option>
                 <option value="dots">::: 点阵</option>
                 <option value="paper">📄 纸张纹理</option>
-                <option value="glass-card">🧊 玻璃卡片</option>
                 <option value="custom">📂 上传背景...</option>
             </select>
         </div>`;
@@ -249,31 +248,6 @@ export function injectPanels(opts = {}) {
         <div class="row stack" id="PaperParamsRow" style="display:none;">
             <div class="label-line"><span>暖色调 (Warmth)</span><span id="PaperWarmthVal">40</span></div>
             <input type="range" id="PaperWarmth" min="0" max="100" step="1" value="40">
-        </div>
-        <div id="GlassParamsRow" style="display:none;">
-            <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <div style="font-size:11px; color:var(--text-sub, #888);">玻璃颜色</div>
-                <select id="GlassColor" style="width:auto; flex:0 0 auto;">
-                    <option value="light">🤍 亮（白雾）</option>
-                    <option value="dark">🖤 暗（烟熏）</option>
-                </select>
-            </div>
-            <div class="row stack"><div class="label-line"><span>白雾不透明度</span><span id="GlassVeilVal">12%</span></div>
-                <input type="range" id="GlassVeil" min="0" max="40" step="1" value="12"></div>
-            <div class="row stack"><div class="label-line"><span>描边亮度</span><span id="GlassBorderVal">50%</span></div>
-                <input type="range" id="GlassBorder" min="0" max="100" step="1" value="50"></div>
-            <div class="row stack"><div class="label-line"><span>左上高光</span><span id="GlassHighlightVal">45%</span></div>
-                <input type="range" id="GlassHighlight" min="0" max="100" step="1" value="45"></div>
-            <div class="row stack"><div class="label-line"><span>圆角</span><span id="GlassRadiusVal">48</span></div>
-                <input type="range" id="GlassRadius" min="0" max="160" step="1" value="48"></div>
-            <div class="row stack"><div class="label-line"><span>投影</span><span id="GlassShadowVal">26</span></div>
-                <input type="range" id="GlassShadow" min="0" max="80" step="1" value="26"></div>
-            <div class="row stack"><div class="label-line"><span>扫光程度</span><span id="GlassSheenVal">45%</span></div>
-                <input type="range" id="GlassSheen" min="0" max="100" step="1" value="45"></div>
-            <div class="row" style="justify-content:space-between; align-items:center;">
-                <div style="font-size:11px; color:var(--text-sub, #888);">磨砂噪点</div>
-                <input type="checkbox" id="GlassGrain" checked>
-            </div>
         </div>`;
 
     placeholder.innerHTML = '';
