@@ -28,13 +28,19 @@
         }
         .data-table input:focus { border-color: var(--accent, #555); background: #fff; }
         .data-table input:disabled { opacity: 0.35; cursor: not-allowed; }
+        /* 去掉数字输入框的上下微调箭头：窄列里它会挤占宽度把数字裁成只剩首位 */
+        .data-table input[type=number]::-webkit-inner-spin-button,
+        .data-table input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .data-table input[type=number] { -moz-appearance: textfield; }
         /* 冻结首列布局：flex 容器，左=类目固定列(普通透明)，右=数值/操作滚动区。两表行高靠相同结构(32px 输入 + 同 padding + 同行间分隔线)自然对齐。 */
         .data-grid { display: flex; align-items: flex-start; margin-top: 5px; }
         .data-grid .data-table { margin-top: 0; }
         .dt-fixed { flex: none; width: 64px; table-layout: fixed; }
         .dt-fixed th, .dt-fixed td { padding-left: 0; }     /* 贴左，节省宽度 */
         .table-scroll { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.22) transparent; }
-        .dt-scroll { width: max-content; table-layout: fixed; }
+        /* min-width:100% → 系列少时铺满容器不滚动、列自然撑开；max-content → 系列多到超出才横向滚动 */
+        .dt-scroll { width: max-content; min-width: 100%; table-layout: fixed; }
+        .dt-scroll .op-cell { display: flex; gap: 2px; justify-content: center; align-items: center; }
         /* 两表表头行等高，保证「名称」与色点/「操作」对齐 */
         .data-grid thead th { height: 28px; box-sizing: border-box; }
         .table-scroll::-webkit-scrollbar { height: 8px; }
@@ -935,8 +941,8 @@
             const head = document.getElementById('DataHead');
             const tbody = document.getElementById('DataBody');
             head.innerHTML = `<tr>
-                ${lineSeries.map((s, si) => `<th title="${s.name}" style="width:52px;"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${s.color};vertical-align:middle;"></span></th>`).join('')}
-                <th style="width:78px;">操作</th>
+                ${lineSeries.map((s, si) => `<th title="${s.name}" style="width:46px;"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${s.color};vertical-align:middle;"></span></th>`).join('')}
+                <th style="width:96px;">操作</th>
             </tr>`;
             tbody.innerHTML = labels.map((label, i) => `
                 <tr>
