@@ -233,34 +233,6 @@
             <!-- 卡片样式 -->
             <div class="control-group">
                 <div class="group-title"><span>卡片样式</span></div>
-                <div class="sub-section ss-blue">
-                    <div class="sub-section-label">卡面材质</div>
-                    <select id="CardMaterial" style="width:100%;">
-                        <option value="follow">纯色</option>
-                        <option value="glass">🧊 玻璃</option>
-                    </select>
-                    <div id="GlassParams" style="display:none; margin-top:8px;">
-                        <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:6px;">
-                            <div style="font-size:11px; color:var(--text-sub,#888);">玻璃颜色</div>
-                            <select id="GlassColor" style="width:auto; flex:0 0 auto;">
-                                <option value="light">🤍 亮（白雾）</option>
-                                <option value="dark">🖤 暗（烟熏）</option>
-                            </select>
-                        </div>
-                        <div class="stack"><div class="label-line"><span>白雾不透明度</span><span id="GlassVeilVal">12%</span></div>
-                            <input type="range" id="GlassVeil" min="0" max="40" step="1" value="12"></div>
-                        <div class="stack"><div class="label-line"><span>描边亮度</span><span id="GlassBorderVal">50%</span></div>
-                            <input type="range" id="GlassBorder" min="0" max="100" step="1" value="50"></div>
-                        <div class="stack"><div class="label-line"><span>左上高光</span><span id="GlassHighlightVal">45%</span></div>
-                            <input type="range" id="GlassHighlight" min="0" max="100" step="1" value="45"></div>
-                        <div class="stack"><div class="label-line"><span>扫光程度</span><span id="GlassSheenVal">45%</span></div>
-                            <input type="range" id="GlassSheen" min="0" max="100" step="1" value="45"></div>
-                        <div class="row" style="justify-content:space-between; align-items:center;">
-                            <div style="font-size:11px; color:var(--text-sub,#888);">磨砂噪点</div>
-                            <input type="checkbox" id="GlassGrain" checked>
-                        </div>
-                    </div>
-                </div>
                 <div class="sub-section ss-green">
                     <div class="sub-section-label">尺寸 & 外观</div>
                     <div class="row stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
@@ -459,7 +431,6 @@
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=shadow-fix4';
         import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingBlobs, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=2';
-        import { drawGlassSurface } from '../shared/glass-surface.js';
 
 
         // ====== Canvas 初始化 ======
@@ -504,9 +475,6 @@
             cardRadius: 16,
             cardBgColor: '#1a1a2e',
             cardBgAlpha: 80,
-            // 卡面材质（玻璃）
-            cardMaterial: 'follow',
-            glassColor: 'light', glassVeil: 0.12, glassBorder: 0.5, glassHighlight: 0.45, glassSheen: 0.45, glassGrain: true,
             shadowEnabled: true,
             shadowAngle: 90,
             shadowDistance: 10,
@@ -830,14 +798,6 @@
             ['CardRadius',  'cardRadius',   'int', 'CardRadiusVal'],
             ['CardBg',      'cardBgColor'],
             ['CardBgAlpha', 'cardBgAlpha', 'int', 'CardBgAlphaVal'],
-            // 卡面材质（玻璃）
-            ['CardMaterial',    'cardMaterial'],
-            ['GlassColor',      'glassColor'],
-            ['GlassVeil',       'glassVeil',      '%',     'GlassVeilVal',      '%'],
-            ['GlassBorder',     'glassBorder',    '%',     'GlassBorderVal',    '%'],
-            ['GlassHighlight',  'glassHighlight', '%',     'GlassHighlightVal', '%'],
-            ['GlassSheen',      'glassSheen',     '%',     'GlassSheenVal',     '%'],
-            ['GlassGrain',      'glassGrain',     'checked'],
             ['ShadowEnabled',  'shadowEnabled',  'checked'],
             ['ShadowAngle',    'shadowAngle',    'int', 'ShadowAngleVal',    '°'],
             ['ShadowDistance', 'shadowDistance', 'int', 'ShadowDistanceVal', 'px'],
@@ -913,9 +873,6 @@
                 }
                 if (key === 'rotatingBgMode') {
                     syncRatioLock();
-                }
-                if (key === 'cardMaterial') {
-                    document.getElementById('GlassParams').style.display = config.cardMaterial === 'glass' ? '' : 'none';
                 }
                 startLoop();
             }
@@ -1020,22 +977,6 @@
         // 旋转光边+光斑模式：忽略图片，用用户比例
         // 有素材时：跟随素材比例（contain 居中）
         // 无素材时：按用户设定的 W:H 比例居中
-        // 卡片底色层：纯色(带透明度) 或 玻璃材质。ctx 须已平移到卡片原点(0,0)。
-        function paintCardBase(c, w, h, radius) {
-            if (config.cardMaterial === 'glass') {
-                drawGlassSurface(c, w, h, radius || 0, {
-                    color: config.glassColor, veil: config.glassVeil, border: config.glassBorder,
-                    highlight: config.glassHighlight, sheen: config.glassSheen, grain: config.glassGrain,
-                });
-            } else {
-                const a = (config.cardBgAlpha ?? 100) / 100;
-                c.globalAlpha = a;
-                c.fillStyle = config.cardBgColor;
-                c.fillRect(0, 0, w, h);
-                c.globalAlpha = 1;
-            }
-        }
-
         function getCardBounds(w, h) {
             const isBlobBg = config.borderStyle === 'rotating-light' && config.rotatingBgMode;
             if (currentMedia && !isBlobBg) {
@@ -1066,8 +1007,12 @@
 
             ctx.translate(bounds.x, bounds.y);
 
-            // 底色层：纯色(带透明度) 或 玻璃
-            paintCardBase(ctx, bounds.w, bounds.h, config.cardRadius);
+            // 底色层：受 cardBgAlpha 控制
+            const bgA = (config.cardBgAlpha ?? 100) / 100;
+            ctx.globalAlpha = bgA;
+            ctx.fillStyle = config.cardBgColor;
+            ctx.fillRect(0, 0, bounds.w, bounds.h);
+            ctx.globalAlpha = 1;
 
             if (currentMedia) {
                 if ((currentMediaType === 'video' && currentMedia.readyState >= 2) || currentMediaType === 'image') {
@@ -1160,8 +1105,10 @@
                 const drawMedia = (c, cx, cy, cw, ch) => {
                     c.save();
                     c.translate(cx, cy);
-                    // 底色层：纯色(带透明度) 或 玻璃
-                    paintCardBase(c, cw, ch, config.cardRadius);
+                    // 底色层：受 cardBgAlpha 控制
+                    c.globalAlpha = bgA;
+                    c.fillStyle = config.cardBgColor;
+                    c.fillRect(0, 0, cw, ch);
                     // 内容层：始终全不透明
                     c.globalAlpha = 1;
                     if (currentMedia) {
@@ -1201,8 +1148,9 @@
                     const drawChromeContent = (c, cx, cy, cw, ch) => {
                         c.save();
                         c.translate(cx, cy);
-                        // 内容区底色：纯色 或 玻璃（窗口内容区为直角，圆角交给窗口框）
-                        paintCardBase(c, cw, ch, 0);
+                        c.globalAlpha = bgA;
+                        c.fillStyle = config.cardBgColor;
+                        c.fillRect(0, 0, cw, ch);
                         c.globalAlpha = 1;
                         if (currentMedia) {
                             const mw = currentMedia.videoWidth || currentMedia.naturalWidth || currentMedia.width;
@@ -1223,11 +1171,11 @@
                     ctx.beginPath();
                     rrect(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h, cr);
                     ctx.clip();
-                    // 层 0：卡片底色（纯色 或 玻璃）
-                    ctx.save();
-                    ctx.translate(baseBounds.x, baseBounds.y);
-                    paintCardBase(ctx, baseBounds.w, baseBounds.h, cr);
-                    ctx.restore();
+                    // 层 0：卡片底色（用户控制的背景色 + 透明度）
+                    ctx.globalAlpha = bgA;
+                    ctx.fillStyle = config.cardBgColor;
+                    ctx.fillRect(baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
+                    ctx.globalAlpha = 1;
                     // 层 1：光斑（仅在光斑模式下绘制）
                     if (blobMode) {
                         drawRotatingBlobs(ctx, baseBounds, config, timeSec);
