@@ -2,7 +2,7 @@
  * Floway Tools — 共享背景系统
  * 从 tool-text-v4 / tool-stack-scan / tool-logo-v4 提取
  * 
- * 支持: 纯色 / 绿幕 / 蓝幕 / 网格 / 点阵 / 透明 / 自定义图片或视频
+ * 支持: 纯色 / 绿幕 / 蓝幕 / 网格 / 点阵 / 透明 / 纸张 / 玻璃卡片 / 自定义图片或视频
  * 可选 SVG 模式: 自动同步背景到 SVG 元素（用于 SVG 渲染管线的效果）
  * 
  * 使用方式 (Canvas 效果):
@@ -53,6 +53,19 @@ export class Background {
         this.patternCanvas = null;
         this.paperTexture = new PaperTexture();
 
+        // 玻璃卡片预设参数（与 #Glass* 控件绑定；单位见下）
+        this.glass = {
+            color: 'light',   // 'light'=白雾(提亮) / 'dark'=烟熏(压暗)
+            veil: 0.12,       // 半透膜不透明度 0~0.4（通透感主旋钮）
+            border: 0.5,      // 描边亮度 0~1
+            highlight: 0.45,  // 左上柔光强度 0~1
+            radius: 48,       // 圆角（1440 基准 px，内部按画布宽缩放）
+            shadow: 26,       // 投影（1440 基准 px）
+            sheen: 0.45,      // 扫光程度 0~1（0=关）
+            grain: true,      // 磨砂噪点
+        };
+        this._glassGrainTile = null;
+
         // SVG 目标元素（可选，SVG 效果用）
         this.svgBgRect = (opts.svgTargets && opts.svgTargets.bgRect) || null;
         this.svgPatternEl = (opts.svgTargets && opts.svgTargets.patternEl) || null;
@@ -87,6 +100,12 @@ export class Background {
                 const paperRow = document.querySelector('#PaperParamsRow');
                 if (paperRow) {
                     paperRow.style.display = (v === 'paper') ? 'flex' : 'none';
+                }
+
+                // 玻璃卡片参数行
+                const glassRow = document.querySelector('#GlassParamsRow');
+                if (glassRow) {
+                    glassRow.style.display = (v === 'glass-card') ? 'block' : 'none';
                 }
 
                 if (v === 'custom' && uploadInput) {
@@ -128,6 +147,36 @@ export class Background {
                 this._updatePatternCache();
                 this._syncSvg();
             });
+        }
+
+        // 玻璃卡片参数绑定（滑块带数值显示；任何改动清缓存键）
+        const bindGlass = (id, key, scale, fmt) => {
+            const el = document.querySelector('#' + id);
+            const val = document.querySelector('#' + id + 'Val');
+            if (!el) return;
+            const upd = () => {
+                this.glass[key] = parseFloat(el.value) * scale;
+                if (val) val.textContent = fmt(parseFloat(el.value));
+                this._glassCacheKey = null;
+            };
+            el.addEventListener('input', upd);
+            upd();
+        };
+        bindGlass('GlassVeil', 'veil', 0.01, x => x + '%');
+        bindGlass('GlassBorder', 'border', 0.01, x => x + '%');
+        bindGlass('GlassHighlight', 'highlight', 0.01, x => x + '%');
+        bindGlass('GlassRadius', 'radius', 1, x => String(x));
+        bindGlass('GlassShadow', 'shadow', 1, x => String(x));
+        bindGlass('GlassSheen', 'sheen', 0.01, x => x + '%');
+        const glassColorEl = document.querySelector('#GlassColor');
+        if (glassColorEl) {
+            glassColorEl.value = this.glass.color;
+            glassColorEl.addEventListener('change', (e) => { this.glass.color = e.target.value; this._glassCacheKey = null; });
+        }
+        const glassGrainEl = document.querySelector('#GlassGrain');
+        if (glassGrainEl) {
+            glassGrainEl.checked = this.glass.grain;
+            glassGrainEl.addEventListener('change', (e) => { this.glass.grain = e.target.checked; this._glassCacheKey = null; });
         }
 
         // 纸张纹理暖色调滑块
@@ -286,6 +335,16 @@ export class Background {
                 ctx.fillStyle = getTheme().canvasBg;
                 ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
             }
+        } else if (this.mode === 'glass-card') {
+            // 卡外透明（供叠加），mp4/webm 不支持 alpha → 卡外填黑（与 keepsAlpha 一致）
+            const W = ctx.canvas.width, H = ctx.canvas.height;
+            ctx.clearRect(0, 0, W, H);
+            if (isRecording && exportFormat !== 'png_seq' && exportFormat !== 'prores') {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, W, H);
+            }
+            const tms = isRecording ? timestamp : performance.now();
+            this._paintGlassCard(ctx, W, H, tms);
         } else {
             // 纯色 (#000000, #00ff00, #0000ff 等)
             ctx.fillStyle = this.mode;
@@ -293,6 +352,119 @@ export class Background {
         }
 
         ctx.restore();
+    }
+
+    // ========== 玻璃卡片绘制 ==========
+
+    /** 圆角矩形路径（带 fallback） */
+    _roundRectPath(c, x, y, w, h, r) {
+        c.beginPath();
+        if (c.roundRect) { c.roundRect(x, y, w, h, r); return; }
+        c.moveTo(x + r, y);
+        c.arcTo(x + w, y, x + w, y + h, r);
+        c.arcTo(x + w, y + h, x, y + h, r);
+        c.arcTo(x, y + h, x, y, r);
+        c.arcTo(x, y, x + w, y, r);
+        c.closePath();
+    }
+
+    /** 磨砂噪点贴片（128px，生成一次缓存） */
+    _glassGrain() {
+        if (this._glassGrainTile) return this._glassGrainTile;
+        const s = 128;
+        const t = document.createElement('canvas');
+        t.width = t.height = s;
+        const tc = t.getContext('2d');
+        const img = tc.createImageData(s, s);
+        for (let i = 0; i < img.data.length; i += 4) {
+            const v = 200 + Math.floor(Math.random() * 55);
+            img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+            img.data[i + 3] = Math.floor(Math.random() * 22);
+        }
+        tc.putImageData(img, 0, 0);
+        this._glassGrainTile = t;
+        return t;
+    }
+
+    /**
+     * 在 ctx 上画一张居中玻璃卡（透明背景之上）。tms=毫秒，用于扫光相位。
+     * 同款配方移植自 demo/glass-card-test.html：半透膜+左上柔光+磨砂+扫光+渐变描边+投影。
+     */
+    _paintGlassCard(ctx, W, H, tms = 0) {
+        const g = this.glass;
+        const k = W / 1440; // 按画布宽缩放（兼容 2x/标准档）
+        const cw = Math.round(W * 0.66), ch = Math.round(H * 0.62);
+        const x = Math.round((W - cw) / 2), y = Math.round((H - ch) / 2);
+        const r = g.radius * k;
+        // 玻璃色：亮=白雾(提亮)，暗=烟熏(压暗)；描边/高光始终走亮边（玻璃缘反光）
+        const veilRGB = g.color === 'dark' ? '18,22,30' : '255,255,255';
+
+        // 1) 投影 + 半透膜
+        ctx.save();
+        if (g.shadow > 0) {
+            ctx.shadowColor = g.color === 'dark' ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.28)';
+            ctx.shadowBlur = g.shadow * k;
+            ctx.shadowOffsetY = Math.round(g.shadow * 0.4 * k);
+        }
+        this._roundRectPath(ctx, x, y, cw, ch, r);
+        ctx.fillStyle = `rgba(${veilRGB}, ${g.veil})`;
+        ctx.fill();
+        ctx.restore();
+
+        // 卡内裁剪
+        ctx.save();
+        this._roundRectPath(ctx, x, y, cw, ch, r);
+        ctx.clip();
+
+        // 2) 左上柔光
+        if (g.highlight > 0) {
+            const lg = ctx.createLinearGradient(x, y, x + cw * 0.7, y + ch * 0.7);
+            lg.addColorStop(0, `rgba(255,255,255, ${0.18 * (g.highlight / 0.45)})`);
+            lg.addColorStop(0.5, 'rgba(255,255,255,0)');
+            ctx.fillStyle = lg;
+            ctx.fillRect(x, y, cw, ch);
+        }
+
+        // 3) 磨砂噪点
+        if (g.grain) {
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = ctx.createPattern(this._glassGrain(), 'repeat');
+            ctx.fillRect(x, y, cw, ch);
+            ctx.globalAlpha = 1;
+        }
+
+        // 4) 扫光（斜向亮带横扫，4 秒循环）
+        if (g.sheen > 0) {
+            const period = 4000;
+            const p = (tms % period) / period;
+            const bandW = cw * 0.22;
+            const sx = x - bandW + p * (cw + bandW * 2);
+            ctx.save();
+            ctx.translate(sx, y + ch / 2);
+            ctx.rotate(-0.32);
+            const sg = ctx.createLinearGradient(-bandW, 0, bandW, 0);
+            sg.addColorStop(0, 'rgba(255,255,255,0)');
+            sg.addColorStop(0.5, `rgba(255,255,255, ${0.16 * g.sheen})`);
+            sg.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = sg;
+            ctx.fillRect(-bandW, -ch, bandW * 2, ch * 2);
+            ctx.restore();
+        }
+
+        ctx.restore(); // 解除裁剪
+
+        // 5) 渐变描边（顶部更亮，骑在边缘）
+        if (g.border > 0) {
+            const bg = ctx.createLinearGradient(x, y, x, y + ch);
+            const bb = g.border / 0.5;
+            bg.addColorStop(0, `rgba(255,255,255, ${0.55 * bb})`);
+            bg.addColorStop(0.5, `rgba(255,255,255, ${0.18 * bb})`);
+            bg.addColorStop(1, `rgba(255,255,255, ${0.30 * bb})`);
+            ctx.strokeStyle = bg;
+            ctx.lineWidth = 1.5 * k;
+            this._roundRectPath(ctx, x + 0.75 * k, y + 0.75 * k, cw - 1.5 * k, ch - 1.5 * k, r);
+            ctx.stroke();
+        }
     }
 
     // ========== 导出用 Canvas 背景绘制（SVG 效果导出时用） ==========
@@ -335,6 +507,13 @@ export class Background {
                 ctx.fillStyle = getTheme().canvasBg;
                 ctx.fillRect(0, 0, width, height);
             }
+        } else if (mode === 'glass-card') {
+            ctx.clearRect(0, 0, width, height);
+            if (exportFormat === 'mp4' || exportFormat === 'webm') {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, width, height);
+            }
+            this._paintGlassCard(ctx, width, height, 0); // SVG 导出无时间轴 → 扫光取相位 0
         } else {
             ctx.fillStyle = mode;
             ctx.fillRect(0, 0, width, height);
