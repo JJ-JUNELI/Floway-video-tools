@@ -353,6 +353,34 @@
             <!-- 卡片外观 -->
             <div class="control-group">
                 <div class="group-title"><span>卡片外观</span></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">卡面材质</div>
+                    <select id="CardMaterial" style="width:100%;">
+                        <option value="follow">跟随风格（纯色/纸张）</option>
+                        <option value="glass">🧊 玻璃</option>
+                    </select>
+                    <div id="GlassParams" style="display:none; margin-top:8px;">
+                        <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <div style="font-size:11px; color:var(--text-sub,#888);">玻璃颜色</div>
+                            <select id="GlassColor" style="width:auto; flex:0 0 auto;">
+                                <option value="light">🤍 亮（白雾）</option>
+                                <option value="dark">🖤 暗（烟熏）</option>
+                            </select>
+                        </div>
+                        <div class="stack"><div class="label-line"><span>白雾不透明度</span><span id="GlassVeilVal">12%</span></div>
+                            <input type="range" id="GlassVeil" min="0" max="40" step="1" value="12"></div>
+                        <div class="stack"><div class="label-line"><span>描边亮度</span><span id="GlassBorderVal">50%</span></div>
+                            <input type="range" id="GlassBorder" min="0" max="100" step="1" value="50"></div>
+                        <div class="stack"><div class="label-line"><span>左上高光</span><span id="GlassHighlightVal">45%</span></div>
+                            <input type="range" id="GlassHighlight" min="0" max="100" step="1" value="45"></div>
+                        <div class="stack"><div class="label-line"><span>扫光程度</span><span id="GlassSheenVal">45%</span></div>
+                            <input type="range" id="GlassSheen" min="0" max="100" step="1" value="45"></div>
+                        <div class="row" style="justify-content:space-between; align-items:center;">
+                            <div style="font-size:11px; color:var(--text-sub,#888);">磨砂噪点</div>
+                            <input type="checkbox" id="GlassGrain" checked>
+                        </div>
+                    </div>
+                </div>
                 <div class="sub-section ss-amber paper-only">
                     <div class="sub-section-label">纸张纹理</div>
                     <div class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
@@ -454,6 +482,7 @@
         import { drawSolidGlow } from '../shared/border-effects.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=shadow-fix4';
+        import { drawGlassSurface } from '../shared/glass-surface.js';
 
         // ====== Canvas 初始化 ======
         const baseWidth = 1440, baseHeight = 1080, scale = 2;
@@ -611,6 +640,9 @@
             chartOffY: 0,
             chartExtraW: 0,
             chartExtraH: 0,
+            // 卡面材质（独立于纸张/赛博风格）
+            cardMaterial: 'follow',   // 'follow'=跟随风格(纯色/纸张) | 'glass'=玻璃
+            glassColor: 'light', glassVeil: 0.12, glassBorder: 0.5, glassHighlight: 0.45, glassSheen: 0.45, glassGrain: true,
             // 纸张纹理（主题风格）
             noiseGrain: 35, vignette: 15,
             lineJitter: 25,
@@ -746,6 +778,12 @@
         // 模式切换事件
         document.getElementById('EffectMode').addEventListener('change', (e) => switchMode(e.target.value));
 
+        // 卡面材质：选「玻璃」时展开玻璃参数
+        document.getElementById('CardMaterial').addEventListener('change', (e) => {
+            document.getElementById('GlassParams').style.display = e.target.value === 'glass' ? '' : 'none';
+            _staticBgCache = null; startLoop();
+        });
+
         // ====== 字体选择器 ======
         const titleFontSelectId = 'TitleFontSelect';
         document.getElementById('TitleFontMount').innerHTML = fontSelectHTML(titleFontSelectId, config.titleFont);
@@ -848,6 +886,14 @@
             ['CardRadius',      'cardRadius',     'int',   'CardRadiusVal'],
             ['CardPad',         'cardPad',        'int',   'CardPadVal'],
             ['CardBg',          'cardBg'],
+            // 卡面材质（玻璃）
+            ['CardMaterial',    'cardMaterial'],
+            ['GlassColor',      'glassColor'],
+            ['GlassVeil',       'glassVeil',      '%',     'GlassVeilVal',      '%'],
+            ['GlassBorder',     'glassBorder',    '%',     'GlassBorderVal',    '%'],
+            ['GlassHighlight',  'glassHighlight', '%',     'GlassHighlightVal', '%'],
+            ['GlassSheen',      'glassSheen',     '%',     'GlassSheenVal',     '%'],
+            ['GlassGrain',      'glassGrain',     'checked'],
             ['FloatEnabled',    'floatEnabled',   'checked'],
             ['FloatRotateX',    'floatRotateX',   'float', 'FloatRotateXVal', '°'],
             ['FloatRotateY',    'floatRotateY',   'float', 'FloatRotateYVal', '°'],
@@ -1264,13 +1310,21 @@
             roundRect(ctx, 0, 0, w, h, config.cardRadius);
             ctx.clip();
 
-            // === 背景 ===
-            ctx.fillStyle = config.cardBg;
-            ctx.fillRect(0, 0, w, h);
-            // 纸张纹理叠加
-            if (isPaper) {
-                const tex = generatePaperTexture(w, h);
-                if (tex) ctx.drawImage(tex, 0, 0, w, h);
+            // === 卡面 ===
+            if (config.cardMaterial === 'glass') {
+                // 玻璃：半透膜替代实底色 → 透出 canvas 背景(透明则可叠到素材)。已在上方按圆角裁剪。
+                drawGlassSurface(ctx, w, h, config.cardRadius, {
+                    color: config.glassColor, veil: config.glassVeil, border: config.glassBorder,
+                    highlight: config.glassHighlight, sheen: config.glassSheen, grain: config.glassGrain,
+                });
+            } else {
+                ctx.fillStyle = config.cardBg;
+                ctx.fillRect(0, 0, w, h);
+                // 纸张纹理叠加
+                if (isPaper) {
+                    const tex = generatePaperTexture(w, h);
+                    if (tex) ctx.drawImage(tex, 0, 0, w, h);
+                }
             }
 
             // === 网格 ===

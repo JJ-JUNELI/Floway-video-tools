@@ -280,6 +280,34 @@
             <!-- 卡片外观 -->
             <div class="control-group">
                 <div class="group-title"><span>卡片外观</span></div>
+                <div class="sub-section ss-blue">
+                    <div class="sub-section-label">卡面材质</div>
+                    <select id="CardMaterial" style="width:100%;">
+                        <option value="follow">默认（纯色/纸张）</option>
+                        <option value="glass">🧊 玻璃</option>
+                    </select>
+                    <div id="GlassParams" style="display:none; margin-top:8px;">
+                        <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <div style="font-size:11px; color:var(--text-sub,#888);">玻璃颜色</div>
+                            <select id="GlassColor" style="width:auto; flex:0 0 auto;">
+                                <option value="light">🤍 亮（白雾）</option>
+                                <option value="dark">🖤 暗（烟熏）</option>
+                            </select>
+                        </div>
+                        <div class="stack"><div class="label-line"><span>白雾不透明度</span><span id="GlassVeilVal">12%</span></div>
+                            <input type="range" id="GlassVeil" min="0" max="40" step="1" value="12"></div>
+                        <div class="stack"><div class="label-line"><span>描边亮度</span><span id="GlassBorderVal">50%</span></div>
+                            <input type="range" id="GlassBorder" min="0" max="100" step="1" value="50"></div>
+                        <div class="stack"><div class="label-line"><span>左上高光</span><span id="GlassHighlightVal">45%</span></div>
+                            <input type="range" id="GlassHighlight" min="0" max="100" step="1" value="45"></div>
+                        <div class="stack"><div class="label-line"><span>扫光程度</span><span id="GlassSheenVal">45%</span></div>
+                            <input type="range" id="GlassSheen" min="0" max="100" step="1" value="45"></div>
+                        <div class="row" style="justify-content:space-between; align-items:center;">
+                            <div style="font-size:11px; color:var(--text-sub,#888);">磨砂噪点</div>
+                            <input type="checkbox" id="GlassGrain" checked>
+                        </div>
+                    </div>
+                </div>
                 <div class="sub-section ss-amber">
                     <div class="sub-section-label">背景</div>
                     <div class="sub-title"><span>启用背景</span><input type="checkbox" id="CardBgTransparent" checked></div>
@@ -407,6 +435,7 @@
 
     <script type="module">
         import { WebGLComposite } from '../shared/webgl-composite.js?v=shadow-fix4';
+        import { drawGlassSurface } from '../shared/glass-surface.js';
         import { initEffect } from '../shared/controls.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { drawSolidGlow } from '../shared/border-effects.js';
@@ -573,6 +602,9 @@
             // 卡片外观
             cardBg: '#f0f5fa',
             cardBgTransparent: false,
+            // 卡面材质（玻璃）
+            cardMaterial: 'follow',
+            glassColor: 'light', glassVeil: 0.12, glassBorder: 0.5, glassHighlight: 0.45, glassSheen: 0.45, glassGrain: true,
             cardBorderEnabled: false,
             cardBorderWidth: 0,
             cardBorderColor: '#ffffff',
@@ -610,6 +642,14 @@
             ['ShowSubTitle',    'showSubTitle',   'checked'],
             ['CardBgTransparent','cardBgTransparent','checked'],
             ['CardBg',          'cardBg'],
+            // 卡面材质（玻璃）
+            ['CardMaterial',    'cardMaterial'],
+            ['GlassColor',      'glassColor'],
+            ['GlassVeil',       'glassVeil',      '%',     'GlassVeilVal',      '%'],
+            ['GlassBorder',     'glassBorder',    '%',     'GlassBorderVal',    '%'],
+            ['GlassHighlight',  'glassHighlight', '%',     'GlassHighlightVal', '%'],
+            ['GlassSheen',      'glassSheen',     '%',     'GlassSheenVal',     '%'],
+            ['GlassGrain',      'glassGrain',     'checked'],
             ['TextureEnabled',  'textureEnabled', 'checked'],
             ['NoiseGrain',      'noiseGrain',     'int',   'NoiseGrainVal'],
             ['Vignette',        'vignette',       'int',   'VignetteVal'],
@@ -777,6 +817,9 @@
                         document.getElementById('CardGlowEnabled').checked = false;
                         document.getElementById('CardGlowOpts').style.display = 'none';
                     }
+                }
+                if (key === 'cardMaterial') {
+                    document.getElementById('GlassParams').style.display = config.cardMaterial === 'glass' ? '' : 'none';
                 }
                 _paperTexCache = null;
                 startLoop();
@@ -987,8 +1030,13 @@
             roundRect(ctx, 0, 0, w, h, config.cardRadius);
             ctx.clip();
 
-            // === 背景 ===
-            if (!isTransparent) {
+            // === 卡面 ===
+            if (config.cardMaterial === 'glass') {
+                drawGlassSurface(ctx, w, h, config.cardRadius, {
+                    color: config.glassColor, veil: config.glassVeil, border: config.glassBorder,
+                    highlight: config.glassHighlight, sheen: config.glassSheen, grain: config.glassGrain,
+                });
+            } else if (!isTransparent) {
                 ctx.fillStyle = config.cardBg;
                 ctx.fillRect(0, 0, w, h);
                 if (config.textureEnabled && (config.noiseGrain > 0 || config.vignette > 0)) {
