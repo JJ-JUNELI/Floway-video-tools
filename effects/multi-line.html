@@ -38,10 +38,12 @@
         .dt-fixed { flex: none; width: 64px; table-layout: fixed; }
         .dt-fixed th, .dt-fixed td { padding-left: 0; }     /* 贴左，节省宽度 */
         .table-scroll { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.22) transparent; }
-        /* width:100% 铺满容器；操作列固定窄，数值列(未设宽)平分剩余宽度 → 自动适配侧栏宽度、不留空隙。
-           min-width 由 JS 按系列数设(见 renderTable)：容器够宽时数值列变宽撑满，窄到数值列低于下限才横向滚动。 */
+        /* 中间数值表：width:100% 铺满中间区；数值列(未设宽)平分宽度 → 随侧栏自适应、不留空隙。
+           min-width 由 JS 按系列数设(见 renderTable)：中间够宽时数值列变宽撑满，窄到数值列低于下限才横向滚动。 */
         .dt-scroll { width: 100%; table-layout: fixed; }
-        .dt-scroll .op-cell { display: flex; gap: 2px; justify-content: center; align-items: center; }
+        /* 操作列冻结在右：普通透明 flex 兄弟(同左侧类目列)，横向滚动时始终可见 */
+        .dt-op { flex: none; width: 96px; table-layout: fixed; }
+        .dt-op .op-cell { display: flex; gap: 2px; justify-content: center; align-items: center; }
         /* 两表表头行等高，保证「名称」与色点/「操作」对齐 */
         .data-grid thead th { height: 28px; box-sizing: border-box; }
         .table-scroll::-webkit-scrollbar { height: 8px; }
@@ -165,7 +167,7 @@
                 <button class="btn-add" onclick="addSeries()">+ 添加折线</button>
                 <!-- 数值表：行=类目，列=各系列（表头仅色点标识，名称在上方列表改）-->
                 <div class="sub-section-label" style="font-size:11px; color:var(--text-sub,#888); margin:10px 0 4px;">数值</div>
-                <!-- 冻结首列(类目)为独立 flex 兄弟：普通透明元素、玻璃自然透出、永不成强调块；数值+操作在右侧独立滚动区，互不重叠故无需任何不透明底 -->
+                <!-- 三段式：类目列(冻结左) | 数值列(中间滚动) | 操作列(冻结右)。两端是普通透明 flex 兄弟、玻璃透出、永不成强调块；与中间滚动区互不重叠故无需不透明底。只有中间数值多到超宽才横向滚动，两端始终可见。 -->
                 <div class="data-grid">
                     <table class="data-table dt-fixed">
                         <thead id="FixedHead"></thead>
@@ -177,6 +179,10 @@
                             <tbody id="DataBody"></tbody>
                         </table>
                     </div>
+                    <table class="data-table dt-op">
+                        <thead id="OpHead"></thead>
+                        <tbody id="OpBody"></tbody>
+                    </table>
                 </div>
                 <button class="btn-add" onclick="addRow()">+ 添加类目</button>
             </div>
@@ -938,25 +944,27 @@
             fHead.innerHTML = `<tr><th>名称</th></tr>`;
             fBody.innerHTML = labels.map((label, i) =>
                 `<tr><td><input type="text" value="${label}" oninput="updateLabel(${i}, this.value)"></td></tr>`).join('');
-            // 2b) 滚动区：各系列数值列 + 操作列；表头每系列只放色点标识
+            // 2b) 中间滚动区：仅各系列数值列；表头每系列只放色点标识。数值列不设宽 → 平分中间区宽度。
+            // min-width 保底:每数值列至少 48px,低于此中间区才横向滚动(窄侧栏下默认 3 系列仍不滚)。
             const head = document.getElementById('DataHead');
             const tbody = document.getElementById('DataBody');
-            // 数值列不设宽 → 平分(容器宽-操作列)；操作列固定 96px。min-width 保底:每数值列至少 48px,低于此才横向滚动(窄侧栏下默认 3 系列仍不滚)。
             const scrollTbl = document.getElementById('DataTable');
-            if (scrollTbl) scrollTbl.style.minWidth = (lineSeries.length * 48 + 96) + 'px';
+            if (scrollTbl) scrollTbl.style.minWidth = (lineSeries.length * 48) + 'px';
             head.innerHTML = `<tr>
                 ${lineSeries.map((s, si) => `<th title="${s.name}"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${s.color};vertical-align:middle;"></span></th>`).join('')}
-                <th style="width:96px;">操作</th>
             </tr>`;
-            tbody.innerHTML = labels.map((label, i) => `
-                <tr>
-                    ${lineSeries.map((s, si) => `<td><input type="number" value="${s.values[i] ?? 0}" oninput="updateSeriesValue(${si}, ${i}, this.value)"></td>`).join('')}
-                    <td class="op-cell">
-                        <button class="btn-icon" onclick="moveRow(${i}, -1)" title="上移">↑</button>
-                        <button class="btn-icon" onclick="moveRow(${i}, 1)" title="下移">↓</button>
-                        <button class="btn-icon del" onclick="removeRow(${i})" title="删除">×</button>
-                    </td>
-                </tr>`).join('');
+            tbody.innerHTML = labels.map((label, i) =>
+                `<tr>${lineSeries.map((s, si) => `<td><input type="number" value="${s.values[i] ?? 0}" oninput="updateSeriesValue(${si}, ${i}, this.value)"></td>`).join('')}</tr>`).join('');
+            // 2c) 冻结右:操作列(独立透明表,横向滚动时始终可见)
+            const opHead = document.getElementById('OpHead');
+            const opBody = document.getElementById('OpBody');
+            opHead.innerHTML = `<tr><th>操作</th></tr>`;
+            opBody.innerHTML = labels.map((label, i) => `
+                <tr><td class="op-cell">
+                    <button class="btn-icon" onclick="moveRow(${i}, -1)" title="上移">↑</button>
+                    <button class="btn-icon" onclick="moveRow(${i}, 1)" title="下移">↓</button>
+                    <button class="btn-icon del" onclick="removeRow(${i})" title="删除">×</button>
+                </td></tr>`).join('');
         }
         const invalidateData = () => { _pathPtsCache = null; _labelMeasureCache = null; startLoop(); };
         window.updateLabel = (i, v) => { labels[i] = v; invalidateData(); };
