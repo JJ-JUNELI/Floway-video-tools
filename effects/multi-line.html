@@ -16,8 +16,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700;900&family=Noto+Serif+SC:wght@200;300;400;500;700;900&family=Orbitron:wght@400;700;900&family=Chakra+Petch:wght@300;400;500;600;700&family=Exo+2:wght@100;300;400;500;600;700;800;900&family=Montserrat:wght@100;300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
 
     <style>
-        /* 吸附列背景：取面板「实测合成色」让吸附列与周围融为一体（不做强调），仅需不透明以挡住滚到下面的数值列。暗色默认见 inline #1d2433 */
-        [data-theme="light"] { --sticky-cell-bg: #f0f1f3; }
+        /* 吸附列背景：取各列「实测本地合成色」分别匹配——面板有左→右渐变，单一色无法两端都融，故首列(偏暗)与末列(偏亮)各用各的；仅需不透明以挡住滚到下面的数值列，不做强调。暗色默认见 inline。 */
+        [data-theme="light"] { --sticky-name-bg: #f0f1f3; --sticky-op-bg: #f7f8fa; }
         /* 数据表格 */
         .data-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 5px; table-layout: fixed; }
         .data-table th { text-align: left; font-size: 10px; color: var(--text-sub, #888); padding: 6px 6px; border-bottom: 1px solid var(--border, #eee); white-space: nowrap; }
@@ -30,15 +30,23 @@
         }
         .data-table input:focus { border-color: var(--accent, #555); background: #fff; }
         .data-table input:disabled { opacity: 0.35; cursor: not-allowed; }
-        /* 多系列横向滚动时：首列(名称/类目)吸左、末列(操作)吸右，始终可见，不被中间数值列挤走 */
+        /* 多系列横向滚动时：首列(名称/类目)吸左、末列(操作)吸右，始终可见，不被中间数值列挤走。
+           背景=各自本地实测合成色 → 与周围同色融入、无强调；无投影，避免成为强调条。 */
         .data-table th:first-child, .data-table td:first-child {
-            position: sticky; left: 0; z-index: 2; background: var(--sticky-cell-bg, #1d2433);
-            box-shadow: 2px 0 3px -2px rgba(0,0,0,0.15);
+            position: sticky; left: 0; z-index: 2; background: var(--sticky-name-bg, #1d2736);
         }
         .data-table th:last-child, .data-table td:last-child {
-            position: sticky; right: 0; z-index: 2; background: var(--sticky-cell-bg, #1d2433);
-            box-shadow: -2px 0 3px -2px rgba(0,0,0,0.15);
+            position: sticky; right: 0; z-index: 2; background: var(--sticky-op-bg, #29323f);
         }
+        /* 横向滚动条：自定义为细玻璃条，替换原生丑滑条 */
+        .table-scroll { overflow-x: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.22) transparent; }
+        .table-scroll::-webkit-scrollbar { height: 8px; }
+        .table-scroll::-webkit-scrollbar-track { background: transparent; }
+        .table-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 99px; border: 2px solid transparent; background-clip: padding-box; }
+        .table-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.34); background-clip: padding-box; }
+        [data-theme="light"] .table-scroll { scrollbar-color: rgba(0,0,0,0.28) transparent; }
+        [data-theme="light"] .table-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); }
+        [data-theme="light"] .table-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.34); }
 
         /* 行操作按钮 */
         .btn-icon {
@@ -153,7 +161,7 @@
                 <button class="btn-add" onclick="addSeries()">+ 添加折线</button>
                 <!-- 数值表：行=类目，列=各系列（表头仅色点标识，名称在上方列表改）-->
                 <div class="sub-section-label" style="font-size:11px; color:var(--text-sub,#888); margin:10px 0 4px;">数值</div>
-                <div style="overflow-x:auto;">
+                <div class="table-scroll">
                     <table class="data-table" id="DataTable">
                         <thead id="DataHead"></thead>
                         <tbody id="DataBody"></tbody>
