@@ -381,7 +381,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="sub-section ss-amber paper-only">
+                <div class="sub-section ss-amber paper-only" id="PaperTexSection">
                     <div class="sub-section-label">纸张纹理</div>
                     <div class="stack"><div class="label-line"><span>纹理强度</span><span id="NoiseGrainVal">35</span></div>
                         <input type="range" id="NoiseGrain" min="0" max="100" step="1" value="35"></div>
@@ -396,7 +396,7 @@
                         <div style="flex:1" class="stack"><div class="label-line"><span>内边距</span><span id="CardPadVal">32</span></div>
                             <input type="range" id="CardPad" min="10" max="100" step="2" value="32"></div>
                     </div>
-                    <div class="row stack">
+                    <div class="row stack" id="CardBgRow">
                         <div class="label-line"><span>卡片底色</span></div>
                         <input type="color" id="CardBg" value="#faf8f3">
                     </div>
@@ -761,6 +761,7 @@
             _staticBgCache = null;
             _pathPtsCache = null;
             _colorCache = null;
+            applyGlassUI();   // 玻璃时切风格后重新强制可读字色 + 维持隐藏无关项
             myResetAnimStart();
         }
 
@@ -778,11 +779,22 @@
         // 模式切换事件
         document.getElementById('EffectMode').addEventListener('change', (e) => switchMode(e.target.value));
 
-        // 卡面材质：选「玻璃」时展开玻璃参数
-        document.getElementById('CardMaterial').addEventListener('change', (e) => {
-            document.getElementById('GlassParams').style.display = e.target.value === 'glass' ? '' : 'none';
-            _staticBgCache = null; startLoop();
-        });
+        // 卡面材质（玻璃）：展开/收起玻璃参数；隐藏无关项（纸张纹理/卡片底色）；
+        // 玻璃时字体强制改为可读色（亮玻璃=白字 / 暗玻璃=黑字）。不调 startLoop（调用方负责）。
+        function applyGlassUI() {
+            const glass = config.cardMaterial === 'glass';
+            document.getElementById('GlassParams').style.display = glass ? '' : 'none';
+            document.getElementById('PaperTexSection').style.display = glass ? 'none' : '';
+            document.getElementById('CardBgRow').style.display = glass ? 'none' : '';
+            if (glass) {
+                const tc = config.glassColor === 'dark' ? '#000000' : '#ffffff';
+                config.mainTitleColor = tc; config.subTitleColor = tc;
+                config.axisLabelColor = tc; config.valueColor = tc;
+                updateUI('TitleColor', tc); updateUI('SubTitleColor', tc);
+                updateUI('AxisLabelColor', tc); updateUI('ValueColor', tc);
+                _colorCache = null;
+            }
+        }
 
         // ====== 字体选择器 ======
         const titleFontSelectId = 'TitleFontSelect';
@@ -954,6 +966,9 @@
                     document.getElementById('EntranceOpts').style.display = show ? '' : 'none';
                     document.getElementById('EntranceDetailOpts').style.display = show ? '' : 'none';
                 }
+                if (key === 'cardMaterial' || key === 'glassColor') {
+                    applyGlassUI();
+                }
                 _paperTexCache = null;
                 _staticBgCache = null;
                 _pathPtsCache = null;
@@ -967,6 +982,7 @@
         document.getElementById('ShadowOpts').style.display = config.shadowEnabled ? '' : 'none';
         document.getElementById('MainTitleOpts').style.display = config.showMainTitle ? '' : 'none';
         document.getElementById('SubTitleOpts').style.display = config.showSubTitle ? '' : 'none';
+        applyGlassUI();
 
         // ====== 漂浮动画（合并到主循环）======
         let _currentRx = config.rotateX * Math.PI / 180;

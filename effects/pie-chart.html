@@ -308,7 +308,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="sub-section ss-amber">
+                <div class="sub-section ss-amber" id="BgSection">
                     <div class="sub-section-label">背景</div>
                     <div class="sub-title"><span>启用背景</span><input type="checkbox" id="CardBgTransparent" checked></div>
                     <div id="CardBgColorRow" class="row stack">
@@ -818,13 +818,29 @@
                         document.getElementById('CardGlowOpts').style.display = 'none';
                     }
                 }
-                if (key === 'cardMaterial') {
-                    document.getElementById('GlassParams').style.display = config.cardMaterial === 'glass' ? '' : 'none';
+                if (key === 'cardMaterial' || key === 'glassColor') {
+                    applyGlassUI();
                 }
                 _paperTexCache = null;
                 startLoop();
             }
         });
+
+        // 卡面材质（玻璃）：展开/收起玻璃参数；隐藏无关项（背景/纸张纹理段）；
+        // 玻璃时标题/标签字体强制可读色（亮玻璃=白字 / 暗玻璃=黑字）。
+        function applyGlassUI() {
+            const glass = config.cardMaterial === 'glass';
+            document.getElementById('GlassParams').style.display = glass ? '' : 'none';
+            document.getElementById('BgSection').style.display = glass ? 'none' : '';
+            document.getElementById('TextureSection').style.display = glass ? 'none' : '';
+            if (glass) {
+                const tc = config.glassColor === 'dark' ? '#000000' : '#ffffff';
+                config.mainTitleColor = tc; config.subTitleColor = tc; config.labelColor = tc;
+                const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+                set('TitleColor', tc); set('SubTitleColor', tc); set('LabelColor', tc);
+            }
+        }
+        applyGlassUI();
 
 
         // ====== 漂浮动画 ======

@@ -267,10 +267,10 @@
                         <input type="range" id="CardScale" min="40" max="100" step="1" value="80"></div>
                     <div class="row stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
                         <input type="range" id="CardRadius" min="0" max="60" step="1" value="16"></div>
-                    <div class="row stack">
+                    <div class="row stack" id="CardBgRow">
                         <div class="label-line"><span>卡片底色</span></div>
                         <input type="color" id="CardBg" value="#1a1a2e"></div>
-                    <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>底色透明度</span><span id="CardBgAlphaVal">80</span></div><input type="range" id="CardBgAlpha" min="0" max="100" value="80"></div></div>
+                    <div class="row" id="CardBgAlphaRow"><div style="flex:1" class="stack"><div class="label-line"><span>底色透明度</span><span id="CardBgAlphaVal">80</span></div><input type="range" id="CardBgAlpha" min="0" max="100" value="80"></div></div>
                     <div class="sub-title"><span>启用投影</span><input type="checkbox" id="ShadowEnabled" checked></div>
                     <div id="ShadowOpts">
                         <div class="row">
@@ -791,7 +791,11 @@
                     syncRatioLock();
                 }
                 if (key === 'cardMaterial') {
-                    document.getElementById('GlassParams').style.display = config.cardMaterial === 'glass' ? '' : 'none';
+                    const glass = config.cardMaterial === 'glass';
+                    document.getElementById('GlassParams').style.display = glass ? '' : 'none';
+                    // 玻璃时隐藏无关项：卡片底色 + 底色透明度
+                    document.getElementById('CardBgRow').style.display = glass ? 'none' : '';
+                    document.getElementById('CardBgAlphaRow').style.display = glass ? 'none' : '';
                 }
                 startLoop();
             }
