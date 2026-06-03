@@ -37,22 +37,25 @@
         .data-grid .data-table { margin-top: 0; }
         .dt-fixed { flex: none; width: 64px; table-layout: fixed; }
         .dt-fixed th, .dt-fixed td { padding-left: 0; }     /* 贴左，节省宽度 */
-        .table-scroll { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.22) transparent; }
+        /* 中间数值区：隐藏原生横向滚动条(用下方全宽自定义滑条驱动)，仍可被 JS / 滚轮滚动 */
+        .table-scroll { flex: 1; min-width: 0; overflow-x: hidden; }
         /* 中间数值表：width:100% 铺满中间区；数值列(未设宽)平分宽度 → 随侧栏自适应、不留空隙。
            min-width 由 JS 按系列数设(见 renderTable)：中间够宽时数值列变宽撑满，窄到数值列低于下限才横向滚动。 */
         .dt-scroll { width: 100%; table-layout: fixed; }
         /* 操作列冻结在右：普通透明 flex 兄弟(同左侧类目列)，横向滚动时始终可见 */
-        .dt-op { flex: none; width: 96px; table-layout: fixed; }
-        .dt-op .op-cell { display: flex; gap: 2px; justify-content: center; align-items: center; }
+        .dt-op { flex: none; width: 108px; table-layout: fixed; }
+        .dt-op .op-cell { display: flex; gap: 7px; justify-content: center; align-items: center; }
         /* 两表表头行等高，保证「名称」与色点/「操作」对齐 */
         .data-grid thead th { height: 28px; box-sizing: border-box; }
-        .table-scroll::-webkit-scrollbar { height: 8px; }
-        .table-scroll::-webkit-scrollbar-track { background: transparent; }
-        .table-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 99px; border: 2px solid transparent; background-clip: padding-box; }
-        .table-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.34); background-clip: padding-box; }
-        [data-theme="light"] .table-scroll { scrollbar-color: rgba(0,0,0,0.28) transparent; }
-        [data-theme="light"] .table-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); }
-        [data-theme="light"] .table-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.34); }
+        /* 全宽自定义横向滑条：贴合整个数据板块宽度(非仅中间区)，纯滑块无左右三角；拖动驱动中间区滚动 */
+        .h-scrollbar { position: relative; height: 9px; margin-top: 8px; border-radius: 99px; background: rgba(255,255,255,0.07); display: none; touch-action: none; user-select: none; }
+        .h-scrollbar.active { display: block; }
+        .h-thumb { position: absolute; top: 0; left: 0; height: 100%; min-width: 28px; border-radius: 99px; background: rgba(255,255,255,0.24); cursor: grab; }
+        .h-thumb:hover { background: rgba(255,255,255,0.36); }
+        .h-thumb:active { cursor: grabbing; background: rgba(255,255,255,0.42); }
+        [data-theme="light"] .h-scrollbar { background: rgba(0,0,0,0.07); }
+        [data-theme="light"] .h-thumb { background: rgba(0,0,0,0.24); }
+        [data-theme="light"] .h-thumb:hover { background: rgba(0,0,0,0.36); }
 
         /* 行操作按钮 */
         .btn-icon {
@@ -184,6 +187,8 @@
                         <tbody id="OpBody"></tbody>
                     </table>
                 </div>
+                <!-- 全宽自定义横向滑条（驱动中间数值区滚动；系列少不需滚动时自动隐藏）-->
+                <div class="h-scrollbar" id="HScroll"><div class="h-thumb" id="HThumb"></div></div>
                 <button class="btn-add" onclick="addRow()">+ 添加类目</button>
             </div>
 
@@ -949,7 +954,7 @@
             const head = document.getElementById('DataHead');
             const tbody = document.getElementById('DataBody');
             const scrollTbl = document.getElementById('DataTable');
-            if (scrollTbl) scrollTbl.style.minWidth = (lineSeries.length * 48) + 'px';
+            if (scrollTbl) scrollTbl.style.minWidth = (lineSeries.length * 44) + 'px';
             head.innerHTML = `<tr>
                 ${lineSeries.map((s, si) => `<th title="${s.name}"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${s.color};vertical-align:middle;"></span></th>`).join('')}
             </tr>`;
@@ -965,6 +970,53 @@
                     <button class="btn-icon" onclick="moveRow(${i}, 1)" title="下移">↓</button>
                     <button class="btn-icon del" onclick="removeRow(${i})" title="删除">×</button>
                 </td></tr>`).join('');
+            if (_hScrollRefresh) _hScrollRefresh();
+        }
+        // 全宽自定义横向滑条：驱动中间数值区(.table-scroll)滚动。中间区原生条已隐藏，
+        // 这里用一根贴合整个数据板块宽度的滑块，纯滑块无三角；拖动/点击轨道/滚轮都能滚。
+        let _hScrollRefresh = null;
+        function setupHScroll() {
+            const mid = document.querySelector('.table-scroll');
+            const bar = document.getElementById('HScroll');
+            const thumb = document.getElementById('HThumb');
+            if (!mid || !bar || !thumb) return;
+            const refresh = () => {
+                const sw = mid.scrollWidth, cw = mid.clientWidth;
+                if (sw <= cw + 1) { bar.classList.remove('active'); return; }
+                bar.classList.add('active');
+                const track = bar.clientWidth;
+                const tw = Math.max(28, Math.round(track * cw / sw));
+                const maxScroll = sw - cw, maxThumb = track - tw;
+                thumb.style.width = tw + 'px';
+                thumb.style.left = (maxScroll ? Math.round(mid.scrollLeft / maxScroll * maxThumb) : 0) + 'px';
+            };
+            const setFromThumbLeft = (nl) => {
+                const track = bar.clientWidth, tw = thumb.offsetWidth, maxThumb = track - tw;
+                nl = Math.min(maxThumb, Math.max(0, nl));
+                thumb.style.left = nl + 'px';
+                const maxScroll = mid.scrollWidth - mid.clientWidth;
+                mid.scrollLeft = maxThumb ? (nl / maxThumb) * maxScroll : 0;
+            };
+            let dragging = false, startX = 0, startLeft = 0;
+            thumb.addEventListener('pointerdown', (e) => {
+                dragging = true; startX = e.clientX; startLeft = parseFloat(thumb.style.left) || 0;
+                thumb.setPointerCapture(e.pointerId); e.preventDefault();
+            });
+            thumb.addEventListener('pointermove', (e) => { if (dragging) setFromThumbLeft(startLeft + (e.clientX - startX)); });
+            thumb.addEventListener('pointerup', () => { dragging = false; });
+            thumb.addEventListener('pointercancel', () => { dragging = false; });
+            bar.addEventListener('pointerdown', (e) => {   // 点击轨道：滑块中心跳到点击处
+                if (e.target === thumb) return;
+                setFromThumbLeft(e.clientX - bar.getBoundingClientRect().left - thumb.offsetWidth / 2);
+            });
+            mid.addEventListener('wheel', (e) => {          // 滚轮(横向或 shift+竖向)滚动数值区
+                const d = e.deltaX || (e.shiftKey ? e.deltaY : 0);
+                if (d) { mid.scrollLeft += d; refresh(); e.preventDefault(); }
+            }, { passive: false });
+            new ResizeObserver(refresh).observe(mid);       // 侧栏宽度变化时重算
+            window.addEventListener('resize', refresh);
+            _hScrollRefresh = refresh;
+            refresh();
         }
         const invalidateData = () => { _pathPtsCache = null; _labelMeasureCache = null; startLoop(); };
         window.updateLabel = (i, v) => { labels[i] = v; invalidateData(); };
@@ -1697,6 +1749,7 @@
         }
 
         // ====== 预览循环（按需启停）======
+        setupHScroll();
         renderTable();
 
         let _animStartTime = performance.now();
