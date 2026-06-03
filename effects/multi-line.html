@@ -16,8 +16,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700;900&family=Noto+Serif+SC:wght@200;300;400;500;700;900&family=Orbitron:wght@400;700;900&family=Chakra+Petch:wght@300;400;500;600;700&family=Exo+2:wght@100;300;400;500;600;700;800;900&family=Montserrat:wght@100;300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
 
     <style>
-        /* 吸附列背景：需不透明，否则横向滚动时中间数值列会透出。暗色默认见 inline #181d28 */
-        [data-theme="light"] { --sticky-cell-bg: #eef1f5; }
+        /* 吸附列背景：取面板「实测合成色」让吸附列与周围融为一体（不做强调），仅需不透明以挡住滚到下面的数值列。暗色默认见 inline #1d2433 */
+        [data-theme="light"] { --sticky-cell-bg: #f0f1f3; }
         /* 数据表格 */
         .data-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 5px; table-layout: fixed; }
         .data-table th { text-align: left; font-size: 10px; color: var(--text-sub, #888); padding: 6px 6px; border-bottom: 1px solid var(--border, #eee); white-space: nowrap; }
@@ -32,12 +32,12 @@
         .data-table input:disabled { opacity: 0.35; cursor: not-allowed; }
         /* 多系列横向滚动时：首列(名称/类目)吸左、末列(操作)吸右，始终可见，不被中间数值列挤走 */
         .data-table th:first-child, .data-table td:first-child {
-            position: sticky; left: 0; z-index: 2; background: var(--sticky-cell-bg, #181d28);
-            box-shadow: 3px 0 5px -3px rgba(0,0,0,0.35);
+            position: sticky; left: 0; z-index: 2; background: var(--sticky-cell-bg, #1d2433);
+            box-shadow: 2px 0 3px -2px rgba(0,0,0,0.15);
         }
         .data-table th:last-child, .data-table td:last-child {
-            position: sticky; right: 0; z-index: 2; background: var(--sticky-cell-bg, #181d28);
-            box-shadow: -3px 0 5px -3px rgba(0,0,0,0.35);
+            position: sticky; right: 0; z-index: 2; background: var(--sticky-cell-bg, #1d2433);
+            box-shadow: -2px 0 3px -2px rgba(0,0,0,0.15);
         }
 
         /* 行操作按钮 */
@@ -917,7 +917,7 @@
             const head = document.getElementById('DataHead');
             const tbody = document.getElementById('DataBody');
             head.innerHTML = `<tr>
-                <th style="min-width:54px;">名称</th>
+                <th style="width:64px;">名称</th>
                 ${lineSeries.map((s, si) => `<th title="${s.name}" style="width:52px;"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${s.color};vertical-align:middle;"></span></th>`).join('')}
                 <th style="width:78px;">操作</th>
             </tr>`;
