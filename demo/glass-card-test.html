@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>玻璃卡片背景 · Demo（透明 MOV 导出）</title>
+<style>
+  :root {
+    --bg: #0f131a; --panel: rgba(22,27,38,0.72); --border: rgba(255,255,255,0.10);
+    --text: #e8ecf3; --sub: #9aa6b8; --accent: #6aa8ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--text); background: var(--bg);
+    display: flex; min-height: 100vh;
+  }
+  /* ===== 控制面板 ===== */
+  .controls {
+    width: 320px; flex: none; padding: 18px; background: var(--panel);
+    border-right: 1px solid var(--border); backdrop-filter: blur(12px);
+    overflow-y: auto; max-height: 100vh;
+  }
+  .controls h1 { font-size: 16px; margin: 0 0 4px; }
+  .controls .hint { color: var(--sub); font-size: 12px; margin: 0 0 16px; }
+  .group { margin-bottom: 16px; }
+  .group > label { display: block; font-size: 12px; color: var(--sub); margin-bottom: 6px; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .row .val { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--text); font-size: 12px; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  select, button {
+    width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: rgba(255,255,255,0.05); color: var(--text); font-size: 13px; cursor: pointer;
+  }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .toggle-row input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+  button.primary { background: var(--accent); color: #06101f; font-weight: 700; border: none; margin-top: 4px; }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .seg { display: flex; gap: 6px; }
+  .seg button { flex: 1; }
+  .seg button.on { background: var(--accent); color: #06101f; border: none; font-weight: 700; }
+  .prog { height: 6px; border-radius: 99px; background: rgba(255,255,255,0.08); margin-top: 10px; overflow: hidden; display: none; }
+  .prog.show { display: block; }
+  .prog > i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 99px; }
+  .note { font-size: 11px; color: var(--sub); margin-top: 6px; }
+
+  /* ===== 舞台 / 背后预览 ===== */
+  .stage {
+    flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px;
+    position: relative; overflow: hidden;
+  }
+  .behind { position: absolute; inset: 0; z-index: 0; }
+  /* 棋盘格 = 透明示意 */
+  .behind.checker {
+    background-color: #2a2f3a;
+    background-image:
+      linear-gradient(45deg, #3a4150 25%, transparent 25%), linear-gradient(-45deg, #3a4150 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #3a4150 75%), linear-gradient(-45deg, transparent 75%, #3a4150 75%);
+    background-size: 28px 28px; background-position: 0 0, 0 14px, 14px -14px, -14px 0;
+  }
+  .behind.dark { background: #11151c; }
+  .behind.light { background: #eef1f6; }
+  /* 彩色忙乱 = 模拟真实视频素材，用来看「微透白盖在细节上」的样子 */
+  .behind.busy {
+    background:
+      radial-gradient(40% 55% at 20% 30%, #ff5d73 0%, transparent 60%),
+      radial-gradient(45% 50% at 80% 25%, #2bd6c6 0%, transparent 60%),
+      radial-gradient(50% 60% at 65% 80%, #6a5cff 0%, transparent 60%),
+      radial-gradient(35% 45% at 15% 85%, #ffcf5d 0%, transparent 60%),
+      repeating-linear-gradient(60deg, rgba(255,255,255,0.06) 0 8px, transparent 8px 16px),
+      #1b2030;
+  }
+  canvas {
+    position: relative; z-index: 1; max-width: 100%; max-height: calc(100vh - 48px);
+    /* 阴影只是给预览一点立体，不影响导出（导出阴影画在 canvas 内） */
+  }
+</style>
+</head>
+<body>
+  <div class="controls">
+    <h1>玻璃卡片背景 · Demo</h1>
+    <p class="hint">透明画布上画「微透白 + 亮边 + 高光 + 圆角 + 投影」的玻璃卡，导出为带 alpha 的 MOV（用项目自带的 <code>PngMovMuxer</code>，无 ffmpeg）。背后预览仅用于看合成效果，<b>不会被导出</b>。</p>
+
+    <div class="group">
+      <label>主题</label>
+      <div class="seg" id="ThemeSeg">
+        <button data-theme="dark" class="on">暗色</button>
+        <button data-theme="light">亮色</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <label>背后预览（不导出）— 模拟你后期要叠的素材</label>
+      <select id="Behind">
+        <option value="checker">棋盘格（=透明，看真实导出）</option>
+        <option value="busy" selected>彩色忙乱（模拟视频素材）</option>
+        <option value="dark">深色</option>
+        <option value="light">亮色</option>
+      </select>
+      <p class="note">在「彩色忙乱」上能看清：白雾会染色压对比，但背后细节<b>不会被模糊</b>（透明导出带不走模糊）。</p>
+    </div>
+
+    <div class="group">
+      <label>白雾不透明度（玻璃通透感主旋钮）</label>
+      <div class="row"><input type="range" id="Veil" min="0" max="40" value="12"><span class="val" id="VeilV">12%</span></div>
+    </div>
+    <div class="group">
+      <label>描边亮度</label>
+      <div class="row"><input type="range" id="Border" min="0" max="100" value="50"><span class="val" id="BorderV">50%</span></div>
+    </div>
+    <div class="group">
+      <label>左上高光强度</label>
+      <div class="row"><input type="range" id="Highlight" min="0" max="100" value="45"><span class="val" id="HighlightV">45%</span></div>
+    </div>
+    <div class="group">
+      <label>圆角</label>
+      <div class="row"><input type="range" id="Radius" min="0" max="80" value="34"><span class="val" id="RadiusV">34</span></div>
+    </div>
+    <div class="group">
+      <label>投影</label>
+      <div class="row"><input type="range" id="Shadow" min="0" max="60" value="26"><span class="val" id="ShadowV">26</span></div>
+    </div>
+
+    <div class="group">
+      <div class="toggle-row"><span>磨砂噪点（烤进图，仍可带走）</span><input type="checkbox" id="Grain" checked></div>
+    </div>
+    <div class="group">
+      <div class="toggle-row"><span>反光扫光（动画）</span><input type="checkbox" id="Sheen" checked></div>
+    </div>
+    <div class="group">
+      <div class="toggle-row"><span>示例文字</span><input type="checkbox" id="ShowText" checked></div>
+    </div>
+
+    <div class="group">
+      <label>导出</label>
+      <div class="row" style="margin-bottom:8px;">
+        <span style="font-size:12px;color:var(--sub);">帧率</span>
+        <div class="seg" style="flex:1;" id="FpsSeg">
+          <button data-fps="30" class="on">30</button>
+          <button data-fps="60">60</button>
+        </div>
+      </div>
+      <div class="row"><span style="font-size:12px;color:var(--sub);">时长</span><input type="range" id="Dur" min="1" max="8" step="0.5" value="3"><span class="val" id="DurV">3.0s</span></div>
+      <button class="primary" id="Export" style="margin-top:10px;">导出透明 MOV</button>
+      <div class="prog" id="Prog"><i id="ProgBar"></i></div>
+      <p class="note" id="Status"></p>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="behind busy" id="BehindLayer"></div>
+    <canvas id="C" width="1280" height="720"></canvas>
+  </div>
+
+<script type="module">
+import { PngMovMuxer } from '../shared/mov-muxer.js';
+
+const canvas = document.getElementById('C');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// ====== 参数（与控件绑定） ======
+const cfg = {
+  theme: 'dark',
+  veil: 0.12, border: 0.5, highlight: 0.45, radius: 34, shadow: 26,
+  grain: true, sheen: true, showText: true,
+};
+
+// 主题相关色（暗色玻璃染深、亮色染白；与侧栏一个思路）
+function tokens() {
+  if (cfg.theme === 'light') {
+    return { veilColor: '255,255,255', borderColor: '255,255,255', glowColor: '255,255,255', shadow: 'rgba(15,23,42,0.20)', text: '#1c2533', sub: 'rgba(28,37,51,0.65)' };
+  }
+  return { veilColor: '255,255,255', borderColor: '255,255,255', glowColor: '255,255,255', shadow: 'rgba(0,0,0,0.30)', text: '#f2f5fa', sub: 'rgba(242,245,250,0.7)' };
+}
+
+// ====== 圆角路径（带 fallback） ======
+function roundRectPath(c, x, y, w, h, r) {
+  c.beginPath();
+  if (c.roundRect) { c.roundRect(x, y, w, h, r); return; }
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+
+// ====== 磨砂噪点贴片（生成一次缓存） ======
+let _grainTile = null;
+function grainTile() {
+  if (_grainTile) return _grainTile;
+  const s = 128;
+  const t = document.createElement('canvas'); t.width = t.height = s;
+  const tc = t.getContext('2d');
+  const img = tc.createImageData(s, s);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = 200 + Math.floor(Math.random() * 55);
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+    img.data[i + 3] = Math.floor(Math.random() * 22); // 极淡
+  }
+  tc.putImageData(img, 0, 0);
+  _grainTile = t;
+  return t;
+}
+
+// ====== 画一帧玻璃卡（核心，可日后移植进 background.js 作预设） ======
+function drawGlassCard(c, t) {
+  const tk = tokens();
+  // 卡片矩形：居中，留边
+  const cw = Math.round(W * 0.66), ch = Math.round(H * 0.62);
+  const x = Math.round((W - cw) / 2), y = Math.round((H - ch) / 2);
+  const r = cfg.radius;
+
+  // 1) 投影（画在 fill 之前，落在卡外）
+  c.save();
+  if (cfg.shadow > 0) {
+    c.shadowColor = tk.shadow;
+    c.shadowBlur = cfg.shadow;
+    c.shadowOffsetY = Math.round(cfg.shadow * 0.4);
+  }
+  roundRectPath(c, x, y, cw, ch, r);
+  c.fillStyle = `rgba(${tk.veilColor}, ${cfg.veil})`; // 半透白雾（通透感主旋钮）
+  c.fill();
+  c.restore();
+
+  // 后续都裁剪在卡内
+  c.save();
+  roundRectPath(c, x, y, cw, ch, r);
+  c.clip();
+
+  // 2) 左上柔光（模拟左上光源）
+  if (cfg.highlight > 0) {
+    const g = c.createLinearGradient(x, y, x + cw * 0.7, y + ch * 0.7);
+    g.addColorStop(0, `rgba(${tk.glowColor}, ${0.18 * cfg.highlight / 0.45})`);
+    g.addColorStop(0.5, `rgba(${tk.glowColor}, 0)`);
+    c.fillStyle = g;
+    c.fillRect(x, y, cw, ch);
+  }
+
+  // 3) 磨砂噪点（烤进图、可带走，但不是真模糊）
+  if (cfg.grain) {
+    const pat = c.createPattern(grainTile(), 'repeat');
+    c.globalAlpha = 0.5;
+    c.fillStyle = pat;
+    c.fillRect(x, y, cw, ch);
+    c.globalAlpha = 1;
+  }
+
+  // 4) 反光扫光（动画：一条斜向亮带横扫，循环）
+  if (cfg.sheen) {
+    const period = 4; // 秒，与导出时长循环对齐
+    const p = ((t % period) / period); // 0..1
+    const bandW = cw * 0.22;
+    const sx = x - bandW + p * (cw + bandW * 2);
+    c.save();
+    c.translate(sx, y + ch / 2);
+    c.rotate(-0.32);
+    const sg = c.createLinearGradient(-bandW, 0, bandW, 0);
+    sg.addColorStop(0, 'rgba(255,255,255,0)');
+    sg.addColorStop(0.5, `rgba(255,255,255,${cfg.theme === 'light' ? 0.10 : 0.14})`);
+    sg.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = sg;
+    c.fillRect(-bandW, -ch, bandW * 2, ch * 2);
+    c.restore();
+  }
+
+  // 5) 示例文字
+  if (cfg.showText) {
+    c.fillStyle = tk.text;
+    c.font = `700 ${Math.round(ch * 0.13)}px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    c.textBaseline = 'alphabetic';
+    c.fillText('玻璃卡片', x + cw * 0.10, y + ch * 0.46);
+    c.fillStyle = tk.sub;
+    c.font = `500 ${Math.round(ch * 0.058)}px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    c.fillText('Glass Card · 微透白 + 亮边 + 高光', x + cw * 0.10, y + ch * 0.60);
+  }
+
+  c.restore(); // 解除裁剪
+
+  // 6) 描边（画在最上面，骑在边缘上；顶部更亮的渐变描边）
+  if (cfg.border > 0) {
+    const bg = c.createLinearGradient(x, y, x, y + ch);
+    bg.addColorStop(0, `rgba(${tk.borderColor}, ${0.55 * cfg.border / 0.5})`);
+    bg.addColorStop(0.5, `rgba(${tk.borderColor}, ${0.18 * cfg.border / 0.5})`);
+    bg.addColorStop(1, `rgba(${tk.borderColor}, ${0.30 * cfg.border / 0.5})`);
+    c.strokeStyle = bg;
+    c.lineWidth = 1.5;
+    roundRectPath(c, x + 0.75, y + 0.75, cw - 1.5, ch - 1.5, r);
+    c.stroke();
+  }
+}
+
+// ====== 渲染一帧（透明！） ======
+function drawScene(t) {
+  ctx.clearRect(0, 0, W, H); // 关键：清成透明，保 alpha
+  drawGlassCard(ctx, t);
+}
+
+// ====== 实时预览循环 ======
+let _t0 = performance.now();
+let _raf = null;
+let _exporting = false;
+function loop() {
+  if (_exporting) return;
+  const t = (performance.now() - _t0) / 1000;
+  drawScene(t);
+  _raf = requestAnimationFrame(loop);
+}
+loop();
+
+// ====== 控件绑定 ======
+const $ = id => document.getElementById(id);
+function bindRange(id, key, fmt, scale = 1) {
+  const el = $(id), v = $(id + 'V');
+  const upd = () => { cfg[key] = (+el.value) * scale; v.textContent = fmt(+el.value); };
+  el.addEventListener('input', upd); upd();
+}
+bindRange('Veil', 'veil', x => x + '%', 0.01);
+bindRange('Border', 'border', x => x + '%', 0.01);
+bindRange('Highlight', 'highlight', x => x + '%', 0.01);
+bindRange('Radius', 'radius', x => String(x));
+bindRange('Shadow', 'shadow', x => String(x));
+$('Grain').addEventListener('change', e => cfg.grain = e.target.checked);
+$('Sheen').addEventListener('change', e => cfg.sheen = e.target.checked);
+$('ShowText').addEventListener('change', e => cfg.showText = e.target.checked);
+
+$('Behind').addEventListener('change', e => {
+  $('BehindLayer').className = 'behind ' + e.target.value;
+});
+
+$('ThemeSeg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  cfg.theme = b.dataset.theme;
+  [...$('ThemeSeg').children].forEach(x => x.classList.toggle('on', x === b));
+});
+
+let exportFps = 30;
+$('FpsSeg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  exportFps = +b.dataset.fps;
+  [...$('FpsSeg').children].forEach(x => x.classList.toggle('on', x === b));
+});
+$('Dur').addEventListener('input', e => $('DurV').textContent = (+e.target.value).toFixed(1) + 's');
+
+// ====== 导出：抓帧 → PngMovMuxer → 下载 MOV ======
+function download(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 8000);
+}
+
+$('Export').addEventListener('click', async () => {
+  if (_exporting) return;
+  _exporting = true;
+  if (_raf) cancelAnimationFrame(_raf);
+  const btn = $('Export'); btn.disabled = true;
+  const prog = $('Prog'); prog.classList.add('show');
+  const bar = $('ProgBar'); const status = $('Status');
+
+  const fps = exportFps;
+  const dur = +$('Dur').value;
+  const total = Math.max(1, Math.round(fps * dur));
+  const mux = new PngMovMuxer({ fps });
+  status.textContent = `编码中… 0 / ${total}`;
+
+  try {
+    for (let i = 0; i < total; i++) {
+      drawScene(i / fps); // 确定性时间步进
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      const buf = new Uint8Array(await blob.arrayBuffer());
+      mux.addFramePNG(buf);
+      const pct = Math.round((i + 1) / total * 100);
+      bar.style.width = pct + '%';
+      status.textContent = `编码中… ${i + 1} / ${total}`;
+      if (i % 4 === 0) await new Promise(r => setTimeout(r, 0)); // 让出主线程，进度条可动
+    }
+    const out = mux.finalize();
+    download(out, `glass-card_${fps}fps_${dur}s.mov`);
+    status.textContent = `完成：${(out.size / 1048576).toFixed(2)} MB · ${total} 帧 · ${W}×${H} · 带 alpha`;
+  } catch (err) {
+    status.textContent = '导出失败：' + err.message;
+    console.error(err);
+  } finally {
+    bar.style.width = '0';
+    prog.classList.remove('show');
+    btn.disabled = false;
+    _exporting = false;
+    _t0 = performance.now();
+    loop();
+  }
+});
+</script>
+</body>
+</html>
