@@ -38,8 +38,9 @@
         .dt-fixed { flex: none; width: 64px; table-layout: fixed; }
         .dt-fixed th, .dt-fixed td { padding-left: 0; }     /* 贴左，节省宽度 */
         .table-scroll { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.22) transparent; }
-        /* min-width:100% → 系列少时铺满容器不滚动、列自然撑开；max-content → 系列多到超出才横向滚动 */
-        .dt-scroll { width: max-content; min-width: 100%; table-layout: fixed; }
+        /* width:100% 铺满容器；操作列固定窄，数值列(未设宽)平分剩余宽度 → 自动适配侧栏宽度、不留空隙。
+           min-width 由 JS 按系列数设(见 renderTable)：容器够宽时数值列变宽撑满，窄到数值列低于下限才横向滚动。 */
+        .dt-scroll { width: 100%; table-layout: fixed; }
         .dt-scroll .op-cell { display: flex; gap: 2px; justify-content: center; align-items: center; }
         /* 两表表头行等高，保证「名称」与色点/「操作」对齐 */
         .data-grid thead th { height: 28px; box-sizing: border-box; }
@@ -940,8 +941,11 @@
             // 2b) 滚动区：各系列数值列 + 操作列；表头每系列只放色点标识
             const head = document.getElementById('DataHead');
             const tbody = document.getElementById('DataBody');
+            // 数值列不设宽 → 平分(容器宽-操作列)；操作列固定 96px。min-width 保底:每数值列至少 48px,低于此才横向滚动(窄侧栏下默认 3 系列仍不滚)。
+            const scrollTbl = document.getElementById('DataTable');
+            if (scrollTbl) scrollTbl.style.minWidth = (lineSeries.length * 48 + 96) + 'px';
             head.innerHTML = `<tr>
-                ${lineSeries.map((s, si) => `<th title="${s.name}" style="width:46px;"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${s.color};vertical-align:middle;"></span></th>`).join('')}
+                ${lineSeries.map((s, si) => `<th title="${s.name}"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${s.color};vertical-align:middle;"></span></th>`).join('')}
                 <th style="width:96px;">操作</th>
             </tr>`;
             tbody.innerHTML = labels.map((label, i) => `
