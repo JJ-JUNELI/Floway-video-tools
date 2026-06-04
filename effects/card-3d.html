@@ -236,6 +236,8 @@
                 <div class="sub-title" style="margin-top:10px;"><span>隐藏图片（只导卡面）</span><input type="checkbox" id="HideMedia"></div>
                 <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">隐藏上传的图片，只保留卡面（底色/描边）；卡片仍按图片尺寸。给别人做空卡片/边框时用。</div>
                 <div style="font-size:11px; color:var(--text-sub); margin-top:8px;">💡 导出格式选「单张图片」时，自动摆正卡片并贴合裁切到卡片大小（含投影/光边），输出尺寸=图片尺寸。</div>
+                <div class="sub-title" style="margin-top:10px;"><span>时长跟随视频</span><input type="checkbox" id="FollowVideoDuration" checked></div>
+                <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">导入视频时，导出时长自动等于视频长度（录满一遍自动停）。导入图片无此项。</div>
             </div>
 
             <!-- 卡片样式 -->
@@ -503,6 +505,7 @@
             entranceStartScale: 100, entranceEndScale: 100,
             imageScale: 100,
             hideMedia: false,
+            followVideoDuration: true,
             cardRatioW: 4,
             cardRatioH: 3,
             borderStyle: 'none',
@@ -585,6 +588,7 @@
                     currentMediaType = 'video';
                     currentMediaName = file.name;
                     syncRatioLock();
+                    syncMediaDuration();
                     vid.play();
                     updateMediaUI(file.name, vid.videoWidth, vid.videoHeight);
                     startLoop();
@@ -602,6 +606,12 @@
             zone.querySelector('.upload-zone-text').innerHTML =
                 `<div style="font-size:20px; margin-bottom:4px;">✅</div>${name}<br><span style="opacity:0.5">${w}×${h}</span>`;
             document.getElementById('RemoveMedia').style.display = '';
+        }
+
+        // 「时长跟随视频」：有视频且开关开时，录制目标时长=视频长度；否则不限（手动停）
+        function syncMediaDuration() {
+            recorder.maxDurationSec = (config.followVideoDuration && currentMediaType === 'video'
+                && currentMedia && isFinite(currentMedia.duration)) ? currentMedia.duration : 0;
         }
 
         function removeMedia() {
@@ -627,6 +637,7 @@
             txt.innerHTML =
                 `<div style="font-size:24px; margin-bottom:4px;">📤</div>拖拽图片/视频到这里<br>或点击下方按钮上传`;
             syncRatioLock();
+            syncMediaDuration();
             document.getElementById('MediaUpload').value = '';
             startLoop();
         }
@@ -833,6 +844,7 @@
             ['EntranceEndScale',      'entranceEndScale',      'int',   'EntranceEndScaleVal',      '%'],
             ['ImageScale', 'imageScale', 'int', 'ImageScaleVal', '%'],
             ['HideMedia', 'hideMedia', 'checked'],
+            ['FollowVideoDuration', 'followVideoDuration', 'checked'],
             ['CardRatioW', 'cardRatioW', 'int'],
             ['CardRatioH', 'cardRatioH', 'int'],
             // ① 实线+辉光
@@ -882,6 +894,9 @@
                 }
                 if (key === 'cardRatioW' || key === 'cardRatioH') {
                     startLoop();
+                }
+                if (key === 'followVideoDuration') {
+                    syncMediaDuration();
                 }
                 if (key === 'rotatingBgMode') {
                     syncRatioLock();

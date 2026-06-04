@@ -4,6 +4,7 @@
   "CardRatioH": "3",
   "ImageScale": "100",
   "HideMedia": false,
+  "FollowVideoDuration": true,
   "CardScale": "80",
   "CardRadius": "16",
   "CardBg": "#1a1a2e",

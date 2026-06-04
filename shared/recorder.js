@@ -41,6 +41,10 @@ export class Recorder {
         // 仅作用于保 alpha 抓帧路径(png_seq/prores)与 mp4；webm(live stream)不裁。null=不裁，导出整画布。
         this.cropRect = null;
 
+        // 录制目标时长（秒）。>0 时达到 maxDurationSec×实际帧率 帧数自动收尾。
+        // 由效果设置（如"导出时长=视频长度"）。0=不限，手动停。
+        this.maxDurationSec = 0;
+
         // 可选配置
         this.useRealtimeWebm = opts.useRealtimeWebm || false;
         this.useRafForFrames = opts.useRafForFrames || false;
@@ -431,6 +435,13 @@ export class Recorder {
         }
 
         this.frameCount++;
+
+        // 时长跟随（如"导出时长=视频长度"）：达到目标帧数自动收尾。用实际 captureFps 换算。
+        if (this.maxDurationSec > 0 && this._captureFps > 0 &&
+            this.frameCount >= Math.round(this.maxDurationSec * this._captureFps)) {
+            this.stop();
+            return;
+        }
 
         // 驱动方式取决于配置
         if (this.useRafForFrames || (this.useManualWebmFrames && this.format === 'webm')) {

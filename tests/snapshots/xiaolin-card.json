@@ -4,6 +4,7 @@
   "CardRatioH": "3",
   "ImageScale": "100",
   "HideMedia": false,
+  "FollowVideoDuration": true,
   "CardMaterial": "follow",
   "GlassColor": "light",
   "GlassVeil": "12",
