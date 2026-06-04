@@ -4,7 +4,6 @@
   "CardRatioH": "3",
   "ImageScale": "100",
   "HideMedia": false,
-  "ExportTrim": false,
   "CardMaterial": "follow",
   "GlassColor": "light",
   "GlassVeil": "12",

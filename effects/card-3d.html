@@ -235,8 +235,7 @@
                 </div>
                 <div class="sub-title" style="margin-top:10px;"><span>隐藏图片（只导卡面）</span><input type="checkbox" id="HideMedia"></div>
                 <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">隐藏上传的图片，只保留卡面（底色/描边）；卡片仍按图片尺寸。给别人做空卡片/边框时用。</div>
-                <div class="sub-title" style="margin-top:10px;"><span>导出完整卡片</span><input type="checkbox" id="ExportTrim"></div>
-                <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">导出时摆正卡片并贴合裁切到卡片大小（含投影/光边），输出尺寸=图片尺寸。仅 单张图片 / PNG 序列 / 透明视频生效。</div>
+                <div style="font-size:11px; color:var(--text-sub); margin-top:8px;">💡 导出格式选「单张图片」时，自动摆正卡片并贴合裁切到卡片大小（含投影/光边），输出尺寸=图片尺寸。</div>
             </div>
 
             <!-- 卡片样式 -->
@@ -504,7 +503,6 @@
             entranceStartScale: 100, entranceEndScale: 100,
             imageScale: 100,
             hideMedia: false,
-            exportTrim: false,
             cardRatioW: 4,
             cardRatioH: 3,
             borderStyle: 'none',
@@ -835,7 +833,6 @@
             ['EntranceEndScale',      'entranceEndScale',      'int',   'EntranceEndScaleVal',      '%'],
             ['ImageScale', 'imageScale', 'int', 'ImageScaleVal', '%'],
             ['HideMedia', 'hideMedia', 'checked'],
-            ['ExportTrim', 'exportTrim', 'checked'],
             ['CardRatioW', 'cardRatioW', 'int'],
             ['CardRatioH', 'cardRatioH', 'int'],
             // ① 实线+辉光
@@ -1263,8 +1260,8 @@
 
             // 统一通过 WebGL 渲染（3D 变换 + 阴影）
             // Canvas 2D 模式：canvas 已扩大，用 scaleX/scaleY 分别补偿宽高比
-            // 导出完整卡片：录制时摆正（去 3D 倾斜/浮动/入场位移），渲染满版卡片供贴合裁切
-            const trim = recorder.isRecording && config.exportTrim;
+            // 导出「单张图片」时自动按完整卡片处理：摆正（去 3D 倾斜/浮动/入场位移）+ 满版卡片供贴合裁切
+            const trim = recorder.isRecording && recorder.format === 'png_single';
             const baseCardScale = trim ? config.cardScale : config.cardScale * entranceScale;
             glComp.render({
                 bgCanvas: bgOffscreen,
