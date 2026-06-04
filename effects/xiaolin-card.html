@@ -228,6 +228,11 @@
                         <input type="number" id="CardRatioH" value="3" min="1" max="21" step="1" class="ratio-input">
                     </div>
                 </div>
+                <div id="ImageScaleRow" class="row stack" style="margin-top:8px;">
+                    <div class="label-line"><span>图片缩放</span><span id="ImageScaleVal">100%</span></div>
+                    <input type="range" id="ImageScale" min="30" max="100" step="1" value="100">
+                    <div style="font-size:11px; color:var(--text-sub); margin-top:4px;">缩小后四周露出卡面底色留白</div>
+                </div>
             </div>
 
             <!-- 卡片样式 -->
@@ -441,6 +446,7 @@
             entranceEndX: 0, entranceEndY: 0,
             entranceStartOpacity: 0, entranceEndOpacity: 100,
             entranceStartScale: 100, entranceEndScale: 100,
+            imageScale: 100,
             cardRatioW: 4,
             cardRatioH: 3,
             // 旋转光边
@@ -760,6 +766,7 @@
             ['EntranceEndOpacity',    'entranceEndOpacity',    'int',   'EntranceEndOpacityVal',    '%'],
             ['EntranceStartScale',    'entranceStartScale',    'int',   'EntranceStartScaleVal',    '%'],
             ['EntranceEndScale',      'entranceEndScale',      'int',   'EntranceEndScaleVal',      '%'],
+            ['ImageScale', 'imageScale', 'int', 'ImageScaleVal', '%'],
             ['CardRatioW', 'cardRatioW', 'int'],
             ['CardRatioH', 'cardRatioH', 'int'],
             // 旋转光边
@@ -971,7 +978,7 @@
                 const mw = currentMedia.videoWidth || currentMedia.naturalWidth || currentMedia.width;
                 const mh = currentMedia.videoHeight || currentMedia.naturalHeight || currentMedia.height;
                 if (mw && mh) {
-                    const s = Math.min(baseBounds.w / mw, baseBounds.h / mh);
+                    const s = Math.min(baseBounds.w / mw, baseBounds.h / mh) * ((config.imageScale ?? 100) / 100);
                     const dw = mw * s, dh = mh * s;
                     ctx.drawImage(currentMedia, (baseBounds.w - dw) / 2, (baseBounds.h - dh) / 2, dw, dh);
                 }
