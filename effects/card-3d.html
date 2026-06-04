@@ -233,8 +233,10 @@
                     <input type="range" id="ImageScale" min="30" max="100" step="1" value="100">
                     <div style="font-size:11px; color:var(--text-sub); margin-top:4px;">缩小后四周露出卡面底色留白</div>
                 </div>
+                <div class="sub-title" style="margin-top:10px;"><span>隐藏图片（只导卡面）</span><input type="checkbox" id="HideMedia"></div>
+                <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">隐藏上传的图片，只保留卡面（底色/描边）；卡片仍按图片尺寸。给别人做空卡片/边框时用。</div>
                 <div class="sub-title" style="margin-top:10px;"><span>导出完整卡片</span><input type="checkbox" id="ExportTrim"></div>
-                <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">导出时摆正卡片并贴合裁切到卡片大小（含投影/光边），输出尺寸=图片尺寸。仅 PNG 序列 / 透明视频生效。</div>
+                <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">导出时摆正卡片并贴合裁切到卡片大小（含投影/光边），输出尺寸=图片尺寸。仅 单张图片 / PNG 序列 / 透明视频生效。</div>
             </div>
 
             <!-- 卡片样式 -->
@@ -501,6 +503,7 @@
             entranceStartOpacity: 0, entranceEndOpacity: 100,
             entranceStartScale: 100, entranceEndScale: 100,
             imageScale: 100,
+            hideMedia: false,
             exportTrim: false,
             cardRatioW: 4,
             cardRatioH: 3,
@@ -831,6 +834,7 @@
             ['EntranceStartScale',    'entranceStartScale',    'int',   'EntranceStartScaleVal',    '%'],
             ['EntranceEndScale',      'entranceEndScale',      'int',   'EntranceEndScaleVal',      '%'],
             ['ImageScale', 'imageScale', 'int', 'ImageScaleVal', '%'],
+            ['HideMedia', 'hideMedia', 'checked'],
             ['ExportTrim', 'exportTrim', 'checked'],
             ['CardRatioW', 'cardRatioW', 'int'],
             ['CardRatioH', 'cardRatioH', 'int'],
@@ -969,6 +973,7 @@
 
         // ====== 卡片内容绘制 ======
         function drawMediaFit(ctx, media, w, h) {
+            if (config.hideMedia) return;   // 隐藏图片：只留卡面（底色/描边），卡片仍按图片尺寸
             const mw = media.videoWidth || media.naturalWidth || media.width;
             const mh = media.videoHeight || media.naturalHeight || media.height;
             if (!mw || !mh) return;
@@ -1216,7 +1221,7 @@
                         c.fillStyle = config.cardBgColor;
                         c.fillRect(0, 0, cw, ch);
                         c.globalAlpha = 1;
-                        if (currentMedia) {
+                        if (currentMedia && !config.hideMedia) {
                             const mw = currentMedia.videoWidth || currentMedia.naturalWidth || currentMedia.width;
                             const mh = currentMedia.videoHeight || currentMedia.naturalHeight || currentMedia.height;
                             if (mw && mh) {

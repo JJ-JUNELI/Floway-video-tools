@@ -158,7 +158,7 @@ export class Recorder {
     // mp4/webm 不支持 alpha，录制时需填实底。各效果的"透明模式填黑"判断统一走这里，
     // 避免每个效果各写 `format !== 'png_seq'`（漏掉 prores 会导致透明视频变黑底）。
     get keepsAlpha() {
-        return this.format === 'png_seq' || this.format === 'prores';
+        return this.format === 'png_seq' || this.format === 'prores' || this.format === 'png_single';
     }
 
     async start() {
@@ -227,6 +227,11 @@ export class Recorder {
                 this._proresHalf = resEl ? (resEl.value === 'half') : false;  // 标准 1x = 缩到一半
                 this._initProres();
                 this.btn.innerHTML = "⏹ 停止录制 (透明MOV)";
+                this.btn.classList.add('recording');
+                this._processFrameLoop();
+            } else if (this.format === 'png_single') {
+                // 单张图片：抓首帧即存即停（含 cropRect 贴合裁切）。无需编码器。
+                this.btn.innerHTML = "⏳ 导出图片…";
                 this.btn.classList.add('recording');
                 this._processFrameLoop();
             } else {
@@ -305,6 +310,9 @@ export class Recorder {
             }
         } else if (this.format === 'prores') {
             this._finishProres();
+        } else if (this.format === 'png_single') {
+            // 图片已在抓帧时保存，这里只复位按钮
+            this._resetBtn();
         } else {
             if (this.recorder) this.recorder.stop();
             else this._resetBtn();
@@ -367,7 +375,15 @@ export class Recorder {
         // 调用效果的渲染函数 (可能是 async，比如 SVG rasterize)
         await this.onFrame(time);
 
-        if (this.format === 'png_seq') {
+        if (this.format === 'png_single') {
+            // 单张图片：抓首帧（含 cropRect 裁切）即存即停
+            const src = this._encodeSource(false);
+            const blob = await new Promise(r => src.toBlob(r, 'image/png'));
+            saveFile(blob, `${this.fileName}_${Date.now()}.png`);
+            this.frameCount++;
+            this.stop();
+            return;
+        } else if (this.format === 'png_seq') {
             const src = this._encodeSource(false);  // 含 cropRect 裁切
             await new Promise(r => {
                 src.toBlob(b => {
