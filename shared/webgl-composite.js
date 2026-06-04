@@ -465,7 +465,9 @@ export class WebGLComposite {
         // === Pass 3: 卡片内容（SDF 裁剪 + 描边 + 辉光）===
         if (cardTexture) {
             this._uploadTexture(cardTexture);
-            this._drawQuad(mvp, cardNormBounds, cardRadius, opts.skipSDF ? 0 : 1.0, cardAlpha);
+            // uRadius 必须与 uCardPixelSize 同尺度：cardPixelW=cardScale*cb.w，故圆角也要 ×cardScale，
+            // 否则 cardScale<1 时 SDF 圆角占比偏大、比 2D 卡面圆角更圆 → 削掉圆角处描边（角比边窄）。
+            this._drawQuad(mvp, cardNormBounds, cardRadius * cardScale, opts.skipSDF ? 0 : 1.0, cardAlpha);
         }
     }
 
