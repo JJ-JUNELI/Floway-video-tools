@@ -51,12 +51,12 @@ PNG 序列之外的「单文件透明视频」。导出格式下拉的 `🎬 透
 
 ### 引擎：纯 JS 自封装（`shared/mov-muxer.js` 的 `PngMovMuxer`，无 ffmpeg）
 - **不依赖 ffmpeg / 任何 wasm**。封 MOV 只是「PNG 字节装箱 + 写采样表（atom）」——PNG 编码浏览器 `toBlob` 已免费做完，MOV 只是个"信封+目录"，纯 JS 几 KB 即可。（曾用 ffmpeg.wasm `-c:v copy`，是 31MB 杀鸡用牛刀 + 一堆 wasm 内存问题，已整体移除。）
-- `PngMovMuxer`：`addFramePNG(uint8)` 逐帧持有（首帧从 PNG 的 IHDR 自动读宽高），`finalize()` 返回 `Blob(video/quicktime)`。结构 = `ftyp + wide + mdat(帧字节) + moov`（`stsd 'png ' depth24 / 变长 stsz / edts·elst / minf hdlr`），对齐 ffmpeg 的 PNG-in-MOV 输出，已在剪映/AE 实测通过、逐像素无损（PSNR=inf）。
-- **内存友好**：帧是普通 JS `Uint8Array`，`finalize` 用 `new Blob([...parts])` 分段拼装（不分配巨型连续缓冲、可落盘），下载完整组帧即可 GC 回收。**没有"wasm 内存只增不减 / 导出后整页卡 / 要 terminate 重载"那套问题**——那是 ffmpeg.wasm 时代的，已随移除一并消失。
+- `PngMovMuxer`：`await addFrameBlob(pngBlob)` 逐帧持有 **PNG Blob**（首帧异步读 IHDR 自动得宽高），`finalize()` 返回 `Blob(video/quicktime)`。结构 = `ftyp + wide + mdat(帧字节) + moov`（`stsd 'png ' depth24 / 变长 stsz / edts·elst / minf hdlr`），对齐 ffmpeg 的 PNG-in-MOV 输出，已在剪映/AE 实测通过、逐像素无损（PSNR=inf）。
+- **内存友好**：帧以 **PNG Blob** 持有（不是 Uint8Array）→ 大 Blob 浏览器(Chromium)自动落盘、常驻内存大降；`finalize` 用 `new Blob([头, ...帧Blob, moov])` 按引用分段拼装（不分配巨型连续缓冲）。`mdat` >4GB 时自动切 **64 位 largesize**（stco 单 chunk 偏移很小、仍 32 位安全）→ 文件结构不卡 4GB。**没有"wasm 内存只增不减 / 导出后整页卡 / 要 terminate 重载"那套问题**——那是 ffmpeg.wasm 时代的，已随移除一并消失。
 
 ### 抓帧 / 内存 / 时长上限
-- 抓帧 = `canvas.toBlob('image/png')`，逐帧 `PngMovMuxer.addFramePNG`，帧持有在 JS 数组（普通 JS 堆，下载后 GC 回收）。
-- 预算 `_proresByteBudget = 2.5e9`（2.5GB）：累计 PNG 字节超了就**自动停录 + 封装已抓帧 + 弹窗**告知时长。mp4/webm 流式编码无限制；PNG 序列无显式上限但堆内存、极长可能 OOM。
+- 抓帧 = `canvas.toBlob('image/png')`，逐帧 `await PngMovMuxer.addFrameBlob(blob)`，帧以 **Blob** 持有（大 Blob 浏览器可落盘，常驻内存远低于"所有帧之和"）。
+- 预算 `_proresByteBudget = 12e9`（~12GB）：累计 PNG 字节超了就**自动停录 + 封装已抓帧 + 弹窗**告知时长。Blob 落盘后内存不再是主瓶颈，上限主要受 Blob 存储/磁盘/下载约束（Chromium 利好最大；Firefox/Safari 大 Blob 更可能留内存）。mp4/webm 流式编码无限制；PNG 序列(JSZip)仍全在内存、极长可能 OOM。
 
 ### 档位（导出面板，选透明视频时显示）
 - **帧率**：30 / 60 fps（`#ProResFps`）。

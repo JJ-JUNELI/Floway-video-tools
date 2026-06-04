@@ -12,16 +12,20 @@
  *
  * 用法:
  *   const mux = new PngMovMuxer({ fps: 30 });   // 宽高自动从首帧 PNG 的 IHDR 读取
- *   mux.addFramePNG(uint8Png);                  // 逐帧加入（不拷贝、不转码，仅持有引用）
+ *   await mux.addFrameBlob(pngBlob);            // 逐帧加入 PNG Blob（不拷贝、不转码，仅持有引用）
  *   const blob = mux.finalize();                // 返回 Blob(video/quicktime)，可直接下载
  *
- * 注意：帧持有在 JS 数组里，峰值≈所有 PNG 字节之和；finalize 用 Blob 分段拼装，
- *       不分配巨型连续缓冲（避免 2GB+ 连续分配失败 / 双份峰值）。
+ * 内存：帧以 PNG **Blob** 持有（不是 Uint8Array）。大 Blob 浏览器(Chromium)会自动分页落盘，
+ *       常驻内存远低于"所有 PNG 字节之和"，上限从 JS 堆 ~2.5GB 抬到 Blob 存储/磁盘级（几十 GB）。
+ *       finalize 用 `new Blob([头, ...帧Blob, moov])` 按引用拼装，不分配巨型连续缓冲。
+ *       (Firefox/Safari 对大 Blob 更可能留内存，落盘红利打折。)
  */
 
 // ---- 字节小工具 ----
 function u16(n) { return [(n >> 8) & 0xff, n & 0xff]; }
 function u32(n) { return [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff]; }
+// 64 位大端（用于 >4GB 的 mdat largesize；n ≤ 2^53 由 JS Number 安全表示）
+function u64(n) { return [...u32(Math.floor(n / 0x100000000)), ...u32(n >>> 0)]; }
 function fourcc(s) { return [s.charCodeAt(0), s.charCodeAt(1), s.charCodeAt(2), s.charCodeAt(3)]; }
 
 /** atom: 4字节长度 + 4字节类型 + 负载 */
@@ -42,17 +46,18 @@ export class PngMovMuxer {
         this.fps = fps;
         this.width = 0;
         this.height = 0;
-        this.frames = [];   // Uint8Array[]（PNG 字节，原样）
+        this.frames = [];   // Blob[]（PNG 帧，原样持有；大 Blob 浏览器可落盘）
     }
 
-    /** 加入一帧 PNG（Uint8Array）。首帧解析 IHDR 得到宽高。 */
-    addFramePNG(png) {
+    /** 加入一帧 PNG（Blob）。首帧异步读 IHDR 前 24 字节得到宽高。 */
+    async addFrameBlob(blob) {
         if (this.frames.length === 0) {
             // PNG: 8字节签名 + IHDR(长度4+'IHDR'4+宽4+高4...) → 宽在偏移16、高在偏移20（大端）
-            this.width = (png[16] << 24 | png[17] << 16 | png[18] << 8 | png[19]) >>> 0;
-            this.height = (png[20] << 24 | png[21] << 16 | png[22] << 8 | png[23]) >>> 0;
+            const head = new Uint8Array(await blob.slice(0, 24).arrayBuffer());
+            this.width = (head[16] << 24 | head[17] << 16 | head[18] << 8 | head[19]) >>> 0;
+            this.height = (head[20] << 24 | head[21] << 16 | head[22] << 8 | head[23]) >>> 0;
         }
-        this.frames.push(png);
+        this.frames.push(blob);
     }
 
     get frameCount() { return this.frames.length; }
@@ -82,7 +87,7 @@ export class PngMovMuxer {
         const stts = box('stts', ...u32(0), ...u32(1), ...u32(N), ...u32(1)); // 每帧 delta=1（时基=fps）
         const stsc = box('stsc', ...u32(0), ...u32(1), ...u32(1), ...u32(N), ...u32(1)); // 全部 N 帧在 1 个 chunk
         const sizes = [];
-        for (const f of this.frames) sizes.push(...u32(f.length));
+        for (const f of this.frames) sizes.push(...u32(f.size));
         const stsz = box('stsz', ...u32(0), ...u32(0), ...u32(N), ...sizes); // sample_size=0 → 变长表
         const stco = box('stco', ...u32(0), ...u32(1), ...u32(mdatDataOffset));
         return box('stbl', this._stsd(), stts, stsc, stsz, stco);
@@ -131,11 +136,19 @@ export class PngMovMuxer {
     finalize() {
         const ftyp = box('ftyp', ...fourcc('qt  '), ...u32(0x00000200), ...fourcc('qt  '));
         const wide = [...u32(8), ...fourcc('wide')];        // mdat 前占位（QuickTime 传统）
-        const mdatDataOffset = ftyp.length + wide.length + 8;
-        const dataLen = this.frames.reduce((s, f) => s + f.length, 0);
-        const mdatHeader = [...u32(8 + dataLen), ...fourcc('mdat')];
+        const dataLen = this.frames.reduce((s, f) => s + f.size, 0);
+        // mdat 长度：≤4GB 用 32 位标准头(8B)；>4GB 用 64 位 largesize(size=1 + 8字节实际长度，16B 头)。
+        // 单 chunk，stco 偏移=mdat 数据起点(很小)始终 32 位安全；仅 mdat 盒长度需 64 位。
+        let mdatHeader, mdatDataOffset;
+        if (8 + dataLen <= 0xFFFFFFFF) {
+            mdatHeader = [...u32(8 + dataLen), ...fourcc('mdat')];
+            mdatDataOffset = ftyp.length + wide.length + 8;
+        } else {
+            mdatHeader = [...u32(1), ...fourcc('mdat'), ...u64(16 + dataLen)];
+            mdatDataOffset = ftyp.length + wide.length + 16;
+        }
         const moov = this._moov(mdatDataOffset);
-        // Blob 分段：小头部转 Uint8Array，帧 Uint8Array 原样塞入；浏览器负责拼装（可落盘，省内存）
+        // Blob 分段：小头部转 Uint8Array，帧 Blob 原样塞入；浏览器负责拼装（可落盘，省内存）
         const parts = [new Uint8Array(ftyp), new Uint8Array(wide), new Uint8Array(mdatHeader),
             ...this.frames, new Uint8Array(moov)];
         return new Blob(parts, { type: 'video/quicktime' });

@@ -370,8 +370,7 @@ $('Export').addEventListener('click', async () => {
     for (let i = 0; i < total; i++) {
       drawScene(i / fps); // 确定性时间步进
       const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-      const buf = new Uint8Array(await blob.arrayBuffer());
-      mux.addFramePNG(buf);
+      await mux.addFrameBlob(blob);
       const pct = Math.round((i + 1) / total * 100);
       bar.style.width = pct + '%';
       status.textContent = `编码中… ${i + 1} / ${total}`;

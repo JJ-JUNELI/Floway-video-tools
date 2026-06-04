@@ -24,7 +24,7 @@
  */
 
 import { saveFile } from './utils.js';
-import { PngMovMuxer } from './mov-muxer.js';
+import { PngMovMuxer } from './mov-muxer.js?v=blob-frames';
 export class Recorder {
     constructor(opts) {
         this.canvas = opts.canvas;
@@ -113,8 +113,10 @@ export class Recorder {
         this._movMux = new PngMovMuxer({ fps: this._proresFps || 30 });
         this._proresN = 0;
         this._proresBytes = 0;
-        // ~2.5GB PNG 预算。帧持有在 JS 数组里（普通 JS 堆，下载完即 GC 回收，不像 wasm 只增不减）。
-        this._proresByteBudget = 2.5e9;
+        // PNG 帧以 Blob 持有（浏览器可落盘）→ 内存不再是主瓶颈，预算抬到 ~12GB。
+        // 仍保留上限：超大文件受 Blob 存储/磁盘/下载约束，到顶自动收尾+提示而非崩页。
+        // 注：mov-muxer 在 >4GB 时已切 64 位 mdat，文件结构本身不再卡 4GB。
+        this._proresByteBudget = 12e9;
         this._proresHitCap = false;
     }
 
@@ -397,10 +399,10 @@ export class Recorder {
             // cropRect（导出完整卡片）裁切也在此处统一完成（_encodeSource 内 drawImage 预乘合成，透明软边不发黑）。
             const src = this._encodeSource(this._proresHalf);
             const png = await new Promise(r => src.toBlob(r, 'image/png'));
-            const bytes = new Uint8Array(await png.arrayBuffer());
-            this._movMux.addFramePNG(bytes);
+            // 以 Blob 持有（不 arrayBuffer 进 JS 堆）：大 Blob 浏览器自动落盘，内存占用大降。
+            await this._movMux.addFrameBlob(png);
             this._proresN++;
-            this._proresBytes += bytes.length;
+            this._proresBytes += png.size;
             if (this._proresBytes >= this._proresByteBudget) {
                 this._proresHitCap = true;
                 this.stop();   // 达内存上限 → 收尾封装
