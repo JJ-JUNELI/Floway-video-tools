@@ -3,6 +3,7 @@
   "CardRatioW": "4",
   "CardRatioH": "3",
   "ImageScale": "100",
+  "ExportTrim": false,
   "CardMaterial": "follow",
   "GlassColor": "light",
   "GlassVeil": "12",

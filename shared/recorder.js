@@ -37,6 +37,10 @@ export class Recorder {
         this.width = opts.width || this.canvas.width;
         this.height = opts.height || this.canvas.height;
 
+        // 可选裁切：物理像素 {x,y,w,h}。由效果在录制时设置（如「导出完整卡片」贴合裁切）。
+        // 仅作用于保 alpha 抓帧路径(png_seq/prores)与 mp4；webm(live stream)不裁。null=不裁，导出整画布。
+        this.cropRect = null;
+
         // 可选配置
         this.useRealtimeWebm = opts.useRealtimeWebm || false;
         this.useRafForFrames = opts.useRafForFrames || false;
@@ -160,6 +164,7 @@ export class Recorder {
     async start() {
         this.isRecording = true;
         this.frameCount = 0;
+        this.cropRect = null;    // 每次录制重新决定（效果可在首帧 onFrame 内设置）
         this._captureFps = 60;   // 默认 60；ProRes 可改 30（见下）
         document.body.classList.add('is-recording');
         this.ind.style.display = 'flex';
@@ -321,6 +326,32 @@ export class Recorder {
      * 帧同步渲染循环 (用于 MP4/PNG，以及非循环动画的 WebM)
      * 每帧时间 = frameCount * (1000/60)，确保输出帧均匀
      */
+    /**
+     * 返回送编码的源画布：按 cropRect 裁切（物理像素）+ 可选 1x 降采样。
+     * 无裁切且不降采样时直接返回主画布（零拷贝）。裁切/降采样走 2D 暂存（drawImage 预乘合成，透明软边不发黑）。
+     */
+    _encodeSource(half) {
+        const cr = this.cropRect;
+        if (!cr && !half) return this.canvas;
+        const cw = this.canvas.width, ch = this.canvas.height;
+        let sx0 = 0, sy0 = 0, sw = cw, sh = ch;
+        if (cr) {
+            sx0 = Math.max(0, Math.round(cr.x)); sy0 = Math.max(0, Math.round(cr.y));
+            sw = Math.min(cw - sx0, Math.round(cr.w)); sh = Math.min(ch - sy0, Math.round(cr.h));
+            if (sw <= 0 || sh <= 0) return this.canvas; // 裁切无效 → 退回整画布
+        }
+        let dw = sw, dh = sh;
+        if (half) { dw = Math.max(2, Math.round(sw / 2)); dh = Math.max(2, Math.round(sh / 2)); }
+        if (!this._encScratch) this._encScratch = document.createElement('canvas');
+        const sc = this._encScratch;
+        if (sc.width !== dw || sc.height !== dh) { sc.width = dw; sc.height = dh; }
+        const g = sc.getContext('2d');
+        g.clearRect(0, 0, dw, dh);
+        g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+        g.drawImage(this.canvas, sx0, sy0, sw, sh, 0, 0, dw, dh);
+        return sc;
+    }
+
     async _processFrameLoop() {
         if (!this.isRecording) return;
 
@@ -337,30 +368,18 @@ export class Recorder {
         await this.onFrame(time);
 
         if (this.format === 'png_seq') {
+            const src = this._encodeSource(false);  // 含 cropRect 裁切
             await new Promise(r => {
-                this.canvas.toBlob(b => {
+                src.toBlob(b => {
                     this.zip.file(`frame_${String(this.frameCount).padStart(5, '0')}.png`, b);
                     r();
                 }, 'image/png');
             });
         } else if (this.format === 'prores') {
             // 抓帧 → toBlob PNG → 加入自封装器（mov-muxer.js）。帧持有在 JS 堆，下载完即 GC 回收。
-            let src = this.canvas;
-            if (this._proresHalf) {
-                // 标准 1x：抓帧时就用 drawImage 缩到一半（2x 渲染→1x 输出 = SSAA 超采样，边缘更锐）。
-                // 浏览器 drawImage 走预乘合成，透明软边不发黑（已实测 2D 与 premultipliedAlpha:false 的 WebGL 源）。
-                // 缩后 PNG 仅 1/4 大 → 时长上限随之放大约 4×。
-                if (!this._proresScratch) this._proresScratch = document.createElement('canvas');
-                const sc = this._proresScratch;
-                const hw = Math.max(2, Math.round(this.canvas.width / 2));
-                const hh = Math.max(2, Math.round(this.canvas.height / 2));
-                if (sc.width !== hw || sc.height !== hh) { sc.width = hw; sc.height = hh; }
-                const sx = sc.getContext('2d');
-                sx.clearRect(0, 0, hw, hh);
-                sx.imageSmoothingEnabled = true; sx.imageSmoothingQuality = 'high';
-                sx.drawImage(this.canvas, 0, 0, hw, hh);
-                src = sc;
-            }
+            // _proresHalf 标准 1x：drawImage 缩到一半（2x 渲染→1x 输出 = SSAA 超采样，边缘更锐）；
+            // cropRect（导出完整卡片）裁切也在此处统一完成（_encodeSource 内 drawImage 预乘合成，透明软边不发黑）。
+            const src = this._encodeSource(this._proresHalf);
             const png = await new Promise(r => src.toBlob(r, 'image/png'));
             const bytes = new Uint8Array(await png.arrayBuffer());
             this._movMux.addFramePNG(bytes);
@@ -372,6 +391,7 @@ export class Recorder {
                 return;
             }
         } else if (this.format === 'mp4') {
+            // mp4 编码尺寸在 start 时固定、且不支持 alpha → 不应用 cropRect（导出完整卡片请用 PNG 序列/透明视频）
             const frame = new VideoFrame(this.canvas, { timestamp: time * 1000 });
             if (this.videoEncoder.encodeQueueSize > this.encodeQueueMax + 3) {
                 frame.close();
