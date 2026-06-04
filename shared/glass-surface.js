@@ -108,13 +108,13 @@ export function drawGlassSurface(ctx, w, h, radius, opts = {}, timeMs) {
 
     ctx.restore(); // 解除裁剪
 
-    // 5) 渐变描边（顶部更亮，骑在边缘内侧）
+    // 5) 渐变描边（左上→右下：左上角强、右下角弱，呼应左上光源；比原四角均匀更立体）
     if (border > 0) {
-        const bg = ctx.createLinearGradient(0, 0, 0, h);
+        const bg = ctx.createLinearGradient(0, 0, w, h);
         const bb = border / 0.5;
-        bg.addColorStop(0, `rgba(255,255,255, ${0.55 * bb})`);
-        bg.addColorStop(0.5, `rgba(255,255,255, ${0.18 * bb})`);
-        bg.addColorStop(1, `rgba(255,255,255, ${0.30 * bb})`);
+        bg.addColorStop(0,    `rgba(255,255,255, ${0.95 * bb})`);  // 左上角最强
+        bg.addColorStop(0.45, `rgba(255,255,255, ${0.42 * bb})`);
+        bg.addColorStop(1,    `rgba(255,255,255, ${0.16 * bb})`);  // 右下角最弱
         ctx.strokeStyle = bg;
         const lw = 1.5 * k * borderWidth;   // 粗细随倍数缩放
         const off = lw / 2;                 // 内缩半个线宽，粗描边仍落在卡面内
