@@ -968,11 +968,12 @@
             const mw = media.videoWidth || media.naturalWidth || media.width;
             const mh = media.videoHeight || media.naturalHeight || media.height;
             if (!mw || !mh) return;
-            const s = Math.min(w / mw, h / mh) * ((config.imageScale ?? 100) / 100);
-            const dw = mw * s, dh = mh * s;
-            const dx = (w - dw) / 2, dy = (h - dh) / 2;
+            // 内框 = 卡面去掉四周等宽边 m；内框比例 == 图片比例 → 填满即不变形
+            const m = _cardPad;
+            const dx = m, dy = m, dw = w - 2 * m, dh = h - 2 * m;
+            if (dw <= 0 || dh <= 0) return;
             // 缩小留白时图片不再贴卡面边，卡面 clip 圆不到它 → 给图片自身补圆角
-            if ((config.imageScale ?? 100) < 100 && config.cardRadius > 0) {
+            if (m > 0 && config.cardRadius > 0) {
                 ctx.save();
                 ctx.beginPath();
                 rrect(ctx, dx, dy, dw, dh, config.cardRadius);
@@ -991,9 +992,12 @@
             };
         }
 
+        // 缩小图片时四周等宽留白的边宽（由 getCardBounds 计算，drawMediaFit 读取）
+        let _cardPad = 0;
+
         // 卡片在画布中的区域
         // 旋转光边+光斑模式：忽略图片，用用户比例
-        // 有素材时：跟随素材比例（contain 居中）
+        // 有素材时：跟随素材比例（contain 居中）；缩小时卡面 = 图片 + 四周等宽边
         // 无素材时：按用户设定的 W:H 比例居中
         function getCardBounds(w, h) {
             const isBlobBg = config.borderStyle === 'rotating-light' && config.rotatingBgMode;
@@ -1001,9 +1005,16 @@
                 const { w: mw, h: mh } = getMediaSize(currentMedia);
                 if (mw && mh) {
                     const s = Math.min(w / mw, h / mh);
-                    return { x: (w - mw * s) / 2, y: (h - mh * s) / 2, w: mw * s, h: mh * s };
+                    const f = (config.imageScale ?? 100) / 100;
+                    // 图片等比缩小 + 四周等宽边 m（m→0 当 f=1）。
+                    // 卡面 = 图片 + 2m，内框比例 == 图片比例 → 图片填满内框不变形、四周留白等宽。
+                    const m = (Math.min(mw, mh) * s * (1 - f)) / 2;
+                    _cardPad = m;
+                    const fw = mw * s * f + 2 * m, fh = mh * s * f + 2 * m;
+                    return { x: (w - fw) / 2, y: (h - fh) / 2, w: fw, h: fh };
                 }
             }
+            _cardPad = 0;
             const rw = Math.max(1, config.cardRatioW || 4);
             const rh = Math.max(1, config.cardRatioH || 3);
             const targetRatio = rw / rh;
