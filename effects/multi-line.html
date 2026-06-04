@@ -366,6 +366,8 @@
                             <input type="range" id="GlassVeil" min="0" max="40" step="1" value="12"></div>
                         <div class="stack"><div class="label-line"><span>描边亮度</span><span id="GlassBorderVal">50%</span></div>
                             <input type="range" id="GlassBorder" min="0" max="100" step="1" value="50"></div>
+                        <div class="stack"><div class="label-line"><span>描边粗细</span><span id="GlassBorderWidthVal">100%</span></div>
+                            <input type="range" id="GlassBorderWidth" min="50" max="800" step="10" value="100"></div>
                         <div class="stack"><div class="label-line"><span>左上高光</span><span id="GlassHighlightVal">45%</span></div>
                             <input type="range" id="GlassHighlight" min="0" max="100" step="1" value="45"></div>
                         <div class="stack"><div class="label-line"><span>扫光程度</span><span id="GlassSheenVal">45%</span></div>
@@ -617,7 +619,7 @@
             chartExtraH: 0,
             // 卡面材质（独立于纸张/赛博风格）
             cardMaterial: 'follow',
-            glassColor: 'light', glassVeil: 0.12, glassBorder: 0.5, glassHighlight: 0.45, glassSheen: 0.45, glassGrain: true,
+            glassColor: 'light', glassVeil: 0.12, glassBorder: 0.5, glassBorderWidth: 1, glassHighlight: 0.45, glassSheen: 0.45, glassGrain: true,
             // 纸张纹理（主题风格）
             noiseGrain: 35, vignette: 15,
             lineJitter: 25,
@@ -853,6 +855,7 @@
             ['GlassColor',      'glassColor'],
             ['GlassVeil',       'glassVeil',      '%',     'GlassVeilVal',      '%'],
             ['GlassBorder',     'glassBorder',    '%',     'GlassBorderVal',    '%'],
+            ['GlassBorderWidth', 'glassBorderWidth', '%',  'GlassBorderWidthVal', '%'],
             ['GlassHighlight',  'glassHighlight', '%',     'GlassHighlightVal', '%'],
             ['GlassSheen',      'glassSheen',     '%',     'GlassSheenVal',     '%'],
             ['GlassGrain',      'glassGrain',     'checked'],
@@ -1320,7 +1323,7 @@
             // === 卡面 ===
             if (config.cardMaterial === 'glass') {
                 drawGlassSurface(ctx, w, h, config.cardRadius, {
-                    color: config.glassColor, veil: config.glassVeil, border: config.glassBorder,
+                    color: config.glassColor, veil: config.glassVeil, border: config.glassBorder, borderWidth: config.glassBorderWidth,
                     highlight: config.glassHighlight, sheen: config.glassSheen, grain: config.glassGrain,
                 });
             } else {

@@ -60,6 +60,7 @@
   "GlassColor": "light",
   "GlassVeil": "12",
   "GlassBorder": "50",
+  "GlassBorderWidth": "100",
   "GlassHighlight": "45",
   "GlassSheen": "45",
   "GlassGrain": true,

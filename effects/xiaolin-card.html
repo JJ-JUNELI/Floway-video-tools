@@ -256,6 +256,8 @@
                             <input type="range" id="GlassVeil" min="0" max="40" step="1" value="12"></div>
                         <div class="stack"><div class="label-line"><span>描边亮度</span><span id="GlassBorderVal">50%</span></div>
                             <input type="range" id="GlassBorder" min="0" max="100" step="1" value="50"></div>
+                        <div class="stack"><div class="label-line"><span>描边粗细</span><span id="GlassBorderWidthVal">100%</span></div>
+                            <input type="range" id="GlassBorderWidth" min="50" max="800" step="10" value="100"></div>
                         <div class="stack"><div class="label-line"><span>左上高光</span><span id="GlassHighlightVal">45%</span></div>
                             <input type="range" id="GlassHighlight" min="0" max="100" step="1" value="45"></div>
                         <div class="stack"><div class="label-line"><span>扫光程度</span><span id="GlassSheenVal">45%</span></div>
@@ -426,7 +428,7 @@
             cardBgColor: '#1a1a2e',
             // 卡面材质（玻璃）
             cardMaterial: 'follow',
-            glassColor: 'light', glassVeil: 0.12, glassBorder: 0.5, glassHighlight: 0.45, glassSheen: 0.45, glassGrain: true,
+            glassColor: 'light', glassVeil: 0.12, glassBorder: 0.5, glassBorderWidth: 1, glassHighlight: 0.45, glassSheen: 0.45, glassGrain: true,
             cardBgAlpha: 80,
             shadowEnabled: true,
             shadowAngle: 90,
@@ -739,6 +741,7 @@
             ['GlassColor',      'glassColor'],
             ['GlassVeil',       'glassVeil',      '%',     'GlassVeilVal',      '%'],
             ['GlassBorder',     'glassBorder',    '%',     'GlassBorderVal',    '%'],
+            ['GlassBorderWidth', 'glassBorderWidth', '%',  'GlassBorderWidthVal', '%'],
             ['GlassHighlight',  'glassHighlight', '%',     'GlassHighlightVal', '%'],
             ['GlassSheen',      'glassSheen',     '%',     'GlassSheenVal',     '%'],
             ['GlassGrain',      'glassGrain',     'checked'],
@@ -970,7 +973,7 @@
                 ctx.save();
                 ctx.translate(baseBounds.x, baseBounds.y);
                 drawGlassSurface(ctx, baseBounds.w, baseBounds.h, cr, {
-                    color: config.glassColor, veil: config.glassVeil, border: config.glassBorder,
+                    color: config.glassColor, veil: config.glassVeil, border: config.glassBorder, borderWidth: config.glassBorderWidth,
                     highlight: config.glassHighlight, sheen: config.glassSheen, grain: config.glassGrain,
                 });
                 ctx.restore();

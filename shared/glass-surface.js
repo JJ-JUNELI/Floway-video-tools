@@ -47,13 +47,14 @@ function roundRectPath(c, x, y, w, h, r) {
  * @param {number} w 卡面宽（绘制坐标系，已含缩放）
  * @param {number} h 卡面高
  * @param {number} radius 圆角半径（与卡片一致）
- * @param {object} opts { color:'light'|'dark', veil 0~1, border 0~1, highlight 0~1, sheen 0~1, grain:bool }
+ * @param {object} opts { color:'light'|'dark', veil 0~1, border 0~1, borderWidth(倍数,默认1), highlight 0~1, sheen 0~1, grain:bool }
  * @param {number} timeMs 扫光相位（毫秒）；不传则用 performance.now()
  */
 export function drawGlassSurface(ctx, w, h, radius, opts = {}, timeMs) {
     const color = opts.color || 'light';
     const veil = opts.veil != null ? opts.veil : 0.12;
     const border = opts.border != null ? opts.border : 0.5;
+    const borderWidth = opts.borderWidth != null ? opts.borderWidth : 1; // 描边粗细倍数（1 = 基准 1.5px@k）
     const highlight = opts.highlight != null ? opts.highlight : 0.45;
     const sheen = opts.sheen != null ? opts.sheen : 0.45;
     const grain = opts.grain !== false;
@@ -115,8 +116,10 @@ export function drawGlassSurface(ctx, w, h, radius, opts = {}, timeMs) {
         bg.addColorStop(0.5, `rgba(255,255,255, ${0.18 * bb})`);
         bg.addColorStop(1, `rgba(255,255,255, ${0.30 * bb})`);
         ctx.strokeStyle = bg;
-        ctx.lineWidth = 1.5 * k;
-        roundRectPath(ctx, 0.75 * k, 0.75 * k, w - 1.5 * k, h - 1.5 * k, radius);
+        const lw = 1.5 * k * borderWidth;   // 粗细随倍数缩放
+        const off = lw / 2;                 // 内缩半个线宽，粗描边仍落在卡面内
+        ctx.lineWidth = lw;
+        roundRectPath(ctx, off, off, w - lw, h - lw, Math.max(0, radius - off + 0.75 * k));
         ctx.stroke();
     }
 }
