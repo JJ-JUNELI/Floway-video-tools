@@ -970,7 +970,18 @@
             if (!mw || !mh) return;
             const s = Math.min(w / mw, h / mh) * ((config.imageScale ?? 100) / 100);
             const dw = mw * s, dh = mh * s;
-            ctx.drawImage(media, (w - dw) / 2, (h - dh) / 2, dw, dh);
+            const dx = (w - dw) / 2, dy = (h - dh) / 2;
+            // 缩小留白时图片不再贴卡面边，卡面 clip 圆不到它 → 给图片自身补圆角
+            if ((config.imageScale ?? 100) < 100 && config.cardRadius > 0) {
+                ctx.save();
+                ctx.beginPath();
+                rrect(ctx, dx, dy, dw, dh, config.cardRadius);
+                ctx.clip();
+                ctx.drawImage(media, dx, dy, dw, dh);
+                ctx.restore();
+            } else {
+                ctx.drawImage(media, dx, dy, dw, dh);
+            }
         }
 
         function getMediaSize(media) {

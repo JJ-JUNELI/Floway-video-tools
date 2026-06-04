@@ -980,7 +980,18 @@
                 if (mw && mh) {
                     const s = Math.min(baseBounds.w / mw, baseBounds.h / mh) * ((config.imageScale ?? 100) / 100);
                     const dw = mw * s, dh = mh * s;
-                    ctx.drawImage(currentMedia, (baseBounds.w - dw) / 2, (baseBounds.h - dh) / 2, dw, dh);
+                    const dx = (baseBounds.w - dw) / 2, dy = (baseBounds.h - dh) / 2;
+                    // 缩小留白时图片不再贴卡面边，卡面 clip 圆不到它 → 给图片自身补圆角
+                    if ((config.imageScale ?? 100) < 100 && cr > 0) {
+                        ctx.save();
+                        ctx.beginPath();
+                        rrect(ctx, dx, dy, dw, dh, cr);
+                        ctx.clip();
+                        ctx.drawImage(currentMedia, dx, dy, dw, dh);
+                        ctx.restore();
+                    } else {
+                        ctx.drawImage(currentMedia, dx, dy, dw, dh);
+                    }
                 }
             }
             ctx.restore();
