@@ -108,18 +108,38 @@ export function drawGlassSurface(ctx, w, h, radius, opts = {}, timeMs) {
 
     ctx.restore(); // 解除裁剪
 
-    // 5) 渐变描边（左上→右下：左上角强、右下角弱，呼应左上光源；比原四角均匀更立体）
+    // 5) 描边：主描边（四条边均匀偏强、左上→右下轻微方向）+ 四角额外强调（圆角弧比直边更亮）
     if (border > 0) {
-        const bg = ctx.createLinearGradient(0, 0, w, h);
         const bb = border / 0.5;
-        bg.addColorStop(0,    `rgba(255,255,255, ${0.95 * bb})`);  // 左上角最强
-        bg.addColorStop(0.45, `rgba(255,255,255, ${0.42 * bb})`);
-        bg.addColorStop(1,    `rgba(255,255,255, ${0.16 * bb})`);  // 右下角最弱
-        ctx.strokeStyle = bg;
         const lw = 1.5 * k * borderWidth;   // 粗细随倍数缩放
         const off = lw / 2;                 // 内缩半个线宽，粗描边仍落在卡面内
+        const px = off, py = off, pw = w - lw, ph = h - lw;
+        const pr = Math.max(0, Math.min(radius - off + 0.75 * k, pw / 2, ph / 2));
         ctx.lineWidth = lw;
-        roundRectPath(ctx, off, off, w - lw, h - lw, Math.max(0, radius - off + 0.75 * k));
+
+        // 主描边：左上→右下渐变，但右下保持可见强度（四条边都不弱）
+        const bg = ctx.createLinearGradient(0, 0, w, h);
+        bg.addColorStop(0, `rgba(255,255,255, ${0.88 * bb})`);
+        bg.addColorStop(1, `rgba(255,255,255, ${0.40 * bb})`);
+        ctx.strokeStyle = bg;
+        roundRectPath(ctx, px, py, pw, ph, pr);
         ctx.stroke();
+
+        // 四角强调：在圆角弧上再描一遍，让「角」明显强于「边」；左上最强、右下最弱但仍清晰
+        if (pr > 0.5) {
+            const HALF = Math.PI / 2;
+            const arc = (cx, cy, a0, alpha) => {
+                ctx.beginPath();
+                ctx.arc(cx, cy, pr, a0, a0 + HALF);
+                ctx.strokeStyle = `rgba(255,255,255, ${alpha * bb})`;
+                ctx.stroke();
+            };
+            ctx.lineCap = 'round';
+            arc(px + pr,      py + pr,      Math.PI, 0.65);   // 左上：最强
+            arc(px + pw - pr, py + pr,      -HALF,   0.46);   // 右上
+            arc(px + pr,      py + ph - pr, HALF,    0.46);   // 左下
+            arc(px + pw - pr, py + ph - pr, 0,       0.36);   // 右下：最弱但仍清晰
+            ctx.lineCap = 'butt';
+        }
     }
 }
