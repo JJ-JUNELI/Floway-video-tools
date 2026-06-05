@@ -461,8 +461,23 @@ export class Recorder {
     }
 
     _resetBtn() {
+        this._freeBuffers();
         this.btn.innerHTML = "⬤ 录制";
         this.btn.disabled = false;
         if (this.onStateChange) this.onStateChange(false);
+    }
+
+    /**
+     * 导出收尾后主动释放大块缓冲，避免常驻内存：
+     * - this.zip：JSZip 攒着 PNG 序列所有帧，导出后若不置空会一直赖到下次录制（长序列=几个 GB）。
+     * - this._movMux：透明视频封装器（含帧 Blob 引用）。最终 MOV Blob 已独立，置空让帧 Blob 随下载完成+GC 回收。
+     * - this._encScratch：抓帧暂存画布（2x 下 ~24MB 像素缓冲），width/height=0 释放底层缓冲。
+     * 注：下载中的 Blob 由浏览器自身持有直到写盘完成，JS 这边丢引用即可，不会中断下载。
+     */
+    _freeBuffers() {
+        this.zip = null;
+        this._movMux = null;
+        this.chunks = [];
+        if (this._encScratch) { this._encScratch.width = 0; this._encScratch.height = 0; this._encScratch = null; }
     }
 }
