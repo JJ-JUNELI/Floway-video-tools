@@ -13,3 +13,7 @@ playwright/.cache/
 demo/*.mov
 demo/vendor/
 shared/vendor/
+
+# 本地试验 / 临时脚本
+sandbox/
+_uipos.js
