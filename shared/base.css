@@ -1269,7 +1269,10 @@ body.logo canvas {
 .group-title:hover .group-reset { opacity: 1; }
 .group-reset:hover { background: rgba(255,255,255,0.12); }
 .group-reset:active { background: rgba(255,255,255,0.20); }
-/* 不做任何旋转/位移动画——只用背景做反馈 */
+/* 只转里面的图标，方框(边框/背景)不动；仅点击「还原」时转一圈 */
+.group-reset-ic { display: inline-block; line-height: 1; }
+@keyframes group-reset-spin { from { transform: rotate(0); } to { transform: rotate(-360deg); } }
+.group-reset-ic.spinning { animation: group-reset-spin 0.45s ease; }
 
 /* ========================================
    Advanced Params — 每个板块内的高级参数折叠

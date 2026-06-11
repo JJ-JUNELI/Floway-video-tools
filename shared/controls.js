@@ -592,7 +592,9 @@ export function initCollapsibleGroups(root = document) {
                 resetBtn.type = 'button';
                 resetBtn.className = 'group-reset';
                 resetBtn.title = '还原本组参数';
-                resetBtn.textContent = '↺';
+                // 图标单独包一层，只转图标、方框不动
+                resetBtn.innerHTML = '<span class="group-reset-ic">↺</span>';
+                const resetIc = resetBtn.firstChild;
                 title.appendChild(resetBtn);
                 // 初始化完成后（下一帧，等 applyConfigToUI 等都跑完）快照各控件默认值
                 let snap = null;
@@ -603,6 +605,11 @@ export function initCollapsibleGroups(root = document) {
                 requestAnimationFrame(() => { snap = takeSnap(); });
                 resetBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
+                    // 只让里面的图标转一圈（方框不动）；动画结束移除，连点可重播
+                    resetIc.classList.remove('spinning');
+                    void resetIc.offsetWidth;
+                    resetIc.classList.add('spinning');
+                    resetIc.addEventListener('animationend', () => resetIc.classList.remove('spinning'), { once: true });
                     if (!snap) snap = takeSnap();
                     snap.forEach(s => {
                         const el = s.el;
