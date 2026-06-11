@@ -345,10 +345,6 @@
                 <div id="RotatingLightOpts" class="border-opts" style="display:none">
                     <div class="sub-section ss-amber">
                         <div class="sub-section-label">描边</div>
-                        <div class="row" style="justify-content:space-between;align-items:center">
-                            <span style="font-size:12px;color:var(--text-sub)">启用光斑</span>
-                            <input type="checkbox" id="RotatingBgMode" checked>
-                        </div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>旋转速度</span><span id="RotatingSpeedVal">30</span></div><input type="range" id="RotatingSpeed" min="0" max="100" value="30"></div></div>
                         <div class="row stack">
                             <div class="label-line"><span>亮边颜色</span></div>
@@ -358,20 +354,6 @@
                             <input type="color" id="RotatingDimColor" value="#1e1e3a"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="RotatingBorderWidthVal">3</span></div><input type="range" id="RotatingBorderWidth" min="0" max="20" value="3"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>亮段数量</span><span id="RotatingSegmentsVal">1</span></div><input type="range" id="RotatingSegments" min="1" max="8" value="1"></div></div>
-                    </div>
-                    <div class="sub-section ss-blue">
-                        <div class="sub-section-label">光斑</div>
-                        <div class="row stack">
-                            <div class="label-line"><span>光斑1色</span></div>
-                            <input type="color" id="RotatingBlob1" value="#3b82f6"></div>
-                        <div class="row stack">
-                            <div class="label-line"><span>光斑2色</span></div>
-                            <input type="color" id="RotatingBlob2" value="#8b5cf6"></div>
-                        <div class="row stack">
-                            <div class="label-line"><span>光斑3色</span></div>
-                            <input type="color" id="RotatingBlob3" value="#ec4899"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>光斑大小</span><span id="RotatingBlobSizeVal">300</span></div><input type="range" id="RotatingBlobSize" min="50" max="1200" value="300"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>光斑速度</span><span id="RotatingBlobSpeedVal">30</span></div><input type="range" id="RotatingBlobSpeed" min="0" max="100" value="30"></div></div>
                     </div>
                 </div>
 
@@ -429,7 +411,7 @@
         import { initEffect } from '../shared/controls.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=corner-fix';
-        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingBlobs, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=chrome-grey';
+        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=chrome-grey';
 
 
         // ====== Canvas 初始化 ======
@@ -511,9 +493,6 @@
             // ④ 旋转光边
             rotatingSpeed: 30, rotatingLightColor: '#60a5fa', rotatingDimColor: '#1e1e3a',
             rotatingBorderWidth: 3, rotatingSegments: 1,
-            rotatingBgMode: true,
-            rotatingBlob1: '#3b82f6', rotatingBlob2: '#8b5cf6', rotatingBlob3: '#ec4899',
-            rotatingBlobSize: 300, rotatingBlobSpeed: 30,
         };
 
         // ====== 素材管理 ======
@@ -537,10 +516,9 @@
             row.style.pointerEvents = locked ? 'none' : '';
         }
 
-        // 有图片 + 非光斑模式 → 锁定；其他情况 → 解锁
+        // 有图片 → 锁定比例；无图片 → 解锁
         function syncRatioLock() {
-            const isBlobBg = config.borderStyle === 'rotating-light' && config.rotatingBgMode;
-            setRatioLocked(!!currentMedia && !isBlobBg);
+            setRatioLocked(!!currentMedia);
         }
 
         function loadFile(file) {
@@ -905,12 +883,6 @@
             ['RotatingDimColor', 'rotatingDimColor'],
             ['RotatingBorderWidth', 'rotatingBorderWidth', 'int', 'RotatingBorderWidthVal'],
             ['RotatingSegments', 'rotatingSegments', 'int', 'RotatingSegmentsVal'],
-            ['RotatingBgMode', 'rotatingBgMode', 'checked'],
-            ['RotatingBlob1', 'rotatingBlob1'],
-            ['RotatingBlob2', 'rotatingBlob2'],
-            ['RotatingBlob3', 'rotatingBlob3'],
-            ['RotatingBlobSize', 'rotatingBlobSize', 'int', 'RotatingBlobSizeVal'],
-            ['RotatingBlobSpeed', 'rotatingBlobSpeed', 'int', 'RotatingBlobSpeedVal'],
         ], {
             syncFromConfig: true,
             onChange: (_, key) => {
@@ -926,9 +898,6 @@
                 }
                 if (key === 'followVideoDuration') {
                     syncMediaDuration();
-                }
-                if (key === 'rotatingBgMode') {
-                    syncRatioLock();
                 }
                 startLoop();
             }
@@ -1066,12 +1035,10 @@
         }
 
         // 卡片在画布中的区域
-        // 旋转光边+光斑模式：忽略图片，用用户比例
         // 有素材时：跟随素材比例（contain 居中）；缩小时卡面 = 图片 + 四周等宽边
         // 无素材时：按用户设定的 W:H 比例居中
         function getCardBounds(w, h) {
-            const isBlobBg = config.borderStyle === 'rotating-light' && config.rotatingBgMode;
-            if (currentMedia && !isBlobBg) {
+            if (currentMedia) {
                 const { w: mw, h: mh } = getMediaSize(currentMedia);
                 if (mw && mh) {
                     const s = Math.min(w / mw, h / mh);
@@ -1298,7 +1265,6 @@
                     effectPadding = drawBrowserChrome(ctx, baseBounds, config, drawChromeContent);
                 } else if (style === 'rotating-light') {
                     const cr = config.cardRadius;
-                    const blobMode = config.rotatingBgMode;
                     ctx.save();
                     ctx.beginPath();
                     rrect(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h, cr);
@@ -1308,12 +1274,8 @@
                     ctx.fillStyle = config.cardBgColor;
                     ctx.fillRect(baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h);
                     ctx.globalAlpha = 1;
-                    // 层 1：光斑（仅在光斑模式下绘制）
-                    if (blobMode) {
-                        drawRotatingBlobs(ctx, baseBounds, config, timeSec);
-                    }
-                    // 层 2：内容（图片，光斑模式下不画）
-                    if (currentMedia && !blobMode) {
+                    // 层 1：内容（图片）
+                    if (currentMedia) {
                         ctx.translate(baseBounds.x, baseBounds.y);
                         drawMediaFit(ctx, currentMedia, baseBounds.w, baseBounds.h);
                     }
