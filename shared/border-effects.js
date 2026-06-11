@@ -305,220 +305,164 @@ function lightenHexRGBA(hex, f, a) {
     return `rgba(${mix(r)},${mix(g)},${mix(b)},${a})`;
 }
 
-// 在 (cx,cy) 为中心、约 s 大小的方框内画一枚线性图标：保存/复制/刷新
-function drawChromeIcon(ctx, type, cx, cy, s, color, lw) {
+// 在 (cx,cy) 为中心、约 s 大小内画白色图标（深色圆按钮上）：保存/复制/刷新
+// darkColor 用于在白色块上挖暗色细节（软盘滑盖/标签、复制前后块的分隔）
+function drawChromeIcon(ctx, type, cx, cy, s, color, lw, darkColor) {
     ctx.save();
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
     ctx.lineWidth = lw;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    const h = s / 2;
     if (type === 'save') {
-        // 下载/保存：竖线 + 向下箭头 + 底座
+        // 软盘：白色主体(右上折角) + 暗色顶部滑盖 + 暗色底部标签
+        const a = s * 0.82, x0 = cx - a / 2, y0 = cy - a / 2, fold = a * 0.26, rr = a * 0.1;
         ctx.beginPath();
-        ctx.moveTo(cx, cy - h * 0.85); ctx.lineTo(cx, cy + h * 0.2);
-        ctx.moveTo(cx - h * 0.42, cy - h * 0.18); ctx.lineTo(cx, cy + h * 0.28); ctx.lineTo(cx + h * 0.42, cy - h * 0.18);
-        ctx.moveTo(cx - h * 0.7, cy + h * 0.7); ctx.lineTo(cx + h * 0.7, cy + h * 0.7);
-        ctx.stroke();
+        ctx.moveTo(x0 + rr, y0);
+        ctx.lineTo(x0 + a - fold, y0);
+        ctx.lineTo(x0 + a, y0 + fold);
+        ctx.lineTo(x0 + a, y0 + a - rr);
+        ctx.arcTo(x0 + a, y0 + a, x0 + a - rr, y0 + a, rr);
+        ctx.lineTo(x0 + rr, y0 + a);
+        ctx.arcTo(x0, y0 + a, x0, y0 + a - rr, rr);
+        ctx.lineTo(x0, y0 + rr);
+        ctx.arcTo(x0, y0, x0 + rr, y0, rr);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = darkColor || '#1c1c1f';
+        ctx.fillRect(x0 + a * 0.5, y0 + a * 0.1, a * 0.18, a * 0.24);          // 顶部滑盖
+        ctx.fillRect(x0 + a * 0.22, y0 + a * 0.5, a * 0.56, a * 0.32);          // 底部标签
     } else if (type === 'copy') {
-        // 复制：两个叠放的圆角方块
-        const a = s * 0.46;
-        ctx.beginPath(); rrect(ctx, cx - a * 0.6, cy - a * 0.72, a, a, a * 0.2); ctx.stroke();
-        ctx.beginPath(); rrect(ctx, cx - a * 0.1, cy - a * 0.22, a, a, a * 0.2); ctx.stroke();
+        // 复制：后方块(白描边) + 前方块(白填充，暗色描边分隔)
+        const a = s * 0.52, off = a * 0.26, rr = a * 0.18;
+        ctx.lineWidth = lw;
+        ctx.beginPath(); rrect(ctx, cx - a / 2 + off, cy - a / 2 - off, a, a, rr); ctx.stroke();   // 后块
+        ctx.fillStyle = color;
+        ctx.beginPath(); rrect(ctx, cx - a / 2 - off, cy - a / 2 + off, a, a, rr); ctx.fill();      // 前块(填充)
+        ctx.strokeStyle = darkColor || '#1c1c1f'; ctx.lineWidth = lw * 1.6;
+        ctx.beginPath(); rrect(ctx, cx - a / 2 - off, cy - a / 2 + off, a, a, rr); ctx.stroke();    // 前块暗描边(与后块分隔)
     } else if (type === 'refresh') {
-        // 刷新：开口圆弧 + 箭头
-        const r = h * 0.72;
-        ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI * 0.45, Math.PI * 1.95); ctx.stroke();
-        const ax = cx + r * Math.cos(Math.PI * 0.45), ay = cy + r * Math.sin(Math.PI * 0.45);
-        ctx.beginPath();
-        ctx.moveTo(ax - h * 0.34, ay + h * 0.02);
-        ctx.lineTo(ax + h * 0.02, ay + h * 0.06);
-        ctx.lineTo(ax - h * 0.06, ay - h * 0.32);
-        ctx.stroke();
+        // 刷新：上下两段弧 + 末端切向箭头（经典 ⟳ 双箭头）
+        const r = s * 0.32;
+        ctx.lineWidth = lw;
+        const ah = lw * 2.2;
+        // 末端 θ 处沿切线(增角方向)画箭头
+        const arrow = (θ) => {
+            const px = cx + r * Math.cos(θ), py = cy + r * Math.sin(θ);
+            const tx = -Math.sin(θ), ty = Math.cos(θ);   // 切向(增角)
+            const nx = Math.cos(θ), ny = Math.sin(θ);    // 径向(向外)
+            const tipx = px + tx * ah * 0.5, tipy = py + ty * ah * 0.5;
+            ctx.beginPath();
+            ctx.moveTo(tipx - tx * ah + nx * ah * 0.75, tipy - ty * ah + ny * ah * 0.75);
+            ctx.lineTo(tipx, tipy);
+            ctx.lineTo(tipx - tx * ah - nx * ah * 0.75, tipy - ty * ah - ny * ah * 0.75);
+            ctx.stroke();
+        };
+        // 上弧（左→右上），末端在右上
+        ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI * 1.05, Math.PI * 1.85); ctx.stroke();
+        arrow(Math.PI * 1.85);
+        // 下弧（右→左下），末端在左下
+        ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI * 0.05, Math.PI * 0.85); ctx.stroke();
+        arrow(Math.PI * 0.85);
     }
     ctx.restore();
 }
 
 export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
     const cr = cfg.cardRadius || cfg.chromeCornerRadius || 0;
-    const bw = cfg.chromeBorderWidth || 0;
-    const bc = cfg.chromeBorderColor || '#ffffff';
+    const fw = cfg.chromeBorderWidth != null ? cfg.chromeBorderWidth : 12;   // 外框(贝塞)宽度
+    const frameColor = cfg.chromeBorderColor || '#cfcfcf';                    // 外框灰
     const gw = cfg.chromeGlowWidth || 0;
     const gc = cfg.chromeGlowColor || '#3b82f6';
     const gi = cfg.chromeGlowIntensity || 0;
-    const barColor = cfg.chromeBarColor || '#1e1e2e';
-    const urlText = cfg.chromeUrlText || 'floway.tools';
-    const sepA = cfg.chromeSepAlpha || 0;
-    const urlA = cfg.chromeUrlAlpha || 0;
-    const textA = cfg.chromeTextAlpha || 0;
-    const innerW = cfg.chromeInnerWidth || 0;
-    const innerC = cfg.chromeInnerColor || '#333344';
+    const barColor = cfg.chromeBarColor || '#8c8c8e';                         // 标题栏灰
 
-    // 顶部 = 控制条(状态点+按钮) + 标题条；总高 tH 向上扩展，不占内容区
-    const tBar = Math.round(card.w * 0.05);
-    const tTitle = Math.round(card.w * 0.052);
-    const tH = tBar + tTitle;
-    const pad = Math.round(tBar * 0.5);
-
-    // 整个浏览器窗口区域：card 内容区上方额外扩展 tH
+    // 单条标题栏；总高 tH 向上扩展，不占内容区
+    const tH = Math.round(card.w * 0.078);
     const winX = card.x, winY = card.y - tH, winW = card.w, winH = card.h + tH;
     const winR = cr;
 
-    // 辉光
+    // 辉光（可选，默认 0）
     if (gw > 0) {
         if (!_glowTmp) _glowTmp = document.createElement('canvas');
         const cw = ctx.canvas.width, ch_ = ctx.canvas.height;
-        if (_glowTmp.width !== cw || _glowTmp.height !== ch_) {
-            _glowTmp.width = cw; _glowTmp.height = ch_;
-        }
+        if (_glowTmp.width !== cw || _glowTmp.height !== ch_) { _glowTmp.width = cw; _glowTmp.height = ch_; }
         const tc = _glowTmp.getContext('2d');
-        tc.globalCompositeOperation = 'source-over';
-        tc.globalAlpha = 1;
-        tc.shadowBlur = 0;
-        tc.shadowColor = 'rgba(0,0,0,0)';
-        tc.filter = 'none';
-        tc.setTransform(1, 0, 0, 1, 0, 0);
-        tc.clearRect(0, 0, cw, ch_);
-
+        tc.globalCompositeOperation = 'source-over'; tc.globalAlpha = 1; tc.filter = 'none';
+        tc.setTransform(1, 0, 0, 1, 0, 0); tc.clearRect(0, 0, cw, ch_);
         const t = ctx.getTransform();
         tc.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
-        const rawP = gi * 6;
-        const fullP = Math.floor(rawP);
-        const fracP = rawP - fullP;
+        const rawP = gi * 6, fullP = Math.floor(rawP), fracP = rawP - fullP;
         tc.filter = `blur(${gw * t.a}px)`;
         tc.strokeStyle = hexToRGBA(gc, 0.7);
-        tc.lineWidth = gw * t.a * 0.5;
-        tc.lineJoin = 'round';
-        tc.beginPath();
-        rrect(tc, winX - bw, winY - bw, winW + bw * 2, winH + bw * 2, winR + bw);
+        tc.lineWidth = gw * t.a * 0.5; tc.lineJoin = 'round';
+        tc.beginPath(); rrect(tc, winX - fw, winY - fw, winW + fw * 2, winH + fw * 2, winR + fw);
         for (let p = 0; p < fullP; p++) tc.stroke();
         if (fracP > 0.01) { tc.globalAlpha = fracP; tc.stroke(); tc.globalAlpha = 1; }
         tc.filter = 'none';
-
         tc.setTransform(1, 0, 0, 1, 0, 0);
-        tc.globalCompositeOperation = 'destination-out';
-        tc.fillStyle = '#000000';
-        const px = (winX - bw) * t.a + t.e;
-        const py = (winY - bw) * t.d + t.f;
-        const pw = (winW + bw * 2) * t.a;
-        const ph = (winH + bw * 2) * t.d;
-        const pr = (winR + bw) * t.a;
-        tc.beginPath();
-        rrect(tc, px, py, pw, ph, pr);
-        tc.fill();
-
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.drawImage(_glowTmp, 0, 0);
-        ctx.restore();
+        tc.globalCompositeOperation = 'destination-out'; tc.fillStyle = '#000';
+        tc.beginPath(); rrect(tc, (winX - fw) * t.a + t.e, (winY - fw) * t.d + t.f, (winW + fw * 2) * t.a, (winH + fw * 2) * t.d, (winR + fw) * t.a); tc.fill();
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(_glowTmp, 0, 0); ctx.restore();
     }
 
-    // 描边
-    if (bw > 0) {
-        ctx.strokeStyle = bc;
-        ctx.lineWidth = bw * 2;
-        ctx.lineJoin = 'miter';
-        ctx.beginPath();
-        rrect(ctx, winX - bw, winY - bw, winW + bw * 2, winH + bw * 2, winR + bw);
-        ctx.stroke();
+    // ── 外框：灰色光泽贝塞（填充圆角矩形 + 立体高光/暗边）──
+    if (fw > 0) {
+        const fg = ctx.createLinearGradient(0, winY - fw, 0, winY + winH + fw);
+        fg.addColorStop(0, lightenHexRGBA(frameColor, 0.5, 1));
+        fg.addColorStop(0.5, hexToRGBA(frameColor, 1));
+        fg.addColorStop(1, darkenHexRGBA(frameColor, 0.72, 1));
+        ctx.fillStyle = fg;
+        ctx.beginPath(); rrect(ctx, winX - fw, winY - fw, winW + fw * 2, winH + fw * 2, winR + fw); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 1;
+        ctx.beginPath(); rrect(ctx, winX - fw + 0.5, winY - fw + 0.5, winW + fw * 2 - 1, winH + fw * 2 - 1, winR + fw); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); rrect(ctx, winX - fw + 2, winY - fw + 2, winW + fw * 2 - 4, winH + fw * 2 - 4, winR + fw - 2); ctx.stroke();
     }
 
-    // 裁剪到整个窗口
+    // 裁剪到窗口
     ctx.save();
     ctx.beginPath(); rrect(ctx, winX, winY, winW, winH, winR); ctx.clip();
 
-    // ── 玻璃双栏：控制条(深一点) + 标题条(浅一点)，barColor 作色调 ──
-    const tint = barColor;
-    const titleTopY = winY + tBar;
+    // 标题栏（灰，竖向渐变）
+    const bg = ctx.createLinearGradient(0, winY, 0, winY + tH);
+    bg.addColorStop(0, lightenHexRGBA(barColor, 0.16, 1));
+    bg.addColorStop(1, darkenHexRGBA(barColor, 0.9, 1));
+    ctx.fillStyle = bg;
+    ctx.fillRect(winX, winY, winW, tH);
+    // 标题栏底分隔（暗线）
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.fillRect(winX, winY + tH - 1.5, winW, 1.5);
 
-    // 控制条玻璃（近不透明，竖向渐变 + 顶部偏亮）——做成玻璃质感且不透背景
-    const g1 = ctx.createLinearGradient(0, winY, 0, winY + tBar);
-    g1.addColorStop(0, lightenHexRGBA(tint, 0.18, 0.96));
-    g1.addColorStop(1, hexToRGBA(tint, 0.92));
-    ctx.fillStyle = g1;
-    ctx.fillRect(winX, winY, winW, tBar);
+    // 内容区（白底由 card 背景/上传素材提供）
+    if (drawContentFn) drawContentFn(ctx, card.x, card.y, card.w, card.h);
 
-    // 标题条玻璃（向白混合的浅色，近不透明）
-    const g2 = ctx.createLinearGradient(0, titleTopY, 0, titleTopY + tTitle);
-    g2.addColorStop(0, lightenHexRGBA(tint, 0.80, 0.95));
-    g2.addColorStop(1, lightenHexRGBA(tint, 0.70, 0.92));
-    ctx.fillStyle = g2;
-    ctx.fillRect(winX, titleTopY, winW, tTitle);
+    const padX = Math.round(tH * 0.4);
 
-    // 顶部高光细线（玻璃感）
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
-    ctx.fillRect(winX, winY, winW, Math.max(1, Math.round(tBar * 0.045)));
-
-    // 控制条/标题条分隔线
-    ctx.strokeStyle = hexToRGBA(tint, 0.45);
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(winX, titleTopY + 0.5); ctx.lineTo(winX + winW, titleTopY + 0.5); ctx.stroke();
-    // 标题条/内容分隔线（可调透明）
-    if (sepA > 0.01) {
-        ctx.strokeStyle = `rgba(255,255,255,${sepA})`;
-        ctx.lineWidth = 0.5;
-        ctx.beginPath(); ctx.moveTo(winX, winY + tH); ctx.lineTo(winX + winW, winY + tH); ctx.stroke();
-    }
-
-    // ── 左上 绿色状态点（带柔光+高光） ──
-    const dotR = Math.max(4, tBar * 0.16);
-    const dcx = winX + pad + dotR, dcy = winY + tBar / 2;
-    const dg = ctx.createRadialGradient(dcx, dcy, 0, dcx, dcy, dotR * 2.4);
-    dg.addColorStop(0, 'rgba(54,217,122,0.55)');
-    dg.addColorStop(1, 'rgba(54,217,122,0)');
-    ctx.fillStyle = dg;
-    ctx.beginPath(); ctx.arc(dcx, dcy, dotR * 2.4, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#36d97a';
+    // ── 左上 绿色状态点 ──
+    const dotR = tH * 0.23;
+    const dcx = winX + padX + dotR, dcy = winY + tH / 2;
+    ctx.fillStyle = '#21cf67';
     ctx.beginPath(); ctx.arc(dcx, dcy, dotR, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.65)';
-    ctx.beginPath(); ctx.arc(dcx - dotR * 0.3, dcy - dotR * 0.34, dotR * 0.32, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.beginPath(); ctx.arc(dcx - dotR * 0.3, dcy - dotR * 0.32, dotR * 0.3, 0, Math.PI * 2); ctx.fill();
 
-    // ── 右上 3 个玻璃按钮：保存 / 复制 / 刷新 ──
+    // ── 右上 3 个深色圆按钮：保存 / 复制 / 刷新 ──
     const types = ['save', 'copy', 'refresh'];
-    const bSize = Math.round(tBar * 0.62);
-    const bGap = Math.round(bSize * 0.34);
-    const byy = winY + (tBar - bSize) / 2;
-    const totalW = types.length * bSize + (types.length - 1) * bGap;
-    const startX = winX + winW - pad - totalW;
+    const rB = tH * 0.3;
+    const gap = rB * 0.45;
+    const n = types.length;
+    const firstCx = winX + winW - padX - (n * 2 * rB + (n - 1) * gap) + rB;
+    const cyB = winY + tH / 2;
     types.forEach((ic, i) => {
-        const bxx = startX + i * (bSize + bGap);
-        ctx.fillStyle = 'rgba(255,255,255,0.22)';
-        ctx.beginPath(); rrect(ctx, bxx, byy, bSize, bSize, bSize * 0.28); ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-        ctx.lineWidth = Math.max(0.6, bSize * 0.045);
-        ctx.beginPath(); rrect(ctx, bxx, byy, bSize, bSize, bSize * 0.28); ctx.stroke();
-        drawChromeIcon(ctx, ic, bxx + bSize / 2, byy + bSize / 2, bSize * 0.52, 'rgba(255,255,255,0.92)', Math.max(1, bSize * 0.07));
+        const cxB = firstCx + i * (rB * 2 + gap);
+        ctx.fillStyle = '#1c1c1f';
+        ctx.beginPath(); ctx.arc(cxB, cyB, rB, 0, Math.PI * 2); ctx.fill();
+        drawChromeIcon(ctx, ic, cxB, cyB, rB * 1.2, '#ffffff', Math.max(1.6, rB * 0.13), '#1c1c1f');
     });
 
-    // ── 标题文字（标题条，左对齐，深色调可读） ──
-    if (textA > 0.01 && urlText) {
-        ctx.fillStyle = darkenHexRGBA(tint, 0.42, Math.min(1, textA + 0.55));
-        const fontSize = Math.round(tTitle * 0.46);
-        ctx.font = `700 ${fontSize}px system-ui, "PingFang SC", "Microsoft YaHei", sans-serif`;
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(urlText, winX + pad, titleTopY + tTitle / 2);
-        ctx.textAlign = 'start';
-        ctx.textBaseline = 'alphabetic';
-    }
-
-    // 内容区：背景 + 内容 + 内描边
-    if (drawContentFn) {
-        drawContentFn(ctx, card.x, card.y, card.w, card.h);
-    }
-    if (innerW > 0.5) {
-        ctx.strokeStyle = innerC;
-        ctx.lineWidth = innerW;
-        ctx.beginPath();
-        rrectBottom(ctx, card.x + innerW / 2, card.y + innerW / 2,
-              card.w - innerW, card.h - innerW, Math.max(0, winR - innerW / 2));
-        ctx.stroke();
-    }
-
     ctx.restore();
-
-    return bw + gw + tH;
+    return fw + gw + tH;
 }
 
 // ── ④ 旋转光边 ──

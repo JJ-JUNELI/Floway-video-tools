@@ -322,33 +322,22 @@
                 <!-- ③ 浏览器窗口 -->
                 <div id="BrowserChromeOpts" class="border-opts" style="display:none">
                     <div class="sub-section ss-amber">
-                        <div class="sub-section-label">描边 + 辉光</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="ChromeBorderWidthVal">2</span></div><input type="range" id="ChromeBorderWidth" min="0" max="20" value="2"></div></div>
+                        <div class="sub-section-label">外框</div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>外框宽度</span><span id="ChromeBorderWidthVal">12</span></div><input type="range" id="ChromeBorderWidth" min="0" max="40" value="12"></div></div>
                         <div class="row stack">
-                            <div class="label-line"><span>描边颜色</span></div>
-                            <input type="color" id="ChromeBorderColor" value="#ffffff"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="ChromeGlowWidthVal">15</span></div><input type="range" id="ChromeGlowWidth" min="0" max="60" value="15"></div></div>
+                            <div class="label-line"><span>外框颜色</span></div>
+                            <input type="color" id="ChromeBorderColor" value="#cfcfcf"></div>
+                        <div class="row stack">
+                            <div class="label-line"><span>标题栏色</span></div>
+                            <input type="color" id="ChromeBarColor" value="#8c8c8e"></div>
+                    </div>
+                    <div class="sub-section ss-blue">
+                        <div class="sub-section-label">辉光（可选）</div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="ChromeGlowWidthVal">0</span></div><input type="range" id="ChromeGlowWidth" min="0" max="60" value="0"></div></div>
                         <div class="row stack">
                             <div class="label-line"><span>辉光颜色</span></div>
                             <input type="color" id="ChromeGlowColor" value="#3cc9b0"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="ChromeGlowIntensityVal">50%</span></div><input type="range" id="ChromeGlowIntensity" min="0" max="100" value="50"></div></div>
-                    </div>
-                    <div class="sub-section ss-blue">
-                        <div class="sub-section-label">浏览器 UI</div>
-                        <div class="row stack">
-                            <div class="label-line"><span>玻璃色调</span></div>
-                            <input type="color" id="ChromeBarColor" value="#3cc9b0"></div>
-                        <div class="row stack"><div class="label-line"><span>标题文字</span></div>
-                            <input type="text" id="ChromeUrlText" value="天涯论坛" style="background:var(--panel-bg);border:1px solid var(--border);border-radius:4px;color:var(--text-main);padding:3px 8px;font-size:11px"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>底部分割线</span><span id="ChromeSepAlphaVal">0%</span></div><input type="range" id="ChromeSepAlpha" min="0" max="100" value="0"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>标题文字透明</span><span id="ChromeTextAlphaVal">60%</span></div><input type="range" id="ChromeTextAlpha" min="0" max="100" value="60"></div></div>
-                    </div>
-                    <div class="sub-section ss-green">
-                        <div class="sub-section-label">内边框</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>内边框宽</span><span id="ChromeInnerWidthVal">4</span></div><input type="range" id="ChromeInnerWidth" min="0" max="20" value="4"></div></div>
-                        <div class="row stack">
-                            <div class="label-line"><span>内边框色</span></div>
-                            <input type="color" id="ChromeInnerColor" value="#333344"></div>
                     </div>
                 </div>
 
@@ -440,7 +429,7 @@
         import { initEffect } from '../shared/controls.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=corner-fix';
-        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingBlobs, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=chrome-redesign';
+        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingBlobs, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=chrome-grey';
 
 
         // ====== Canvas 初始化 ======
@@ -516,11 +505,9 @@
             // ② 边缘羽化
             featherBlur: 20, featherIntensity: 0.7,
             // ③ 浏览器窗口
-            chromeBorderWidth: 2, chromeBorderColor: '#ffffff',
-            chromeGlowWidth: 15, chromeGlowColor: '#3cc9b0', chromeGlowIntensity: 0.4,
-            chromeBarColor: '#3cc9b0', chromeUrlText: '天涯论坛',
-            chromeSepAlpha: 0, chromeUrlAlpha: 0, chromeTextAlpha: 0.6,
-            chromeInnerWidth: 0, chromeInnerColor: '#333344',
+            chromeBorderWidth: 12, chromeBorderColor: '#cfcfcf',
+            chromeGlowWidth: 0, chromeGlowColor: '#3cc9b0', chromeGlowIntensity: 0.5,
+            chromeBarColor: '#8c8c8e',
             // ④ 旋转光边
             rotatingSpeed: 30, rotatingLightColor: '#60a5fa', rotatingDimColor: '#1e1e3a',
             rotatingBorderWidth: 3, rotatingSegments: 1,
@@ -912,11 +899,6 @@
             ['ChromeGlowColor', 'chromeGlowColor'],
             ['ChromeGlowIntensity', 'chromeGlowIntensity', '%', 'ChromeGlowIntensityVal', '%'],
             ['ChromeBarColor', 'chromeBarColor'],
-            ['ChromeUrlText', 'chromeUrlText'],
-            ['ChromeSepAlpha', 'chromeSepAlpha', '%', 'ChromeSepAlphaVal', '%'],
-            ['ChromeTextAlpha', 'chromeTextAlpha', '%', 'ChromeTextAlphaVal', '%'],
-            ['ChromeInnerWidth', 'chromeInnerWidth', 'int', 'ChromeInnerWidthVal'],
-            ['ChromeInnerColor', 'chromeInnerColor'],
             // ④ 旋转光边
             ['RotatingSpeed', 'rotatingSpeed', 'int', 'RotatingSpeedVal'],
             ['RotatingLightColor', 'rotatingLightColor'],
