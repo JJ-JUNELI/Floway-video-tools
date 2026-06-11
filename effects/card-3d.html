@@ -1016,6 +1016,19 @@
         // 缩小图片时四周等宽留白的边宽（由 getCardBounds 计算，drawMediaFit 读取）
         let _cardPad = 0;
 
+        // 录制时为逐帧 seek 暂停了视频 → 录制结束后在预览里恢复播放
+        let _pausedForRecord = false;
+        // seek 到 t 并等 'seeked' 落定（含 200ms 超时兜底，防 seeked 不触发时卡死）
+        function seekVideo(vid, t) {
+            return new Promise(resolve => {
+                let done = false;
+                const finish = () => { if (done) return; done = true; clearTimeout(timer); vid.removeEventListener('seeked', finish); resolve(); };
+                vid.addEventListener('seeked', finish);
+                const timer = setTimeout(finish, 200);
+                try { vid.currentTime = t; } catch (e) { finish(); }
+            });
+        }
+
         // 卡片在画布中的区域
         // 旋转光边+光斑模式：忽略图片，用用户比例
         // 有素材时：跟随素材比例（contain 居中）；缩小时卡面 = 图片 + 四周等宽边
@@ -1117,7 +1130,7 @@
         }
 
         // ====== 主渲染函数 ======
-        function drawFrame(timeMs) {
+        async function drawFrame(timeMs) {
             const w = baseWidth, h = baseHeight;
             const isHold = !isFinite(timeMs);
             const timeSec = (isHold ? performance.now() : timeMs) * 0.001;
@@ -1135,10 +1148,13 @@
                 entranceProgress = getEasing(config.entranceEasing)(entranceRaw);
             }
 
-            // 视频帧同步（录制时）
+            // 视频帧同步（录制时）：必须 await 'seeked' 再绘制——seek 进行中 readyState 会掉到 1
+            // (HAVE_METADATA)，此时 drawImage 拿到的是旧帧、且 drawCardContent 的 readyState≥2 门控
+            // 会整帧跳过视频 → 录制时卡片变空白。暂停后逐帧 seek 触发更稳。
             if (currentMediaType === 'video' && recorder.isRecording && currentMedia) {
+                if (!currentMedia.paused) { currentMedia.pause(); _pausedForRecord = true; }
                 const t = (timeMs / 1000) % currentMedia.duration;
-                if (isFinite(t)) currentMedia.currentTime = t;
+                if (isFinite(t)) await seekVideo(currentMedia, t);
             }
 
             // 清除画布（Canvas 2D 模式下扩大 canvas 给效果留空间）
@@ -1334,6 +1350,12 @@
             if (recorder.isRecording) {
                 _loopId = requestAnimationFrame(mainLoop);
                 return;
+            }
+
+            // 录制结束：恢复录制时为逐帧 seek 暂停的视频
+            if (_pausedForRecord && currentMediaType === 'video' && currentMedia) {
+                _pausedForRecord = false;
+                currentMedia.play().catch(() => {});
             }
 
             let time = now - _animStartTime;

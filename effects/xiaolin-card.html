@@ -961,7 +961,20 @@
         }
 
         // ====== 主渲染函数 ======
-        function drawFrame(timeMs) {
+        // 录制时为逐帧 seek 暂停了视频 → 录制结束后在预览里恢复播放
+        let _pausedForRecord = false;
+        // seek 到 t 并等 'seeked' 落定（含 200ms 超时兜底，防 seeked 不触发时卡死）
+        function seekVideo(vid, t) {
+            return new Promise(resolve => {
+                let done = false;
+                const finish = () => { if (done) return; done = true; clearTimeout(timer); vid.removeEventListener('seeked', finish); resolve(); };
+                vid.addEventListener('seeked', finish);
+                const timer = setTimeout(finish, 200);
+                try { vid.currentTime = t; } catch (e) { finish(); }
+            });
+        }
+
+        async function drawFrame(timeMs) {
             const w = baseWidth, h = baseHeight;
             const isHold = !isFinite(timeMs);
             const timeSec = (isHold ? performance.now() : timeMs) * 0.001;
@@ -975,9 +988,12 @@
                 entranceProgress = getEasing(config.entranceEasing)(entranceRaw);
             }
 
+            // 视频帧同步（录制时）：必须 await 'seeked' 再绘制——seek 进行中 readyState 会掉、
+            // 且裸 seek 后立即 draw 抓到的是旧帧。暂停后逐帧 seek 触发更稳、帧更准。
             if (currentMediaType === 'video' && recorder.isRecording && currentMedia) {
+                if (!currentMedia.paused) { currentMedia.pause(); _pausedForRecord = true; }
                 const t = (timeMs / 1000) % currentMedia.duration;
-                if (isFinite(t)) currentMedia.currentTime = t;
+                if (isFinite(t)) await seekVideo(currentMedia, t);
             }
 
             const effectHalfPad = config.rotatingBorderWidth || 0;
@@ -1120,6 +1136,12 @@
             if (recorder.isRecording) {
                 _loopId = requestAnimationFrame(mainLoop);
                 return;
+            }
+
+            // 录制结束：恢复录制时为逐帧 seek 暂停的视频
+            if (_pausedForRecord && currentMediaType === 'video' && currentMedia) {
+                _pausedForRecord = false;
+                currentMedia.play().catch(() => {});
             }
 
             let time = now - _animStartTime;
