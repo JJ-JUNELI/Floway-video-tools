@@ -598,19 +598,27 @@
                     videoCropNorm = null;
                     syncRatioLock();
                     syncMediaDuration();
-                    vid.play();
                     updateMediaUI(file.name, vid.videoWidth, vid.videoHeight);
                     startLoop();
-                    // 首帧可绘制后截一帧作裁切缩略图，进入裁切模式（与图片一致）
-                    const enterVideoCrop = () => {
+                    // 截首帧作裁切缩略图：seek 到起点并等 'seeked' 再绘制——loadeddata 时
+                    // drawImage(video) 常抓到空白/黑帧(帧尚未合成)，seek+seeked 才稳（与录制同路径）。
+                    let grabbed = false;
+                    const grabFrame = () => {
+                        if (grabbed) return;
+                        grabbed = true;
                         cropFrameCanvas = document.createElement('canvas');
                         cropFrameCanvas.width = vid.videoWidth;
                         cropFrameCanvas.height = vid.videoHeight;
                         cropFrameCanvas.getContext('2d').drawImage(vid, 0, 0);
                         enterCropMode(cropFrameCanvas.toDataURL(), vid.videoWidth, vid.videoHeight, true);
+                        vid.play();   // 截完再播，供裁切时预览
                     };
-                    if (vid.readyState >= 2) enterVideoCrop();
-                    else vid.addEventListener('loadeddata', enterVideoCrop, { once: true });
+                    vid.addEventListener('seeked', function onSeeked() {
+                        vid.removeEventListener('seeked', onSeeked);
+                        grabFrame();
+                    }, { once: true });
+                    vid.currentTime = Math.min(0.05, (vid.duration || 1) / 2);
+                    setTimeout(grabFrame, 800);   // 兜底：seeked 万一不触发也进裁切
                 };
                 vid.src = url;
             }
