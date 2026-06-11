@@ -416,11 +416,16 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     }
 
     // ① 玻璃底图（液态玻璃材质；玻璃自带描边关掉，改用下面可调描边）
+    // 玻璃材质参数从 cfg 开放出来（色调/膜浓度/柔光/扫光/噪点）
     ctx.save();
     ctx.translate(bx, by);
     drawGlassSurface(ctx, bw, bh, R, {
-        color: 'light', veil: 0.12, border: 0, borderWidth: 1,
-        highlight: 0.45, sheen: 0.45, grain: true,
+        color: cfg.chromeGlassColor || 'light',
+        veil: cfg.chromeGlassVeil != null ? cfg.chromeGlassVeil : 0.12,
+        border: 0, borderWidth: 1,
+        highlight: cfg.chromeGlassHighlight != null ? cfg.chromeGlassHighlight : 0.45,
+        sheen: cfg.chromeGlassSheen != null ? cfg.chromeGlassSheen : 0.45,
+        grain: cfg.chromeGlassGrain !== false,
     }, timeMs);
     ctx.restore();
     // 底图描边（可调；内缩半个线宽使描边在底图内侧）— 保留

@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>金属光波 · Metal Light Waves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#070809; --stage:#0a0b0d;
+    --panel:rgba(18,20,24,0.66);
+    --panel-line:rgba(255,255,255,0.08);
+    --ink:#e9ecf1; --ink-dim:#8a9099;
+    --accent:#d8a657; --accent-dim:#7a6033;
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+    --disp:"Big Shoulders Display",Impact,"Arial Narrow",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);overflow:hidden;color:var(--ink);
+    font-family:var(--mono);-webkit-font-smoothing:antialiased}
+  .stage{position:fixed;inset:0;display:grid;place-items:center}
+  canvas#gl{display:block;background:#000;border-radius:6px;
+    box-shadow:0 30px 80px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.04)}
+
+  .panel{
+    position:fixed;top:18px;left:18px;width:272px;z-index:10;
+    background:var(--panel);border:1px solid var(--panel-line);border-radius:14px;
+    backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);
+    box-shadow:0 1px 0 0 rgba(255,255,255,.06) inset,0 24px 60px -20px rgba(0,0,0,.8);
+    overflow:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+  .panel.collapsed{transform:translateX(calc(-100% + 46px))}
+  .panel__head{display:flex;align-items:center;gap:10px;padding:14px 14px 12px;border-bottom:1px solid var(--panel-line)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 10px 1px var(--accent);animation:pulse 3.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.5;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+  .title{font-family:var(--disp);font-weight:900;font-size:21px;letter-spacing:.04em;line-height:.95;text-transform:uppercase}
+  .title small{display:block;font-family:var(--mono);font-weight:500;font-size:9.5px;letter-spacing:.32em;color:var(--ink-dim);margin-top:3px}
+  .collapse{margin-left:auto;width:24px;height:24px;border:1px solid var(--panel-line);border-radius:7px;
+    background:transparent;color:var(--ink-dim);cursor:pointer;font-size:13px;display:grid;place-items:center;transition:.2s}
+  .collapse:hover{color:var(--ink);border-color:var(--accent-dim)}
+
+  .body{padding:8px 14px 14px;max-height:calc(100vh - 150px);overflow-y:auto}
+  .body::-webkit-scrollbar{width:7px}
+  .body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+
+  .sec{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--accent-dim);
+    margin:14px 0 2px;padding-top:8px;border-top:1px solid var(--panel-line)}
+  .sec:first-child{border-top:none;padding-top:2px;margin-top:4px}
+
+  .ctrl{padding:8px 0 6px}
+  .ctrl__top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+  .ctrl__label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim)}
+  .ctrl__val{font-size:11.5px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;background:transparent;cursor:ew-resize}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;border-radius:2px;
+    background:linear-gradient(90deg,var(--accent) var(--p,40%),rgba(255,255,255,.12) var(--p,40%))}
+  input[type=range]::-moz-range-track{height:2px;border-radius:2px;background:rgba(255,255,255,.12)}
+  input[type=range]::-moz-range-progress{height:2px;border-radius:2px;background:var(--accent)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;margin-top:-5.5px;
+    border-radius:50%;background:#1a1c20;border:1.5px solid var(--accent);
+    box-shadow:0 0 0 3px rgba(216,166,87,.12),0 2px 6px rgba(0,0,0,.6);transition:transform .12s}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#1a1c20;border:1.5px solid var(--accent)}
+  input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
+
+  .row{display:flex;gap:9px;margin-top:10px}
+  .colorbox{flex:1;display:flex;align-items:center;gap:8px;font-size:9.5px;letter-spacing:.1em;color:var(--ink-dim);text-transform:uppercase}
+  .colorbox input{width:26px;height:22px;padding:0;border:1px solid var(--panel-line);border-radius:6px;background:none;cursor:pointer}
+  .colorbox input::-webkit-color-swatch-wrapper{padding:2px}
+  .colorbox input::-webkit-color-swatch{border:none;border-radius:4px}
+
+  select{width:100%;background:#15171b;color:var(--ink);border:1px solid var(--panel-line);
+    border-radius:7px;padding:7px 8px;font-family:var(--mono);font-size:11px;cursor:pointer}
+  .field{margin-top:8px}
+  .field>span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:5px}
+
+  .btns{display:flex;gap:8px;margin-top:12px}
+  .btn{flex:1;padding:9px 0;border:1px solid var(--panel-line);border-radius:8px;background:rgba(255,255,255,.02);
+    color:var(--ink);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:.18s}
+  .btn:hover{border-color:var(--accent-dim);background:rgba(216,166,87,.08)}
+  .btn.primary{border-color:var(--accent-dim);color:var(--accent)}
+  .btn.primary:hover{background:rgba(216,166,87,.14)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+
+  .status{margin-top:10px;font-size:10px;letter-spacing:.06em;color:var(--ink-dim);min-height:14px;text-align:center}
+  .status.rec{color:var(--accent)}
+
+  .toggle{display:flex;align-items:center;justify-content:space-between;padding:9px 0 7px;cursor:pointer;user-select:none}
+  .toggle span{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim)}
+  .toggle input{appearance:none;-webkit-appearance:none;width:34px;height:18px;border-radius:10px;
+    background:rgba(255,255,255,.12);position:relative;cursor:pointer;transition:.2s;flex:none}
+  .toggle input:checked{background:var(--accent-dim)}
+  .toggle input::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#e9ecf1;transition:.2s}
+  .toggle input:checked::after{left:18px;background:var(--accent)}
+</style>
+</head>
+<body>
+<div class="stage"><canvas id="gl"></canvas></div>
+
+<aside class="panel" id="panel">
+  <div class="panel__head">
+    <span class="dot"></span>
+    <div class="title">光波<small>METAL · LIGHT · WAVES</small></div>
+    <button class="collapse" id="collapse" title="收起/展开">‹</button>
+  </div>
+  <div class="body" id="body">
+    <div class="sec">线条 / Lines</div>
+    <!-- line sliders injected -->
+    <div class="sec" id="secLight">光影 / Light</div>
+    <!-- light sliders injected -->
+    <div class="row">
+      <label class="colorbox">底色<input type="color" id="cBase" value="#1c2026"></label>
+      <label class="colorbox">光色<input type="color" id="cLight" value="#cdd6e4"></label>
+    </div>
+    <div class="btns">
+      <button class="btn primary" id="play">⏸ 暂停</button>
+      <button class="btn" id="rand">随机</button>
+      <button class="btn" id="reset">复位</button>
+    </div>
+
+    <div class="sec">导出 9:16 / Export</div>
+    <div class="field"><span>分辨率</span>
+      <select id="expRes">
+        <option value="1080x1920">1080 × 1920 (高清)</option>
+        <option value="720x1280">720 × 1280 (标准)</option>
+        <option value="1440x2560">1440 × 2560 (2K)</option>
+      </select>
+    </div>
+    <div class="ctrl"><div class="ctrl__top"><span class="ctrl__label">视频时长</span><span class="ctrl__val" id="v_dur">6 s</span></div>
+      <input type="range" id="dur" min="2" max="20" step="1" value="6"></div>
+    <div class="btns">
+      <button class="btn" id="expPng">导出图片 PNG</button>
+      <button class="btn primary" id="expVid">导出视频 WebM</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+</aside>
+
+<script>
+/* ============ 参数 ============ */
+const LINE_PARAMS = [
+  {id:'lineCount',    label:'线条数量', min:0,    max:300, step:1,    val:120},
+  {id:'lineWidth',    label:'线条粗细', min:0.3,  max:8,   step:0.1,  val:1.4},
+  {id:'gradient',     label:'疏密渐变', min:-1,   max:1,   step:0.02, val:0},
+  {id:'lineStrength', label:'线条强度', min:0,    max:1.2, step:0.01, val:0.55},
+  {id:'angle',        label:'倾斜角度', min:0,    max:180, step:1,    val:116, unit:'°'},
+];
+const LIGHT_PARAMS = [
+  {id:'lightSpeed',   label:'光影速度', min:0,    max:3,   step:0.01, val:0.75},
+  {id:'waveAmp',      label:'波浪幅度', min:0,    max:0.30,step:0.005, val:0.085},
+  {id:'waveFreq',     label:'波浪频率', min:0.3,  max:8,   step:0.1,  val:2.3},
+  {id:'lightWidth',   label:'光影宽度', min:0.05, max:1,   step:0.01, val:0.55},
+  {id:'lightStrength',label:'光影强度', min:0,    max:1.6, step:0.01, val:0.95},
+  {id:'blobCount',    label:'光斑数量', min:0,    max:8,   step:1,    val:4},
+  {id:'blobSize',     label:'光斑尺寸', min:0.05, max:1.0, step:0.01, val:0.25},
+  {id:'blobStrength', label:'光斑强度', min:0,    max:2,   step:0.01, val:0.8},
+  {id:'blobSpeed',    label:'光斑速度', min:0,    max:2,   step:0.01, val:0.25},
+];
+const PARAMS = [...LINE_PARAMS, ...LIGHT_PARAMS];
+const DEFAULTS = Object.fromEntries(PARAMS.map(p=>[p.id,p.val]));
+const state = {...DEFAULTS, symmetric:1, base:[0.11,0.125,0.15], light:[0.80,0.84,0.90]};
+const ASPECT = 9/16;
+
+/* ============ 着色器 ============ */
+const VERT = `attribute vec2 aPos; varying vec2 vUv;
+void main(){ vUv = aPos*0.5+0.5; gl_Position = vec4(aPos,0.0,1.0); }`;
+
+const FRAG = `#extension GL_OES_standard_derivatives : enable
+precision highp float;
+varying vec2 vUv;
+uniform vec2  uRes;
+uniform float uTime;
+uniform float uLineCount, uLineWidth, uLineStrength, uAngle, uLightSpeed, uWaveAmp, uWaveFreq, uLightWidth, uLightStrength;
+uniform float uBlobCount, uBlobSize, uBlobStrength, uBlobSpeed;
+uniform float uGradient, uSymmetric;
+uniform vec3  uBase, uLight;
+#define TAU 6.28318530718
+#define SPAN 1.35
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453123); }
+vec2 hash2(float n){ return fract(sin(vec2(n*127.1, n*311.7))*43758.5453123); }
+
+void main(){
+  vec2 p = vUv - 0.5;
+  p.x *= uRes.x / uRes.y;             // 比例校正（9:16 时 x 范围约 ±0.28）
+
+  float ca = cos(uAngle), sa = sin(uAngle);
+  vec2 r = vec2(p.x*ca - p.y*sa, p.x*sa + p.y*ca);
+  float a = r.x;                      // 沿线
+  float b = r.y;                      // 跨线（细线分布于此轴）
+  float t = uTime;
+
+  // 波浪：跨线坐标低频扭曲 → 线条随水波起伏
+  float warp = uWaveAmp * ( sin(a*uWaveFreq + t*0.6)*0.65 + sin(a*uWaveFreq*0.47 - t*0.33)*0.35 );
+  float bw = b + warp;
+
+  // 流动扫光（多层正弦 → 弯曲、移动的光带）
+  float wob = sin(a*1.3 + t*0.5) * (uWaveAmp*7.0);
+  float L  = 0.5 + 0.5*sin( bw*3.0 + wob + t*uLightSpeed );
+  L = pow(L, mix(1.0, 4.5, 1.0 - uLightWidth));
+  float L2 = 0.5 + 0.5*sin( -bw*1.7 + a*1.1 + t*uLightSpeed*0.6 );
+  L = clamp(L*0.82 + L2*0.42, 0.0, 1.0);
+  float lit = L * uLightStrength;
+
+  // 漂浮光斑（高斯亮点，在可见区内缓慢游动）
+  vec2 ext = vec2(0.5*uRes.x/uRes.y, 0.5);            // 可见区半幅 → 光斑落在画面内
+  float blobs = 0.0;
+  for(int i=0;i<8;i++){
+    if(float(i) >= uBlobCount) break;
+    vec2 rnd = hash2(float(i)+1.0);
+    vec2 center = (rnd - 0.5) * 2.0 * ext;
+    center += vec2(sin(t*uBlobSpeed + rnd.x*TAU), cos(t*uBlobSpeed*0.7 + rnd.y*TAU)) * ext * 0.35;
+    float d = length(p - center);
+    blobs += exp(-(d*d) / (uBlobSize*uBlobSize));
+  }
+  lit += blobs * uBlobStrength;
+
+  // ===== 细线：数量=根数（0=无线，1=单根）；疏密渐变让每根间距不同；可中心对称 =====
+  float lines = 0.0;
+  if(uLineCount > 0.5){
+    float un = bw / SPAN;                          // 跨向归一，中心=0
+    float gamma = pow(3.0, uGradient);             // >1 中疏边密 / <1 中密边疏 / 1 均匀
+    float ph, centerOff;
+    if(uSymmetric > 0.5){                          // 关于中心镜像对称
+      ph = sign(un) * pow(abs(un)*2.0, gamma) * (0.5 * uLineCount);
+      centerOff = 0.5;                             // 线落在整数相位（含正中一根）
+    }else{                                         // 单侧（参考图式：一边密一边疏）
+      ph = pow(clamp(un + 0.5, 0.0, 1.0), gamma) * uLineCount;
+      centerOff = 0.0;
+    }
+    float aa = fwidth(ph) + 1e-6;
+    float lineDist = abs(fract(ph + centerOff) - 0.5);   // 相位单位下到最近线距离
+    float tpx = lineDist / aa;                            // 转像素距离 → 线宽恒定，不随间距变
+    float halfPx = uLineWidth * uRes.y / 1000.0;          // 与分辨率成比例：预览/导出一致
+    lines = 1.0 - smoothstep(halfPx, halfPx + 1.0, tpx);
+  }
+
+  // 合成
+  vec3 col = uBase * mix(0.10, 1.18, lit);
+  col += uLight * lines * uLineStrength * (0.06 + 0.7*lit);   // 线被光照处更亮（各向异性）
+
+  col *= 1.0 - 0.20*length(p*vec2(0.7,0.95));            // 暗角
+  col += (hash(gl_FragCoord.xy + t) - 0.5) * 0.015;       // 细噪点去色带
+  gl_FragColor = vec4(max(col,0.0), 1.0);
+}`;
+
+/* ============ GL ============ */
+const cv = document.getElementById('gl');
+const gl = cv.getContext('webgl', {antialias:false, alpha:false, preserveDrawingBuffer:true, powerPreference:'high-performance'});
+if(!gl){ document.body.innerHTML = '<p style="color:#fff;padding:40px;font-family:monospace">当前浏览器不支持 WebGL。</p>'; throw 0; }
+gl.getExtension('OES_standard_derivatives');
+
+function compile(type, src){
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+gl.linkProgram(prog); gl.useProgram(prog);
+
+const vb = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+const aPos = gl.getAttribLocation(prog, 'aPos');
+gl.enableVertexAttribArray(aPos);
+gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+const U = {};
+['uRes','uTime','uLineCount','uLineWidth','uLineStrength','uAngle','uLightSpeed','uWaveAmp',
+ 'uWaveFreq','uLightWidth','uLightStrength','uBlobCount','uBlobSize','uBlobStrength','uBlobSpeed',
+ 'uBase','uLight','uGradient','uSymmetric'].forEach(n=>U[n]=gl.getUniformLocation(prog,n));
+
+/* ============ 9:16 舞台尺寸 ============ */
+let exporting = false;
+function fitStage(){
+  if(exporting) return;
+  const availW = innerWidth, availH = innerHeight;
+  let h = Math.min(availH - 36, (availW - 36) / ASPECT);
+  let w = h * ASPECT;
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+  gl.viewport(0,0,cv.width,cv.height);
+}
+addEventListener('resize', fitStage); fitStage();
+
+function render(time){
+  gl.uniform2f(U.uRes, cv.width, cv.height);
+  gl.uniform1f(U.uTime, time);
+  gl.uniform1f(U.uLineCount, state.lineCount);
+  gl.uniform1f(U.uLineWidth, state.lineWidth);
+  gl.uniform1f(U.uLineStrength, state.lineStrength);
+  gl.uniform1f(U.uAngle, state.angle*Math.PI/180);
+  gl.uniform1f(U.uLightSpeed, state.lightSpeed);
+  gl.uniform1f(U.uWaveAmp, state.waveAmp);
+  gl.uniform1f(U.uWaveFreq, state.waveFreq);
+  gl.uniform1f(U.uLightWidth, state.lightWidth);
+  gl.uniform1f(U.uLightStrength, state.lightStrength);
+  gl.uniform1f(U.uBlobCount, state.blobCount);
+  gl.uniform1f(U.uBlobSize, state.blobSize);
+  gl.uniform1f(U.uBlobStrength, state.blobStrength);
+  gl.uniform1f(U.uBlobSpeed, state.blobSpeed);
+  gl.uniform1f(U.uGradient, state.gradient);
+  gl.uniform1f(U.uSymmetric, state.symmetric);
+  gl.uniform3fv(U.uBase, state.base);
+  gl.uniform3fv(U.uLight, state.light);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+/* ============ 控件 ============ */
+const body = document.getElementById('body'), secLight = document.getElementById('secLight');
+const colorRow = body.querySelector('.row');
+function buildSlider(p, beforeNode){
+  const el = document.createElement('div'); el.className='ctrl';
+  el.innerHTML = `<div class="ctrl__top"><span class="ctrl__label">${p.label}</span>
+      <span class="ctrl__val" id="v_${p.id}"></span></div>
+    <input type="range" id="s_${p.id}" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.val}">`;
+  body.insertBefore(el, beforeNode);
+  const slider = el.querySelector('input'), out = el.querySelector('.ctrl__val');
+  const fmt = v => p.step<1 ? (+v).toFixed(p.step<0.01?3:(p.step<0.1?2:1)) : (+v).toFixed(0);
+  const paint = ()=>{ slider.style.setProperty('--p',(slider.value-p.min)/(p.max-p.min)*100+'%');
+    out.textContent = fmt(slider.value)+(p.unit||''); };
+  slider.addEventListener('input', ()=>{ state[p.id]=+slider.value; paint(); });
+  slider.__paint = paint; paint();
+}
+LINE_PARAMS.forEach(p => buildSlider(p, secLight));   // 线条组：插在「光影」小节前
+
+// 中心对称开关（线条组末）
+const symRow = document.createElement('label'); symRow.className='toggle';
+symRow.innerHTML = `<span>中心对称</span><input type="checkbox" id="s_symmetric" ${state.symmetric?'checked':''}>`;
+body.insertBefore(symRow, secLight);
+const symInput = document.getElementById('s_symmetric');
+symInput.addEventListener('change', ()=>{ state.symmetric = symInput.checked ? 1 : 0; });
+
+LIGHT_PARAMS.forEach(p => buildSlider(p, colorRow));  // 光影组：插在颜色行前
+
+/* 颜色 */
+const cBase=document.getElementById('cBase'), cLight=document.getElementById('cLight');
+const hex2rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255);
+const rgb2hex=c=>'#'+c.map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('');
+function syncColors(){ state.base=hex2rgb(cBase.value); state.light=hex2rgb(cLight.value); }
+cBase.value=rgb2hex(state.base); cLight.value=rgb2hex(state.light);
+cBase.addEventListener('input',syncColors); cLight.addEventListener('input',syncColors); syncColors();
+
+/* 时长 */
+const durEl=document.getElementById('dur'), durVal=document.getElementById('v_dur');
+const paintDur=()=>{ durEl.style.setProperty('--p',(durEl.value-2)/18*100+'%'); durVal.textContent=durEl.value+' s'; };
+durEl.addEventListener('input',paintDur); paintDur();
+
+/* 播放 / 随机 / 复位 */
+let playing=true, simTime=0, last=performance.now();
+const playBtn=document.getElementById('play');
+playBtn.addEventListener('click',()=>{ playing=!playing; playBtn.textContent=playing?'⏸ 暂停':'▶ 播放'; last=performance.now(); });
+function setAll(v){ Object.assign(state,v);
+  PARAMS.forEach(p=>{ const s=document.getElementById('s_'+p.id); if(s){ s.value=state[p.id]; s.__paint(); } });
+  symInput.checked = !!state.symmetric;
+  cBase.value=rgb2hex(state.base); cLight.value=rgb2hex(state.light); }
+document.getElementById('reset').addEventListener('click',()=>setAll({...DEFAULTS, symmetric:1, base:[0.11,0.125,0.15], light:[0.80,0.84,0.90]}));
+const rnd=(a,b)=>a+Math.random()*(b-a);
+document.getElementById('rand').addEventListener('click',()=>setAll({
+  lineCount:Math.round(rnd(1,160)), lineWidth:rnd(0.8,3.5), gradient:rnd(-0.7,0.7), lineStrength:rnd(0.3,0.9),
+  angle:Math.round(rnd(0,180)), lightSpeed:rnd(0.3,1.8), waveAmp:rnd(0.02,0.22),
+  waveFreq:rnd(1,6), lightWidth:rnd(0.25,0.85), lightStrength:rnd(0.6,1.3),
+  blobCount:Math.round(rnd(0,6)), blobSize:rnd(0.12,0.45), blobStrength:rnd(0.3,1.2), blobSpeed:rnd(0.1,0.8),
+  symmetric: Math.random()<0.6 ? 1 : 0,
+  base:[rnd(0.05,0.16),rnd(0.06,0.17),rnd(0.07,0.2)], light:[rnd(0.6,0.95),rnd(0.6,0.95),rnd(0.65,1.0)]
+}));
+
+/* 收起 */
+const panel=document.getElementById('panel'), collapse=document.getElementById('collapse');
+collapse.addEventListener('click',()=>{ panel.classList.toggle('collapsed');
+  collapse.textContent=panel.classList.contains('collapsed')?'›':'‹'; });
+
+/* ============ 导出 ============ */
+const statusEl=document.getElementById('status');
+const expPng=document.getElementById('expPng'), expVid=document.getElementById('expVid');
+function expDims(){ const [w,h]=document.getElementById('expRes').value.split('x').map(Number); return {w,h}; }
+function download(blob,name){ const u=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),2000); }
+
+function beginExport(){ exporting=true; const {w,h}=expDims();
+  cv.width=w; cv.height=h; gl.viewport(0,0,w,h); }     // CSS 尺寸不变(仍 9:16) → 预览不变形
+function endExport(){ exporting=false; fitStage(); }
+
+expPng.addEventListener('click',()=>{
+  beginExport(); render(simTime);
+  cv.toBlob(b=>{ download(b, `metal-waves_${Date.now()}.png`); endExport();
+    statusEl.textContent='图片已导出'; setTimeout(()=>statusEl.textContent='',2500); }, 'image/png');
+});
+
+let recording=false;
+expVid.addEventListener('click',()=>{
+  if(recording) return;
+  const dur=+durEl.value, fps=60;
+  let mime='video/webm;codecs=vp9'; if(!MediaRecorder.isTypeSupported(mime)) mime='video/webm;codecs=vp8';
+  if(!MediaRecorder.isTypeSupported(mime)) mime='video/webm';
+  beginExport();
+  const stream=cv.captureStream(fps);
+  const rec=new MediaRecorder(stream,{mimeType:mime, videoBitsPerSecond:24_000_000});
+  const chunks=[]; rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+  rec.onstop=()=>{ download(new Blob(chunks,{type:'video/webm'}), `metal-waves_${Date.now()}.webm`);
+    recording=false; expVid.disabled=expPng.disabled=false; statusEl.classList.remove('rec');
+    statusEl.textContent='视频已导出'; setTimeout(()=>statusEl.textContent='',2500); endExport(); };
+  recording=true; expVid.disabled=expPng.disabled=true; statusEl.classList.add('rec');
+  rec.start();
+  const t0=performance.now();
+  (function step(){
+    const el=(performance.now()-t0)/1000;
+    render(simTime + el);
+    statusEl.textContent=`● 录制中 ${el.toFixed(1)} / ${dur}s`;
+    if(el<dur) requestAnimationFrame(step); else rec.stop();
+  })();
+});
+
+/* ============ 预览循环 ============ */
+function frame(now){
+  if(!exporting){
+    if(playing) simTime += (now-last)/1000;
+    last=now; fitStage(); render(simTime);
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

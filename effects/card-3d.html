@@ -324,6 +324,16 @@
                     <div class="sub-section ss-amber">
                         <div class="sub-section-label">底图（玻璃）</div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>边缝宽度</span><span id="ChromeBorderWidthVal">24</span></div><input type="range" id="ChromeBorderWidth" min="0" max="60" value="24"></div></div>
+                        <div class="row" style="justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--text-sub)">玻璃色调</span>
+                            <select id="ChromeGlassColor" style="width:100px">
+                                <option value="light">亮</option>
+                                <option value="dark">暗</option>
+                            </select>
+                        </div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>膜浓度</span><span id="ChromeGlassVeilVal">12%</span></div><input type="range" id="ChromeGlassVeil" min="0" max="100" value="12"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>柔光</span><span id="ChromeGlassHighlightVal">45%</span></div><input type="range" id="ChromeGlassHighlight" min="0" max="100" value="45"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>扫光</span><span id="ChromeGlassSheenVal">45%</span></div><input type="range" id="ChromeGlassSheen" min="0" max="100" value="45"></div></div>
+                        <div class="sub-title" style="margin-top:6px"><span>磨砂噪点</span><input type="checkbox" id="ChromeGlassGrain" checked></div>
                     </div>
                     <div class="sub-section ss-green">
                         <div class="sub-section-label">描边（底图 + 浏览器UI 共用）</div>
@@ -412,7 +422,7 @@
         import { initEffect } from '../shared/controls.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=corner-fix';
-        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=chrome-glass';
+        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=chrome-glass2';
 
 
         // ====== Canvas 初始化 ======
@@ -489,6 +499,9 @@
             featherBlur: 15, featherIntensity: 0.5,
             // ③ 浏览器窗口（三层：玻璃底图 + 内嵌内容 + 顶部 UI）
             chromeBorderWidth: 24,
+            // 玻璃底图材质（开放调节）
+            chromeGlassColor: 'light', chromeGlassVeil: 0.12,
+            chromeGlassHighlight: 0.45, chromeGlassSheen: 0.45, chromeGlassGrain: true,
             chromeBaseStrokeW: 2, chromeBaseStrokeColor: '#8a8a8a',
             chromeGlowWidth: 0, chromeGlowColor: '#3cc9b0', chromeGlowIntensity: 0.5,
             // ④ 旋转光边
@@ -873,6 +886,11 @@
             ['FeatherIntensity', 'featherIntensity', '%', 'FeatherIntensityVal', '%'],
             // ③ 浏览器窗口
             ['ChromeBorderWidth', 'chromeBorderWidth', 'int', 'ChromeBorderWidthVal'],
+            ['ChromeGlassColor', 'chromeGlassColor'],
+            ['ChromeGlassVeil', 'chromeGlassVeil', '%', 'ChromeGlassVeilVal', '%'],
+            ['ChromeGlassHighlight', 'chromeGlassHighlight', '%', 'ChromeGlassHighlightVal', '%'],
+            ['ChromeGlassSheen', 'chromeGlassSheen', '%', 'ChromeGlassSheenVal', '%'],
+            ['ChromeGlassGrain', 'chromeGlassGrain', 'checked'],
             ['ChromeBaseStrokeW', 'chromeBaseStrokeW', 'int', 'ChromeBaseStrokeWVal'],
             ['ChromeBaseStrokeColor', 'chromeBaseStrokeColor'],
             ['ChromeGlowWidth', 'chromeGlowWidth', 'int', 'ChromeGlowWidthVal'],
