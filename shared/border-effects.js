@@ -369,20 +369,24 @@ function drawChromeIcon(ctx, type, cx, cy, s, color, lw, darkColor) {
 }
 
 export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
-    const cr = cfg.cardRadius || cfg.chromeCornerRadius || 0;
-    const fw = cfg.chromeBorderWidth != null ? cfg.chromeBorderWidth : 12;   // 外框(贝塞)宽度
-    const frameColor = cfg.chromeBorderColor || '#cfcfcf';                    // 外框灰
+    // 三层模型：① 灰色底图(整张卡片) ② 内容图(叠在上面，左/右/下等宽缝隙、顶部留 UI 空隙、靠底边)
+    // ③ 浏览器 UI(绿点+三按钮，在顶部缝隙里)
+    const R = cfg.cardRadius || cfg.chromeCornerRadius || 0;
+    const baseColor = cfg.chromeBorderColor || '#cfcfcf';                     // 灰底色
+    const m = cfg.chromeBorderWidth != null ? cfg.chromeBorderWidth : 24;     // 左/右/下 等宽缝隙
     const gw = cfg.chromeGlowWidth || 0;
     const gc = cfg.chromeGlowColor || '#3b82f6';
     const gi = cfg.chromeGlowIntensity || 0;
-    const barColor = cfg.chromeBarColor || '#8c8c8e';                         // 标题栏灰
 
-    // 单条标题栏；总高 tH 向上扩展，不占内容区
-    const tH = Math.round(card.w * 0.078);
-    const winX = card.x, winY = card.y - tH, winW = card.w, winH = card.h + tH;
-    const winR = cr;
+    // ① 灰色底图 = 卡片范围
+    const bx = card.x, by = card.y, bw = card.w, bh = card.h;
+    // 顶部 UI 条高（放圆点+按钮，比侧缝大）；内容图靠底、左右下缝隙 = m
+    const uiH = Math.max(Math.round(card.w * 0.072), m * 2.2);
+    const cxr = bx + m, cwr = bw - 2 * m;
+    const cyr = by + uiH, chr = bh - uiH - m;
+    const cR = Math.max(0, R - m);            // 内容圆角(与底图同心，四周缝隙均匀)
 
-    // 辉光（可选，默认 0）
+    // 辉光（可选，默认 0）：围绕灰底图外缘
     if (gw > 0) {
         if (!_glowTmp) _glowTmp = document.createElement('canvas');
         const cw = ctx.canvas.width, ch_ = ctx.canvas.height;
@@ -396,73 +400,58 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
         tc.filter = `blur(${gw * t.a}px)`;
         tc.strokeStyle = hexToRGBA(gc, 0.7);
         tc.lineWidth = gw * t.a * 0.5; tc.lineJoin = 'round';
-        tc.beginPath(); rrect(tc, winX - fw, winY - fw, winW + fw * 2, winH + fw * 2, winR + fw);
+        tc.beginPath(); rrect(tc, bx, by, bw, bh, R);
         for (let p = 0; p < fullP; p++) tc.stroke();
         if (fracP > 0.01) { tc.globalAlpha = fracP; tc.stroke(); tc.globalAlpha = 1; }
         tc.filter = 'none';
         tc.setTransform(1, 0, 0, 1, 0, 0);
         tc.globalCompositeOperation = 'destination-out'; tc.fillStyle = '#000';
-        tc.beginPath(); rrect(tc, (winX - fw) * t.a + t.e, (winY - fw) * t.d + t.f, (winW + fw * 2) * t.a, (winH + fw * 2) * t.d, (winR + fw) * t.a); tc.fill();
+        tc.beginPath(); rrect(tc, bx * t.a + t.e, by * t.d + t.f, bw * t.a, bh * t.d, R * t.a); tc.fill();
         ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(_glowTmp, 0, 0); ctx.restore();
     }
 
-    // ── 外框：灰色光泽贝塞（填充圆角矩形 + 立体高光/暗边）──
-    if (fw > 0) {
-        const fg = ctx.createLinearGradient(0, winY - fw, 0, winY + winH + fw);
-        fg.addColorStop(0, lightenHexRGBA(frameColor, 0.5, 1));
-        fg.addColorStop(0.5, hexToRGBA(frameColor, 1));
-        fg.addColorStop(1, darkenHexRGBA(frameColor, 0.72, 1));
-        ctx.fillStyle = fg;
-        ctx.beginPath(); rrect(ctx, winX - fw, winY - fw, winW + fw * 2, winH + fw * 2, winR + fw); ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 1;
-        ctx.beginPath(); rrect(ctx, winX - fw + 0.5, winY - fw + 0.5, winW + fw * 2 - 1, winH + fw * 2 - 1, winR + fw); ctx.stroke();
-        ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.5;
-        ctx.beginPath(); rrect(ctx, winX - fw + 2, winY - fw + 2, winW + fw * 2 - 4, winH + fw * 2 - 4, winR + fw - 2); ctx.stroke();
+    // ① 灰色底图（轻微竖向渐变 + 外缘暗边，质感）
+    const bgGrad = ctx.createLinearGradient(0, by, 0, by + bh);
+    bgGrad.addColorStop(0, lightenHexRGBA(baseColor, 0.14, 1));
+    bgGrad.addColorStop(1, darkenHexRGBA(baseColor, 0.9, 1));
+    ctx.fillStyle = bgGrad;
+    ctx.beginPath(); rrect(ctx, bx, by, bw, bh, R); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 1;
+    ctx.beginPath(); rrect(ctx, bx + 0.5, by + 0.5, bw - 1, bh - 1, R); ctx.stroke();
+
+    // ② 内容图（裁剪到内容圆角矩形再画；白底/素材由 drawContentFn 提供）
+    if (chr > 0 && cwr > 0) {
+        ctx.save();
+        ctx.beginPath(); rrect(ctx, cxr, cyr, cwr, chr, cR); ctx.clip();
+        if (drawContentFn) drawContentFn(ctx, cxr, cyr, cwr, chr);
+        ctx.restore();
+        // 内容边缘细暗线，跟灰底分隔利落
+        ctx.strokeStyle = 'rgba(0,0,0,0.14)'; ctx.lineWidth = 1;
+        ctx.beginPath(); rrect(ctx, cxr + 0.5, cyr + 0.5, cwr - 1, chr - 1, cR); ctx.stroke();
     }
 
-    // 裁剪到窗口
-    ctx.save();
-    ctx.beginPath(); rrect(ctx, winX, winY, winW, winH, winR); ctx.clip();
-
-    // 标题栏（灰，竖向渐变）
-    const bg = ctx.createLinearGradient(0, winY, 0, winY + tH);
-    bg.addColorStop(0, lightenHexRGBA(barColor, 0.16, 1));
-    bg.addColorStop(1, darkenHexRGBA(barColor, 0.9, 1));
-    ctx.fillStyle = bg;
-    ctx.fillRect(winX, winY, winW, tH);
-    // 标题栏底分隔（暗线）
-    ctx.fillStyle = 'rgba(0,0,0,0.22)';
-    ctx.fillRect(winX, winY + tH - 1.5, winW, 1.5);
-
-    // 内容区（白底由 card 背景/上传素材提供）
-    if (drawContentFn) drawContentFn(ctx, card.x, card.y, card.w, card.h);
-
-    const padX = Math.round(tH * 0.4);
-
-    // ── 左上 绿色状态点 ──
-    const dotR = tH * 0.23;
-    const dcx = winX + padX + dotR, dcy = winY + tH / 2;
+    // ③ 浏览器 UI（顶部缝隙内）：绿点(对齐内容左) + 三按钮(对齐内容右)
+    const stripCy = by + uiH / 2;
+    const dotR = uiH * 0.2;
+    const dcx = cxr + dotR, dcy = stripCy;
     ctx.fillStyle = '#21cf67';
     ctx.beginPath(); ctx.arc(dcx, dcy, dotR, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
-    ctx.beginPath(); ctx.arc(dcx - dotR * 0.3, dcy - dotR * 0.32, dotR * 0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.beginPath(); ctx.arc(dcx - dotR * 0.3, dcy - dotR * 0.32, dotR * 0.32, 0, Math.PI * 2); ctx.fill();
 
-    // ── 右上 3 个深色圆按钮：保存 / 复制 / 刷新 ──
     const types = ['save', 'copy', 'refresh'];
-    const rB = tH * 0.3;
-    const gap = rB * 0.45;
+    const rB = uiH * 0.26;
+    const gap = rB * 0.5;
     const n = types.length;
-    const firstCx = winX + winW - padX - (n * 2 * rB + (n - 1) * gap) + rB;
-    const cyB = winY + tH / 2;
+    const lastCx = cxr + cwr - rB;            // 最右按钮对齐内容右边
     types.forEach((ic, i) => {
-        const cxB = firstCx + i * (rB * 2 + gap);
+        const cxB = lastCx - (n - 1 - i) * (rB * 2 + gap);
         ctx.fillStyle = '#1c1c1f';
-        ctx.beginPath(); ctx.arc(cxB, cyB, rB, 0, Math.PI * 2); ctx.fill();
-        drawChromeIcon(ctx, ic, cxB, cyB, rB * 1.2, '#ffffff', Math.max(1.6, rB * 0.13), '#1c1c1f');
+        ctx.beginPath(); ctx.arc(cxB, stripCy, rB, 0, Math.PI * 2); ctx.fill();
+        drawChromeIcon(ctx, ic, cxB, stripCy, rB * 1.2, '#ffffff', Math.max(1.4, rB * 0.13), '#1c1c1f');
     });
 
-    ctx.restore();
-    return fw + gw + tH;
+    return gw;   // 灰底图=卡片范围，不向上扩展；仅辉光需外扩 padding
 }
 
 // ── ④ 旋转光边 ──

@@ -322,14 +322,11 @@
                 <!-- ③ 浏览器窗口 -->
                 <div id="BrowserChromeOpts" class="border-opts" style="display:none">
                     <div class="sub-section ss-amber">
-                        <div class="sub-section-label">外框</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>外框宽度</span><span id="ChromeBorderWidthVal">12</span></div><input type="range" id="ChromeBorderWidth" min="0" max="40" value="12"></div></div>
+                        <div class="sub-section-label">底图</div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>边缝宽度</span><span id="ChromeBorderWidthVal">24</span></div><input type="range" id="ChromeBorderWidth" min="0" max="60" value="24"></div></div>
                         <div class="row stack">
-                            <div class="label-line"><span>外框颜色</span></div>
+                            <div class="label-line"><span>底图颜色</span></div>
                             <input type="color" id="ChromeBorderColor" value="#cfcfcf"></div>
-                        <div class="row stack">
-                            <div class="label-line"><span>标题栏色</span></div>
-                            <input type="color" id="ChromeBarColor" value="#8c8c8e"></div>
                     </div>
                     <div class="sub-section ss-blue">
                         <div class="sub-section-label">辉光（可选）</div>
@@ -411,7 +408,7 @@
         import { initEffect } from '../shared/controls.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=corner-fix';
-        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=chrome-grey';
+        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=chrome-3layer';
 
 
         // ====== Canvas 初始化 ======
@@ -486,10 +483,9 @@
             solidGlowDir: 'outer',
             // ② 边缘羽化
             featherBlur: 15, featherIntensity: 0.5,
-            // ③ 浏览器窗口
-            chromeBorderWidth: 12, chromeBorderColor: '#cfcfcf',
+            // ③ 浏览器窗口（三层：灰底图 + 内嵌内容 + 顶部 UI）
+            chromeBorderWidth: 24, chromeBorderColor: '#cfcfcf',
             chromeGlowWidth: 0, chromeGlowColor: '#3cc9b0', chromeGlowIntensity: 0.5,
-            chromeBarColor: '#8c8c8e',
             // ④ 旋转光边
             rotatingSpeed: 30, rotatingLightColor: '#60a5fa', rotatingDimColor: '#1e1e3a',
             rotatingBorderWidth: 3, rotatingSegments: 1,
@@ -876,7 +872,6 @@
             ['ChromeGlowWidth', 'chromeGlowWidth', 'int', 'ChromeGlowWidthVal'],
             ['ChromeGlowColor', 'chromeGlowColor'],
             ['ChromeGlowIntensity', 'chromeGlowIntensity', '%', 'ChromeGlowIntensityVal', '%'],
-            ['ChromeBarColor', 'chromeBarColor'],
             // ④ 旋转光边
             ['RotatingSpeed', 'rotatingSpeed', 'int', 'RotatingSpeedVal'],
             ['RotatingLightColor', 'rotatingLightColor'],
@@ -1093,10 +1088,8 @@
         function getEffectPad(style, config) {
             if (style === 'solid-glow') return (config.solidBorderWidth || 0) + (config.solidGlowWidth || 0);
             if (style === 'edge-feather') return (config.featherBlur || 0) * (config.featherIntensity || 0);
-            if (style === 'browser-chrome') {
-                const tH = Math.round(baseWidth * 0.04);
-                return (config.chromeBorderWidth || 0) + (config.chromeGlowWidth || 0) + tH;
-            }
+            // 浏览器窗口：灰底图=卡片范围，不向上扩展，只有辉光会外溢
+            if (style === 'browser-chrome') return config.chromeGlowWidth || 0;
             if (style === 'rotating-light') return config.rotatingBorderWidth || 0;
             return 0;
         }
