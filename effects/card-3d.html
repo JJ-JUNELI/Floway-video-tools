@@ -322,23 +322,15 @@
                 <!-- ③ 浏览器窗口 -->
                 <div id="BrowserChromeOpts" class="border-opts" style="display:none">
                     <div class="sub-section ss-amber">
-                        <div class="sub-section-label">底图</div>
+                        <div class="sub-section-label">底图（玻璃）</div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>边缝宽度</span><span id="ChromeBorderWidthVal">24</span></div><input type="range" id="ChromeBorderWidth" min="0" max="60" value="24"></div></div>
-                        <div class="row stack">
-                            <div class="label-line"><span>底图颜色</span></div>
-                            <input type="color" id="ChromeBorderColor" value="#cfcfcf"></div>
                     </div>
                     <div class="sub-section ss-green">
-                        <div class="sub-section-label">描边</div>
-                        <div class="sub-title"><span>宽度绑定</span><input type="checkbox" id="ChromeStrokeLink" checked></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>底图描边宽</span><span id="ChromeBaseStrokeWVal">2</span></div><input type="range" id="ChromeBaseStrokeW" min="0" max="20" value="2"></div></div>
+                        <div class="sub-section-label">描边（底图 + 浏览器UI 共用）</div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="ChromeBaseStrokeWVal">2</span></div><input type="range" id="ChromeBaseStrokeW" min="0" max="20" value="2"></div></div>
                         <div class="row stack">
-                            <div class="label-line"><span>底图描边色</span></div>
+                            <div class="label-line"><span>描边颜色</span></div>
                             <input type="color" id="ChromeBaseStrokeColor" value="#8a8a8a"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>内容描边宽</span><span id="ChromeContentStrokeWVal">2</span></div><input type="range" id="ChromeContentStrokeW" min="0" max="20" value="2"></div></div>
-                        <div class="row stack">
-                            <div class="label-line"><span>内容描边色</span></div>
-                            <input type="color" id="ChromeContentStrokeColor" value="#c8c8c8"></div>
                     </div>
                     <div class="sub-section ss-blue">
                         <div class="sub-section-label">辉光（可选）</div>
@@ -420,7 +412,7 @@
         import { initEffect } from '../shared/controls.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=corner-fix';
-        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=chrome-stroke';
+        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=chrome-glass';
 
 
         // ====== Canvas 初始化 ======
@@ -495,11 +487,9 @@
             solidGlowDir: 'outer',
             // ② 边缘羽化
             featherBlur: 15, featherIntensity: 0.5,
-            // ③ 浏览器窗口（三层：灰底图 + 内嵌内容 + 顶部 UI）
-            chromeBorderWidth: 24, chromeBorderColor: '#cfcfcf',
+            // ③ 浏览器窗口（三层：玻璃底图 + 内嵌内容 + 顶部 UI）
+            chromeBorderWidth: 24,
             chromeBaseStrokeW: 2, chromeBaseStrokeColor: '#8a8a8a',
-            chromeContentStrokeW: 2, chromeContentStrokeColor: '#c8c8c8',
-            chromeStrokeLink: true,
             chromeGlowWidth: 0, chromeGlowColor: '#3cc9b0', chromeGlowIntensity: 0.5,
             // ④ 旋转光边
             rotatingSpeed: 30, rotatingLightColor: '#60a5fa', rotatingDimColor: '#1e1e3a',
@@ -883,12 +873,8 @@
             ['FeatherIntensity', 'featherIntensity', '%', 'FeatherIntensityVal', '%'],
             // ③ 浏览器窗口
             ['ChromeBorderWidth', 'chromeBorderWidth', 'int', 'ChromeBorderWidthVal'],
-            ['ChromeBorderColor', 'chromeBorderColor'],
-            ['ChromeStrokeLink', 'chromeStrokeLink', 'checked'],
             ['ChromeBaseStrokeW', 'chromeBaseStrokeW', 'int', 'ChromeBaseStrokeWVal'],
             ['ChromeBaseStrokeColor', 'chromeBaseStrokeColor'],
-            ['ChromeContentStrokeW', 'chromeContentStrokeW', 'int', 'ChromeContentStrokeWVal'],
-            ['ChromeContentStrokeColor', 'chromeContentStrokeColor'],
             ['ChromeGlowWidth', 'chromeGlowWidth', 'int', 'ChromeGlowWidthVal'],
             ['ChromeGlowColor', 'chromeGlowColor'],
             ['ChromeGlowIntensity', 'chromeGlowIntensity', '%', 'ChromeGlowIntensityVal', '%'],
@@ -913,20 +899,6 @@
                 }
                 if (key === 'followVideoDuration') {
                     syncMediaDuration();
-                }
-                // 描边宽度绑定：开启时改一个，另一个跟随（不派发事件，避免循环）
-                if (config.chromeStrokeLink && (key === 'chromeBaseStrokeW' || key === 'chromeContentStrokeW')) {
-                    const src = key === 'chromeBaseStrokeW' ? 'chromeBaseStrokeW' : 'chromeContentStrokeW';
-                    const dstKey = key === 'chromeBaseStrokeW' ? 'chromeContentStrokeW' : 'chromeBaseStrokeW';
-                    const dstId  = key === 'chromeBaseStrokeW' ? 'ChromeContentStrokeW' : 'ChromeBaseStrokeW';
-                    config[dstKey] = config[src];
-                    const el = document.getElementById(dstId); if (el) el.value = config[src];
-                    const sp = document.getElementById(dstId + 'Val'); if (sp) sp.textContent = config[src];
-                }
-                if (key === 'chromeStrokeLink' && config.chromeStrokeLink) {
-                    config.chromeContentStrokeW = config.chromeBaseStrokeW;
-                    const el = document.getElementById('ChromeContentStrokeW'); if (el) el.value = config.chromeBaseStrokeW;
-                    const sp = document.getElementById('ChromeContentStrokeWVal'); if (sp) sp.textContent = config.chromeBaseStrokeW;
                 }
                 startLoop();
             }
@@ -1289,7 +1261,7 @@
                         }
                         c.restore();
                     };
-                    effectPadding = drawBrowserChrome(ctx, baseBounds, config, drawChromeContent);
+                    effectPadding = drawBrowserChrome(ctx, baseBounds, config, drawChromeContent, timeSec * 1000);
                 } else if (style === 'rotating-light') {
                     const cr = config.cardRadius;
                     ctx.save();

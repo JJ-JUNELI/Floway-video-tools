@@ -6,6 +6,8 @@
  * 返回效果超出卡片边界的像素数（用于 WebGL padding）。
  */
 
+import { drawGlassSurface } from './glass-surface.js';
+
 // ── 工具函数 ──
 
 export function hexToRGBA(hex, a) {
@@ -368,20 +370,17 @@ function drawChromeIcon(ctx, type, cx, cy, s, color, lw, darkColor) {
     ctx.restore();
 }
 
-export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
-    // 三层模型：① 灰色底图(整张卡片) ② 内容图(叠在上面，左/右/下等宽缝隙、顶部留 UI 空隙、靠底边)
+export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
+    // 三层模型：① 玻璃底图(整张卡片) ② 内容图(叠在上面，左/右/下等宽缝隙、顶部留 UI 空隙、靠底边)
     // ③ 浏览器 UI(绿点+三按钮，在顶部缝隙里)
     const R = cfg.cardRadius || cfg.chromeCornerRadius || 0;
-    const baseColor = cfg.chromeBorderColor || '#cfcfcf';                     // 灰底色
     const m = cfg.chromeBorderWidth != null ? cfg.chromeBorderWidth : 24;     // 左/右/下 等宽缝隙
     const gw = cfg.chromeGlowWidth || 0;
     const gc = cfg.chromeGlowColor || '#3b82f6';
     const gi = cfg.chromeGlowIntensity || 0;
-    // 底图/内容描边（宽度可在 UI 侧绑定一致）
-    const baseStrokeW = cfg.chromeBaseStrokeW != null ? cfg.chromeBaseStrokeW : 0;
-    const baseStrokeC = cfg.chromeBaseStrokeColor || '#888888';
-    const contentStrokeW = cfg.chromeContentStrokeW != null ? cfg.chromeContentStrokeW : 0;
-    const contentStrokeC = cfg.chromeContentStrokeColor || '#888888';
+    // 描边：底图 + 浏览器 UI 共用同一套（宽度/颜色），内容图无描边
+    const strokeW = cfg.chromeBaseStrokeW != null ? cfg.chromeBaseStrokeW : 0;
+    const strokeC = cfg.chromeBaseStrokeColor || '#888888';
 
     // ① 灰色底图 = 卡片范围
     const bx = card.x, by = card.y, bw = card.w, bh = card.h;
@@ -416,16 +415,18 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
         ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(_glowTmp, 0, 0); ctx.restore();
     }
 
-    // ① 灰色底图（轻微竖向渐变 + 外缘暗边，质感）
-    const bgGrad = ctx.createLinearGradient(0, by, 0, by + bh);
-    bgGrad.addColorStop(0, lightenHexRGBA(baseColor, 0.14, 1));
-    bgGrad.addColorStop(1, darkenHexRGBA(baseColor, 0.9, 1));
-    ctx.fillStyle = bgGrad;
-    ctx.beginPath(); rrect(ctx, bx, by, bw, bh, R); ctx.fill();
-    // 底图描边（可调；内缩半个线宽使描边在底图内侧）
-    if (baseStrokeW > 0) {
-        const lw = baseStrokeW, o = lw / 2;
-        ctx.strokeStyle = baseStrokeC; ctx.lineWidth = lw;
+    // ① 玻璃底图（液态玻璃材质；玻璃自带描边关掉，改用下面可调描边）
+    ctx.save();
+    ctx.translate(bx, by);
+    drawGlassSurface(ctx, bw, bh, R, {
+        color: 'light', veil: 0.12, border: 0, borderWidth: 1,
+        highlight: 0.45, sheen: 0.45, grain: true,
+    }, timeMs);
+    ctx.restore();
+    // 底图描边（可调；内缩半个线宽使描边在底图内侧）— 保留
+    if (strokeW > 0) {
+        const lw = strokeW, o = lw / 2;
+        ctx.strokeStyle = strokeC; ctx.lineWidth = lw;
         ctx.beginPath(); rrect(ctx, bx + o, by + o, bw - lw, bh - lw, Math.max(0, R - o)); ctx.stroke();
     }
 
@@ -435,12 +436,7 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
         ctx.beginPath(); rrect(ctx, cxr, cyr, cwr, chr, cR); ctx.clip();
         if (drawContentFn) drawContentFn(ctx, cxr, cyr, cwr, chr);
         ctx.restore();
-        // 内容描边（可调；内缩半个线宽使描边在内容内侧）
-        if (contentStrokeW > 0) {
-            const lw = contentStrokeW, o = lw / 2;
-            ctx.strokeStyle = contentStrokeC; ctx.lineWidth = lw;
-            ctx.beginPath(); rrect(ctx, cxr + o, cyr + o, cwr - lw, chr - lw, Math.max(0, cR - o)); ctx.stroke();
-        }
+        // 内容图无描边（按需求去掉）
     }
 
     // ③ 浏览器 UI（顶部缝隙内）：绿点(左) + 三按钮(右)
@@ -453,6 +449,11 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
     ctx.beginPath(); ctx.arc(dcx, dcy, dotR, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,0.4)';
     ctx.beginPath(); ctx.arc(dcx - dotR * 0.3, dcy - dotR * 0.32, dotR * 0.32, 0, Math.PI * 2); ctx.fill();
+    // UI 描边：宽度/颜色绑定底图描边，一起变化
+    if (strokeW > 0) {
+        ctx.strokeStyle = strokeC; ctx.lineWidth = strokeW;
+        ctx.beginPath(); ctx.arc(dcx, dcy, dotR, 0, Math.PI * 2); ctx.stroke();
+    }
 
     const types = ['save', 'copy', 'refresh'];
     const rB = uiH * 0.26;
@@ -463,6 +464,10 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
         const cxB = lastCx - (n - 1 - i) * (rB * 2 + gap);
         ctx.fillStyle = '#1c1c1f';
         ctx.beginPath(); ctx.arc(cxB, stripCy, rB, 0, Math.PI * 2); ctx.fill();
+        if (strokeW > 0) {
+            ctx.strokeStyle = strokeC; ctx.lineWidth = strokeW;
+            ctx.beginPath(); ctx.arc(cxB, stripCy, rB, 0, Math.PI * 2); ctx.stroke();
+        }
         drawChromeIcon(ctx, ic, cxB, stripCy, rB * 1.2, '#ffffff', Math.max(1.4, rB * 0.13), '#1c1c1f');
     });
 
