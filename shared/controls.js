@@ -673,6 +673,7 @@ const CATEGORY_DEFS = [
     { id: 'data',  label: '内容', icon: '<path d="M5 6h14M5 12h14M5 18h9"/>' },
     { id: 'style', label: '样式', icon: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>' },
     { id: 'card',  label: '卡片', icon: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10.5h18"/>' },
+    { id: '3d',    label: '三维设置', icon: '<path d="M12 2.8l7.5 4.2v8.8L12 20l-7.5-4.2V7z"/><path d="M4.5 7l7.5 4.2L19.5 7M12 11.2V20"/>' },
     { id: 'anim',  label: '动画', icon: '<path d="M8 5l11 7-11 7z"/>' },
 ];
 
