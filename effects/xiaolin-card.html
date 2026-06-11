@@ -480,6 +480,11 @@
         let originalImage = null;
         let croppedCanvas = null;
         let cropActive = false;
+        // 视频裁切：用「归一化源矩形」绘制时裁（视频无法烘焙）。null=不裁（全帧）
+        let videoCropNorm = null;   // { sx, sy, sw, sh } 0~1（相对视频帧）
+        let cropFrameCanvas = null; // 视频首帧快照（裁切 UI 缩略图 + 重新裁切用）
+        let cropSrcW = 0, cropSrcH = 0;   // 当前被裁素材的固有像素尺寸
+        let cropTargetIsVideo = false;    // 当前裁切目标是视频还是图片
 
         function setRatioLocked(locked) {
             const row = document.getElementById('RatioRow');
@@ -506,6 +511,8 @@
             originalImage = null;
             croppedCanvas = null;
             cropActive = false;
+            videoCropNorm = null;
+            cropFrameCanvas = null;
             document.getElementById('CropBtnRow').style.display = 'none';
             document.getElementById('CropOverlay').classList.remove('active');
             document.getElementById('CropThumb').style.display = 'none';
@@ -515,7 +522,8 @@
                 img.onload = () => {
                     originalImage = img;
                     currentMediaName = file.name;
-                    enterCropMode(file.name, img.naturalWidth, img.naturalHeight);
+                    videoCropNorm = null;
+                    enterCropMode(img.src, img.naturalWidth, img.naturalHeight, false);
                 };
                 img.src = url;
             } else if (file.type.startsWith('video/')) {
@@ -527,11 +535,22 @@
                     currentMedia = vid;
                     currentMediaType = 'video';
                     currentMediaName = file.name;
+                    videoCropNorm = null;
                     syncRatioLock();
                     syncMediaDuration();
                     vid.play();
                     updateMediaUI(file.name, vid.videoWidth, vid.videoHeight);
                     startLoop();
+                    // 首帧可绘制后截一帧作裁切缩略图，进入裁切模式（与图片一致）
+                    const enterVideoCrop = () => {
+                        cropFrameCanvas = document.createElement('canvas');
+                        cropFrameCanvas.width = vid.videoWidth;
+                        cropFrameCanvas.height = vid.videoHeight;
+                        cropFrameCanvas.getContext('2d').drawImage(vid, 0, 0);
+                        enterCropMode(cropFrameCanvas.toDataURL(), vid.videoWidth, vid.videoHeight, true);
+                    };
+                    if (vid.readyState >= 2) enterVideoCrop();
+                    else vid.addEventListener('loadeddata', enterVideoCrop, { once: true });
                 };
                 vid.src = url;
             }
@@ -565,6 +584,8 @@
             originalImage = null;
             croppedCanvas = null;
             cropActive = false;
+            videoCropNorm = null;
+            cropFrameCanvas = null;
             document.getElementById('MediaInfo').style.display = 'none';
             document.getElementById('RemoveMedia').style.display = 'none';
             document.getElementById('CropBtnRow').style.display = 'none';
@@ -592,9 +613,12 @@
         let cropRect = { x: 0, y: 0, w: 0, h: 0 };
         const MIN_CROP = 20;
 
-        function enterCropMode(name, iw, ih) {
+        function enterCropMode(srcDataURL, iw, ih, isVideo) {
             cropActive = true;
-            cropThumb.src = originalImage.src;
+            cropTargetIsVideo = !!isVideo;
+            cropSrcW = iw;
+            cropSrcH = ih;
+            cropThumb.src = srcDataURL;
             cropThumb.style.display = 'block';
             const zone = document.getElementById('DropZone');
             zone.querySelector('.upload-zone-text').style.display = 'none';
@@ -615,8 +639,8 @@
             const zone = document.getElementById('DropZone');
             const zw = zone.clientWidth;
             const zh = zone.clientHeight;
-            const iw = originalImage.naturalWidth;
-            const ih = originalImage.naturalHeight;
+            const iw = cropSrcW;
+            const ih = cropSrcH;
             const s = Math.min(zw / iw, zh / ih);
             const dw = iw * s, dh = ih * s;
             thumbRect = { x: (zw - dw) / 2, y: (zh - dh) / 2, w: dw, h: dh, scale: s };
@@ -685,38 +709,51 @@
         document.addEventListener('mouseup', () => { cropDragging = null; });
 
         document.getElementById('CropBtnConfirm').addEventListener('click', () => {
-            if (!originalImage) return;
+            if (!cropSrcW || !cropSrcH) return;
             const sx = (cropRect.x - thumbRect.x) / thumbRect.scale;
             const sy = (cropRect.y - thumbRect.y) / thumbRect.scale;
             const sw = cropRect.w / thumbRect.scale;
             const sh = cropRect.h / thumbRect.scale;
 
-            croppedCanvas = document.createElement('canvas');
-            croppedCanvas.width = Math.round(sw);
-            croppedCanvas.height = Math.round(sh);
-            const cctx = croppedCanvas.getContext('2d');
-            cctx.drawImage(originalImage, sx, sy, sw, sh, 0, 0, croppedCanvas.width, croppedCanvas.height);
+            if (cropTargetIsVideo) {
+                // 视频：不烘焙，记归一化源矩形，绘制时按帧裁
+                videoCropNorm = { sx: sx / cropSrcW, sy: sy / cropSrcH, sw: sw / cropSrcW, sh: sh / cropSrcH };
+                if (cropFrameCanvas) {
+                    const tc = document.createElement('canvas');
+                    tc.width = Math.round(sw); tc.height = Math.round(sh);
+                    tc.getContext('2d').drawImage(cropFrameCanvas, sx, sy, sw, sh, 0, 0, tc.width, tc.height);
+                    cropThumb.src = tc.toDataURL();
+                }
+                updateMediaUI(currentMediaName + ' (裁切)', Math.round(sw), Math.round(sh));
+            } else {
+                croppedCanvas = document.createElement('canvas');
+                croppedCanvas.width = Math.round(sw);
+                croppedCanvas.height = Math.round(sh);
+                const cctx = croppedCanvas.getContext('2d');
+                cctx.drawImage(originalImage, sx, sy, sw, sh, 0, 0, croppedCanvas.width, croppedCanvas.height);
+                currentMedia = croppedCanvas;
+                currentMediaType = 'image';
+                cropThumb.src = croppedCanvas.toDataURL();
+                updateMediaUI(currentMediaName + ' (裁切)', croppedCanvas.width, croppedCanvas.height);
+            }
 
-            currentMedia = croppedCanvas;
-            currentMediaType = 'image';
             cropActive = false;
             cropOverlay.classList.remove('active');
-
-            cropThumb.src = croppedCanvas.toDataURL();
             cropThumb.style.display = 'block';
 
             document.getElementById('CropBtnReset').textContent = '重新裁切';
             document.getElementById('CropBtnConfirm').style.display = 'none';
 
-            updateMediaUI(currentMediaName + ' (裁切)', croppedCanvas.width, croppedCanvas.height);
             syncRatioLock();
             startLoop();
         });
 
         document.getElementById('CropBtnReset').addEventListener('click', () => {
-            if (!originalImage) return;
+            if (!cropSrcW || !cropSrcH) return;
             cropActive = true;
-            cropThumb.src = originalImage.src;
+            cropThumb.src = cropTargetIsVideo
+                ? (cropFrameCanvas ? cropFrameCanvas.toDataURL() : cropThumb.src)
+                : originalImage.src;
             cropThumb.style.display = 'block';
             document.getElementById('CropBtnReset').textContent = '重选区域';
             document.getElementById('CropBtnConfirm').style.display = '';
@@ -893,11 +930,19 @@
         // ====== 工具函数 ======
         function lerp(a, b, t) { return a + (b - a) * t; }
 
+        // 素材源矩形（像素）：视频带裁切时取归一化矩形那块，否则整帧；图片/裁切后图片都是整张
+        function mediaSrcRect(media) {
+            const fw = media.videoWidth || media.naturalWidth || media.width || 0;
+            const fh = media.videoHeight || media.naturalHeight || media.height || 0;
+            if (currentMediaType === 'video' && videoCropNorm) {
+                return { sx: videoCropNorm.sx * fw, sy: videoCropNorm.sy * fh, sw: videoCropNorm.sw * fw, sh: videoCropNorm.sh * fh };
+            }
+            return { sx: 0, sy: 0, sw: fw, sh: fh };
+        }
+
         function getMediaSize(media) {
-            return {
-                w: media.videoWidth || media.naturalWidth || media.width || 0,
-                h: media.videoHeight || media.naturalHeight || media.height || 0,
-            };
+            const r = mediaSrcRect(media);   // 视频裁切后用裁切尺寸 → 卡片比例跟随裁切
+            return { w: r.sw, h: r.sh };
         }
 
         // 缩小图片时四周等宽留白的边宽（由 getCardBounds 计算，绘制图片处读取）
@@ -1055,10 +1100,9 @@
             }
             if (currentMedia && !blobMode && !config.hideMedia) {
                 ctx.translate(baseBounds.x, baseBounds.y);
-                const mw = currentMedia.videoWidth || currentMedia.naturalWidth || currentMedia.width;
-                const mh = currentMedia.videoHeight || currentMedia.naturalHeight || currentMedia.height;
-                if (mw && mh) {
-                    // 内框 = 卡面去掉四周等宽边 m；内框比例 == 图片比例 → 填满即不变形
+                const r = mediaSrcRect(currentMedia);
+                if (r.sw && r.sh) {
+                    // 内框 = 卡面去掉四周等宽边 m；内框比例 == 素材(裁切后)比例 → 填满即不变形
                     const m = _cardPad;
                     const dx = m, dy = m, dw = baseBounds.w - 2 * m, dh = baseBounds.h - 2 * m;
                     if (dw > 0 && dh > 0) {
@@ -1068,10 +1112,10 @@
                             ctx.beginPath();
                             rrect(ctx, dx, dy, dw, dh, cr);
                             ctx.clip();
-                            ctx.drawImage(currentMedia, dx, dy, dw, dh);
+                            ctx.drawImage(currentMedia, r.sx, r.sy, r.sw, r.sh, dx, dy, dw, dh);
                             ctx.restore();
                         } else {
-                            ctx.drawImage(currentMedia, dx, dy, dw, dh);
+                            ctx.drawImage(currentMedia, r.sx, r.sy, r.sw, r.sh, dx, dy, dw, dh);
                         }
                     }
                 }
