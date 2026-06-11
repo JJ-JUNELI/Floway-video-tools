@@ -380,8 +380,8 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
 
     // ① 灰色底图 = 卡片范围
     const bx = card.x, by = card.y, bw = card.w, bh = card.h;
-    // 顶部 UI 条高（放圆点+按钮，比侧缝大）；内容图靠底、左右下缝隙 = m
-    const uiH = Math.max(Math.round(card.w * 0.072), m * 2.2);
+    // 顶部 UI 条高（只跟卡片宽相关，不随边缝 m 变 → 调边缝时 UI 不移动）
+    const uiH = Math.round(card.w * 0.072);
     const cxr = bx + m, cwr = bw - 2 * m;
     const cyr = by + uiH, chr = bh - uiH - m;
     const cR = Math.max(0, R - m);            // 内容圆角(与底图同心，四周缝隙均匀)
@@ -430,10 +430,12 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
         ctx.beginPath(); rrect(ctx, cxr + 0.5, cyr + 0.5, cwr - 1, chr - 1, cR); ctx.stroke();
     }
 
-    // ③ 浏览器 UI（顶部缝隙内）：绿点(对齐内容左) + 三按钮(对齐内容右)
+    // ③ 浏览器 UI（顶部缝隙内）：绿点(左) + 三按钮(右)
+    // 位置相对底图边缘 + 固定内边距，不随边缝 m 变 → 调边缝时 UI 不移动
     const stripCy = by + uiH / 2;
+    const padX = Math.round(uiH * 0.42);
     const dotR = uiH * 0.2;
-    const dcx = cxr + dotR, dcy = stripCy;
+    const dcx = bx + padX + dotR, dcy = stripCy;
     ctx.fillStyle = '#21cf67';
     ctx.beginPath(); ctx.arc(dcx, dcy, dotR, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,0.4)';
@@ -443,7 +445,7 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
     const rB = uiH * 0.26;
     const gap = rB * 0.5;
     const n = types.length;
-    const lastCx = cxr + cwr - rB;            // 最右按钮对齐内容右边
+    const lastCx = bx + bw - padX - rB;       // 最右按钮相对底图右边固定内边距
     types.forEach((ic, i) => {
         const cxB = lastCx - (n - 1 - i) * (rB * 2 + gap);
         ctx.fillStyle = '#1c1c1f';
