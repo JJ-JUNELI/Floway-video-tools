@@ -1268,10 +1268,8 @@ body.logo canvas {
 }
 .group-title:hover .group-reset { opacity: 1; }
 .group-reset:hover { background: rgba(255,255,255,0.12); }
-.group-reset:active { background: rgba(255,255,255,0.18); }
-/* 仅在真正点击「还原」时转一圈（JS 加 .spinning）；hover/移开都不旋转 */
-@keyframes group-reset-spin { from { transform: rotate(0); } to { transform: rotate(-360deg); } }
-.group-reset.spinning { animation: group-reset-spin 0.45s ease; }
+.group-reset:active { background: rgba(255,255,255,0.20); }
+/* 不做任何旋转/位移动画——只用背景做反馈 */
 
 /* ========================================
    Advanced Params — 每个板块内的高级参数折叠

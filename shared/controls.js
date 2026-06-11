@@ -603,11 +603,6 @@ export function initCollapsibleGroups(root = document) {
                 requestAnimationFrame(() => { snap = takeSnap(); });
                 resetBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    // 仅此刻转一圈作反馈（动画结束即移除，hover/移开不触发）
-                    resetBtn.classList.remove('spinning');
-                    void resetBtn.offsetWidth;   // 重置动画，便于连点重播
-                    resetBtn.classList.add('spinning');
-                    resetBtn.addEventListener('animationend', () => resetBtn.classList.remove('spinning'), { once: true });
                     if (!snap) snap = takeSnap();
                     snap.forEach(s => {
                         const el = s.el;
