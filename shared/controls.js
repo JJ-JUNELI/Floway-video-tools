@@ -583,6 +583,47 @@ export function initCollapsibleGroups(root = document) {
         const labelSpan = title.querySelector('span');
         const key = (labelSpan ? labelSpan.textContent : title.textContent || '').trim();
 
+        // 2.5) 还原本组参数按钮（预设面板/无可还原控件的分组不加）
+        if (!group.matches('.preset-panel') && !title.querySelector('.group-reset')) {
+            const resettable = Array.from(group.querySelectorAll('input, select, textarea'))
+                .filter(el => el.type !== 'file' && el.type !== 'button' && el.type !== 'hidden');
+            if (resettable.length) {
+                const resetBtn = document.createElement('button');
+                resetBtn.type = 'button';
+                resetBtn.className = 'group-reset';
+                resetBtn.title = '还原本组参数';
+                resetBtn.textContent = '↺';
+                title.appendChild(resetBtn);
+                // 初始化完成后（下一帧，等 applyConfigToUI 等都跑完）快照各控件默认值
+                let snap = null;
+                const takeSnap = () => resettable.map(el =>
+                    (el.type === 'checkbox' || el.type === 'radio')
+                        ? { el, checked: el.checked }
+                        : { el, value: el.value, isSelect: el.tagName === 'SELECT' });
+                requestAnimationFrame(() => { snap = takeSnap(); });
+                resetBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (!snap) snap = takeSnap();
+                    snap.forEach(s => {
+                        const el = s.el;
+                        if ('checked' in s) {
+                            if (el.checked !== s.checked) {
+                                el.checked = s.checked;
+                                el.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                        } else {
+                            if (el.value !== s.value) {
+                                el.value = s.value;
+                                el.dispatchEvent(new Event('input', { bubbles: true }));
+                                el.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                            if (s.isSelect && el._fsRefresh) el._fsRefresh();
+                        }
+                    });
+                });
+            }
+        }
+
         // 3) 追加折叠箭头
         if (!title.querySelector('.collapse-arrow')) {
             const arrow = document.createElement('span');

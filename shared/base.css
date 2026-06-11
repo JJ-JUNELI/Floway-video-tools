@@ -1245,6 +1245,31 @@ body.logo canvas {
 .control-group.collapsed .group-content { display: none; }
 .control-group.collapsed .collapse-arrow { transform: rotate(-90deg); }
 
+/* 还原本组参数按钮（玻璃质感同折叠箭头）：自有 margin-left:auto，与箭头并排靠右 */
+.control-group .group-title .group-reset {
+    width: 22px;
+    height: 22px;
+    margin-left: auto;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 0.5px solid var(--border);
+    box-shadow: var(--glass-highlight);
+    color: var(--text-sub);
+    font-size: 13px;
+    line-height: 1;
+    opacity: 0.7;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s, transform 0.3s;
+}
+.group-title:hover .group-reset { opacity: 1; }
+.group-reset:hover { background: rgba(255,255,255,0.12); transform: rotate(-150deg); }
+.group-reset:active { transform: rotate(-360deg); }
+
 /* ========================================
    Advanced Params — 每个板块内的高级参数折叠
    ======================================== */
