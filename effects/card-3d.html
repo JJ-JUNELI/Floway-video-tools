@@ -330,18 +330,18 @@
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="ChromeGlowWidthVal">15</span></div><input type="range" id="ChromeGlowWidth" min="0" max="60" value="15"></div></div>
                         <div class="row stack">
                             <div class="label-line"><span>辉光颜色</span></div>
-                            <input type="color" id="ChromeGlowColor" value="#3b82f6"></div>
+                            <input type="color" id="ChromeGlowColor" value="#3cc9b0"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="ChromeGlowIntensityVal">50%</span></div><input type="range" id="ChromeGlowIntensity" min="0" max="100" value="50"></div></div>
                     </div>
                     <div class="sub-section ss-blue">
                         <div class="sub-section-label">浏览器 UI</div>
                         <div class="row stack">
-                            <div class="label-line"><span>标题栏色</span></div>
-                            <input type="color" id="ChromeBarColor" value="#1e1e2e"></div>
-                        <div class="row"><input type="text" id="ChromeUrlText" value="floway.tools" style="flex:1;background:var(--panel-bg);border:1px solid var(--border);border-radius:4px;color:var(--text-main);padding:3px 8px;font-size:11px"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>分割线透明</span><span id="ChromeSepAlphaVal">30%</span></div><input type="range" id="ChromeSepAlpha" min="0" max="100" value="30"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>URL栏透明</span><span id="ChromeUrlAlphaVal">30%</span></div><input type="range" id="ChromeUrlAlpha" min="0" max="100" value="30"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>URL字透明</span><span id="ChromeTextAlphaVal">50%</span></div><input type="range" id="ChromeTextAlpha" min="0" max="100" value="50"></div></div>
+                            <div class="label-line"><span>玻璃色调</span></div>
+                            <input type="color" id="ChromeBarColor" value="#3cc9b0"></div>
+                        <div class="row stack"><div class="label-line"><span>标题文字</span></div>
+                            <input type="text" id="ChromeUrlText" value="天涯论坛" style="background:var(--panel-bg);border:1px solid var(--border);border-radius:4px;color:var(--text-main);padding:3px 8px;font-size:11px"></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>底部分割线</span><span id="ChromeSepAlphaVal">0%</span></div><input type="range" id="ChromeSepAlpha" min="0" max="100" value="0"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>标题文字透明</span><span id="ChromeTextAlphaVal">60%</span></div><input type="range" id="ChromeTextAlpha" min="0" max="100" value="60"></div></div>
                     </div>
                     <div class="sub-section ss-green">
                         <div class="sub-section-label">内边框</div>
@@ -440,7 +440,7 @@
         import { initEffect } from '../shared/controls.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=corner-fix';
-        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingBlobs, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=2';
+        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingBlobs, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=chrome-redesign';
 
 
         // ====== Canvas 初始化 ======
@@ -517,10 +517,10 @@
             featherBlur: 20, featherIntensity: 0.7,
             // ③ 浏览器窗口
             chromeBorderWidth: 2, chromeBorderColor: '#ffffff',
-            chromeGlowWidth: 15, chromeGlowColor: '#3b82f6', chromeGlowIntensity: 0.5,
-            chromeBarColor: '#1e1e2e', chromeUrlText: 'floway.tools',
-            chromeSepAlpha: 0.3, chromeUrlAlpha: 0.3, chromeTextAlpha: 0.5,
-            chromeInnerWidth: 4, chromeInnerColor: '#333344',
+            chromeGlowWidth: 15, chromeGlowColor: '#3cc9b0', chromeGlowIntensity: 0.4,
+            chromeBarColor: '#3cc9b0', chromeUrlText: '天涯论坛',
+            chromeSepAlpha: 0, chromeUrlAlpha: 0, chromeTextAlpha: 0.6,
+            chromeInnerWidth: 0, chromeInnerColor: '#333344',
             // ④ 旋转光边
             rotatingSpeed: 30, rotatingLightColor: '#60a5fa', rotatingDimColor: '#1e1e3a',
             rotatingBorderWidth: 3, rotatingSegments: 1,
@@ -914,7 +914,6 @@
             ['ChromeBarColor', 'chromeBarColor'],
             ['ChromeUrlText', 'chromeUrlText'],
             ['ChromeSepAlpha', 'chromeSepAlpha', '%', 'ChromeSepAlphaVal', '%'],
-            ['ChromeUrlAlpha', 'chromeUrlAlpha', '%', 'ChromeUrlAlphaVal', '%'],
             ['ChromeTextAlpha', 'chromeTextAlpha', '%', 'ChromeTextAlphaVal', '%'],
             ['ChromeInnerWidth', 'chromeInnerWidth', 'int', 'ChromeInnerWidthVal'],
             ['ChromeInnerColor', 'chromeInnerColor'],

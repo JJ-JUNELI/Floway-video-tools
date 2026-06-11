@@ -287,6 +287,59 @@ export function drawEdgeFeather(ctx, card, cfg, sourceCanvas) {
 
 // ── ③ 浏览器窗口 ──
 
+function _hexRGB(hex) {
+    let h = (hex || '#000').replace('#', '');
+    if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    const n = parseInt(h, 16) || 0;
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+// 压暗（f<1）返回 rgba —— 用于标题文字等需要可读深色处
+function darkenHexRGBA(hex, f, a) {
+    const [r, g, b] = _hexRGB(hex);
+    return `rgba(${Math.round(r * f)},${Math.round(g * f)},${Math.round(b * f)},${a})`;
+}
+// 向白混合 f（0=原色,1=白）返回 rgba —— 用于浅色玻璃栏
+function lightenHexRGBA(hex, f, a) {
+    const [r, g, b] = _hexRGB(hex);
+    const mix = c => Math.round(c + (255 - c) * f);
+    return `rgba(${mix(r)},${mix(g)},${mix(b)},${a})`;
+}
+
+// 在 (cx,cy) 为中心、约 s 大小的方框内画一枚线性图标：保存/复制/刷新
+function drawChromeIcon(ctx, type, cx, cy, s, color, lw) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = lw;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    const h = s / 2;
+    if (type === 'save') {
+        // 下载/保存：竖线 + 向下箭头 + 底座
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - h * 0.85); ctx.lineTo(cx, cy + h * 0.2);
+        ctx.moveTo(cx - h * 0.42, cy - h * 0.18); ctx.lineTo(cx, cy + h * 0.28); ctx.lineTo(cx + h * 0.42, cy - h * 0.18);
+        ctx.moveTo(cx - h * 0.7, cy + h * 0.7); ctx.lineTo(cx + h * 0.7, cy + h * 0.7);
+        ctx.stroke();
+    } else if (type === 'copy') {
+        // 复制：两个叠放的圆角方块
+        const a = s * 0.46;
+        ctx.beginPath(); rrect(ctx, cx - a * 0.6, cy - a * 0.72, a, a, a * 0.2); ctx.stroke();
+        ctx.beginPath(); rrect(ctx, cx - a * 0.1, cy - a * 0.22, a, a, a * 0.2); ctx.stroke();
+    } else if (type === 'refresh') {
+        // 刷新：开口圆弧 + 箭头
+        const r = h * 0.72;
+        ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI * 0.45, Math.PI * 1.95); ctx.stroke();
+        const ax = cx + r * Math.cos(Math.PI * 0.45), ay = cy + r * Math.sin(Math.PI * 0.45);
+        ctx.beginPath();
+        ctx.moveTo(ax - h * 0.34, ay + h * 0.02);
+        ctx.lineTo(ax + h * 0.02, ay + h * 0.06);
+        ctx.lineTo(ax - h * 0.06, ay - h * 0.32);
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
 export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
     const cr = cfg.cardRadius || cfg.chromeCornerRadius || 0;
     const bw = cfg.chromeBorderWidth || 0;
@@ -302,9 +355,11 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
     const innerW = cfg.chromeInnerWidth || 0;
     const innerC = cfg.chromeInnerColor || '#333344';
 
-    // 标题栏高度：基于内容区宽度比例，不占用 card 内容区
-    const tH = Math.round(card.w * 0.04);
-    const pad = Math.round(tH * 0.4);
+    // 顶部 = 控制条(状态点+按钮) + 标题条；总高 tH 向上扩展，不占内容区
+    const tBar = Math.round(card.w * 0.05);
+    const tTitle = Math.round(card.w * 0.052);
+    const tH = tBar + tTitle;
+    const pad = Math.round(tBar * 0.5);
 
     // 整个浏览器窗口区域：card 内容区上方额外扩展 tH
     const winX = card.x, winY = card.y - tH, winW = card.w, winH = card.h + tH;
@@ -373,48 +428,77 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
     ctx.save();
     ctx.beginPath(); rrect(ctx, winX, winY, winW, winH, winR); ctx.clip();
 
-    // 标题栏（顶部 tH 区域）
-    ctx.fillStyle = barColor;
-    ctx.fillRect(winX, winY, winW, tH);
+    // ── 玻璃双栏：控制条(深一点) + 标题条(浅一点)，barColor 作色调 ──
+    const tint = barColor;
+    const titleTopY = winY + tBar;
 
-    // 分割线
+    // 控制条玻璃（近不透明，竖向渐变 + 顶部偏亮）——做成玻璃质感且不透背景
+    const g1 = ctx.createLinearGradient(0, winY, 0, winY + tBar);
+    g1.addColorStop(0, lightenHexRGBA(tint, 0.18, 0.96));
+    g1.addColorStop(1, hexToRGBA(tint, 0.92));
+    ctx.fillStyle = g1;
+    ctx.fillRect(winX, winY, winW, tBar);
+
+    // 标题条玻璃（向白混合的浅色，近不透明）
+    const g2 = ctx.createLinearGradient(0, titleTopY, 0, titleTopY + tTitle);
+    g2.addColorStop(0, lightenHexRGBA(tint, 0.80, 0.95));
+    g2.addColorStop(1, lightenHexRGBA(tint, 0.70, 0.92));
+    ctx.fillStyle = g2;
+    ctx.fillRect(winX, titleTopY, winW, tTitle);
+
+    // 顶部高光细线（玻璃感）
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillRect(winX, winY, winW, Math.max(1, Math.round(tBar * 0.045)));
+
+    // 控制条/标题条分隔线
+    ctx.strokeStyle = hexToRGBA(tint, 0.45);
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(winX, titleTopY + 0.5); ctx.lineTo(winX + winW, titleTopY + 0.5); ctx.stroke();
+    // 标题条/内容分隔线（可调透明）
     if (sepA > 0.01) {
         ctx.strokeStyle = `rgba(255,255,255,${sepA})`;
         ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.moveTo(winX, winY + tH);
-        ctx.lineTo(winX + winW, winY + tH);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(winX, winY + tH); ctx.lineTo(winX + winW, winY + tH); ctx.stroke();
     }
 
-    // 红绿灯
-    const dotR = Math.max(3, tH * 0.14);
-    const dotGap = dotR * 3.2;
-    const dy = winY + tH / 2;
-    const dotStartX = winX + pad + dotR;
-    ['#ff5f57', '#febc2e', '#28c840'].forEach((c, i) => {
-        ctx.fillStyle = c;
-        ctx.beginPath();
-        ctx.arc(dotStartX + i * dotGap, dy, dotR, 0, Math.PI * 2);
-        ctx.fill();
+    // ── 左上 绿色状态点（带柔光+高光） ──
+    const dotR = Math.max(4, tBar * 0.16);
+    const dcx = winX + pad + dotR, dcy = winY + tBar / 2;
+    const dg = ctx.createRadialGradient(dcx, dcy, 0, dcx, dcy, dotR * 2.4);
+    dg.addColorStop(0, 'rgba(54,217,122,0.55)');
+    dg.addColorStop(1, 'rgba(54,217,122,0)');
+    ctx.fillStyle = dg;
+    ctx.beginPath(); ctx.arc(dcx, dcy, dotR * 2.4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#36d97a';
+    ctx.beginPath(); ctx.arc(dcx, dcy, dotR, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.beginPath(); ctx.arc(dcx - dotR * 0.3, dcy - dotR * 0.34, dotR * 0.32, 0, Math.PI * 2); ctx.fill();
+
+    // ── 右上 3 个玻璃按钮：保存 / 复制 / 刷新 ──
+    const types = ['save', 'copy', 'refresh'];
+    const bSize = Math.round(tBar * 0.62);
+    const bGap = Math.round(bSize * 0.34);
+    const byy = winY + (tBar - bSize) / 2;
+    const totalW = types.length * bSize + (types.length - 1) * bGap;
+    const startX = winX + winW - pad - totalW;
+    types.forEach((ic, i) => {
+        const bxx = startX + i * (bSize + bGap);
+        ctx.fillStyle = 'rgba(255,255,255,0.22)';
+        ctx.beginPath(); rrect(ctx, bxx, byy, bSize, bSize, bSize * 0.28); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.lineWidth = Math.max(0.6, bSize * 0.045);
+        ctx.beginPath(); rrect(ctx, bxx, byy, bSize, bSize, bSize * 0.28); ctx.stroke();
+        drawChromeIcon(ctx, ic, bxx + bSize / 2, byy + bSize / 2, bSize * 0.52, 'rgba(255,255,255,0.92)', Math.max(1, bSize * 0.07));
     });
 
-    // URL 栏（垂直水平居中）
-    const ux = dotStartX + dotGap * 3 + pad * 0.5;
-    const uh = tH * 0.52;
-    const uy = winY + (tH - uh) / 2;
-    const uw = winX + winW - pad - ux;
-    if (urlA > 0.01) {
-        ctx.fillStyle = `rgba(255,255,255,${urlA})`;
-        ctx.beginPath(); rrect(ctx, ux, uy, uw, uh, uh * 0.25); ctx.fill();
-    }
-    if (textA > 0.01) {
-        ctx.fillStyle = `rgba(255,255,255,${textA})`;
-        const fontSize = Math.round(uh * 0.6);
-        ctx.font = `${fontSize}px system-ui`;
-        ctx.textAlign = 'center';
+    // ── 标题文字（标题条，左对齐，深色调可读） ──
+    if (textA > 0.01 && urlText) {
+        ctx.fillStyle = darkenHexRGBA(tint, 0.42, Math.min(1, textA + 0.55));
+        const fontSize = Math.round(tTitle * 0.46);
+        ctx.font = `700 ${fontSize}px system-ui, "PingFang SC", "Microsoft YaHei", sans-serif`;
+        ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        ctx.fillText(urlText, ux + uw / 2, uy + uh / 2);
+        ctx.fillText(urlText, winX + pad, titleTopY + tTitle / 2);
         ctx.textAlign = 'start';
         ctx.textBaseline = 'alphabetic';
     }
