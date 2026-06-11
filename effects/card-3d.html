@@ -288,7 +288,7 @@
                 <div id="SolidGlowOpts" class="border-opts" style="display:none">
                     <div class="sub-section ss-amber">
                         <div class="sub-section-label">描边</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="SolidBorderWidthVal">8</span></div><input type="range" id="SolidBorderWidth" min="0" max="25" value="8"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="SolidBorderWidthVal">2</span></div><input type="range" id="SolidBorderWidth" min="0" max="25" value="2"></div></div>
                         <div class="row stack">
                             <div class="label-line"><span>描边颜色</span></div>
                             <input type="color" id="SolidBorderColor" value="#ffffff"></div>
@@ -302,11 +302,11 @@
                                 <option value="both">双向</option>
                             </select>
                         </div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="SolidGlowWidthVal">30</span></div><input type="range" id="SolidGlowWidth" min="0" max="80" value="30"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="SolidGlowWidthVal">24</span></div><input type="range" id="SolidGlowWidth" min="0" max="80" value="24"></div></div>
                         <div class="row stack">
                             <div class="label-line"><span>辉光颜色</span></div>
-                            <input type="color" id="SolidGlowColor" value="#3b82f6"></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="SolidGlowIntensityVal">70%</span></div><input type="range" id="SolidGlowIntensity" min="0" max="100" value="70"></div></div>
+                            <input type="color" id="SolidGlowColor" value="#7accff"></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="SolidGlowIntensityVal">36%</span></div><input type="range" id="SolidGlowIntensity" min="0" max="100" value="36"></div></div>
                     </div>
                 </div>
 
@@ -499,8 +499,8 @@
             cardRatioH: 3,
             borderStyle: 'none',
             // ① 实线+辉光
-            solidBorderWidth: 8, solidBorderColor: '#ffffff',
-            solidGlowWidth: 30, solidGlowColor: '#3b82f6', solidGlowIntensity: 0.7,
+            solidBorderWidth: 2, solidBorderColor: '#ffffff',
+            solidGlowWidth: 24, solidGlowColor: '#7accff', solidGlowIntensity: 0.36,
             solidGlowDir: 'outer',
             // ② 边缘羽化
             featherBlur: 20, featherIntensity: 0.7,
