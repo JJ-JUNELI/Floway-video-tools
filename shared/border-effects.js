@@ -377,6 +377,11 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
     const gw = cfg.chromeGlowWidth || 0;
     const gc = cfg.chromeGlowColor || '#3b82f6';
     const gi = cfg.chromeGlowIntensity || 0;
+    // 底图/内容描边（宽度可在 UI 侧绑定一致）
+    const baseStrokeW = cfg.chromeBaseStrokeW != null ? cfg.chromeBaseStrokeW : 0;
+    const baseStrokeC = cfg.chromeBaseStrokeColor || '#888888';
+    const contentStrokeW = cfg.chromeContentStrokeW != null ? cfg.chromeContentStrokeW : 0;
+    const contentStrokeC = cfg.chromeContentStrokeColor || '#888888';
 
     // ① 灰色底图 = 卡片范围
     const bx = card.x, by = card.y, bw = card.w, bh = card.h;
@@ -384,7 +389,8 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
     const uiH = Math.round(card.w * 0.072);
     const cxr = bx + m, cwr = bw - 2 * m;
     const cyr = by + uiH, chr = bh - uiH - m;
-    const cR = Math.max(0, R - m);            // 内容圆角(与底图同心，四周缝隙均匀)
+    // 内容圆角 = 卡片圆角(夹取到内容尺寸)；只跟 R 相关，不随边缝 m 变 → 调边缝不改圆角
+    const cR = Math.max(0, Math.min(R, cwr / 2, chr / 2));
 
     // 辉光（可选，默认 0）：围绕灰底图外缘
     if (gw > 0) {
@@ -416,8 +422,12 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
     bgGrad.addColorStop(1, darkenHexRGBA(baseColor, 0.9, 1));
     ctx.fillStyle = bgGrad;
     ctx.beginPath(); rrect(ctx, bx, by, bw, bh, R); ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 1;
-    ctx.beginPath(); rrect(ctx, bx + 0.5, by + 0.5, bw - 1, bh - 1, R); ctx.stroke();
+    // 底图描边（可调；内缩半个线宽使描边在底图内侧）
+    if (baseStrokeW > 0) {
+        const lw = baseStrokeW, o = lw / 2;
+        ctx.strokeStyle = baseStrokeC; ctx.lineWidth = lw;
+        ctx.beginPath(); rrect(ctx, bx + o, by + o, bw - lw, bh - lw, Math.max(0, R - o)); ctx.stroke();
+    }
 
     // ② 内容图（裁剪到内容圆角矩形再画；白底/素材由 drawContentFn 提供）
     if (chr > 0 && cwr > 0) {
@@ -425,9 +435,12 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn) {
         ctx.beginPath(); rrect(ctx, cxr, cyr, cwr, chr, cR); ctx.clip();
         if (drawContentFn) drawContentFn(ctx, cxr, cyr, cwr, chr);
         ctx.restore();
-        // 内容边缘细暗线，跟灰底分隔利落
-        ctx.strokeStyle = 'rgba(0,0,0,0.14)'; ctx.lineWidth = 1;
-        ctx.beginPath(); rrect(ctx, cxr + 0.5, cyr + 0.5, cwr - 1, chr - 1, cR); ctx.stroke();
+        // 内容描边（可调；内缩半个线宽使描边在内容内侧）
+        if (contentStrokeW > 0) {
+            const lw = contentStrokeW, o = lw / 2;
+            ctx.strokeStyle = contentStrokeC; ctx.lineWidth = lw;
+            ctx.beginPath(); rrect(ctx, cxr + o, cyr + o, cwr - lw, chr - lw, Math.max(0, cR - o)); ctx.stroke();
+        }
     }
 
     // ③ 浏览器 UI（顶部缝隙内）：绿点(左) + 三按钮(右)
