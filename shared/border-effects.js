@@ -415,24 +415,25 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
         ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(_glowTmp, 0, 0); ctx.restore();
     }
 
-    // ① 玻璃底图（液态玻璃材质；玻璃自带描边关掉，改用下面可调描边）
-    // 玻璃材质参数从 cfg 开放出来（色调/膜浓度/柔光/扫光/噪点）
+    // ① 玻璃底图（液态玻璃材质）
+    // 玻璃材质参数从 cfg 开放出来（色调/膜浓度/柔光/扫光/噪点 + 玻璃自带的白色渐变描边）
     ctx.save();
     ctx.translate(bx, by);
     drawGlassSurface(ctx, bw, bh, R, {
         color: cfg.chromeGlassColor || 'light',
         veil: cfg.chromeGlassVeil != null ? cfg.chromeGlassVeil : 0.12,
-        border: 0, borderWidth: 1,
+        border: cfg.chromeGlassBorder != null ? cfg.chromeGlassBorder : 0.5,
+        borderWidth: 1,
         highlight: cfg.chromeGlassHighlight != null ? cfg.chromeGlassHighlight : 0.45,
         sheen: cfg.chromeGlassSheen != null ? cfg.chromeGlassSheen : 0.45,
         grain: cfg.chromeGlassGrain !== false,
     }, timeMs);
     ctx.restore();
-    // 底图描边（可调；内缩半个线宽使描边在底图内侧）— 保留
+    // 底图描边（可调；外扩半个线宽 → 描边整体落在底图外侧，套在玻璃描边外面）
     if (strokeW > 0) {
         const lw = strokeW, o = lw / 2;
         ctx.strokeStyle = strokeC; ctx.lineWidth = lw;
-        ctx.beginPath(); rrect(ctx, bx + o, by + o, bw - lw, bh - lw, Math.max(0, R - o)); ctx.stroke();
+        ctx.beginPath(); rrect(ctx, bx - o, by - o, bw + lw, bh + lw, R + o); ctx.stroke();
     }
 
     // ② 内容图（裁剪到内容圆角矩形再画；白底/素材由 drawContentFn 提供）

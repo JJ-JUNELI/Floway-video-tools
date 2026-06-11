@@ -28,6 +28,7 @@
   "ChromeGlassVeil": "12",
   "ChromeGlassHighlight": "45",
   "ChromeGlassSheen": "45",
+  "ChromeGlassBorder": "50",
   "ChromeGlassGrain": true,
   "ChromeBaseStrokeW": "2",
   "ChromeBaseStrokeColor": "#8a8a8a",

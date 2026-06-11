@@ -333,10 +333,11 @@
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>膜浓度</span><span id="ChromeGlassVeilVal">12%</span></div><input type="range" id="ChromeGlassVeil" min="0" max="100" value="12"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>柔光</span><span id="ChromeGlassHighlightVal">45%</span></div><input type="range" id="ChromeGlassHighlight" min="0" max="100" value="45"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>扫光</span><span id="ChromeGlassSheenVal">45%</span></div><input type="range" id="ChromeGlassSheen" min="0" max="100" value="45"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>玻璃描边</span><span id="ChromeGlassBorderVal">50%</span></div><input type="range" id="ChromeGlassBorder" min="0" max="100" value="50"></div></div>
                         <div class="sub-title" style="margin-top:6px"><span>磨砂噪点</span><input type="checkbox" id="ChromeGlassGrain" checked></div>
                     </div>
                     <div class="sub-section ss-green">
-                        <div class="sub-section-label">描边（底图 + 浏览器UI 共用）</div>
+                        <div class="sub-section-label">外描边（底图 + 浏览器UI 共用）</div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="ChromeBaseStrokeWVal">2</span></div><input type="range" id="ChromeBaseStrokeW" min="0" max="20" value="2"></div></div>
                         <div class="row stack">
                             <div class="label-line"><span>描边颜色</span></div>
@@ -422,7 +423,7 @@
         import { initEffect } from '../shared/controls.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=corner-fix';
-        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=chrome-glass2';
+        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect } from '../shared/border-effects.js?v=chrome-glass3';
 
 
         // ====== Canvas 初始化 ======
@@ -502,6 +503,7 @@
             // 玻璃底图材质（开放调节）
             chromeGlassColor: 'light', chromeGlassVeil: 0.12,
             chromeGlassHighlight: 0.45, chromeGlassSheen: 0.45, chromeGlassGrain: true,
+            chromeGlassBorder: 0.5,
             chromeBaseStrokeW: 2, chromeBaseStrokeColor: '#8a8a8a',
             chromeGlowWidth: 0, chromeGlowColor: '#3cc9b0', chromeGlowIntensity: 0.5,
             // ④ 旋转光边
@@ -890,6 +892,7 @@
             ['ChromeGlassVeil', 'chromeGlassVeil', '%', 'ChromeGlassVeilVal', '%'],
             ['ChromeGlassHighlight', 'chromeGlassHighlight', '%', 'ChromeGlassHighlightVal', '%'],
             ['ChromeGlassSheen', 'chromeGlassSheen', '%', 'ChromeGlassSheenVal', '%'],
+            ['ChromeGlassBorder', 'chromeGlassBorder', '%', 'ChromeGlassBorderVal', '%'],
             ['ChromeGlassGrain', 'chromeGlassGrain', 'checked'],
             ['ChromeBaseStrokeW', 'chromeBaseStrokeW', 'int', 'ChromeBaseStrokeWVal'],
             ['ChromeBaseStrokeColor', 'chromeBaseStrokeColor'],
@@ -1112,8 +1115,8 @@
         function getEffectPad(style, config) {
             if (style === 'solid-glow') return (config.solidBorderWidth || 0) + (config.solidGlowWidth || 0);
             if (style === 'edge-feather') return (config.featherBlur || 0) * (config.featherIntensity || 0);
-            // 浏览器窗口：灰底图=卡片范围，不向上扩展，只有辉光会外溢
-            if (style === 'browser-chrome') return config.chromeGlowWidth || 0;
+            // 浏览器窗口：辉光与外描边都从卡片边缘向外溢出，取较大者预留
+            if (style === 'browser-chrome') return Math.max(config.chromeGlowWidth || 0, config.chromeBaseStrokeW || 0);
             if (style === 'rotating-light') return config.rotatingBorderWidth || 0;
             return 0;
         }
