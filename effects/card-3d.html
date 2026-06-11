@@ -247,13 +247,13 @@
                     <div class="sub-section-label">尺寸 & 外观</div>
                     <div class="row stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
                         <input type="range" id="CardScale" min="40" max="100" step="1" value="80"></div>
-                    <div class="row stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">16</span></div>
-                        <input type="range" id="CardRadius" min="0" max="100" step="1" value="16"></div>
+                    <div class="row stack"><div class="label-line"><span>圆角大小</span><span id="CardRadiusVal">35</span></div>
+                        <input type="range" id="CardRadius" min="0" max="100" step="1" value="35"></div>
                     <div class="row stack">
                         <div class="label-line"><span>卡片底色</span></div>
-                        <input type="color" id="CardBg" value="#1a1a2e"></div>
-                    <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>底色透明度</span><span id="CardBgAlphaVal">80</span></div><input type="range" id="CardBgAlpha" min="0" max="100" value="80"></div></div>
-                    <div class="sub-title"><span>启用投影</span><input type="checkbox" id="ShadowEnabled" checked></div>
+                        <input type="color" id="CardBg" value="#ffffff"></div>
+                    <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>底色透明度</span><span id="CardBgAlphaVal">100</span></div><input type="range" id="CardBgAlpha" min="0" max="100" value="100"></div></div>
+                    <div class="sub-title"><span>启用投影</span><input type="checkbox" id="ShadowEnabled"></div>
                     <div id="ShadowOpts">
                         <div class="row">
                             <div style="flex:1" class="stack"><div class="label-line"><span>角度</span><span id="ShadowAngleVal">90°</span></div>
@@ -383,10 +383,10 @@
                 <div class="sub-section ss-blue">
                     <div class="sub-section-label">透视角度</div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">1.5°</span></div>
-                            <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="1.5"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">-1°</span></div>
-                            <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="-1"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴倾斜</span><span id="RotateXVal">0°</span></div>
+                            <input type="range" id="RotateX" min="-15" max="15" step="0.5" value="0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴倾斜</span><span id="RotateYVal">0°</span></div>
+                            <input type="range" id="RotateY" min="-15" max="15" step="0.5" value="0"></div>
                     </div>
                 </div>
             </div>
@@ -396,16 +396,16 @@
                 <div class="group-title"><span>漂浮动画</span></div>
                 <div class="sub-section ss-purple">
                     <div class="sub-section-label">漂浮参数</div>
-                    <div class="sub-title"><span>启用微动画</span><input type="checkbox" id="FloatEnabled" checked></div>
+                    <div class="sub-title"><span>启用微动画</span><input type="checkbox" id="FloatEnabled"></div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴摆幅</span><span id="FloatRotateXVal">2.0°</span></div>
-                            <input type="range" id="FloatRotateX" min="0" max="8" step="0.5" value="2.0"></div>
-                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴摆幅</span><span id="FloatRotateYVal">1.5°</span></div>
-                            <input type="range" id="FloatRotateY" min="0" max="8" step="0.5" value="1.5"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>X轴摆幅</span><span id="FloatRotateXVal">0°</span></div>
+                            <input type="range" id="FloatRotateX" min="0" max="8" step="0.5" value="0"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>Y轴摆幅</span><span id="FloatRotateYVal">3.5°</span></div>
+                            <input type="range" id="FloatRotateY" min="0" max="8" step="0.5" value="3.5"></div>
                     </div>
                     <div class="row">
-                        <div style="flex:1" class="stack"><div class="label-line"><span>周期 (秒)</span><span id="FloatDurationVal">4s</span></div>
-                            <input type="range" id="FloatDuration" min="1" max="10" step="0.5" value="4"></div>
+                        <div style="flex:1" class="stack"><div class="label-line"><span>周期 (秒)</span><span id="FloatDurationVal">7s</span></div>
+                            <input type="range" id="FloatDuration" min="1" max="10" step="0.5" value="7"></div>
                         <div style="flex:1" class="stack"><div class="label-line"><span>相位差</span><span id="FloatPhaseVal">25%</span></div>
                             <input type="range" id="FloatPhase" min="0" max="100" step="5" value="25"></div>
                     </div>
@@ -471,18 +471,18 @@
         // ====== 配置 ======
         const config = {
             cardScale: 0.8,
-            cardRadius: 16,
-            cardBgColor: '#1a1a2e',
-            cardBgAlpha: 80,
-            shadowEnabled: true,
+            cardRadius: 35,
+            cardBgColor: '#ffffff',
+            cardBgAlpha: 100,
+            shadowEnabled: false,
             shadowAngle: 90,
             shadowDistance: 10,
             shadowBlur: 20,
             shadowOpacity: 25,
-            rotateX: 1.5, rotateY: -1,
-            floatEnabled: true,
-            floatDuration: 4,
-            floatRotateX: 2.0, floatRotateY: 1.5,
+            rotateX: 0, rotateY: 0,
+            floatEnabled: false,
+            floatDuration: 7,
+            floatRotateX: 0, floatRotateY: 3.5,
             floatPhase: 25,
             entranceEnabled: true,
             entrancePreset: 'slideUp',
