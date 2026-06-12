@@ -374,13 +374,14 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     // 三层模型：① 玻璃底图(整张卡片) ② 内容图(叠在上面，左/右/下等宽缝隙、顶部留 UI 空隙、靠底边)
     // ③ 浏览器 UI(绿点+三按钮，在顶部缝隙里)
     const R = cfg.cardRadius || cfg.chromeCornerRadius || 0;
-    const m = cfg.chromeBorderWidth != null ? cfg.chromeBorderWidth : 24;     // 左/右/下 等宽缝隙
+    // ② 内容图：相对底图的内缩间距（边缝），左/右/下等宽
+    const m = cfg.chromeContentInset != null ? cfg.chromeContentInset : 24;
     const gw = cfg.chromeGlowWidth || 0;
     const gc = cfg.chromeGlowColor || '#3b82f6';
     const gi = cfg.chromeGlowIntensity || 0;
-    // 描边：底图 + 浏览器 UI 共用同一套（宽度/颜色），内容图无描边
-    const strokeW = cfg.chromeBaseStrokeW != null ? cfg.chromeBaseStrokeW : 0;
-    const strokeC = cfg.chromeBaseStrokeColor || '#888888';
+    // ③ 描边：底图 + 浏览器 UI 共用同一套（宽度/颜色），内容图无描边
+    const strokeW = cfg.chromeStrokeWidth != null ? cfg.chromeStrokeWidth : 0;
+    const strokeC = cfg.chromeStrokeColor || '#888888';
 
     // ① 灰色底图 = 卡片范围
     const bx = card.x, by = card.y, bw = card.w, bh = card.h;
@@ -420,9 +421,9 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     ctx.save();
     ctx.translate(bx, by);
     drawGlassSurface(ctx, bw, bh, R, {
-        color: cfg.chromeGlassColor || 'light',
+        color: cfg.chromeGlassTint || 'light',
         veil: cfg.chromeGlassVeil != null ? cfg.chromeGlassVeil : 0.12,
-        border: cfg.chromeGlassBorder != null ? cfg.chromeGlassBorder : 0.5,
+        border: cfg.chromeGlassStroke != null ? cfg.chromeGlassStroke : 0.5,
         borderWidth: 1,
         highlight: cfg.chromeGlassHighlight != null ? cfg.chromeGlassHighlight : 0.45,
         sheen: cfg.chromeGlassSheen != null ? cfg.chromeGlassSheen : 0.45,
