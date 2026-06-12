@@ -1086,6 +1086,8 @@ canvas {
     height: auto;
     display: block;
     /* 设计稿：预览画布为带描边+圆角+柔和投影的卡片 */
+    /* border-box：让 1px 描边计入 max-height/width:100%，否则描边外溢 2px、画布比侧栏/预览区高 2px */
+    box-sizing: border-box;
     border: 1px solid var(--border);
     border-radius: 8px;
     box-shadow: var(--shadow-canvas);
@@ -1104,6 +1106,7 @@ canvas.webgl-canvas {
     transform: translate(-50%, -50%);
     display: block;
     background: transparent;
+    box-sizing: border-box;
     border: 1px solid var(--border);
     border-radius: 8px;
     box-shadow: var(--shadow-canvas);
