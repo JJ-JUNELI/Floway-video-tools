@@ -323,32 +323,32 @@
                 <div id="BrowserChromeOpts" class="border-opts" style="display:none">
                     <div class="sub-section ss-amber">
                         <div class="sub-section-label">底图（玻璃）</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>边缝宽度</span><span id="ChromeBorderWidthVal">24</span></div><input type="range" id="ChromeBorderWidth" min="0" max="60" value="24"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>边缝宽度</span><span id="ChromeBorderWidthVal">14</span></div><input type="range" id="ChromeBorderWidth" min="0" max="60" value="14"></div></div>
                         <div class="row" style="justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--text-sub)">玻璃色调</span>
                             <select id="ChromeGlassColor" style="width:100px">
                                 <option value="light">亮</option>
                                 <option value="dark">暗</option>
                             </select>
                         </div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>膜浓度</span><span id="ChromeGlassVeilVal">12%</span></div><input type="range" id="ChromeGlassVeil" min="0" max="100" value="12"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>柔光</span><span id="ChromeGlassHighlightVal">45%</span></div><input type="range" id="ChromeGlassHighlight" min="0" max="100" value="45"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>扫光</span><span id="ChromeGlassSheenVal">45%</span></div><input type="range" id="ChromeGlassSheen" min="0" max="100" value="45"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>玻璃描边</span><span id="ChromeGlassBorderVal">50%</span></div><input type="range" id="ChromeGlassBorder" min="0" max="100" value="50"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>膜浓度</span><span id="ChromeGlassVeilVal">51%</span></div><input type="range" id="ChromeGlassVeil" min="0" max="100" value="51"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>柔光</span><span id="ChromeGlassHighlightVal">80%</span></div><input type="range" id="ChromeGlassHighlight" min="0" max="100" value="80"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>扫光</span><span id="ChromeGlassSheenVal">0%</span></div><input type="range" id="ChromeGlassSheen" min="0" max="100" value="0"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>玻璃描边</span><span id="ChromeGlassBorderVal">25%</span></div><input type="range" id="ChromeGlassBorder" min="0" max="100" value="25"></div></div>
                         <div class="sub-title" style="margin-top:6px"><span>磨砂噪点</span><input type="checkbox" id="ChromeGlassGrain" checked></div>
                     </div>
                     <div class="sub-section ss-green">
                         <div class="sub-section-label">外描边（底图 + 浏览器UI 共用）</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="ChromeBaseStrokeWVal">2</span></div><input type="range" id="ChromeBaseStrokeW" min="0" max="20" value="2"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="ChromeBaseStrokeWVal">3</span></div><input type="range" id="ChromeBaseStrokeW" min="0" max="20" value="3"></div></div>
                         <div class="row stack">
                             <div class="label-line"><span>描边颜色</span></div>
-                            <input type="color" id="ChromeBaseStrokeColor" value="#8a8a8a"></div>
+                            <input type="color" id="ChromeBaseStrokeColor" value="#000000"></div>
                     </div>
                     <div class="sub-section ss-blue">
                         <div class="sub-section-label">辉光（可选）</div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="ChromeGlowWidthVal">0</span></div><input type="range" id="ChromeGlowWidth" min="0" max="60" value="0"></div></div>
                         <div class="row stack">
                             <div class="label-line"><span>辉光颜色</span></div>
-                            <input type="color" id="ChromeGlowColor" value="#3cc9b0"></div>
+                            <input type="color" id="ChromeGlowColor" value="#ffffff"></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光强度</span><span id="ChromeGlowIntensityVal">50%</span></div><input type="range" id="ChromeGlowIntensity" min="0" max="100" value="50"></div></div>
                     </div>
                 </div>
@@ -499,13 +499,13 @@
             // ② 边缘羽化
             featherBlur: 15, featherIntensity: 0.5,
             // ③ 浏览器窗口（三层：玻璃底图 + 内嵌内容 + 顶部 UI）
-            chromeBorderWidth: 24,
+            chromeBorderWidth: 14,
             // 玻璃底图材质（开放调节）
-            chromeGlassColor: 'light', chromeGlassVeil: 0.12,
-            chromeGlassHighlight: 0.45, chromeGlassSheen: 0.45, chromeGlassGrain: true,
-            chromeGlassBorder: 0.5,
-            chromeBaseStrokeW: 2, chromeBaseStrokeColor: '#8a8a8a',
-            chromeGlowWidth: 0, chromeGlowColor: '#3cc9b0', chromeGlowIntensity: 0.5,
+            chromeGlassColor: 'light', chromeGlassVeil: 0.51,
+            chromeGlassHighlight: 0.80, chromeGlassSheen: 0, chromeGlassGrain: true,
+            chromeGlassBorder: 0.25,
+            chromeBaseStrokeW: 3, chromeBaseStrokeColor: '#000000',
+            chromeGlowWidth: 0, chromeGlowColor: '#ffffff', chromeGlowIntensity: 0.5,
             // ④ 旋转光边
             rotatingSpeed: 30, rotatingLightColor: '#60a5fa', rotatingDimColor: '#1e1e3a',
             rotatingBorderWidth: 3, rotatingSegments: 1,
