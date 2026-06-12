@@ -371,7 +371,7 @@ function drawChromeIcon(ctx, type, cx, cy, s, color, lw, darkColor) {
 }
 
 // 浏览器边框：顶部 UI 条高 = 底图宽 × 此比例（drawBrowserChrome 与外部布局计算共用，单一来源）
-export const CHROME_UI_RATIO = 0.058;
+export const CHROME_UI_RATIO = 0.064;
 
 // 由「内容图尺寸(cw×ch) + 内容边距 m」反推底图尺寸：底图 = 内容 + 左/右/下各 m + 顶部 UI 条。
 // 顶部 UI 条高 = 内容「较长边」× 比例 → 竖屏/横屏都得到一致比例的条（竖屏不再被窄宽度压扁）。
@@ -465,7 +465,7 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     const inset = uiH / 2;
     const stripCy = by + inset;
     const types = ['save', 'copy', 'refresh'];
-    const rB = uiH * 0.32;                     // 按钮半径（条高变窄后按钮系数调大，绝对尺寸大回来一点）
+    const rB = uiH * 0.29;                     // 按钮半径（绿点同尺寸）；条高不变、仅缩小绿点/按钮
     const gap = rB * 0.5;                       // 间距随按钮放大
     const n = types.length;
     // 绿点：大小与按钮一致，圆心离左/上边线 = inset（与最右按钮离右/上边线一致）
