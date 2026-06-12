@@ -448,13 +448,16 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     // ③ 浏览器 UI（顶部缝隙内）：绿点(左) + 三按钮(右)
     // 位置相对底图边缘 + 固定内边距，不随边缝 m 变 → 调边缝时 UI 不移动
     const stripCy = by + uiH / 2;
-    const padX = Math.round(uiH * 0.42);
-    const dotR = uiH * 0.2;
+    const padX = Math.round(uiH * 0.46);
+    const dotR = uiH * 0.185;
     const dcx = bx + padX + dotR, dcy = stripCy;
-    ctx.fillStyle = '#21cf67';
+    // 绿点：竖向渐变 + 顶部高光，立体一点
+    const dotG = ctx.createLinearGradient(dcx, dcy - dotR, dcx, dcy + dotR);
+    dotG.addColorStop(0, '#3ee07f'); dotG.addColorStop(1, '#15b855');
+    ctx.fillStyle = dotG;
     ctx.beginPath(); ctx.arc(dcx, dcy, dotR, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.beginPath(); ctx.arc(dcx - dotR * 0.3, dcy - dotR * 0.32, dotR * 0.32, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.beginPath(); ctx.ellipse(dcx, dcy - dotR * 0.4, dotR * 0.55, dotR * 0.32, 0, 0, Math.PI * 2); ctx.fill();
     // UI 描边：宽度/颜色绑定底图描边，一起变化
     if (strokeW > 0) {
         ctx.strokeStyle = strokeC; ctx.lineWidth = strokeW;
@@ -462,19 +465,24 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     }
 
     const types = ['save', 'copy', 'refresh'];
-    const rB = uiH * 0.26;
-    const gap = rB * 0.5;
+    const rB = uiH * 0.225;                    // 按钮略缩小
+    const gap = rB * 0.62;                     // 间距更匀
     const n = types.length;
     const lastCx = bx + bw - padX - rB;       // 最右按钮相对底图右边固定内边距
     types.forEach((ic, i) => {
         const cxB = lastCx - (n - 1 - i) * (rB * 2 + gap);
-        ctx.fillStyle = '#1c1c1f';
+        // 深色按钮：竖向渐变（上浅下深）+ 顶部高光弧 → 玻璃质感、有立体
+        const bgG = ctx.createLinearGradient(cxB, stripCy - rB, cxB, stripCy + rB);
+        bgG.addColorStop(0, '#34343b'); bgG.addColorStop(1, '#161619');
+        ctx.fillStyle = bgG;
         ctx.beginPath(); ctx.arc(cxB, stripCy, rB, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.10)';
+        ctx.beginPath(); ctx.ellipse(cxB, stripCy - rB * 0.42, rB * 0.62, rB * 0.34, 0, 0, Math.PI * 2); ctx.fill();
         if (strokeW > 0) {
             ctx.strokeStyle = strokeC; ctx.lineWidth = strokeW;
             ctx.beginPath(); ctx.arc(cxB, stripCy, rB, 0, Math.PI * 2); ctx.stroke();
         }
-        drawChromeIcon(ctx, ic, cxB, stripCy, rB * 1.2, '#ffffff', Math.max(1.4, rB * 0.13), '#1c1c1f');
+        drawChromeIcon(ctx, ic, cxB, stripCy, rB * 1.12, '#f2f2f4', Math.max(1.1, rB * 0.105), '#1c1c1f');
     });
 
     return gw;   // 灰底图=卡片范围，不向上扩展；仅辉光需外扩 padding
