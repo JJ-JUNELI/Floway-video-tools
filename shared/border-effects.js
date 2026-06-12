@@ -474,14 +474,13 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     }
 
     // ③ 浏览器 UI（顶部缝隙内）：绿点(左) + 三按钮(右)
-    // 让绿点/按钮离 上边线 / 左右边线 / 内容图上边线 四向间距全等。
-    // 关键：玻璃描边是「外缘贴边、向内延伸 lw」的内描边，视觉线在内缩 lw/2 处。底图描边向内(贴近UI)、
-    // 内容描边向内(远离UI)方向相反 → 以外轮廓为基准会视觉不等。改以描边视觉线为基准补偿内缩量。
+    // 让绿点/按钮离 上/左右边线（底图玻璃描边视觉线）与离 内容图上边线 四向间距全等。
+    // 底图玻璃描边是内描边（视觉线内缩 lw/2），是顶部/两侧的可见边界；内容图那侧的可见边界是
+    // 灰底↔内容的强色边（内容图上边线本身）。所以只按「底图描边内缩量的一半」补偿圆心下移/内移。
     const _glassLW = (gw_, gh_, bwid) => 1.5 * (Math.hypot(gw_, gh_) / 1800) * bwid;
     const baseRimInset = cfg.chromeGlassStroke > 0
         ? _glassLW(bw, bh, cfg.chromeGlassStrokeWidth != null ? cfg.chromeGlassStrokeWidth : 1) / 2 : 0;
-    const contentRimInset = contentStroke > 0 ? _glassLW(cwr, chr, contentStrokeW) / 2 : 0;
-    const inset = uiH / 2 + (baseRimInset + contentRimInset) / 2;
+    const inset = uiH / 2 + baseRimInset / 2;
     const stripCy = by + inset;
     const types = ['save', 'copy', 'refresh'];
     const rB = uiH * 0.29;                     // 按钮半径（绿点同尺寸）；条高不变、仅缩小绿点/按钮
