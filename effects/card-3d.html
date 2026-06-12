@@ -283,6 +283,7 @@
                         <option value="solid-glow">实线 + 辉光</option>
                         <option value="edge-feather">边缘羽化</option>
                         <option value="browser-chrome">浏览器窗口</option>
+                        <option value="glass-card">玻璃卡片</option>
                         <option value="rotating-light">旋转光边</option>
                     </select>
                 </div>
@@ -358,7 +359,27 @@
                     </div>
                 </div>
 
-                <!-- ④ 旋转光边 -->
+                <!-- ④ 玻璃卡片（完整对齐玻璃卡片效果材质） -->
+                <div id="GlassCardOpts" class="border-opts" style="display:none">
+                    <div class="sub-section ss-amber">
+                        <div class="sub-section-label">玻璃材质</div>
+                        <div class="row" style="justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--text-sub)">玻璃颜色</span>
+                            <select id="GlassColor" style="width:120px">
+                                <option value="light">🤍 亮（白雾）</option>
+                                <option value="dark">🖤 暗（烟熏）</option>
+                            </select>
+                        </div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>白雾不透明度</span><span id="GlassVeilVal">12%</span></div><input type="range" id="GlassVeil" min="0" max="100" value="12"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边亮度</span><span id="GlassBorderVal">50%</span></div><input type="range" id="GlassBorder" min="0" max="100" value="50"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边粗细</span><span id="GlassBorderWidthVal">100%</span></div><input type="range" id="GlassBorderWidth" min="0" max="300" step="10" value="100"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>左上高光</span><span id="GlassHighlightVal">45%</span></div><input type="range" id="GlassHighlight" min="0" max="100" value="45"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>扫光程度</span><span id="GlassSheenVal">45%</span></div><input type="range" id="GlassSheen" min="0" max="100" value="45"></div></div>
+                        <div class="sub-title" style="margin-top:6px"><span>磨砂噪点</span><input type="checkbox" id="GlassGrain" checked></div>
+                        <div style="font-size:11px; color:var(--text-sub); margin-top:4px;">玻璃为半透卡面，上传内容叠在其上；用「图片缩放」缩小内容可露出四周玻璃边</div>
+                    </div>
+                </div>
+
+                <!-- ⑤ 旋转光边 -->
                 <div id="RotatingLightOpts" class="border-opts" style="display:none">
                     <div class="sub-section ss-amber">
                         <div class="sub-section-label">描边</div>
@@ -429,6 +450,7 @@
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=corner-fix';
         import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect, CHROME_UI_RATIO, chromeBaseFromContent } from '../shared/border-effects.js?v=chrome-glassw';
+        import { drawGlassSurface } from '../shared/glass-surface.js?v=corner-fix';
 
 
         // ====== Canvas 初始化 ======
@@ -517,7 +539,10 @@
             chromeStrokeWidth: 3, chromeStrokeColor: '#000000',
             // ④ 辉光
             chromeGlowWidth: 0, chromeGlowColor: '#ffffff', chromeGlowIntensity: 0.5,
-            // ④ 旋转光边
+            // ④ 玻璃卡片（完整对齐玻璃卡片效果材质）
+            glassColor: 'light', glassVeil: 0.12, glassBorder: 0.5, glassBorderWidth: 1,
+            glassHighlight: 0.45, glassSheen: 0.45, glassGrain: true,
+            // ⑤ 旋转光边
             rotatingSpeed: 18, rotatingLightColor: '#60a5fa', rotatingDimColor: '#1e1e3a',
             rotatingBorderWidth: 3, rotatingSegments: 5,
         };
@@ -925,7 +950,15 @@
             ['ChromeGlowWidth', 'chromeGlowWidth', 'int', 'ChromeGlowWidthVal'],
             ['ChromeGlowColor', 'chromeGlowColor'],
             ['ChromeGlowIntensity', 'chromeGlowIntensity', '%', 'ChromeGlowIntensityVal', '%'],
-            // ④ 旋转光边
+            // ④ 玻璃卡片
+            ['GlassColor', 'glassColor'],
+            ['GlassVeil', 'glassVeil', '%', 'GlassVeilVal', '%'],
+            ['GlassBorder', 'glassBorder', '%', 'GlassBorderVal', '%'],
+            ['GlassBorderWidth', 'glassBorderWidth', '%', 'GlassBorderWidthVal', '%'],
+            ['GlassHighlight', 'glassHighlight', '%', 'GlassHighlightVal', '%'],
+            ['GlassSheen', 'glassSheen', '%', 'GlassSheenVal', '%'],
+            ['GlassGrain', 'glassGrain', 'checked'],
+            // ⑤ 旋转光边
             ['RotatingSpeed', 'rotatingSpeed', 'int', 'RotatingSpeedVal'],
             ['RotatingLightColor', 'rotatingLightColor'],
             ['RotatingDimColor', 'rotatingDimColor'],
@@ -958,6 +991,7 @@
             'solid-glow': 'SolidGlowOpts',
             'edge-feather': 'EdgeFeatherOpts',
             'browser-chrome': 'BrowserChromeOpts',
+            'glass-card': 'GlassCardOpts',
             'rotating-light': 'RotatingLightOpts',
         };
         document.getElementById('BorderStyle').addEventListener('change', (e) => {
@@ -1350,6 +1384,28 @@
                     }
                     ctx.restore();
                     effectPadding = drawRotatingStroke(ctx, baseBounds, config, timeSec);
+                } else if (style === 'glass-card') {
+                    // 玻璃卡片：玻璃半透卡面（完整材质）→ 内容叠在其上（imageScale 缩小则露玻璃边）
+                    const cr = config.cardRadius;
+                    ctx.save();
+                    ctx.beginPath();
+                    rrect(ctx, baseBounds.x, baseBounds.y, baseBounds.w, baseBounds.h, cr);
+                    ctx.clip();
+                    ctx.save();
+                    ctx.translate(baseBounds.x, baseBounds.y);
+                    drawGlassSurface(ctx, baseBounds.w, baseBounds.h, cr, {
+                        color: config.glassColor, veil: config.glassVeil,
+                        border: config.glassBorder, borderWidth: config.glassBorderWidth,
+                        highlight: config.glassHighlight, sheen: config.glassSheen, grain: config.glassGrain,
+                    }, timeSec * 1000);
+                    ctx.restore();
+                    if (currentMedia) {
+                        ctx.save();
+                        ctx.translate(baseBounds.x, baseBounds.y);
+                        drawMediaFit(ctx, currentMedia, baseBounds.w, baseBounds.h);
+                        ctx.restore();
+                    }
+                    ctx.restore();
                 }
             } else {
                 drawCardContent(w, h);
@@ -1428,8 +1484,9 @@
             const entranceDur = config.entranceEnabled ? config.entranceDuration * 1000 : 0;
             const animDone = entranceDur > 0 && time > entranceDur;
 
-            // 旋转光边和漂浮需要持续动画，动画结束后继续用真实时间
-            const isContinuousAnim = config.borderStyle === 'rotating-light' || config.floatEnabled;
+            // 旋转光边、漂浮、玻璃扫光需要持续动画，动画结束后继续用真实时间
+            const isContinuousAnim = config.borderStyle === 'rotating-light' || config.floatEnabled
+                || (config.borderStyle === 'glass-card' && config.glassSheen > 0);
             if (animDone && !isContinuousAnim) time = Infinity;
             drawFrame(time);
 
