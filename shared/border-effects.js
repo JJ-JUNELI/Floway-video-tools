@@ -371,7 +371,7 @@ function drawChromeIcon(ctx, type, cx, cy, s, color, lw, darkColor) {
 }
 
 // 浏览器边框：顶部 UI 条高 = 底图宽 × 此比例（drawBrowserChrome 与外部布局计算共用，单一来源）
-export const CHROME_UI_RATIO = 0.064;
+export const CHROME_UI_RATIO = 0.058;
 
 // 由「内容图尺寸(cw×ch) + 内容边距 m」反推底图尺寸：底图 = 内容 + 左/右/下各 m + 顶部 UI 条。
 // 顶部 UI 条高 = 内容「较长边」× 比例 → 竖屏/横屏都得到一致比例的条（竖屏不再被窄宽度压扁）。
