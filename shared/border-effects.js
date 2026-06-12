@@ -392,9 +392,12 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     const gw = cfg.chromeGlowWidth || 0;
     const gc = cfg.chromeGlowColor || '#3b82f6';
     const gi = cfg.chromeGlowIntensity || 0;
-    // ③ 描边：底图 + 浏览器 UI 共用同一套（宽度/颜色），内容图无描边
+    // ③ 描边：底图 + 浏览器 UI 共用同一套（宽度/颜色）
     const strokeW = cfg.chromeStrokeWidth != null ? cfg.chromeStrokeWidth : 0;
     const strokeC = cfg.chromeStrokeColor || '#888888';
+    // ② 内容图描边：与底图玻璃描边同款（白色渐变内描边），亮度/粗细独立可调
+    const contentStroke = cfg.chromeContentStroke != null ? cfg.chromeContentStroke : 0;
+    const contentStrokeW = cfg.chromeContentStrokeWidth != null ? cfg.chromeContentStrokeWidth : 1;
 
     // ① 灰色底图 = 卡片范围
     const bx = card.x, by = card.y, bw = card.w, bh = card.h;
@@ -457,6 +460,16 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
         ctx.beginPath(); rrect(ctx, cxr, cyr, cwr, chr, cR); ctx.clip();
         if (drawContentFn) drawContentFn(ctx, cxr, cyr, cwr, chr);
         ctx.restore();
+        // 内容图描边：复用 drawGlassSurface 只画 border（其余材质关掉）→ 与底图玻璃描边同款白色渐变内描边
+        if (contentStroke > 0) {
+            ctx.save();
+            ctx.translate(cxr, cyr);
+            drawGlassSurface(ctx, cwr, chr, cR, {
+                color: cfg.chromeGlassTint || 'light', veil: 0, highlight: 0, sheen: 0, grain: false,
+                border: contentStroke, borderWidth: contentStrokeW,
+            }, timeMs);
+            ctx.restore();
+        }
         // 内容图无描边（按需求去掉）
     }
 
