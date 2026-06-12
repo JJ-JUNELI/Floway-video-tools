@@ -228,11 +228,6 @@
                         <input type="number" id="CardRatioH" value="3" min="1" max="21" step="1" class="ratio-input">
                     </div>
                 </div>
-                <div id="ImageScaleRow" class="row stack" style="margin-top:8px;">
-                    <div class="label-line"><span>图片缩放</span><span id="ImageScaleVal">100%</span></div>
-                    <input type="range" id="ImageScale" min="30" max="100" step="1" value="100">
-                    <div style="font-size:11px; color:var(--text-sub); margin-top:4px;">缩小后四周露出卡面底色留白</div>
-                </div>
                 <div class="sub-title" style="margin-top:10px;"><span>隐藏图片（只导卡面）</span><input type="checkbox" id="HideMedia"></div>
                 <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">隐藏上传的图片，只保留卡面（底色/描边）；卡片仍按图片尺寸。给别人做空卡片/边框时用。</div>
                 <div style="font-size:11px; color:var(--text-sub); margin-top:8px;">💡 导出格式选「单张图片」时，自动摆正卡片并贴合裁切到卡片大小（含投影/光边），输出尺寸=图片尺寸。</div>
@@ -243,6 +238,14 @@
             <!-- 卡片样式 -->
             <div class="control-group">
                 <div class="group-title"><span>卡片样式</span></div>
+                <div class="sub-section ss-purple">
+                    <div class="sub-section-label">内容尺寸调整</div>
+                    <div id="ImageScaleRow" class="row stack">
+                        <div class="label-line"><span>图片缩放</span><span id="ImageScaleVal">100%</span></div>
+                        <input type="range" id="ImageScale" min="30" max="100" step="1" value="100">
+                        <div style="font-size:11px; color:var(--text-sub); margin-top:4px;">缩小后四周露出卡面底色留白；浏览器窗口/未上传内容时不可用</div>
+                    </div>
+                </div>
                 <div class="sub-section ss-green">
                     <div class="sub-section-label">尺寸 & 外观</div>
                     <div class="row stack"><div class="label-line"><span>卡片缩放</span><span id="CardScaleVal">80%</span></div>
@@ -331,7 +334,7 @@
                         </div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>膜浓度</span><span id="ChromeGlassVeilVal">51%</span></div><input type="range" id="ChromeGlassVeil" min="0" max="100" value="51"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>柔光</span><span id="ChromeGlassHighlightVal">80%</span></div><input type="range" id="ChromeGlassHighlight" min="0" max="100" value="80"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>玻璃描边亮度</span><span id="ChromeGlassStrokeVal">56%</span></div><input type="range" id="ChromeGlassStroke" min="0" max="100" value="56"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>玻璃描边亮度</span><span id="ChromeGlassStrokeVal">40%</span></div><input type="range" id="ChromeGlassStroke" min="0" max="100" value="40"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>玻璃描边粗细</span><span id="ChromeGlassStrokeWidthVal">150%</span></div><input type="range" id="ChromeGlassStrokeWidth" min="0" max="300" step="10" value="150"></div></div>
                     </div>
                     <div class="sub-section ss-purple">
@@ -505,7 +508,7 @@
             // ③ 浏览器窗口（三层：① 玻璃底图 ② 内嵌内容 ③ 顶部 UI）
             // ① 底图玻璃材质
             chromeGlassTint: 'light', chromeGlassVeil: 0.51,
-            chromeGlassHighlight: 0.80, chromeGlassStroke: 0.56, chromeGlassStrokeWidth: 1.5,
+            chromeGlassHighlight: 0.80, chromeGlassStroke: 0.40, chromeGlassStrokeWidth: 1.5,
             // 扫光/磨砂噪点已从面板移除并固定关闭
             chromeGlassSheen: 0, chromeGlassGrain: false,
             // ② 内容图布局（内容相对底图的内缩间距 = 边缝）
@@ -540,9 +543,21 @@
             row.style.pointerEvents = locked ? 'none' : '';
         }
 
-        // 有图片 → 锁定比例；无图片 → 解锁
+        // 图片缩放：无上传内容 或 选了浏览器窗口边框 → 变灰不可调
+        function syncImageScaleLock() {
+            const row = document.getElementById('ImageScaleRow');
+            const input = document.getElementById('ImageScale');
+            if (!row || !input) return;
+            const locked = !currentMedia || config.borderStyle === 'browser-chrome';
+            row.style.opacity = locked ? '0.4' : '1';
+            row.style.pointerEvents = locked ? 'none' : '';
+            input.disabled = locked;
+        }
+
+        // 有图片 → 锁定比例；无图片 → 解锁。顺带同步图片缩放可用态。
         function syncRatioLock() {
             setRatioLocked(!!currentMedia);
+            syncImageScaleLock();
         }
 
         function loadFile(file) {
@@ -953,6 +968,9 @@
             syncRatioLock();
             myResetAnimStart();
         });
+
+        // 初始：无素材时图片缩放即变灰
+        syncImageScaleLock();
 
         // ====== 漂浮动画 ======
         let _currentRx = config.rotateX * Math.PI / 180;
