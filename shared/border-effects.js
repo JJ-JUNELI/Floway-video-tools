@@ -436,7 +436,7 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
         color: cfg.chromeGlassTint || 'light',
         veil: cfg.chromeGlassVeil != null ? cfg.chromeGlassVeil : 0.12,
         border: cfg.chromeGlassStroke != null ? cfg.chromeGlassStroke : 0.5,
-        borderWidth: 1,
+        borderWidth: cfg.chromeGlassStrokeWidth != null ? cfg.chromeGlassStrokeWidth : 1,
         highlight: cfg.chromeGlassHighlight != null ? cfg.chromeGlassHighlight : 0.45,
         sheen: cfg.chromeGlassSheen != null ? cfg.chromeGlassSheen : 0.45,
         grain: cfg.chromeGlassGrain !== false,
