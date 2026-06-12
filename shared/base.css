@@ -1386,15 +1386,19 @@ body.logo canvas {
         max-height: none;
     }
     .preview-area {
-        width: 100%;
+        /* 与侧栏同宽同插入：width:auto + 左右 margin:10px，靠 flex 列 stretch 撑到 100%-20px
+           (侧栏也是 calc(100%-20px)+margin:10px) → 预览画布左右与下方侧栏对齐。
+           画布 position:absolute、max-width:100% 按 padding 盒解析会无视 padding，
+           故用 margin 而非 padding 来内缩；overflow:visible 让描边/圆角/投影不被裁。 */
+        width: auto;
         height: 40vh;
         max-height: 40vh;
-        padding: 8px;
-        margin: 0;
+        padding: 0;
+        margin: 10px 10px 0 10px;
         border-radius: 0;
         order: 1;
         flex-shrink: 0;
-        overflow: hidden;
+        overflow: visible;
     }
     .sidebar-header {
         padding: 12px 14px;
