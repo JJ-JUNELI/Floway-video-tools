@@ -451,13 +451,9 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     const stripCy = by + inset;
     const dotR = uiH * 0.2;
     const dcx = bx + inset, dcy = stripCy;     // 绿点圆心离左、上边线都 = inset
-    // 绿点：竖向渐变 + 顶部高光，立体一点
-    const dotG = ctx.createLinearGradient(dcx, dcy - dotR, dcx, dcy + dotR);
-    dotG.addColorStop(0, '#3ee07f'); dotG.addColorStop(1, '#15b855');
-    ctx.fillStyle = dotG;
+    // 绿点：纯色实底（无渐变/高光）
+    ctx.fillStyle = '#21cf67';
     ctx.beginPath(); ctx.arc(dcx, dcy, dotR, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.beginPath(); ctx.ellipse(dcx, dcy - dotR * 0.4, dotR * 0.55, dotR * 0.32, 0, 0, Math.PI * 2); ctx.fill();
     // UI 描边：宽度/颜色绑定底图描边，一起变化
     if (strokeW > 0) {
         ctx.strokeStyle = strokeC; ctx.lineWidth = strokeW;
