@@ -1067,7 +1067,10 @@ input:checked + .slider:before {
     position: relative;
     margin: 12px;
     padding: 0;
-    overflow: hidden;
+    /* overflow:visible：画布按受限轴撑满预览区时，其描边/圆角/柔和投影才不被裁。
+       预览区只含画布(max-100%居中、永不超界)与绝对定位的录制角标，无需 hidden 兜底。
+       竖屏移动端(40vh)仍在各自媒体查询里保留 hidden。 */
+    overflow: visible;
     /* 无框无缝：直接露出全页网格底纹 */
     background: transparent;
 }
