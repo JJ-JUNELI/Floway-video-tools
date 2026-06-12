@@ -370,6 +370,18 @@ function drawChromeIcon(ctx, type, cx, cy, s, color, lw, darkColor) {
     ctx.restore();
 }
 
+// 浏览器边框：顶部 UI 条高 = 底图宽 × 此比例（drawBrowserChrome 与外部布局计算共用，单一来源）
+export const CHROME_UI_RATIO = 0.072;
+
+// 由「内容图尺寸(cw×ch) + 内容边距 m」反推底图尺寸：底图 = 内容 + 左/右/下各 m + 顶部 UI 条。
+// 返回 { bw, bh, uiH }。uiH 仅依赖 bw(=cw+2m)，无循环。给 card-3d 让整窗随素材比例自适配用。
+export function chromeBaseFromContent(cw, ch, m) {
+    const bw = cw + 2 * m;
+    const uiH = Math.round(bw * CHROME_UI_RATIO);
+    const bh = ch + uiH + m;
+    return { bw, bh, uiH };
+}
+
 export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     // 三层模型：① 玻璃底图(整张卡片) ② 内容图(叠在上面，左/右/下等宽缝隙、顶部留 UI 空隙、靠底边)
     // ③ 浏览器 UI(绿点+三按钮，在顶部缝隙里)
@@ -386,7 +398,7 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     // ① 灰色底图 = 卡片范围
     const bx = card.x, by = card.y, bw = card.w, bh = card.h;
     // 顶部 UI 条高（只跟卡片宽相关，不随边缝 m 变 → 调边缝时 UI 不移动）
-    const uiH = Math.round(card.w * 0.072);
+    const uiH = Math.round(card.w * CHROME_UI_RATIO);
     const cxr = bx + m, cwr = bw - 2 * m;
     const cyr = by + uiH, chr = bh - uiH - m;
     // 内容圆角 = 卡片圆角(夹取到内容尺寸)；只跟 R 相关，不随边缝 m 变 → 调边缝不改圆角
