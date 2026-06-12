@@ -483,7 +483,7 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     const inset = uiH / 2 + baseRimInset / 2;
     const stripCy = by + inset;
     const types = ['save', 'copy', 'refresh'];
-    const rB = uiH * 0.26;                     // 按钮半径（绿点同尺寸）；略缩小→四向间距更宽松、竖屏不贴边
+    const rB = uiH * 0.29;                     // 按钮半径（绿点同尺寸）
     const gap = rB * 0.5;                       // 间距随按钮放大
     const n = types.length;
     // 绿点：大小与按钮一致，圆心离左/上边线 = inset（与最右按钮离右/上边线一致）
