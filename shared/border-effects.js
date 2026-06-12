@@ -449,9 +449,13 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     // 角落对称：圆心离上边线 = uiH/2；绿点离左边线、最右按钮离右边线也都 = uiH/2 → 两向等距
     const inset = uiH / 2;
     const stripCy = by + inset;
-    const dotR = uiH * 0.2;
-    const dcx = bx + inset, dcy = stripCy;     // 绿点圆心离左、上边线都 = inset
-    // 绿点：纯色实底（无渐变/高光）
+    const types = ['save', 'copy', 'refresh'];
+    const rB = uiH * 0.28;                     // 按钮半径
+    const gap = rB * 0.5;                       // 间距随按钮放大
+    const n = types.length;
+    // 绿点：大小与按钮一致，圆心离左/上边线 = inset（与最右按钮离右/上边线一致）
+    const dotR = rB;
+    const dcx = bx + inset, dcy = stripCy;
     ctx.fillStyle = '#21cf67';
     ctx.beginPath(); ctx.arc(dcx, dcy, dotR, 0, Math.PI * 2); ctx.fill();
     // UI 描边：宽度/颜色绑定底图描边，一起变化
@@ -460,10 +464,6 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
         ctx.beginPath(); ctx.arc(dcx, dcy, dotR, 0, Math.PI * 2); ctx.stroke();
     }
 
-    const types = ['save', 'copy', 'refresh'];
-    const rB = uiH * 0.28;                     // 按钮更大
-    const gap = rB * 0.5;                       // 间距随按钮放大
-    const n = types.length;
     const lastCx = bx + bw - inset;            // 最右按钮圆心离右、上边线都 = inset
     types.forEach((ic, i) => {
         const cxB = lastCx - (n - 1 - i) * (rB * 2 + gap);
