@@ -461,8 +461,8 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
     }
 
     // ③ 浏览器 UI（顶部缝隙内）：绿点(左) + 三按钮(右)
-    // 角落对称：圆心离上边线 = 离左/右边线 = inset（两向等距）；inset 略大于 uiH/2 → 离边更宽松
-    const inset = uiH * 0.57;
+    // 圆心置于条正中（inset = uiH/2）：绿点/按钮离 上边线 / 左右边线 / 内容图上边线 四向间距全等
+    const inset = uiH / 2;
     const stripCy = by + inset;
     const types = ['save', 'copy', 'refresh'];
     const rB = uiH * 0.29;                     // 按钮半径（绿点同尺寸）；条高不变、仅缩小绿点/按钮
