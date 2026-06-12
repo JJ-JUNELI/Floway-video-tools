@@ -365,14 +365,14 @@
                         <div class="sub-section-label">玻璃材质</div>
                         <div class="row" style="justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--text-sub)">玻璃颜色</span>
                             <select id="GlassColor" style="width:120px">
-                                <option value="light">🤍 亮（白雾）</option>
-                                <option value="dark">🖤 暗（烟熏）</option>
+                                <option value="light">亮（白雾）</option>
+                                <option value="dark">暗（烟熏）</option>
                             </select>
                         </div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>白雾不透明度</span><span id="GlassVeilVal">12%</span></div><input type="range" id="GlassVeil" min="0" max="100" value="12"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边亮度</span><span id="GlassBorderVal">50%</span></div><input type="range" id="GlassBorder" min="0" max="100" value="50"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边粗细</span><span id="GlassBorderWidthVal">100%</span></div><input type="range" id="GlassBorderWidth" min="0" max="300" step="10" value="100"></div></div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>左上高光</span><span id="GlassHighlightVal">45%</span></div><input type="range" id="GlassHighlight" min="0" max="100" value="45"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>白雾不透明度</span><span id="GlassVeilVal">27%</span></div><input type="range" id="GlassVeil" min="0" max="100" value="27"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边亮度</span><span id="GlassBorderVal">35%</span></div><input type="range" id="GlassBorder" min="0" max="100" value="35"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边粗细</span><span id="GlassBorderWidthVal">150%</span></div><input type="range" id="GlassBorderWidth" min="0" max="300" step="10" value="150"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>左上高光</span><span id="GlassHighlightVal">48%</span></div><input type="range" id="GlassHighlight" min="0" max="100" value="48"></div></div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>扫光程度</span><span id="GlassSheenVal">45%</span></div><input type="range" id="GlassSheen" min="0" max="100" value="45"></div></div>
                         <div class="sub-title" style="margin-top:6px"><span>磨砂噪点</span><input type="checkbox" id="GlassGrain" checked></div>
                         <div style="font-size:11px; color:var(--text-sub); margin-top:4px;">玻璃为半透卡面，上传内容叠在其上；用「图片缩放」缩小内容可露出四周玻璃边</div>
@@ -540,8 +540,8 @@
             // ④ 辉光
             chromeGlowWidth: 0, chromeGlowColor: '#ffffff', chromeGlowIntensity: 0.5,
             // ④ 玻璃卡片（完整对齐玻璃卡片效果材质）
-            glassColor: 'light', glassVeil: 0.12, glassBorder: 0.5, glassBorderWidth: 1,
-            glassHighlight: 0.45, glassSheen: 0.45, glassGrain: true,
+            glassColor: 'light', glassVeil: 0.27, glassBorder: 0.35, glassBorderWidth: 1.5,
+            glassHighlight: 0.48, glassSheen: 0.45, glassGrain: true,
             // ⑤ 旋转光边
             rotatingSpeed: 18, rotatingLightColor: '#60a5fa', rotatingDimColor: '#1e1e3a',
             rotatingBorderWidth: 3, rotatingSegments: 5,
@@ -583,6 +583,16 @@
         function syncRatioLock() {
             setRatioLocked(!!currentMedia);
             syncImageScaleLock();
+        }
+
+        // 玻璃卡片选中时图片缩放跟随的默认值（露出四周玻璃边）；切回其它还原 100%
+        const GLASS_CARD_IMAGE_SCALE = 90;
+        function setImageScale(v) {
+            config.imageScale = v;
+            const el = document.getElementById('ImageScale');
+            const val = document.getElementById('ImageScaleVal');
+            if (el) el.value = v;
+            if (val) val.textContent = v + '%';
         }
 
         function loadFile(file) {
@@ -995,10 +1005,14 @@
             'rotating-light': 'RotatingLightOpts',
         };
         document.getElementById('BorderStyle').addEventListener('change', (e) => {
+            const prevStyle = config.borderStyle;
             config.borderStyle = e.target.value;
             document.querySelectorAll('.border-opts').forEach(el => el.style.display = 'none');
             const panelId = borderPanelMap[config.borderStyle];
             if (panelId) document.getElementById(panelId).style.display = '';
+            // 玻璃卡片：图片缩放跟随其默认值；从玻璃卡片切回其它则还原 100%
+            if (config.borderStyle === 'glass-card') setImageScale(GLASS_CARD_IMAGE_SCALE);
+            else if (prevStyle === 'glass-card') setImageScale(100);
             syncRatioLock();
             myResetAnimStart();
         });
