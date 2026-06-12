@@ -340,7 +340,7 @@
                     </div>
                     <div class="sub-section ss-purple">
                         <div class="sub-section-label">内容图（布局）</div>
-                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>内容边距</span><span id="ChromeContentInsetVal">14</span></div><input type="range" id="ChromeContentInset" min="0" max="60" value="14"></div></div>
+                        <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>内容边距</span><span id="ChromeContentInsetVal">11</span></div><input type="range" id="ChromeContentInset" min="0" max="60" value="11"></div></div>
                     </div>
                     <div class="sub-section ss-green">
                         <div class="sub-section-label">描边（底图 + 浏览器UI 共用）</div>
@@ -449,7 +449,7 @@
         import { initEffect } from '../shared/controls.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=corner-fix';
-        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect, CHROME_UI_RATIO, chromeBaseFromContent } from '../shared/border-effects.js?v=chrome-uih4';
+        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect, CHROME_UI_RATIO, chromeBaseFromContent } from '../shared/border-effects.js?v=chrome-uih5';
         import { drawGlassSurface } from '../shared/glass-surface.js?v=corner-fix';
 
 
@@ -534,7 +534,7 @@
             // 扫光/磨砂噪点已从面板移除并固定关闭
             chromeGlassSheen: 0, chromeGlassGrain: false,
             // ② 内容图布局（内容相对底图的内缩间距 = 边缝）
-            chromeContentInset: 14,
+            chromeContentInset: 11,
             // ③ 描边（底图 + UI 共用）
             chromeStrokeWidth: 3, chromeStrokeColor: '#000000',
             // ④ 辉光
