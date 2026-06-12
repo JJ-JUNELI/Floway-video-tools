@@ -374,10 +374,11 @@ function drawChromeIcon(ctx, type, cx, cy, s, color, lw, darkColor) {
 export const CHROME_UI_RATIO = 0.064;
 
 // 由「内容图尺寸(cw×ch) + 内容边距 m」反推底图尺寸：底图 = 内容 + 左/右/下各 m + 顶部 UI 条。
-// 返回 { bw, bh, uiH }。uiH 仅依赖 bw(=cw+2m)，无循环。给 card-3d 让整窗随素材比例自适配用。
+// 顶部 UI 条高 = 内容「较长边」× 比例 → 竖屏/横屏都得到一致比例的条（竖屏不再被窄宽度压扁）。
+// 返回 { bw, bh, uiH }。uiH 只依赖内容尺寸、不依赖 bh，无循环。card-3d 取 uiH 传回 cfg.chromeUiH 给绘制。
 export function chromeBaseFromContent(cw, ch, m) {
     const bw = cw + 2 * m;
-    const uiH = Math.round(bw * CHROME_UI_RATIO);
+    const uiH = Math.round(Math.max(cw, ch) * CHROME_UI_RATIO);
     const bh = ch + uiH + m;
     return { bw, bh, uiH };
 }
@@ -397,8 +398,9 @@ export function drawBrowserChrome(ctx, card, cfg, drawContentFn, timeMs) {
 
     // ① 灰色底图 = 卡片范围
     const bx = card.x, by = card.y, bw = card.w, bh = card.h;
-    // 顶部 UI 条高（只跟卡片宽相关，不随边缝 m 变 → 调边缝时 UI 不移动）
-    const uiH = Math.round(card.w * CHROME_UI_RATIO);
+    // 顶部 UI 条高：优先用 cfg.chromeUiH（card-3d 自适配按内容较长边算好传入，竖屏也匀称）；
+    // 无则退回按卡片宽估算（无媒体/独立调用时）
+    const uiH = cfg.chromeUiH != null ? cfg.chromeUiH : Math.round(card.w * CHROME_UI_RATIO);
     const cxr = bx + m, cwr = bw - 2 * m;
     const cyr = by + uiH, chr = bh - uiH - m;
     // 内容圆角 = 卡片圆角(夹取到内容尺寸)；只跟 R 相关，不随边缝 m 变 → 调边缝不改圆角

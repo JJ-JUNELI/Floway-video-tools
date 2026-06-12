@@ -449,7 +449,7 @@
         import { initEffect } from '../shared/controls.js';
         import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=corner-fix';
-        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect, CHROME_UI_RATIO, chromeBaseFromContent } from '../shared/border-effects.js?v=chrome-glassw';
+        import { drawSolidGlow, drawEdgeFeather, drawBrowserChrome, drawRotatingStroke, rrect, CHROME_UI_RATIO, chromeBaseFromContent } from '../shared/border-effects.js?v=chrome-uih';
         import { drawGlassSurface } from '../shared/glass-surface.js?v=corner-fix';
 
 
@@ -1136,22 +1136,25 @@
         // 卡片在画布中的区域
         // 有素材时：跟随素材比例（contain 居中）；缩小时卡面 = 图片 + 四周等宽边
         // 无素材时：按用户设定的 W:H 比例居中
+        config.chromeUiH = null;   // 默认无；仅浏览器边框+素材自适配时算好传给绘制
         function getCardBounds(w, h) {
             // 浏览器边框 + 有素材：内容图按素材(裁切后)比例，底图 = 内容 + 内容边距m(左右下) + 顶部UI条。
             // 整窗随素材比例自适配 → 内容不被二次裁切、四周无留边、内容边距即用户所设。
+            // 顶部UI条高 = 内容较长边×K（竖屏不再被窄宽度压扁）。uiH = Kc*ch（Kc=max(mAR,1)*K），仍线性可解。
             if (config.borderStyle === 'browser-chrome' && currentMedia) {
                 const { w: mw, h: mh } = getMediaSize(currentMedia);
                 if (mw && mh) {
                     const mAR = mw / mh;
                     const m = config.chromeContentInset || 0;
                     const K = CHROME_UI_RATIO;
-                    // 解内容高 ch，使底图 bw≤w 且 bh≤h：
-                    //   bw = mAR*ch + 2m ;  bh = ch*(1+K*mAR) + m*(2K+1)
+                    const Kc = Math.max(mAR, 1) * K;          // uiH = max(cw,ch)*K = Kc*ch
+                    // 解内容高 ch，使底图 bw≤w 且 bh≤h：bw = mAR*ch + 2m ;  bh = ch*(1+Kc) + m
                     const chByW = (w - 2 * m) / mAR;
-                    const chByH = (h - m * (2 * K + 1)) / (1 + K * mAR);
+                    const chByH = (h - m) / (1 + Kc);
                     const ch = Math.max(1, Math.min(chByW, chByH));
                     const cw = ch * mAR;
-                    const { bw, bh } = chromeBaseFromContent(cw, ch, m);
+                    const { bw, bh, uiH } = chromeBaseFromContent(cw, ch, m);
+                    config.chromeUiH = uiH;                   // 传给 drawBrowserChrome，保证碎切内容=ch
                     _cardPad = 0;
                     return { x: (w - bw) / 2, y: (h - bh) / 2, w: bw, h: bh };
                 }
