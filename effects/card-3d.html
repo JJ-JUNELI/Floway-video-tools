@@ -322,7 +322,7 @@
                 <!-- ③ 浏览器窗口 -->
                 <div id="BrowserChromeOpts" class="border-opts" style="display:none">
                     <div class="sub-section ss-amber">
-                        <div class="sub-section-label">① 底图（玻璃材质）</div>
+                        <div class="sub-section-label">底图（玻璃材质）</div>
                         <div class="row" style="justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--text-sub)">玻璃色调</span>
                             <select id="ChromeGlassTint" style="width:100px">
                                 <option value="light">亮</option>
@@ -336,18 +336,18 @@
                         <div class="sub-title" style="margin-top:6px"><span>磨砂噪点</span><input type="checkbox" id="ChromeGlassGrain" checked></div>
                     </div>
                     <div class="sub-section ss-purple">
-                        <div class="sub-section-label">② 内容图（布局）</div>
+                        <div class="sub-section-label">内容图（布局）</div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>内容边距</span><span id="ChromeContentInsetVal">14</span></div><input type="range" id="ChromeContentInset" min="0" max="60" value="14"></div></div>
                     </div>
                     <div class="sub-section ss-green">
-                        <div class="sub-section-label">③ 描边（底图 + 浏览器UI 共用）</div>
+                        <div class="sub-section-label">描边（底图 + 浏览器UI 共用）</div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>描边宽度</span><span id="ChromeStrokeWidthVal">3</span></div><input type="range" id="ChromeStrokeWidth" min="0" max="20" value="3"></div></div>
                         <div class="row stack">
                             <div class="label-line"><span>描边颜色</span></div>
                             <input type="color" id="ChromeStrokeColor" value="#000000"></div>
                     </div>
                     <div class="sub-section ss-blue">
-                        <div class="sub-section-label">④ 辉光（可选）</div>
+                        <div class="sub-section-label">辉光（可选）</div>
                         <div class="row"><div style="flex:1" class="stack"><div class="label-line"><span>辉光宽度</span><span id="ChromeGlowWidthVal">0</span></div><input type="range" id="ChromeGlowWidth" min="0" max="60" value="0"></div></div>
                         <div class="row stack">
                             <div class="label-line"><span>辉光颜色</span></div>
@@ -456,6 +456,8 @@
             baseWidth, baseHeight, scale,
             defaultBgMode: 'transparent',
             onFrame: drawFrame,
+            // 本效果的渲染循环在静止态会自终止；背景变化时需主动重绘一帧
+            onBackgroundChange: () => startLoop(),
             sharedPanels: {
                 entryAnimation: {
                     xyRange: [-3000, 3000],

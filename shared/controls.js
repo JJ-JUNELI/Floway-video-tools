@@ -392,6 +392,7 @@ export function initEffect(opts) {
         baseHeight,
         scaleFactor: scale,
         svgTargets: opts.svgTargets,
+        onChange: opts.onBackgroundChange,
     });
 
     // 4. Recorder（预览模式用空桩）

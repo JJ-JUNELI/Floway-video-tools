@@ -45,6 +45,8 @@ export class Background {
         this.baseWidth = opts.baseWidth || 1440;
         this.baseHeight = opts.baseHeight || 1080;
         this.scaleFactor = opts.scaleFactor || 1;
+        // 背景状态变化后回调宿主（用于自终止渲染循环的效果，如 card-3d，需主动重绘一帧）
+        this.onChange = opts.onChange || null;
 
         this.mode = this.defaultMode;
         this.patternColor = this.defaultPatternColor;
@@ -63,6 +65,10 @@ export class Background {
 
         this._updatePatternCache();
         if (this.svgBgRect) this._syncSvg();
+    }
+
+    _notify() {
+        if (this.onChange) this.onChange();
     }
 
     _bindUI() {
@@ -96,6 +102,7 @@ export class Background {
                 }
 
                 this._syncSvg();
+                this._notify();   // 切模式后通知宿主重绘（custom 走上传 onload 再通知）
             });
         }
 
@@ -107,10 +114,12 @@ export class Background {
                 if (f.type.startsWith('image/')) {
                     this.bgMediaType = 'image';
                     this.bgMedia = new Image();
+                    this.bgMedia.onload = () => this._notify();   // 图片加载完再通知宿主重绘
                     this.bgMedia.src = url;
                 } else {
                     this.bgMediaType = 'video';
                     this.bgMedia = document.createElement('video');
+                    this.bgMedia.addEventListener('loadeddata', () => this._notify());
                     this.bgMedia.src = url;
                     this.bgMedia.loop = true;
                     this.bgMedia.muted = true;
@@ -127,6 +136,7 @@ export class Background {
                 this.patternColor = e.target.value;
                 this._updatePatternCache();
                 this._syncSvg();
+                this._notify();
             });
         }
 
@@ -140,6 +150,7 @@ export class Background {
                 const v = parseInt(e.target.value, 10);
                 this.paperTexture.setWarmth(v);
                 if (paperWarmthVal) paperWarmthVal.textContent = v;
+                this._notify();
             });
         }
     }
