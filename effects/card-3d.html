@@ -1276,7 +1276,8 @@
                         featherCornerRadius: config.cardRadius,
                     }, offscreen);
                 } else if (style === 'browser-chrome') {
-                    // 浏览器窗口内容区强制 cover 模式，不留黑边
+                    // 内容区 = 显示「上传并已裁切好」的内容，用 contain 完整呈现，浏览器边框不再二次裁切。
+                    // 比例与内容区不符时，留出卡片底色边（非黑边），不裁掉任何内容。
                     const drawChromeContent = (c, cx, cy, cw, ch) => {
                         c.save();
                         c.translate(cx, cy);
@@ -1287,7 +1288,7 @@
                         if (currentMedia && !config.hideMedia) {
                             const r = mediaSrcRect(currentMedia);
                             if (r.sw && r.sh) {
-                                const s = Math.max(cw / r.sw, ch / r.sh);
+                                const s = Math.min(cw / r.sw, ch / r.sh);   // contain：取小，整张内容都进框
                                 const dw = r.sw * s, dh = r.sh * s;
                                 c.drawImage(currentMedia, r.sx, r.sy, r.sw, r.sh, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
                             }
