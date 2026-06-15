@@ -131,7 +131,7 @@ WebGL 效果额外依赖：
 唯一挂着的功能 bug，最便宜先清。窄屏实测 SVG 是否溢出冒滚动条；若在，用 `position:absolute; inset:0` + 容器 `overflow:hidden` 收口。
 > 注：实测发现 SVG 实为 `preserveAspectRatio="xMidYMid meet"`（非 CLAUDE.md 旧记的 `slice`），已有三重 `overflow:hidden` + iframe `scrolling="no"`，CLAUDE.md 该条记录疑似过时。
 
-### Phase 1 — manifest 化首页 🎯（最高性价比）
+### Phase 1 — manifest 化首页 🎯（最高性价比）✅ 已完成（2026-06-15, commit 24f8b0d）
 根治「首页卡片硬编码 + 效果文件漂移」，并为「AI 生成新效果自动入库」铺路。
 - 新建 `effects/manifest.js`（用 **.js 不用 .json**：图标 SVG 用模板字符串更干净、免 fetch、能在 `file://` 跑）。每项 `{ id, file, title, desc, category, keywords, tags, icon(SVG字符串), featured }`。
 - index.html 的 `#ToolGrid`（和精选区）改为从 manifest 渲染，删 ~10 段静态 `<a class="ext-card">`；筛选 tab / ⌘K 搜索 / cat-thumb 接到动态 DOM（注意 ResizeObserver 重对齐时机）。

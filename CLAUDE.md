@@ -166,8 +166,9 @@ push/PR 自动触发 `.github/workflows/smoke.yml`。新增/改动效果页或�
 
 ## 文件结构速查
 ```
-index.html          # 首页（精选预览 + 工具网格）
+index.html          # 首页（工具网格由 effects/manifest.js 动态渲染）
 effects/*.html      # 各效果页（独立单文件）
+effects/manifest.js # 效果清单（单一事实源）：首页卡片数据 + cardHTML/renderToolGrid；新增效果在此登记一项
 shared/
   controls.js       # initEffect() 入口 + 面板注入（含导出面板：格式/帧率/分辨率档）
   recorder.js       # 录制引擎：MP4(WebCodecs)/WebM(MediaRecorder)/PNG(JSZip)/透明视频(PNG-in-MOV 自封装)；recorder.keepsAlpha

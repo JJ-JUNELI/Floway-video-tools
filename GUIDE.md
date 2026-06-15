@@ -19,7 +19,7 @@
 **你只需要：**
 - 描述你要什么效果
 - 把 AI 输出的 HTML 文件保存到 `effects/` 目录
-- 在 `index.html` 的 `.grid-container` 里加一个卡片链接
+- 在 `effects/manifest.js` 的 `EFFECTS` 数组里加一项（id/file/title/desc/category/version/keywords/icon），首页自动出卡片，无需改 `index.html`
 
 ---
 
@@ -40,8 +40,9 @@ floway-tools-v2/
 │   ├── stack-scan.html
 │   ├── logo-matrix.html
 │   ├── particle-field.html   ← 参考实例
-│   └── [新效果].html         ← AI 生成的文件放这里
-└── index.html          ← 导航页（需要手动加卡片链接）
+│   ├── [新效果].html         ← AI 生成的文件放这里
+│   └── manifest.js          ← 效果清单（新增效果在此登记一项，首页自动渲染卡片）
+└── index.html          ← 导航页（卡片由 manifest.js 动态渲染，无需手改）
 ```
 
 ---
