@@ -137,12 +137,11 @@ WebGL 效果额外依赖：
 - index.html 的 `#ToolGrid`（和精选区）改为从 manifest 渲染，删 ~10 段静态 `<a class="ext-card">`；筛选 tab / ⌘K 搜索 / cat-thumb 接到动态 DOM（注意 ResizeObserver 重对齐时机）。
 - 加**双向漂移测试**进冒烟：manifest 每项 `file` 存在且无错加载；`effects/*.html` 每个都在 manifest 里。
 
-### Phase 2 — UI 一致性收口 🎨（纯体感，工作量中）
-先定规范再逐效果落地。
-- **2a** 写规范进 GUIDE.md：slider=stack、select/color/checkbox=row；单位统一（透明度`%`/角度`°`/字号`px`/时长`s`）；分组标题统一中文；分组顺序统一为 **模式/内容 → 样式 → 排版位置 → 动画 → 共享(背景+导出)**。
-- **2b** 逐效果改 HTML/顺序（10 文件，机械但量大，逐个改完跑冒烟+目测）。
-- **2c** checkbox 语义区分：chart-fx 14 个一样的 toggle 里，模式选择类改 segmented/select、功能开关留 toggle（动逻辑，单独做）。
-- **⚠️ 关键依赖**：改控件顺序会破 card-3d 快照测试（按 DOM 顺序 dump），每次调顺序须同步更新 `tests/snapshots/card-3d.json`。
+### Phase 2 — UI 一致性收口 🎨（纯体感）✅ 基本完成（2026-06-15）——只做了标题，其余作废
+评审后大幅收窄：多数「为整齐而整齐」的改动收益低或与现有机制冲突，**仅保留标题清理**。
+- **2a 规范** 已写进 GUIDE.md「面板设计规范」(commit 75b93fe)，并按用户反馈修正：**滑块默认不加单位**（px 等是刻意去掉的，加了视觉杂乱；仅保留既有 %/°/s 消歧）。见 [[slider-no-unit-suffix]]。
+- **2b 分组标题** 去中英混用已完成(commit 773e574)：`填充设置 (Fill)`→`填充设置` 等 3 处。标题里纯文本须包 `<span>`（折叠按钮归位约束）。
+- **作废项**：① 补单位 → 用户刻意不加；② 分组线性顺序统一 → 参数早已**标签化**（`initCategoryTabs` 按 data-cat/关键词自动归类，侧栏按 内容/样式/动画 tab 切换），线性顺序无意义且冲突；③ 控件横竖排方向统一 → 真实不一致极少，收益太小；④ checkbox 改 select → 模式本就用下拉（如 `EffectMode`），无真实案例。
 
 ### Phase 3 — 录制体验 📹（高频痛点）✅ 已完成（2026-06-15, commit df909bb）
 改 `recorder.js` 一处，所有效果受益。
