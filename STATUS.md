@@ -122,13 +122,42 @@ WebGL 效果额外依赖：
 
 ---
 
-## 五、未来规划
+## 五、改进路线图（2026-06-15 制定）
 
-1. **主题切换自动化** — 将 themeToggle 按钮绑定收进 `initEffect()`，消除每个效果重复的 8 行样板代码
-2. **ChartCore（进行中，见路线图 Phase C）** — 抽三图表共享的 config 默认 + `MODE_PRESETS` 预设引擎 + 数据表格 CRUD 到 `shared/chart-core.js`，根除「副本漂移」
-3. **bindUI 以 config 为唯一真相（路线图 Phase B）** — 初始化把 config 推回 UI，改默认值只需改一处
-4. **Manifest 机制** — 效果数量增多后，用 `effects/manifest.json` 驱动 index.html 动态渲染卡片
-5. **模板库应用** — index.html 改造为支持 AI 聊天生成新效果的完整应用
+> 按「风险 × 收益」排序：低风险高收益在前，高风险重构压轴。每阶段独立成 PR、单独 commit+push 到 `claude/dev`、`npm test` 保持绿、不推 main。
+> **建议执行顺序：0 → 1 →（3、4 穿插）→ 2 → 5**。
+
+### Phase 0 — 排查/修复 stack-scan 预览滚动条 ⚡
+唯一挂着的功能 bug，最便宜先清。窄屏实测 SVG 是否溢出冒滚动条；若在，用 `position:absolute; inset:0` + 容器 `overflow:hidden` 收口。
+> 注：实测发现 SVG 实为 `preserveAspectRatio="xMidYMid meet"`（非 CLAUDE.md 旧记的 `slice`），已有三重 `overflow:hidden` + iframe `scrolling="no"`，CLAUDE.md 该条记录疑似过时。
+
+### Phase 1 — manifest 化首页 🎯（最高性价比）
+根治「首页卡片硬编码 + 效果文件漂移」，并为「AI 生成新效果自动入库」铺路。
+- 新建 `effects/manifest.js`（用 **.js 不用 .json**：图标 SVG 用模板字符串更干净、免 fetch、能在 `file://` 跑）。每项 `{ id, file, title, desc, category, keywords, tags, icon(SVG字符串), featured }`。
+- index.html 的 `#ToolGrid`（和精选区）改为从 manifest 渲染，删 ~10 段静态 `<a class="ext-card">`；筛选 tab / ⌘K 搜索 / cat-thumb 接到动态 DOM（注意 ResizeObserver 重对齐时机）。
+- 加**双向漂移测试**进冒烟：manifest 每项 `file` 存在且无错加载；`effects/*.html` 每个都在 manifest 里。
+
+### Phase 2 — UI 一致性收口 🎨（纯体感，工作量中）
+先定规范再逐效果落地。
+- **2a** 写规范进 GUIDE.md：slider=stack、select/color/checkbox=row；单位统一（透明度`%`/角度`°`/字号`px`/时长`s`）；分组标题统一中文；分组顺序统一为 **模式/内容 → 样式 → 排版位置 → 动画 → 共享(背景+导出)**。
+- **2b** 逐效果改 HTML/顺序（10 文件，机械但量大，逐个改完跑冒烟+目测）。
+- **2c** checkbox 语义区分：chart-fx 14 个一样的 toggle 里，模式选择类改 segmented/select、功能开关留 toggle（动逻辑，单独做）。
+- **⚠️ 关键依赖**：改控件顺序会破 card-3d 快照测试（按 DOM 顺序 dump），每次调顺序须同步更新 `tests/snapshots/card-3d.json`。
+
+### Phase 3 — 录制体验 📹（高频痛点）
+改 `recorder.js` 一处，所有效果受益。
+- 录制中显示进度：定长录制（`maxDurationSec`）显示 已录帧/总帧 + 百分比 + 估算剩余；PNG/MOV 封装阶段显示打包进度。
+- 透明视频内存上限按浏览器区分：Chromium 维持 12GB（Blob 落盘）、非 Chromium 调低并在选格式时提示。
+
+### Phase 4 — 主题切换样板收口 🧹（低风险低收益）
+把 themeToggle 按钮注入 + `initThemeToggle()` 收进 `initEffect`/`injectPanels`，消除每效果 3 处样板。⚠️ stack-scan 不走 initEffect，需特判保留手动初始化。
+
+### Phase 5 — ChartCore 重构 🏗️（高风险，压轴，单独 PR）
+抽 chart-fx/bar-chart/pie-chart/multi-line 共享的 `config` 默认 + `MODE_PRESETS`（`definePresetPair`）+ 数据表格 CRUD → `shared/chart-core.js`，根除四文件副本漂移。**依赖 Phase 2 的 UI 规范先定好**，否则重构完返工。
+
+### 远期
+- **bindUI 以 config 为唯一真相**：初始化把 config 推回 UI，改默认值只需改一处（部分已在 Phase B 落地）。
+- **模板库应用**：index.html 改造为支持 AI 聊天生成新效果的完整应用（Phase 1 manifest 是其前置）。
 
 ---
 

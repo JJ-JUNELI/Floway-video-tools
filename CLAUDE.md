@@ -118,7 +118,8 @@ Chromium 下，带 `backdrop-filter` 的元素若**嵌套在另一个 backdrop-f
 - [x] ~~**VideoEncoder 没有 feature detection**~~ **已修**：recorder.js `_loadLibs` 检测 `typeof VideoEncoder`，不支持(Firefox/Safari)时禁用 mp4 选项并改名「(需要 Chrome/Edge)」、自动切 webm。
 - [x] ~~**Recorder 库检测靠 setTimeout 300ms**~~ **已修**：改为轮询(150ms/最多 5s)等 `window.Mp4Muxer`，弱网不再过早误判离线。
 - [x] ~~**start.sh 不支持 macOS**~~ **已修**：WSL 后、xdg-open 前加了 `command -v open` 的 macOS 分支。
-- [ ] **预览橱窗 stack-scan 仍可能有滚动条**：SVG preserveAspectRatio="slice" 溢出问题可能还未完全解决，需实际测试
+- [x] ~~**预览橱窗 stack-scan 仍可能有滚动条**~~ **已核实不存在**（2026-06-15 playwright 多尺寸实测无溢出）：SVG 实为 `preserveAspectRatio="xMidYMid meet"`（非旧记的 `slice`），叠加三重 `overflow:hidden`（根 .preview-mode + 内联脚本 body + .preview-area）+ iframe `scrolling="no"`，不会冒滚动条。
+- [ ] **（休眠）预览模式交叉轴塌成 0 → featured 预览空白**：`.preview-mode` 强制 `align-items:center`，使 preview-area 在交叉轴收缩到内容尺寸；canvas/SVG 又靠 `height/width:100%` 反向依赖父尺寸，一起塌成 0（横向视口塌高、竖向塌宽，所有效果通病，非 stack-scan 特有）。当前 featured 精选区已注释，无用户可见影响；若重新启用 iframe 预览需先修（给 preview-area 确定的交叉轴尺寸/改 stretch）。
 
 ### 小问题
 - [x] ~~**精选区和全部工具区重复展示**~~ **已解决**：首页精选推荐区(`featured-section`)已注释隐藏，只剩「探索」全部工具网格。
