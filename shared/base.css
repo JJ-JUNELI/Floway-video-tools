@@ -1694,19 +1694,31 @@ body.logo canvas {
 }
 .preview-mode canvas,
 .preview-mode #mainSvg {
-    width: 100% !important;
-    height: 100% !important;
-    max-width: none !important;
     border-radius: 0 !important;
     border: none !important;
     box-shadow: none !important;
 }
+.preview-mode canvas {
+    /* 保持 4:3 不拉伸：撑满受限轴、另一轴按比例、绝对居中（同非预览行为，仅去边框）。
+       不要用 width/height:100%——会把画面拉伸到 iframe 宽高比 */
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+}
 .preview-mode #mainSvg {
     position: absolute !important;
     inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
     transform: none !important;
+    /* viewBox + preserveAspectRatio="meet" 自带 letterbox，填满不拉伸 */
 }
 .preview-mode .preview-area {
+    /* align-self:stretch：预览模式 body 为 align-items:center，会让 preview-area 在交叉轴
+       收缩到内容尺寸；而 canvas/SVG 为 absolute 脱流、无内容撑 → 整块塌成 0、预览空白。
+       stretch 覆盖 center，配合 flex:1 填满两轴。 */
+    align-self: stretch !important;
     overflow: hidden !important;
     position: relative !important;
     background: transparent !important;
