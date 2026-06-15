@@ -3,7 +3,7 @@
  * 一行代码完成：Canvas 初始化、Background、Recorder、面板注入、预览循环
  */
 
-import { Recorder } from './recorder.js?v=free-mem';
+import { Recorder } from './recorder.js?v=rec-progress';
 import { Background } from './background.js';
 import { lerp, hexToRgba, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, getEasing, loadFont, setupFontSelector, initFontSelector, FONT_LIST, fontSelectHTML, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped, bindUI, applyVignetteMask, calcGradCoords } from './utils.js';
 import { getTheme } from './themes.js';

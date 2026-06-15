@@ -68,8 +68,35 @@ export class Recorder {
         this._proresN = 0;            // 透明视频: 已加入封装器的帧数
 
         this._libsLoaded = false;
+
+        // 浏览器是否 Chromium 系：决定透明视频内存上限（Chromium 大 Blob 可落盘 → 上限高；
+        // Firefox/Safari 大 Blob 更可能常驻内存 → 上限调低，并在选透明视频时提示）。
+        this._isChromium = (() => {
+            try {
+                const uad = navigator.userAgentData;
+                if (uad && Array.isArray(uad.brands)) {
+                    return uad.brands.some(b => /Chromium|Google Chrome|Microsoft Edge/i.test(b.brand));
+                }
+            } catch (e) { /* ignore */ }
+            const ua = navigator.userAgent || '';
+            return /Chrome|Chromium|Edg\//.test(ua) && !/Firefox/.test(ua);
+        })();
+
         this._loadLibs();
         this._bindButton();
+        this._initProresHint();
+    }
+
+    /** 非 Chromium 浏览器：在透明视频档位行内提示时长上限较低（选透明视频时该行才显示，即「选格式时提示」）。 */
+    _initProresHint() {
+        if (this._isChromium) return;
+        const opts = document.getElementById('ProResOpts');
+        if (!opts || opts.querySelector('.prores-hint')) return;
+        const hint = document.createElement('div');
+        hint.className = 'prores-hint';
+        hint.textContent = '⚠️ 当前浏览器对大文件支持有限，透明视频时长上限较低；长视频建议用 Chrome/Edge。';
+        hint.style.cssText = 'flex-basis:100%;font-size:11px;line-height:1.45;opacity:.72;margin-top:2px;';
+        opts.appendChild(hint);
     }
 
     _loadLibs() {
@@ -117,10 +144,11 @@ export class Recorder {
         this._movMux = new PngMovMuxer({ fps: this._proresFps || 30 });
         this._proresN = 0;
         this._proresBytes = 0;
-        // PNG 帧以 Blob 持有（浏览器可落盘）→ 内存不再是主瓶颈，预算抬到 ~12GB。
-        // 仍保留上限：超大文件受 Blob 存储/磁盘/下载约束，到顶自动收尾+提示而非崩页。
+        // PNG 帧以 Blob 持有 → 内存不再是主瓶颈。预算按浏览器分档：
+        // Chromium 大 Blob 自动落盘 → ~12GB；Firefox/Safari 大 Blob 更可能常驻内存 → 调低到 ~2.5GB，
+        // 防止长序列吃满内存崩页。到顶自动收尾+提示而非崩页。
         // 注：mov-muxer 在 >4GB 时已切 64 位 mdat，文件结构本身不再卡 4GB。
-        this._proresByteBudget = 12e9;
+        this._proresByteBudget = this._isChromium ? 12e9 : 2.5e9;
         this._proresHitCap = false;
     }
 
@@ -174,6 +202,7 @@ export class Recorder {
         this._captureFps = 60;   // 默认 60；ProRes 可改 30（见下）
         document.body.classList.add('is-recording');
         this.ind.style.display = 'flex';
+        this._clearProgress();
 
         if (this.onStateChange) this.onStateChange(true);
 
@@ -294,8 +323,10 @@ export class Recorder {
         if (this.onStateChange) this.onStateChange(false);
 
         if (this.format === 'png_seq') {
-            this.btn.innerHTML = "⏳ 打包 ZIP 中...";
-            this.zip.generateAsync({ type: "blob" }).then(content => {
+            this.btn.innerHTML = "⏳ 打包 ZIP 0%";
+            this.zip.generateAsync({ type: "blob" }, (meta) => {
+                this.btn.innerHTML = `⏳ 打包 ZIP ${Math.floor(meta.percent)}%`;
+            }).then(content => {
                 saveFile(content, `${this.fileName}_Seq_${Date.now()}.zip`);
                 this._resetBtn();
             });
@@ -333,6 +364,8 @@ export class Recorder {
         if (!this._webmLoopRunning) return;
         const elapsed = performance.now() - this._animStartTime;
         this.onFrame(elapsed);
+        this.frameCount++;
+        this._updateProgress(elapsed);
         requestAnimationFrame(() => this._webmLoop());
     }
 
@@ -435,6 +468,7 @@ export class Recorder {
         }
 
         this.frameCount++;
+        this._updateProgress();
 
         // 时长跟随（如"导出时长=视频长度"）：达到目标帧数自动收尾。用实际 captureFps 换算。
         if (this.maxDurationSec > 0 && this._captureFps > 0 &&
@@ -453,6 +487,47 @@ export class Recorder {
         }
     }
 
+    // ====== 录制进度反馈（RecIndicator 内追加 .rec-progress，不动各效果原标签） ======
+
+    _ensureProgressEl() {
+        if (this._progEl && this._progEl.isConnected) return this._progEl;
+        if (!this.ind) return null;
+        let el = this.ind.querySelector('.rec-progress');
+        if (!el) {
+            el = document.createElement('span');
+            el.className = 'rec-progress';
+            el.style.cssText = 'margin-left:6px;opacity:.85;font-variant-numeric:tabular-nums;';
+            this.ind.appendChild(el);
+        }
+        this._progEl = el;
+        return el;
+    }
+
+    /** 每帧更新进度：定长录制显示「已录/总 帧 百分比」，手动停显示「帧数 · 秒」；透明视频附累计 MB。 */
+    _updateProgress(elapsedMsOverride) {
+        const el = this._ensureProgressEl();
+        if (!el) return;
+        const fps = this._captureFps || 60;
+        const n = this.frameCount;
+        let txt;
+        if (this.maxDurationSec > 0 && fps > 0) {
+            const total = Math.max(1, Math.round(this.maxDurationSec * fps));
+            const pct = Math.min(100, Math.floor((n / total) * 100));
+            txt = `· ${n}/${total} 帧 ${pct}%`;
+        } else {
+            const elapsed = elapsedMsOverride != null ? elapsedMsOverride / 1000 : n / fps;
+            txt = `· ${n} 帧 ${elapsed.toFixed(1)}s`;
+        }
+        if (this.format === 'prores' && this._proresBytes) {
+            txt += ` · ${(this._proresBytes / 1e6).toFixed(0)}MB`;
+        }
+        el.textContent = ' ' + txt;
+    }
+
+    _clearProgress() {
+        if (this._progEl) this._progEl.textContent = '';
+    }
+
     _saveVideoWebM() {
         const blob = new Blob(this.chunks, { type: 'video/webm' });
         saveFile(blob, `${this.fileName}_${Date.now()}.webm`);
@@ -462,6 +537,7 @@ export class Recorder {
 
     _resetBtn() {
         this._freeBuffers();
+        this._clearProgress();
         this.btn.innerHTML = "⬤ 录制";
         this.btn.disabled = false;
         if (this.onStateChange) this.onStateChange(false);
