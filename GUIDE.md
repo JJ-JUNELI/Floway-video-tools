@@ -49,7 +49,7 @@ floway-tools-v2/
 
 ## 效果文件模板
 
-每个效果是一个**完整的单文件 HTML**。背景面板和导出面板由 `shared/controls.js` 自动注入，**你不需要写也不应该修改它们**。
+每个效果是一个**完整的单文件 HTML**。背景面板、导出面板、以及 sidebar-header 的**主题切换按钮**都由 `shared/controls.js` 的 `initEffect()` 自动注入，**你不需要写也不应该修改它们**（不用再手写 `#themeToggle` 按钮、import `initThemeToggle` 或调用它）。
 
 ### 模板 A（推荐）：Canvas 最简模式 — onRender
 

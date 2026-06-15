@@ -149,8 +149,8 @@ WebGL 效果额外依赖：
 - 录制中显示进度：定长录制（`maxDurationSec`）显示 已录帧/总帧 + 百分比 + 估算剩余；PNG/MOV 封装阶段显示打包进度。
 - 透明视频内存上限按浏览器区分：Chromium 维持 12GB（Blob 落盘）、非 Chromium 调低并在选格式时提示。
 
-### Phase 4 — 主题切换样板收口 🧹（低风险低收益）
-把 themeToggle 按钮注入 + `initThemeToggle()` 收进 `initEffect`/`injectPanels`，消除每效果 3 处样板。⚠️ stack-scan 不走 initEffect，需特判保留手动初始化。
+### Phase 4 — 主题切换样板收口 🧹（低风险低收益）✅ 已完成（2026-06-15, commit 待填）
+把 themeToggle 按钮注入 + `initThemeToggle()` 收进 `initEffect`（新增 `initThemeToggleButton()`：注入按钮+绑定，幂等），消除 9 个效果各 3 处样板（按钮 HTML/import/调用）。stack-scan 不走 initEffect，保留其自管的手动主题接线。
 
 ### Phase 5 — ChartCore 重构 🏗️（高风险，压轴，单独 PR）
 抽 chart-fx/bar-chart/pie-chart/multi-line 共享的 `config` 默认 + `MODE_PRESETS`（`definePresetPair`）+ 数据表格 CRUD → `shared/chart-core.js`，根除四文件副本漂移。**依赖 Phase 2 的 UI 规范先定好**，否则重构完返工。

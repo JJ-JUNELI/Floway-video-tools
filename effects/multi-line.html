@@ -140,9 +140,6 @@
         <div class="sidebar-header">
             <a href="../index.html" class="btn-icon" title="返回首页" style="text-decoration:none; margin-right:8px; font-size:15px;">←</a>
             <div class="app-title"><svg class="app-icon" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span>多折线图</span><span style="font-size:9px; color:var(--text-sub, #888)">v1.0</span></div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button id="themeToggle" class="btn-theme" title="切换主题"></button>
-            </div>
         </div>
 
         <div class="controls-container">
@@ -477,7 +474,7 @@
         import { initEffect } from '../shared/controls.js';
         import { definePresetPair } from '../shared/utils.js';
         import { drawSolidGlow } from '../shared/border-effects.js';
-        import { getTheme, toggleTheme, initThemeToggle } from '../shared/themes.js';
+        import { getTheme } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=corner-fix';
         import { drawGlassSurface } from '../shared/glass-surface.js?v=corner-fix';
 
@@ -1100,7 +1097,6 @@
         window.resetData = () => { labels = INITIAL_LABELS.slice(); lineSeries = INITIAL_SERIES.map(s => ({ ...s, values: s.values.slice() })); renderTable(); invalidateData(); };
 
         document.getElementById('BtnPlay').addEventListener('click', () => myResetAnimStart());
-        initThemeToggle();
 
         // 条件显示：数值标签选项
         const valueOptsEl = document.getElementById('ValueLabelOpts');

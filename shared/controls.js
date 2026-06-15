@@ -6,7 +6,7 @@
 import { Recorder } from './recorder.js?v=rec-progress';
 import { Background } from './background.js';
 import { lerp, hexToRgba, getLightness, clamp, easeLinear, easeInCubic, easeOutCubic, easeInOutCubic, easeOutQuart, easeOutExpo, getEasing, loadFont, setupFontSelector, initFontSelector, FONT_LIST, fontSelectHTML, drawMediaContain, createLinearGradient, createRadialGradient, drawTextCentered, drawTextWrapped, bindUI, applyVignetteMask, calcGradCoords } from './utils.js';
-import { getTheme } from './themes.js';
+import { getTheme, initThemeToggle } from './themes.js';
 import { enhanceAllSelects, enhanceSelect } from './custom-select.js';
 
 // ========== 共享面板构建器 ==========
@@ -330,6 +330,20 @@ export function injectPanels(opts = {}) {
  * @param {{bgRect, patternEl}} [opts.svgTargets] - 透传给 Background（仅 SVG 效果使用）
  * @returns {{ ctx, canvas, bg, recorder, baseWidth, baseHeight, scale, clearFrame, drawBg, startPreviewLoop, resetAnimStart }}
  */
+// ========== 主题切换按钮（注入 + 绑定，免各效果重复 3 处样板：按钮 HTML/import/调用） ==========
+// 各效果 sidebar-header 原本各写一个 <button id="themeToggle">；现统一在此注入并绑定。
+// 幂等：若效果 HTML 仍保留静态按钮则跳过注入、只绑定。stack-scan 不走 initEffect，仍自管。
+function initThemeToggleButton() {
+    const header = document.querySelector('.sidebar-header');
+    if (header && !header.querySelector('#themeToggle')) {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex; align-items:center; gap:10px;';
+        wrap.innerHTML = '<button id="themeToggle" class="btn-theme" title="切换主题"></button>';
+        header.appendChild(wrap);
+    }
+    initThemeToggle();
+}
+
 export function initEffect(opts) {
     // 0. 预览模式检测
     const isPreview = new URLSearchParams(window.location.search).has('preview');
@@ -364,6 +378,9 @@ export function initEffect(opts) {
 
     // 1.12 参数分类标签（文字/数据 · 样式 · 动画）
     if (!isPreview) initCategoryTabs();
+
+    // 1.13 主题切换按钮（注入 sidebar-header + 绑定，免各效果重复 3 处样板）
+    if (!isPreview) initThemeToggleButton();
 
     // 2. Canvas 初始化（预览模式降低分辨率；可跳过供 WebGL/SVG 效果使用）
     const baseWidth = opts.baseWidth || 1440;
