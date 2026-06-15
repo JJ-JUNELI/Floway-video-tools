@@ -144,7 +144,7 @@ WebGL 效果额外依赖：
 - **2c** checkbox 语义区分：chart-fx 14 个一样的 toggle 里，模式选择类改 segmented/select、功能开关留 toggle（动逻辑，单独做）。
 - **⚠️ 关键依赖**：改控件顺序会破 card-3d 快照测试（按 DOM 顺序 dump），每次调顺序须同步更新 `tests/snapshots/card-3d.json`。
 
-### Phase 3 — 录制体验 📹（高频痛点）
+### Phase 3 — 录制体验 📹（高频痛点）✅ 已完成（2026-06-15, commit df909bb）
 改 `recorder.js` 一处，所有效果受益。
 - 录制中显示进度：定长录制（`maxDurationSec`）显示 已录帧/总帧 + 百分比 + 估算剩余；PNG/MOV 封装阶段显示打包进度。
 - 透明视频内存上限按浏览器区分：Chromium 维持 12GB（Blob 落盘）、非 Chromium 调低并在选格式时提示。
