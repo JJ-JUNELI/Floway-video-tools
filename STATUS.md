@@ -151,8 +151,9 @@ WebGL 效果额外依赖：
 ### Phase 4 — 主题切换样板收口 🧹（低风险低收益）✅ 已完成（2026-06-15, commit b6d224a）
 把 themeToggle 按钮注入 + `initThemeToggle()` 收进 `initEffect`（新增 `initThemeToggleButton()`：注入按钮+绑定，幂等），消除 9 个效果各 3 处样板（按钮 HTML/import/调用）。stack-scan 不走 initEffect，保留其自管的手动主题接线。
 
-### Phase 5 — ChartCore 重构 🏗️（高风险，压轴，单独 PR）
-抽 chart-fx/bar-chart/pie-chart/multi-line 共享的 `config` 默认 + `MODE_PRESETS`（`definePresetPair`）+ 数据表格 CRUD → `shared/chart-core.js`，根除四文件副本漂移。**依赖 Phase 2 的 UI 规范先定好**，否则重构完返工。
+### Phase 5 — ChartCore 重构 🏗️（高风险，压轴，单独 PR）— 梳理完成，见 [docs/chartcore-plan.md](docs/chartcore-plan.md)
+抽 chart-fx/bar-chart/pie-chart/multi-line 共享的图表无关 `config` 默认（标题/入场/卡片漂浮/动画/纸张 5 块）→ `shared/chart-core.js` 的 `chartBaseConfig()`，根除副本漂移。
+**梳理结论**（2026-06-16）：真正"四家通吃"的只有那 5 块（~50–60 键）；数据模型四者本质不同、pie 无双风格、各图表默认值有刻意差异——**只去重不抹平**。改动清单与验证闸门见计划文档；前置是给 4 图表补控件默认值快照做安全网。
 
 ### 远期
 - **bindUI 以 config 为唯一真相**：初始化把 config 推回 UI，改默认值只需改一处（部分已在 Phase B 落地）。
