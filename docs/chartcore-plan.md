@@ -1,6 +1,6 @@
 # ChartCore 重构计划（Phase 5）
 
-> 状态：**梳理完成、未动手**。本文是开 PR 时的依据。
+> 状态：**核心已落地（2026-06-16）**。`chartBaseConfig()` 已建，bar-chart/chart-fx/multi-line 已接入（快照逐字节不变）；pie 有意不接入；可选的 `chartBaseThemePair()` 未做。
 > 目标：抽 `chart-fx / multi-line / bar-chart / pie-chart` 四个图表里**图表无关**的重复 config/预设到 `shared/chart-core.js`，根除「副本漂移」（改一个通用默认值要同步改 4 个文件）。
 > 原则：**只去重、不改任何生效默认值**；数据模型与各图表本体渲染**不动**。
 

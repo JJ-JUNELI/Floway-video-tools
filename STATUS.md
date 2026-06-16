@@ -151,7 +151,8 @@ WebGL 效果额外依赖：
 ### Phase 4 — 主题切换样板收口 🧹（低风险低收益）✅ 已完成（2026-06-15, commit b6d224a）
 把 themeToggle 按钮注入 + `initThemeToggle()` 收进 `initEffect`（新增 `initThemeToggleButton()`：注入按钮+绑定，幂等），消除 9 个效果各 3 处样板（按钮 HTML/import/调用）。stack-scan 不走 initEffect，保留其自管的手动主题接线。
 
-### Phase 5 — ChartCore 重构 🏗️（高风险，压轴，单独 PR）— 梳理完成，见 [docs/chartcore-plan.md](docs/chartcore-plan.md)
+### Phase 5 — ChartCore 重构 🏗️ ✅ 核心完成（2026-06-16）— 详见 [docs/chartcore-plan.md](docs/chartcore-plan.md)
+**已落地**：新增 `shared/chart-core.js` 的 `chartBaseConfig()`（图表无关通用默认：标题通用子集/卡片漂浮/动画/入场/卡面材质/纸张/公用）；3 个笛卡尔图（bar-chart 3a18223、chart-fx+multi-line 89752d3）config 改为 `{ ...chartBaseConfig(), 特有+覆盖 }`，每个的控件默认值快照逐字节不变。pie-chart 为异类（无双风格/网格/glass、模型不同）**有意不接入**。可选的 `chartBaseThemePair()`（MODE_PRESETS 去重）暂未做（收益不抵风险）。下方为原始计划：
 抽 chart-fx/bar-chart/pie-chart/multi-line 共享的图表无关 `config` 默认（标题/入场/卡片漂浮/动画/纸张 5 块）→ `shared/chart-core.js` 的 `chartBaseConfig()`，根除副本漂移。
 **梳理结论**（2026-06-16）：真正"四家通吃"的只有那 5 块（~50–60 键）；数据模型四者本质不同、pie 无双风格、各图表默认值有刻意差异——**只去重不抹平**。改动清单与验证闸门见计划文档；前置是给 4 图表补控件默认值快照做安全网。
 
