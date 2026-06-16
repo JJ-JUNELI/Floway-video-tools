@@ -478,6 +478,7 @@
     <script type="module">
         import { initEffect } from '../shared/controls.js';
         import { definePresetPair } from '../shared/utils.js';
+        import { chartBaseConfig } from '../shared/chart-core.js';
         import { drawSolidGlow } from '../shared/border-effects.js';
         import { getTheme } from '../shared/themes.js';
         import { WebGLComposite } from '../shared/webgl-composite.js?v=corner-fix';
@@ -545,22 +546,13 @@
         let currentMode = 'paper';
 
         const config = {
-            // 标题
+            ...chartBaseConfig(),   // 通用默认：标题通用子集/卡片漂浮/动画/入场/卡面材质/纸张/公用
+            // —— 标题（本图表特有：文本 + 副标题尺寸/位置） ——
             mainTitle: '汽车零售销量新能源月度渗透率走势',
             subTitle: '新能源乘用车渗透率超 50%',
-            titleFont: "'Noto Sans SC', sans-serif",
-            mainTitleSize: 26,
             subTitleSize: 36,
-            mainTitleWeight: 700,
-            subTitleWeight: 400,
-            mainTitleColor: '#333333',
-            subTitleColor: '#999999',
-            mainTitleX: 0,
-            mainTitleY: -490,
             subTitleX: 630,
-            subTitleY: 0,
-            showBrackets: true,
-            // 折线
+            // —— 折线 ——
             lineWidth: 1.2,
             lineColor: '#555555',
             showPoints: true,
@@ -569,13 +561,13 @@
             valueBgEnabled: true,
             valueBgColor: '#555555',
             pointSize: 4,
-            // 图例
+            // —— 图例 ——
             showLegend: true,
             barLegend: '月度销量',
             lineLegend: '渗透率（%）',
             legendSize: 11,
             legendOffY: 0,
-            // 柱状图
+            // —— 柱状图 ——
             showBars: false,
             barWidth: 0.6,
             barColor: '#a8c5da',
@@ -586,7 +578,7 @@
             barStrokeWidth: 0,
             barStrokeColor: '#7a9aac',
             barJitter: 0,
-            // 网格与坐标
+            // —— 网格与坐标（含双 Y 轴，本图表特有） ——
             gridY: 4,
             yAxisMode: 'zero',
             yMin: 0, yMax: 100,
@@ -597,71 +589,22 @@
             pointSpacing: 100,
             axisLabelSize: 11,
             axisLabelColor: '#999999',
-            // 卡片漂浮 (WebGL)
-            rotateX: 1.5, rotateY: -1,
-            shadowEnabled: true,
-            shadowAngle: 90,
-            shadowDistance: 10,
-            shadowBlur: 20,
-            shadowOpacity: 25,
-            cardRadius: 16,
-            cardBorderEnabled: false,
-            cardBorderWidth: 0,
-            cardBorderColor: '#ffffff',
-            cardGlowEnabled: false,
-            cardGlowWidth: 0,
-            cardGlowColor: '#3b82f6',
-            cardGlowIntensity: 70,
-            cardScale: 0.8,
-            cardPad: 32,
-            floatEnabled: true,
-            floatRotateX: 2.0, floatRotateY: 1.5,
-            floatPhase: 25, floatDuration: 4,
-            // 动画
-            animDuration: 3.5,
-            animEasing: 'easeInOut',
-            // 入场动画
-            entranceEnabled: true,
-            entrancePreset: 'slideUp',
-            entranceDuration: 0.8,
-            entranceEasing: 'easeOut',
-            entranceStartX: 0,
-            entranceStartY: 300,
-            entranceEndX: 0,
-            entranceEndY: 0,
-            entranceStartOpacity: 0,
-            entranceEndOpacity: 100,
-            entranceStartScale: 100,
-            entranceEndScale: 100,
+            // —— 入场（折线特有延迟） ——
             lineDelay: 0.3,
-            // 图表区域
-            chartOffX: 0,
-            chartOffY: 0,
-            chartExtraW: 0,
+            // —— 图表区域（特有覆盖） ——
             chartExtraH: 0,
-            // 卡面材质（独立于纸张/赛博风格）
-            cardMaterial: 'follow',   // 'follow'=跟随风格(纯色/纸张) | 'glass'=玻璃
-            glassColor: 'light', glassVeil: 0.12, glassBorder: 0.5, glassBorderWidth: 1, glassHighlight: 0.45, glassSheen: 0.45, glassGrain: true,
-            // 纸张纹理（主题风格）
-            noiseGrain: 35, vignette: 15,
+            // —— 纸张纹理（折线特有抖动） ——
             lineJitter: 25,
-            // 公用
+            // —— 公用（折线特有） ——
             areaColor: '#b4a58c',
             areaFollowLine: false,
             fillOpacity: 0.20,
-            gridOpacity: 0.30,
             dropLineOpacity: 0.20,
             tension: 0,
             glowBlur: 0,
-            cardBg: '#faf8f3',
             showArea: true,
             valueSize: 11,
             valueColor: '#555555',
-            showGrid: true,
-            gridColor: '#c3bcaf',
-            subTitleGlow: false,
-            showMainTitle: true,
-            showSubTitle: true,
         };
 
         // ====== 模式预设（切换主题时同步的参数） ======
